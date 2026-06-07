@@ -30,6 +30,84 @@ const loadWorkoutDataButton = document.querySelector("#load-workout-data");
 const syncPendingButton = document.querySelector("#sync-pending");
 const syncStatus = document.querySelector("#sync-status");
 const savedTestEntries = document.querySelector("#saved-test-entries");
+const exerciseList = document.querySelector("#exercise-list");
+const libraryCount = document.querySelector("#library-count");
+const filterChips = Array.from(document.querySelectorAll(".filter-chip"));
+
+const exercises = [
+  {
+    name: "Push-up",
+    area: "Chest + triceps",
+    icon: "pushup",
+    tags: ["home", "gym", "bodyweight"]
+  },
+  {
+    name: "Dumbbell Bench Press",
+    area: "Chest",
+    icon: "bench",
+    tags: ["home", "gym", "dumbbells"]
+  },
+  {
+    name: "Squat",
+    area: "Legs",
+    icon: "squat",
+    tags: ["home", "gym", "bodyweight"]
+  },
+  {
+    name: "Goblet Squat",
+    area: "Legs",
+    icon: "goblet",
+    tags: ["home", "gym", "dumbbells"]
+  },
+  {
+    name: "Deadlift",
+    area: "Back + legs",
+    icon: "deadlift",
+    tags: ["gym", "barbell"]
+  },
+  {
+    name: "Lat Pulldown",
+    area: "Back",
+    icon: "pulldown",
+    tags: ["gym", "machine"]
+  },
+  {
+    name: "Dumbbell Row",
+    area: "Back",
+    icon: "row",
+    tags: ["home", "gym", "dumbbells"]
+  },
+  {
+    name: "Shoulder Press",
+    area: "Shoulders",
+    icon: "press",
+    tags: ["home", "gym", "dumbbells"]
+  },
+  {
+    name: "Plank",
+    area: "Core",
+    icon: "plank",
+    tags: ["home", "gym", "bodyweight"]
+  },
+  {
+    name: "Biceps Curl",
+    area: "Arms",
+    icon: "curl",
+    tags: ["home", "gym", "dumbbells"]
+  },
+  {
+    name: "Triceps Pressdown",
+    area: "Arms",
+    icon: "pressdown",
+    tags: ["gym", "machine"]
+  },
+  {
+    name: "Treadmill Walk",
+    area: "Cardio",
+    icon: "treadmill",
+    tags: ["gym", "cardio"]
+  }
+];
 
 if (dateLabel) {
   dateLabel.textContent = new Intl.DateTimeFormat("en-US", {
@@ -192,6 +270,59 @@ function escapeHtml(value) {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");
+}
+
+function getExerciseIcon(name) {
+  const icons = {
+    pushup: '<line x1="24" y1="74" x2="92" y2="74"></line><circle cx="34" cy="45" r="9"></circle><line x1="43" y1="48" x2="68" y2="58"></line><line x1="68" y1="58" x2="90" y2="52"></line><line x1="56" y1="54" x2="47" y2="75"></line><line x1="74" y1="56" x2="76" y2="75"></line>',
+    bench: '<line x1="20" y1="75" x2="94" y2="75"></line><line x1="30" y1="75" x2="26" y2="93"></line><line x1="82" y1="75" x2="88" y2="93"></line><circle cx="40" cy="49" r="8"></circle><line x1="48" y1="52" x2="72" y2="60"></line><line x1="31" y1="43" x2="84" y2="43"></line><line x1="31" y1="37" x2="31" y2="49"></line><line x1="84" y1="37" x2="84" y2="49"></line>',
+    squat: '<circle cx="58" cy="27" r="8"></circle><line x1="58" y1="35" x2="48" y2="58"></line><line x1="48" y1="58" x2="66" y2="70"></line><line x1="66" y1="70" x2="82" y2="88"></line><line x1="49" y1="58" x2="35" y2="78"></line><line x1="35" y1="78" x2="25" y2="92"></line><line x1="40" y1="45" x2="74" y2="45"></line>',
+    goblet: '<circle cx="58" cy="25" r="8"></circle><line x1="58" y1="33" x2="56" y2="54"></line><rect x="48" y="43" width="18" height="18" rx="4"></rect><line x1="49" y1="58" x2="37" y2="78"></line><line x1="37" y1="78" x2="27" y2="92"></line><line x1="62" y1="58" x2="76" y2="78"></line><line x1="76" y1="78" x2="88" y2="92"></line>',
+    deadlift: '<line x1="20" y1="84" x2="94" y2="84"></line><circle cx="22" cy="84" r="8"></circle><circle cx="92" cy="84" r="8"></circle><circle cx="58" cy="31" r="8"></circle><line x1="58" y1="39" x2="50" y2="61"></line><line x1="50" y1="61" x2="42" y2="82"></line><line x1="50" y1="61" x2="68" y2="82"></line><line x1="47" y1="56" x2="37" y2="82"></line><line x1="55" y1="57" x2="69" y2="82"></line>',
+    pulldown: '<line x1="28" y1="24" x2="86" y2="24"></line><line x1="58" y1="24" x2="58" y2="43"></line><circle cx="58" cy="52" r="8"></circle><line x1="58" y1="60" x2="58" y2="83"></line><line x1="31" y1="35" x2="49" y2="60"></line><line x1="85" y1="35" x2="67" y2="60"></line><line x1="48" y1="84" x2="38" y2="97"></line><line x1="66" y1="84" x2="76" y2="97"></line>',
+    row: '<circle cx="38" cy="37" r="8"></circle><line x1="46" y1="42" x2="67" y2="56"></line><line x1="67" y1="56" x2="86" y2="48"></line><line x1="52" y1="50" x2="40" y2="77"></line><line x1="58" y1="52" x2="72" y2="82"></line><rect x="84" y="42" width="14" height="13" rx="3"></rect><line x1="25" y1="84" x2="92" y2="84"></line>',
+    press: '<circle cx="58" cy="45" r="8"></circle><line x1="58" y1="53" x2="58" y2="78"></line><line x1="38" y1="31" x2="48" y2="52"></line><line x1="78" y1="31" x2="68" y2="52"></line><line x1="34" y1="29" x2="44" y2="24"></line><line x1="73" y1="24" x2="83" y2="29"></line><line x1="49" y1="78" x2="40" y2="95"></line><line x1="67" y1="78" x2="76" y2="95"></line>',
+    plank: '<line x1="22" y1="76" x2="94" y2="76"></line><circle cx="35" cy="47" r="8"></circle><line x1="43" y1="50" x2="68" y2="55"></line><line x1="68" y1="55" x2="91" y2="64"></line><line x1="50" y1="51" x2="42" y2="76"></line><line x1="85" y1="62" x2="80" y2="76"></line>',
+    curl: '<circle cx="58" cy="31" r="8"></circle><line x1="58" y1="39" x2="58" y2="66"></line><line x1="49" y1="45" x2="41" y2="66"></line><line x1="67" y1="45" x2="79" y2="60"></line><rect x="77" y="56" width="13" height="12" rx="3"></rect><line x1="51" y1="67" x2="43" y2="92"></line><line x1="65" y1="67" x2="75" y2="92"></line>',
+    pressdown: '<line x1="58" y1="20" x2="58" y2="40"></line><line x1="43" y1="40" x2="73" y2="40"></line><circle cx="58" cy="52" r="8"></circle><line x1="58" y1="60" x2="58" y2="82"></line><line x1="43" y1="57" x2="49" y2="79"></line><line x1="73" y1="57" x2="67" y2="79"></line><line x1="48" y1="80" x2="39" y2="90"></line><line x1="68" y1="80" x2="77" y2="90"></line>',
+    treadmill: '<rect x="22" y="70" width="70" height="16" rx="5"></rect><line x1="77" y1="70" x2="66" y2="44"></line><line x1="66" y1="44" x2="82" y2="44"></line><circle cx="49" cy="28" r="8"></circle><line x1="49" y1="36" x2="54" y2="57"></line><line x1="54" y1="57" x2="43" y2="70"></line><line x1="55" y1="57" x2="68" y2="70"></line>'
+  };
+
+  return `<svg viewBox="0 0 116 116" role="img" aria-label="${escapeHtml(name)} line illustration">${icons[name] || icons.pushup}</svg>`;
+}
+
+function renderExercises(filter = "all") {
+  if (!exerciseList) return;
+
+  const visibleExercises = filter === "all"
+    ? exercises
+    : exercises.filter((exercise) => exercise.tags.includes(filter));
+
+  if (libraryCount) {
+    const label = visibleExercises.length === 1 ? "exercise" : "exercises";
+    libraryCount.textContent = `${visibleExercises.length} ${label}`;
+  }
+
+  exerciseList.innerHTML = visibleExercises.map((exercise) => `
+    <article class="exercise-card">
+      <div class="exercise-art">
+        ${getExerciseIcon(exercise.icon)}
+      </div>
+      <div class="exercise-info">
+        <h3>${escapeHtml(exercise.name)}</h3>
+        <p class="exercise-meta">${escapeHtml(exercise.area)}</p>
+        <div class="tag-row">
+          ${exercise.tags.map((tag) => `<span class="exercise-tag">${escapeHtml(formatTag(tag))}</span>`).join("")}
+        </div>
+      </div>
+    </article>
+  `).join("");
+}
+
+function formatTag(tag) {
+  if (tag === "bodyweight") return "no equipment";
+  if (tag === "machine") return "cable/machine";
+  return tag;
 }
 
 function getStoredAccessToken() {
@@ -481,6 +612,14 @@ tabs.forEach((tab) => {
   });
 });
 
+filterChips.forEach((chip) => {
+  chip.addEventListener("click", () => {
+    const filter = chip.dataset.filter || "all";
+    filterChips.forEach((item) => item.classList.toggle("is-active", item === chip));
+    renderExercises(filter);
+  });
+});
+
 connectButton?.addEventListener("click", () => {
   startDropboxConnect().catch((error) => {
     setSyncStatus(error.message, "bad");
@@ -517,6 +656,7 @@ window.addEventListener("online", () => {
 window.addEventListener("offline", updateConnectionState);
 
 renderTestEntries();
+renderExercises();
 finishDropboxConnect().catch((error) => {
   setSyncStatus(error.message, "bad");
   updateConnectionState();

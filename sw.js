@@ -1,4 +1,4 @@
-const CACHE_NAME = "training-book-shell-v2";
+const CACHE_NAME = "training-book-shell-v3";
 const ASSETS = [
   "./",
   "index.html",

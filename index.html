@@ -113,10 +113,27 @@
       </section>
 
       <section class="screen" data-screen="library" aria-labelledby="library-title">
-        <div class="blank-panel">
-          <p class="eyebrow">Exercises</p>
-          <h2 id="library-title">Library</h2>
-          <p>The picture-first exercise list will live here.</p>
+        <div class="library-panel">
+          <div class="library-heading">
+            <div>
+              <p class="eyebrow">Exercises</p>
+              <h2 id="library-title">Library</h2>
+              <p class="library-copy">Browse the starter list and narrow it to where you are training today.</p>
+            </div>
+            <span class="library-count" id="library-count">0 exercises</span>
+          </div>
+
+          <div class="filter-strip" aria-label="Exercise filters">
+            <button class="filter-chip is-active" type="button" data-filter="all">All</button>
+            <button class="filter-chip" type="button" data-filter="home">Home</button>
+            <button class="filter-chip" type="button" data-filter="gym">Gym</button>
+            <button class="filter-chip" type="button" data-filter="bodyweight">No equipment</button>
+            <button class="filter-chip" type="button" data-filter="dumbbells">Dumbbells</button>
+            <button class="filter-chip" type="button" data-filter="machine">Cable/machine</button>
+            <button class="filter-chip" type="button" data-filter="cardio">Cardio</button>
+          </div>
+
+          <div class="exercise-list" id="exercise-list" aria-live="polite"></div>
         </div>
       </section>
 
