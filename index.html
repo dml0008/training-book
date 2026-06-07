@@ -21,9 +21,9 @@
         <p class="eyebrow">Personal logbook</p>
         <h1>Training Book</h1>
       </div>
-      <div class="sync-pill" aria-label="Dropbox sync will be added later">
+      <div class="sync-pill" id="sync-pill" aria-label="Dropbox sync status">
         <span class="sync-dot"></span>
-        Dropbox later
+        Local only
       </div>
     </header>
 
@@ -61,6 +61,47 @@
             <p>Streaks, weekly target, and goals will read from your saved workouts.</p>
           </article>
         </div>
+
+        <section class="sync-test-panel" aria-labelledby="sync-test-title">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Step 3 test</p>
+              <h3 id="sync-test-title">Dropbox save/load</h3>
+            </div>
+            <span class="connection-badge" id="connection-badge">Not connected</span>
+          </div>
+
+          <div class="sync-grid">
+            <div class="field-group">
+              <label for="dropbox-app-key">Dropbox app key</label>
+              <input id="dropbox-app-key" autocomplete="off" spellcheck="false" placeholder="Paste once on this device">
+            </div>
+            <div class="sync-actions">
+              <button class="primary-button" id="connect-dropbox" type="button">Connect</button>
+              <button class="quiet-button" id="forget-dropbox" type="button">Forget</button>
+            </div>
+          </div>
+
+          <div class="field-group">
+            <label for="test-entry">Test workout note</label>
+            <textarea id="test-entry" rows="3" placeholder="Example: Desktop test - chest day"></textarea>
+          </div>
+
+          <div class="sync-actions sync-actions-wide">
+            <button class="primary-button" id="save-test-entry" type="button">Save test entry</button>
+            <button class="quiet-button" id="load-workout-data" type="button">Load from Dropbox</button>
+            <button class="quiet-button" id="sync-pending" type="button">Sync pending</button>
+          </div>
+
+          <div class="sync-status" id="sync-status">Connect Dropbox, then save a test entry.</div>
+
+          <div class="saved-list-wrap">
+            <p class="saved-list-title">Saved test entries</p>
+            <div class="saved-list" id="saved-test-entries">
+              <p class="empty-list">No test entries yet.</p>
+            </div>
+          </div>
+        </section>
       </section>
 
       <section class="screen" data-screen="log" aria-labelledby="log-title">
