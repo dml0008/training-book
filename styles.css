@@ -39,6 +39,7 @@ button {
 input,
 textarea {
   width: 100%;
+  max-width: 100%;
   border: 1px solid var(--line);
   border-radius: 8px;
   background: var(--panel-2);
@@ -496,6 +497,21 @@ p {
 
   .sync-pill {
     width: fit-content;
+  }
+
+  .sync-test-panel {
+    padding: 16px;
+  }
+
+  .field-group,
+  .sync-grid,
+  .sync-actions-wide {
+    min-width: 0;
+  }
+
+  .primary-button,
+  .quiet-button {
+    width: 100%;
   }
 
   .hero-panel {
