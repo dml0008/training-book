@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Training Book</title>
+  <meta name="description" content="A personal workout and training logbook.">
+  <meta name="theme-color" content="#101413">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Training Book">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/icon.svg">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Personal logbook</p>
+        <h1>Training Book</h1>
+      </div>
+      <div class="sync-pill" aria-label="Dropbox sync will be added later">
+        <span class="sync-dot"></span>
+        Dropbox later
+      </div>
+    </header>
+
+    <main class="screen-stack">
+      <section class="screen is-active" data-screen="today" aria-labelledby="today-title">
+        <div class="hero-panel">
+          <p class="date-label" id="today-date">Today</p>
+          <h2 id="today-title">Ready when you are.</h2>
+          <p class="hero-copy">The logging screen comes next. For now, this is the first real frame of the app.</p>
+          <div class="quick-stats" aria-label="Future training summary">
+            <div>
+              <span class="stat-number">0</span>
+              <span class="stat-label">workouts</span>
+            </div>
+            <div>
+              <span class="stat-number">0</span>
+              <span class="stat-label">week streak</span>
+            </div>
+            <div>
+              <span class="stat-number">--</span>
+              <span class="stat-label">last session</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-row">
+          <article class="preview-card">
+            <span class="card-kicker">Next up</span>
+            <h3>Log a workout</h3>
+            <p>Big, fast controls for sets, reps, weight, and simple cardio will live here.</p>
+          </article>
+          <article class="preview-card">
+            <span class="card-kicker">Later</span>
+            <h3>Progress</h3>
+            <p>Streaks, weekly target, and goals will read from your saved workouts.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="screen" data-screen="log" aria-labelledby="log-title">
+        <div class="blank-panel">
+          <p class="eyebrow">Capture</p>
+          <h2 id="log-title">Log</h2>
+          <p>This will become the fast workout capture screen.</p>
+        </div>
+      </section>
+
+      <section class="screen" data-screen="library" aria-labelledby="library-title">
+        <div class="blank-panel">
+          <p class="eyebrow">Exercises</p>
+          <h2 id="library-title">Library</h2>
+          <p>The picture-first exercise list will live here.</p>
+        </div>
+      </section>
+
+      <section class="screen" data-screen="history" aria-labelledby="history-title">
+        <div class="blank-panel">
+          <p class="eyebrow">Review</p>
+          <h2 id="history-title">History</h2>
+          <p>Past workouts will show here once saving is added.</p>
+        </div>
+      </section>
+
+      <section class="screen" data-screen="progress" aria-labelledby="progress-title">
+        <div class="blank-panel">
+          <p class="eyebrow">Accountability</p>
+          <h2 id="progress-title">Progress</h2>
+          <p>Streaks, targets, and goals will show here later.</p>
+        </div>
+      </section>
+    </main>
+
+    <nav class="tabbar" aria-label="Main sections">
+      <button class="tab is-active" type="button" data-target="today" aria-current="page">
+        <span class="tab-icon" aria-hidden="true">T</span>
+        <span>Today</span>
+      </button>
+      <button class="tab" type="button" data-target="log">
+        <span class="tab-icon" aria-hidden="true">+</span>
+        <span>Log</span>
+      </button>
+      <button class="tab" type="button" data-target="library">
+        <span class="tab-icon" aria-hidden="true">L</span>
+        <span>Library</span>
+      </button>
+      <button class="tab" type="button" data-target="history">
+        <span class="tab-icon" aria-hidden="true">H</span>
+        <span>History</span>
+      </button>
+      <button class="tab" type="button" data-target="progress">
+        <span class="tab-icon" aria-hidden="true">P</span>
+        <span>Progress</span>
+      </button>
+    </nav>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
