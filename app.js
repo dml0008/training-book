@@ -28,6 +28,7 @@ const todayAddExtra = document.querySelector(".today-add-extra");
 const todayExtraPicker = document.querySelector("#today-extra-picker");
 const addTodayExtraButton = document.querySelector("#add-today-extra");
 const syncPill = document.querySelector("#sync-pill");
+const syncPillLabel = document.querySelector("#sync-pill-label");
 const exerciseList = document.querySelector("#exercise-list");
 const libraryCount = document.querySelector("#library-count");
 const filterChips = Array.from(document.querySelectorAll(".filter-chip"));
@@ -619,15 +620,27 @@ function showScreen(name) {
 }
 
 function setSyncStatus(message, tone = "") {
-  if (!syncStatus) return;
-  syncStatus.textContent = message;
-  syncStatus.className = tone ? `sync-status ${tone}` : "sync-status";
+  if (syncStatus) {
+    syncStatus.textContent = message;
+    syncStatus.className = tone ? `sync-status ${tone}` : "sync-status";
+    return;
+  }
+
+  if (syncPill) {
+    syncPill.title = message;
+  }
 }
 
 function setConnectionUi(message, tone = "") {
   if (syncPill) {
     syncPill.className = tone ? `sync-pill ${tone}` : "sync-pill";
-    syncPill.lastChild.textContent = message;
+    syncPill.disabled = false;
+    syncPill.title = hasPendingData()
+      ? "Tap to sync pending Dropbox data"
+      : "Tap to load the latest Dropbox data";
+    if (syncPillLabel) {
+      syncPillLabel.textContent = message;
+    }
   }
 }
 
@@ -1395,6 +1408,12 @@ async function downloadWorkoutData() {
 
 async function loadWorkoutData() {
   if (!navigator.onLine) {
+    setSyncStatus("Offline. Connect to the internet before loading Dropbox data.", "warn");
+    return;
+  }
+
+  if (hasPendingData()) {
+    await syncPendingData();
     return;
   }
 
@@ -1415,7 +1434,9 @@ async function loadWorkoutData() {
   }
 
   saveLocalData(data);
-  markPendingData(data);
+  clearPendingData();
+  renderTodayRoutine();
+  renderActiveWorkout();
   updateConnectionState();
 }
 
@@ -1434,6 +1455,31 @@ async function syncPendingData() {
   await uploadWorkoutData(pendingData);
   clearPendingData();
   setSyncStatus("Pending data synced to Dropbox.", "good");
+  renderTodayRoutine();
+}
+
+async function handleSyncPillClick() {
+  if (!navigator.onLine) {
+    setConnectionUi(hasPendingData() ? "Offline, pending" : "Offline", "warn");
+    alert("You are offline. Training Book will sync when internet is back.");
+    return;
+  }
+
+  try {
+    if (hasPendingData()) {
+      setConnectionUi("Syncing...", "warn");
+      await syncPendingData();
+      alert("Pending workout data synced to Dropbox.");
+      return;
+    }
+
+    setConnectionUi("Loading...", "");
+    await loadWorkoutData();
+    alert("Latest Dropbox data loaded.");
+  } catch (error) {
+    updateConnectionState();
+    alert(`${error.message} Your local data is still safe on this device.`);
+  }
 }
 
 function forgetDropbox() {
@@ -1879,6 +1925,13 @@ const importPlanButton = document.querySelector("#import-plan");
 
 exportPacketButton?.addEventListener("click", exportReviewPacket);
 importPlanButton?.addEventListener("click", importUpdatedPlan);
+
+syncPill?.addEventListener("click", () => {
+  handleSyncPillClick().catch((error) => {
+    updateConnectionState();
+    alert(`${error.message} Your local data is still safe on this device.`);
+  });
+});
 
 window.addEventListener("online", () => {
   updateConnectionState();

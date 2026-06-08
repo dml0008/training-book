@@ -143,8 +143,19 @@ p {
   border-radius: 999px;
   background: rgba(16, 20, 19, 0.82);
   color: var(--muted);
+  cursor: pointer;
   font-size: 13px;
   white-space: nowrap;
+}
+
+.sync-pill:disabled {
+  cursor: wait;
+  opacity: 0.78;
+}
+
+.sync-pill:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 .sync-pill.good {
