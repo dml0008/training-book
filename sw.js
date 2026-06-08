@@ -1,16 +1,18 @@
-const CACHE_NAME = "training-book-shell-v3";
-const ASSETS = [
+const CACHE_NAME = "training-book-shell-v4";
+const STATIC_ASSETS = [
+  "manifest.webmanifest",
+  "icons/icon.svg"
+];
+const APP_FILES = [
   "./",
   "index.html",
   "styles.css",
-  "app.js",
-  "manifest.webmanifest",
-  "icons/icon.svg"
+  "app.js"
 ];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS))
+    caches.open(CACHE_NAME).then((cache) => cache.addAll([...STATIC_ASSETS, ...APP_FILES]))
   );
 });
 
@@ -25,7 +27,29 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
 
+  const url = new URL(event.request.url);
+  const isAppFile = APP_FILES.some((file) => url.pathname.endsWith(file) || file === "./");
+
   event.respondWith(
-    caches.match(event.request).then((cached) => cached || fetch(event.request))
+    (isAppFile ? networkFirst : cacheFirst)(event.request)
   );
 });
+
+async function networkFirst(request) {
+  try {
+    const response = await fetch(request);
+    if (response.ok) {
+      const cache = await caches.open(CACHE_NAME);
+      cache.put(request, response.clone());
+    }
+    return response;
+  } catch {
+    return caches.match(request) || new Response("Offline", { status: 503 });
+  }
+}
+
+async function cacheFirst(request) {
+  const cached = await caches.match(request);
+  if (cached) return cached;
+  return fetch(request).catch(() => new Response("Offline", { status: 503 }));
+}
