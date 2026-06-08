@@ -405,11 +405,6 @@ function setSyncStatus(message, tone = "") {
 }
 
 function setConnectionUi(message, tone = "") {
-  if (connectionBadge) {
-    connectionBadge.textContent = message;
-    connectionBadge.className = tone ? `connection-badge ${tone}` : "connection-badge";
-  }
-
   if (syncPill) {
     syncPill.className = tone ? `sync-pill ${tone}` : "sync-pill";
     syncPill.lastChild.textContent = message;
