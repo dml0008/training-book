@@ -16,7 +16,9 @@ Step 3 added a temporary visible Dropbox save/load test on the Today screen. It 
 
 Step 4 added the first browse-only Exercise Library screen: a 12-exercise starter set with clean placeholder line visuals and filters for location/equipment.
 
-Step 5 started as a manual Log screen draft, but the product direction has pivoted: normal use should be Today-first planned routines. Manual/ad-hoc logging can remain as a fallback, while the main flow should show Daniel the planned routine for today, let him check/log it off, and save it through the existing Dropbox/local engine.
+Step 5 delivered the Today-first planned routine flow: normal use now starts on Today, shows Daniel the planned routine for the day, lets him check exercises off, shows progress, and saves through the existing Dropbox/local engine. Manual/ad-hoc logging remains available as a fallback.
+
+Step 6 is implemented and ready for testing. Export/import is the AI coach loop, and the daily-driver UX stays on Today: quick difficulty logging, actual performance steppers, swaps, skips, extras, and plan-vs-logged clarity while working out.
 
 Future routine planning should be AI-ready, not AI-connected: Training Book should store private goals, preferences, routines, weekly plans, and workout logs in Dropbox app data, generate a copyable review packet for an outside AI coach, and import updated routines back into the app.
 

@@ -43,6 +43,13 @@
             </div>
           </div>
 
+          <div class="today-add-extra">
+            <select id="today-extra-picker" aria-label="Add extra exercise">
+              <option value="">Add extra exercise</option>
+            </select>
+            <button class="quiet-button" id="add-today-extra" type="button">Add extra</button>
+          </div>
+
           <div class="today-footer">
             <div class="today-progress" id="today-progress" aria-live="polite">
               <span id="today-progress-number">0%</span>
@@ -122,10 +129,19 @@
       </section>
 
       <section class="screen" data-screen="history" aria-labelledby="history-title">
-        <div class="blank-panel">
-          <p class="eyebrow">Review</p>
-          <h2 id="history-title">History</h2>
-          <p>Past workouts will show here once saving is added.</p>
+        <div class="history-panel">
+          <div class="history-heading">
+            <p class="eyebrow">Review & Coach</p>
+            <h2 id="history-title">History</h2>
+            <p>View your workouts and export data for an AI coach.</p>
+          </div>
+          <div class="history-actions">
+            <button class="primary-button" id="export-review-packet" type="button">Export Review Packet</button>
+            <button class="primary-button" id="import-plan" type="button">Import Updated Plan</button>
+          </div>
+          <div id="history-content" aria-live="polite">
+            <p class="empty-state">Past workouts will show here as you log.</p>
+          </div>
         </div>
       </section>
 

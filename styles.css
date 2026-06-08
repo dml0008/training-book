@@ -188,7 +188,8 @@ p {
 .hero-panel,
 .blank-panel,
 .library-panel,
-.log-panel {
+.log-panel,
+.history-panel {
   border: 1px solid var(--line);
   border-radius: 8px;
   background: linear-gradient(145deg, rgba(23, 29, 27, 0.96), rgba(12, 16, 15, 0.98));
@@ -664,6 +665,71 @@ p {
   max-width: 260px;
 }
 
+.difficulty-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.difficulty-row label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 750;
+}
+
+.difficulty-value {
+  color: var(--accent);
+  font-weight: 900;
+}
+
+.difficulty-row input[type="range"] {
+  flex: 1;
+  max-width: 150px;
+  height: 6px;
+  padding: 0;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+.difficulty-row input[type="range"]::-webkit-slider-thumb {
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.difficulty-row input[type="range"]::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.difficulty-row input[type="range"]::-webkit-slider-runnable-track {
+  height: 6px;
+  background: var(--line);
+  border-radius: 3px;
+}
+
+.difficulty-row input[type="range"]::-moz-range-track {
+  height: 6px;
+  background: var(--line);
+  border-radius: 3px;
+  border: none;
+}
+
 .workout-card-actions,
 .workout-footer {
   display: flex;
@@ -694,6 +760,30 @@ p {
   font-size: 12px;
   font-weight: 850;
   white-space: nowrap;
+}
+
+.history-panel,
+.history-heading {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.history-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.history-actions button {
+  flex: 1;
+  min-width: 180px;
+}
+
+.empty-state {
+  color: var(--muted);
+  text-align: center;
+  padding: 32px 16px;
 }
 
 .filter-strip {
@@ -928,7 +1018,7 @@ p {
 
 .today-exercise-card {
   display: grid;
-  grid-template-columns: 56px minmax(0, 1fr);
+  grid-template-columns: 72px minmax(0, 1fr);
   gap: 12px;
   padding: 12px;
   border: 1px solid var(--line);
@@ -937,11 +1027,34 @@ p {
   align-items: start;
 }
 
+.today-exercise-card.is-done {
+  border-color: rgba(183, 255, 53, 0.42);
+}
+
+.today-exercise-art,
 .exercise-checkbox-wrapper {
   display: grid;
+  gap: 8px;
   place-items: center;
-  cursor: pointer;
   margin: 0;
+}
+
+.today-done-button {
+  width: 100%;
+  min-height: 34px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: rgba(16, 20, 19, 0.92);
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.today-done-button.is-done {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #101413;
 }
 
 .exercise-checkbox-wrapper input[type="checkbox"] {
@@ -1007,6 +1120,120 @@ p {
   color: var(--accent);
   font-weight: 800;
   margin-top: 4px;
+}
+
+.today-card-topline {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.today-skip-button {
+  width: auto;
+  min-height: 34px;
+  flex: 0 0 auto;
+}
+
+.today-actual-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.today-stepper {
+  min-width: 0;
+  padding: 9px;
+  border: 1px solid rgba(155, 168, 161, 0.18);
+  border-radius: 8px;
+  background: rgba(16, 20, 19, 0.58);
+}
+
+.today-stepper > span,
+.today-difficulty > span,
+.today-swap-row span {
+  display: block;
+  margin-bottom: 7px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.stepper-controls {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) 34px;
+  gap: 6px;
+  align-items: center;
+}
+
+.stepper-controls strong {
+  min-width: 0;
+  color: var(--text);
+  font-size: 18px;
+  font-weight: 900;
+  text-align: center;
+}
+
+.stepper-button {
+  display: grid;
+  min-width: 34px;
+  min-height: 34px;
+  place-items: center;
+  border: 1px solid rgba(183, 255, 53, 0.28);
+  border-radius: 7px;
+  background: rgba(9, 12, 11, 0.55);
+  color: var(--accent);
+  cursor: pointer;
+  font-size: 20px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.today-difficulty {
+  margin-top: 10px;
+}
+
+.difficulty-scale {
+  display: grid;
+  grid-template-columns: repeat(10, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.difficulty-chip {
+  min-width: 0;
+  min-height: 34px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: rgba(9, 12, 11, 0.38);
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 900;
+  padding: 0;
+}
+
+.difficulty-chip.is-active {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #101413;
+}
+
+.today-swap-row {
+  margin-top: 10px;
+}
+
+.today-swap-row label {
+  margin: 0;
+}
+
+.today-add-extra {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  margin: 0 0 18px;
 }
 
 .today-footer {
@@ -1153,6 +1380,22 @@ p {
 
   .exercise-info h3 {
     font-size: 18px;
+  }
+
+  .today-exercise-card {
+    grid-template-columns: 60px minmax(0, 1fr);
+  }
+
+  .today-actual-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .difficulty-scale {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+
+  .today-add-extra {
+    grid-template-columns: 1fr;
   }
 
   .today-footer {

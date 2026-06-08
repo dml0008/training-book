@@ -6,21 +6,19 @@ Expected app link after publishing:
 
 `https://dml0008.github.io/training-book/`
 
-## Simple GitHub web upload
+## Current publishing path
 
-1. Create a new public GitHub repository named `training-book`.
-2. Upload the contents of this folder, not the folder itself:
-   - `index.html`
-   - `styles.css`
-   - `app.js`
-   - `manifest.webmanifest`
-   - `sw.js`
-   - `icons/`
-   - `README.md`
-3. In the repository, open Settings -> Pages.
-4. Set Source to "Deploy from a branch."
-5. Pick branch `main` and folder `/root`, then save.
-6. Wait a minute or two, then open:
+The repo now exists and this folder is connected to it with git:
+
+`https://github.com/dml0008/training-book`
+
+GitHub Pages is expected to deploy from branch `main` and folder `/root`.
+After Daniel approves a session's app changes, commit and push from this folder:
+
+1. Check `git status`.
+2. Commit the intended app files only.
+3. Push to `origin main`.
+4. Wait a minute or two, then open:
    `https://dml0008.github.io/training-book/`
 
 No private workout data, Dropbox keys, passwords, or app secrets should be uploaded here.

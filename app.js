@@ -24,6 +24,9 @@ const todayRoutineList = document.querySelector("#today-routine-list");
 const todayProgressNumber = document.querySelector("#today-progress-number");
 const todayProgressLabel = document.querySelector("#today-progress-label");
 const saveTodayWorkoutButton = document.querySelector("#save-today-workout");
+const todayAddExtra = document.querySelector(".today-add-extra");
+const todayExtraPicker = document.querySelector("#today-extra-picker");
+const addTodayExtraButton = document.querySelector("#add-today-extra");
 const syncPill = document.querySelector("#sync-pill");
 const exerciseList = document.querySelector("#exercise-list");
 const libraryCount = document.querySelector("#library-count");
@@ -37,6 +40,8 @@ const workoutProgressNumber = document.querySelector("#workout-progress-number")
 const workoutProgressLabel = document.querySelector("#workout-progress-label");
 const workoutSaveStatus = document.querySelector("#workout-save-status");
 const saveWorkoutButton = document.querySelector("#save-workout");
+const appKeyInput = document.querySelector("#app-key");
+const syncStatus = document.querySelector("#sync-status");
 
 const today = new Date();
 const todayDisplay = new Intl.DateTimeFormat("en-US", {
@@ -213,6 +218,96 @@ function getTodayWorkoutProgress() {
   return { total, done, percent };
 }
 
+function getExerciseById(exerciseId) {
+  return exercises.find((exercise) => exercise.id === exerciseId) || null;
+}
+
+function clampNumber(value, min, max) {
+  return Math.min(max, Math.max(min, Number(value) || 0));
+}
+
+function makeTodayExercise(plannedEx, source = "planned") {
+  const exerciseInfo = getExerciseById(plannedEx.exerciseId) || exercises[0];
+  const isCardio = Boolean(plannedEx.targetDuration) || exerciseInfo.type === "cardio";
+  const targetSets = Number(plannedEx.targetSets) || (isCardio ? 0 : 3);
+  const targetReps = Number(plannedEx.targetReps) || 0;
+  const targetDuration = Number(plannedEx.targetDuration) || 0;
+
+  return {
+    id: `today-${exerciseInfo.id}-${randomString(5)}`,
+    exerciseId: exerciseInfo.id,
+    name: exerciseInfo.name,
+    type: isCardio ? "cardio" : "strength",
+    area: exerciseInfo.area,
+    icon: exerciseInfo.icon,
+    source,
+    targetSets,
+    targetReps,
+    targetDuration,
+    actualSets: targetSets || 1,
+    actualReps: targetReps,
+    actualWeight: 0,
+    actualDuration: targetDuration || 30,
+    difficulty: 5,
+    checked: false
+  };
+}
+
+function formatTodayTarget(exercise) {
+  if (exercise.type === "cardio") return `${exercise.targetDuration || exercise.actualDuration} min planned`;
+  if (exercise.targetReps) return `${exercise.targetSets} sets x ${exercise.targetReps} reps planned`;
+  return `${exercise.targetSets} sets planned`;
+}
+
+function renderStepper(exercise, field, label, step = 1, min = 0, max = 999, suffix = "") {
+  const value = Number(exercise[field]) || 0;
+  return `
+    <div class="today-stepper" data-field="${escapeHtml(field)}">
+      <span>${escapeHtml(label)}</span>
+      <div class="stepper-controls">
+        <button type="button" class="stepper-button" data-action="adjust-today" data-field="${escapeHtml(field)}" data-delta="${-step}" data-min="${min}" data-max="${max}" aria-label="Decrease ${escapeHtml(label)}">-</button>
+        <strong>${escapeHtml(value)}${suffix ? ` ${escapeHtml(suffix)}` : ""}</strong>
+        <button type="button" class="stepper-button" data-action="adjust-today" data-field="${escapeHtml(field)}" data-delta="${step}" data-min="${min}" data-max="${max}" aria-label="Increase ${escapeHtml(label)}">+</button>
+      </div>
+    </div>
+  `;
+}
+
+function renderTodayActualControls(exercise) {
+  if (exercise.type === "cardio") {
+    return `<div class="today-actual-grid">${renderStepper(exercise, "actualDuration", "Minutes", 5, 0, 240)}</div>`;
+  }
+
+  return `
+    <div class="today-actual-grid">
+      ${renderStepper(exercise, "actualSets", "Sets", 1, 1, 8)}
+      ${renderStepper(exercise, "actualReps", "Reps", 1, 0, 50)}
+      ${renderStepper(exercise, "actualWeight", "Weight", 5, 0, 500, "lb")}
+    </div>
+  `;
+}
+
+function renderDifficultyScale(exercise) {
+  return `
+    <div class="today-difficulty" aria-label="Difficulty for ${escapeHtml(exercise.name)}">
+      <span>Difficulty</span>
+      <div class="difficulty-scale">
+        ${Array.from({ length: 10 }).map((_, index) => {
+          const value = index + 1;
+          const active = value === Number(exercise.difficulty) ? " is-active" : "";
+          return `<button type="button" class="difficulty-chip${active}" data-action="set-difficulty" data-value="${value}">${value}</button>`;
+        }).join("")}
+      </div>
+    </div>
+  `;
+}
+
+function renderExerciseSwapOptions(currentExerciseId) {
+  return exercises.map((exercise) => `
+    <option value="${escapeHtml(exercise.id)}" ${exercise.id === currentExerciseId ? "selected" : ""}>${escapeHtml(exercise.name)}</option>
+  `).join("");
+}
+
 function updateTodayProgress() {
   const progress = getTodayWorkoutProgress();
   if (todayProgressNumber) {
@@ -231,6 +326,7 @@ function renderTodayRoutine() {
   const routine = getTodayPlannedRoutine();
 
   if (!routine) {
+    activeWorkout.exercises = [];
     todayRoutineList.innerHTML = `
       <div class="empty-routine">
         <p class="eyebrow">No workout today</p>
@@ -240,6 +336,9 @@ function renderTodayRoutine() {
     if (todayRoutineName) {
       todayRoutineName.textContent = "Rest day";
     }
+    if (todayAddExtra) {
+      todayAddExtra.hidden = true;
+    }
     updateTodayProgress();
     return;
   }
@@ -247,21 +346,14 @@ function renderTodayRoutine() {
   if (todayRoutineName) {
     todayRoutineName.textContent = routine.name;
   }
+  if (todayAddExtra) {
+    todayAddExtra.hidden = false;
+  }
 
-  activeWorkout.exercises = routine.exercises.map((plannedEx) => {
-    const exerciseInfo = exercises.find((e) => e.id === plannedEx.exerciseId) || exercises[0];
-    return {
-      id: `today-${plannedEx.exerciseId}-${randomString(5)}`,
-      exerciseId: plannedEx.exerciseId,
-      name: exerciseInfo.name,
-      area: exerciseInfo.area,
-      icon: exerciseInfo.icon,
-      targetSets: plannedEx.targetSets,
-      targetReps: plannedEx.targetReps,
-      targetDuration: plannedEx.targetDuration,
-      checked: false
-    };
-  });
+  activeWorkout.startedAt = new Date().toISOString();
+  activeWorkout.exercises = routine.exercises.map((plannedEx) => makeTodayExercise(plannedEx));
+  renderTodayWorkout();
+  return;
 
   todayRoutineList.innerHTML = activeWorkout.exercises.map((ex) => `
     <article class="today-exercise-card" data-exercise-id="${escapeHtml(ex.id)}">
@@ -298,6 +390,120 @@ function handleTodayExerciseCheck(event) {
   }
 }
 
+function renderTodayWorkout() {
+  if (!todayRoutineList) return;
+
+  todayRoutineList.innerHTML = activeWorkout.exercises.map((ex) => `
+    <article class="today-exercise-card${ex.checked ? " is-done" : ""}" data-exercise-id="${escapeHtml(ex.id)}">
+      <div class="today-exercise-art">
+        <div class="exercise-icon-small" aria-hidden="true">
+          ${getExerciseIcon(ex.icon)}
+        </div>
+        <button class="today-done-button${ex.checked ? " is-done" : ""}" type="button" data-action="toggle-today">${ex.checked ? "Done" : "Log"}</button>
+      </div>
+      <div class="exercise-details">
+        <div class="today-card-topline">
+          <div>
+            <h3>${escapeHtml(ex.name)}</h3>
+            <p class="exercise-meta">${escapeHtml(ex.area)}${ex.source === "extra" ? " - extra" : ""}</p>
+          </div>
+          <button class="quiet-button small-button today-skip-button" type="button" data-action="skip-today">Skip</button>
+        </div>
+        <p class="exercise-target">${escapeHtml(formatTodayTarget(ex))}</p>
+        ${renderTodayActualControls(ex)}
+        ${renderDifficultyScale(ex)}
+        <div class="today-swap-row">
+          <label>
+            <span>Swap</span>
+            <select data-action="swap-today" aria-label="Swap ${escapeHtml(ex.name)}">${renderExerciseSwapOptions(ex.exerciseId)}</select>
+          </label>
+        </div>
+      </div>
+    </article>
+  `).join("");
+
+  updateTodayProgress();
+}
+
+function addTodayExtraExercise() {
+  const exerciseId = todayExtraPicker?.value;
+  if (!exerciseId) return;
+
+  const exercise = getExerciseById(exerciseId);
+  if (!exercise) return;
+
+  activeWorkout.exercises.push(makeTodayExercise({
+    exerciseId: exercise.id,
+    targetSets: exercise.type === "cardio" ? undefined : 3,
+    targetReps: exercise.type === "cardio" ? undefined : 10,
+    targetDuration: exercise.type === "cardio" ? 30 : undefined
+  }, "extra"));
+
+  if (todayExtraPicker) todayExtraPicker.value = "";
+  renderTodayWorkout();
+}
+
+function handleTodayWorkoutChange(event) {
+  const card = event.target.closest(".today-exercise-card");
+  if (!card) return;
+
+  const exercise = activeWorkout.exercises.find((ex) => ex.id === card.dataset.exerciseId);
+  if (!exercise) return;
+
+  if (event.target.matches("select[data-action='swap-today']")) {
+    const swapTo = getExerciseById(event.target.value);
+    if (!swapTo) return;
+
+    const replacement = makeTodayExercise({
+      exerciseId: swapTo.id,
+      targetSets: swapTo.type === "cardio" ? undefined : exercise.targetSets || 3,
+      targetReps: swapTo.type === "cardio" ? undefined : exercise.targetReps || 10,
+      targetDuration: swapTo.type === "cardio" ? exercise.targetDuration || 30 : undefined
+    }, exercise.source === "extra" ? "extra" : "swapped");
+
+    replacement.id = exercise.id;
+    replacement.checked = exercise.checked;
+    activeWorkout.exercises = activeWorkout.exercises.map((item) => item.id === exercise.id ? replacement : item);
+    renderTodayWorkout();
+  }
+}
+
+function handleTodayWorkoutClick(event) {
+  const button = event.target.closest("button");
+  if (!button) return;
+
+  const card = button.closest(".today-exercise-card");
+  const exercise = activeWorkout.exercises.find((ex) => ex.id === card?.dataset.exerciseId);
+  const action = button.dataset.action;
+
+  if (action === "skip-today" && exercise) {
+    activeWorkout.exercises = activeWorkout.exercises.filter((item) => item.id !== exercise.id);
+    renderTodayWorkout();
+    return;
+  }
+
+  if (action === "toggle-today" && exercise) {
+    exercise.checked = !exercise.checked;
+    renderTodayWorkout();
+    return;
+  }
+
+  if (action === "adjust-today" && exercise) {
+    const field = button.dataset.field;
+    const delta = Number(button.dataset.delta) || 0;
+    const min = Number(button.dataset.min) || 0;
+    const max = Number(button.dataset.max) || 999;
+    exercise[field] = clampNumber((Number(exercise[field]) || 0) + delta, min, max);
+    renderTodayWorkout();
+    return;
+  }
+
+  if (action === "set-difficulty" && exercise) {
+    exercise.difficulty = Number(button.dataset.value) || 5;
+    renderTodayWorkout();
+  }
+}
+
 async function saveTodayWorkout() {
   const routine = getTodayPlannedRoutine();
   if (!routine) {
@@ -305,8 +511,8 @@ async function saveTodayWorkout() {
     return;
   }
 
-  const progress = getTodayWorkoutProgress();
-  if (progress.done === 0) {
+  const loggedExercises = activeWorkout.exercises.filter((ex) => ex.checked);
+  if (loggedExercises.length === 0) {
     alert("Log at least one exercise before saving.");
     return;
   }
@@ -317,17 +523,20 @@ async function saveTodayWorkout() {
   data.updatedBy = getDeviceId();
   data.workouts = Array.isArray(data.workouts) ? data.workouts : [];
 
-  const loggedEntries = activeWorkout.exercises
-    .filter((ex) => ex.checked)
+  const loggedEntries = loggedExercises
     .map((ex) => {
-      if (ex.targetDuration) {
+      if (ex.type === "cardio") {
         return {
           id: ex.id,
           type: "cardio",
           exerciseId: ex.exerciseId,
           exerciseName: ex.name,
-          durationMinutes: ex.targetDuration,
-          done: true
+          planned: {
+            durationMinutes: ex.targetDuration || 0
+          },
+          durationMinutes: Number(ex.actualDuration) || 0,
+          done: true,
+          difficulty: Number(ex.difficulty) || 5
         };
       }
       return {
@@ -335,13 +544,23 @@ async function saveTodayWorkout() {
         type: "strength",
         exerciseId: ex.exerciseId,
         exerciseName: ex.name,
-        sets: Array.from({ length: ex.targetSets || 1 }).map((_, i) => ({
+        planned: {
+          sets: ex.targetSets || 0,
+          reps: ex.targetReps || 0
+        },
+        actualSummary: {
+          sets: Number(ex.actualSets) || 0,
+          reps: Number(ex.actualReps) || 0,
+          weight: Number(ex.actualWeight) || 0
+        },
+        sets: Array.from({ length: Number(ex.actualSets) || 1 }).map((_, i) => ({
           id: `set-${i + 1}`,
           setNumber: i + 1,
-          reps: ex.targetReps || 0,
-          weight: 0,
+          reps: Number(ex.actualReps) || 0,
+          weight: Number(ex.actualWeight) || 0,
           done: true
-        }))
+        })),
+        difficulty: Number(ex.difficulty) || 5
       };
     });
 
@@ -353,6 +572,7 @@ async function saveTodayWorkout() {
     savedAt,
     createdBy: getDeviceId(),
     fromRoutine: routine.id,
+    routineName: routine.name,
     entries: loggedEntries
   };
 
@@ -637,12 +857,21 @@ function renderExercises(filter = "all") {
 }
 
 function renderExercisePicker() {
-  if (!exercisePicker) return;
+  const options = exercises.map((exercise) => `<option value="${escapeHtml(exercise.id)}">${escapeHtml(exercise.name)}</option>`).join("");
 
-  exercisePicker.innerHTML = `
-    <option value="">Choose from the starter library</option>
-    ${exercises.map((exercise) => `<option value="${escapeHtml(exercise.id)}">${escapeHtml(exercise.name)}</option>`).join("")}
-  `;
+  if (exercisePicker) {
+    exercisePicker.innerHTML = `
+      <option value="">Choose from the starter library</option>
+      ${options}
+    `;
+  }
+
+  if (todayExtraPicker) {
+    todayExtraPicker.innerHTML = `
+      <option value="">Add extra exercise</option>
+      ${options}
+    `;
+  }
 }
 
 function setWorkoutStatus(message, tone = "") {
@@ -658,7 +887,8 @@ function makeWorkoutExercise(exercise) {
       exerciseId: exercise.id,
       name: exercise.name,
       type: "cardio",
-      durationMinutes: ""
+      durationMinutes: "",
+      difficulty: 5
     };
   }
 
@@ -674,7 +904,8 @@ function makeWorkoutExercise(exercise) {
         weight: "",
         done: false
       }
-    ]
+    ],
+    difficulty: 5
   };
 }
 
@@ -774,6 +1005,10 @@ function renderCardioFields(exercise) {
       <label for="${escapeHtml(exercise.id)}-duration">Minutes</label>
       <input id="${escapeHtml(exercise.id)}-duration" inputmode="decimal" type="number" min="0" step="1" value="${escapeHtml(exercise.durationMinutes)}" data-field="durationMinutes">
     </div>
+    <div class="difficulty-row">
+      <label for="${escapeHtml(exercise.id)}-difficulty">Difficulty: <span class="difficulty-value">${escapeHtml(exercise.difficulty)}</span>/10</label>
+      <input id="${escapeHtml(exercise.id)}-difficulty" type="range" min="1" max="10" value="${escapeHtml(exercise.difficulty)}" data-field="difficulty">
+    </div>
   `;
 }
 
@@ -798,6 +1033,10 @@ function renderStrengthFields(exercise) {
         </div>
       `).join("")}
     </div>
+    <div class="difficulty-row">
+      <label for="${escapeHtml(exercise.id)}-difficulty">Difficulty: <span class="difficulty-value">${escapeHtml(exercise.difficulty)}</span>/10</label>
+      <input id="${escapeHtml(exercise.id)}-difficulty" type="range" min="1" max="10" value="${escapeHtml(exercise.difficulty)}" data-field="difficulty">
+    </div>
   `;
 }
 
@@ -814,6 +1053,15 @@ function handleWorkoutInput(event) {
 
   const field = event.target.dataset.field;
   if (!field) return;
+
+  if (field === "difficulty") {
+    exercise.difficulty = Number(event.target.value);
+    const valueDisplay = card.querySelector(".difficulty-value");
+    if (valueDisplay) {
+      valueDisplay.textContent = exercise.difficulty;
+    }
+    return;
+  }
 
   if (exercise.type === "cardio" && field === "durationMinutes") {
     exercise.durationMinutes = event.target.value;
@@ -870,7 +1118,8 @@ function makeSavedWorkout() {
         exerciseId: exercise.exerciseId,
         exerciseName: exercise.name,
         durationMinutes: Number(exercise.durationMinutes) || 0,
-        done: Number(exercise.durationMinutes) > 0
+        done: Number(exercise.durationMinutes) > 0,
+        difficulty: Number(exercise.difficulty) || 5
       };
     }
 
@@ -885,7 +1134,8 @@ function makeSavedWorkout() {
         reps: Number(set.reps) || 0,
         weight: Number(set.weight) || 0,
         done: Boolean(set.done)
-      }))
+      })),
+      difficulty: Number(exercise.difficulty) || 5
     };
   });
 
@@ -901,9 +1151,10 @@ function makeSavedWorkout() {
 }
 
 function workoutHasLoggedWork() {
+  if (!activeWorkout.exercises || activeWorkout.exercises.length === 0) return false;
   return activeWorkout.exercises.some((exercise) => {
     if (exercise.type === "cardio") return Number(exercise.durationMinutes) > 0;
-    return exercise.sets.some((set) => set.done || Number(set.reps) > 0 || Number(set.weight) > 0);
+    return exercise.sets && exercise.sets.some((set) => set.done || Number(set.reps) > 0 || Number(set.weight) > 0);
   });
 }
 
@@ -1216,6 +1467,367 @@ function updateConnectionState() {
   }
 }
 
+function makeSlug(value) {
+  return String(value || "routine")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "") || "routine";
+}
+
+function findExerciseIdByName(name) {
+  const normalized = String(name || "").trim().toLowerCase();
+  return exercises.find((exercise) => exercise.name.toLowerCase() === normalized)?.id || makeSlug(name);
+}
+
+function formatEntryDetails(entry) {
+  if (entry.type === "cardio") {
+    const planned = entry.planned?.durationMinutes ? `planned ${entry.planned.durationMinutes} min, ` : "";
+    return `${planned}actual ${entry.durationMinutes || 0} min`;
+  }
+
+  const summary = entry.actualSummary
+    ? `${entry.actualSummary.sets}x${entry.actualSummary.reps} @ ${entry.actualSummary.weight} lb`
+    : entry.sets?.map((set) => `${set.reps}@${set.weight}lb`).join(", ");
+  const planned = entry.planned?.sets ? `planned ${entry.planned.sets}x${entry.planned.reps || 0}, ` : "";
+  return `${planned}actual ${summary || "no sets"}`;
+}
+
+function formatRoutineExercise(exercise) {
+  const exerciseInfo = getExerciseById(exercise.exerciseId);
+  const name = exerciseInfo?.name || exercise.exerciseId;
+  if (exercise.targetDuration) return `- ${name}: ${exercise.targetDuration} min`;
+  return `- ${name}: ${exercise.targetSets || 1}x${exercise.targetReps || 0}`;
+}
+
+function formatWorkoutForExport(workout) {
+  const lines = [];
+  lines.push(`Date: ${workout.date} - ${workout.name || workout.routineName || "Workout"}`);
+
+  workout.entries?.forEach((entry) => {
+    lines.push(`  ${entry.exerciseName}: ${formatEntryDetails(entry)} | Difficulty: ${entry.difficulty || "not logged"}/10`);
+  });
+
+  return lines.join("\n");
+}
+
+function generateReviewPacket() {
+  const data = getLocalData();
+  const packet = [];
+
+  packet.push("=== TRAINING BOOK REVIEW PACKET ===");
+  packet.push(`Exported: ${new Date().toISOString()}`);
+  packet.push("");
+
+  packet.push("COACHING REQUEST:");
+  packet.push("Review the workouts I actually completed, the difficulty ratings, and my current plan. Suggest updated routines and a weekly plan. Focus feedback on what I did log, not on skipped or omitted exercises.");
+  packet.push("");
+
+  packet.push("CURRENT WEEKLY PLAN:");
+  const weeklyPlan = data.weeklyPlan || getStarterWeeklyPlan();
+  Object.entries(weeklyPlan).forEach(([day, routineId]) => {
+    const routine = data.routines?.find((r) => r.id === routineId);
+    packet.push(`${day}: ${routine?.name || "rest"}`);
+  });
+  packet.push("");
+
+  packet.push("CURRENT ROUTINES:");
+  data.routines?.forEach((routine) => {
+    packet.push(`ROUTINE: ${routine.name}`);
+    routine.exercises?.forEach((exercise) => {
+      packet.push(formatRoutineExercise(exercise));
+    });
+    if (routine.notes) packet.push(`Notes: ${routine.notes}`);
+    packet.push("");
+  });
+
+  packet.push("WORKOUT HISTORY (all workouts):");
+  if (data.workouts && data.workouts.length > 0) {
+    data.workouts.slice().reverse().forEach((workout) => {
+      packet.push(formatWorkoutForExport(workout));
+      packet.push("");
+    });
+  } else {
+    packet.push("(no workouts logged yet)");
+    packet.push("");
+  }
+
+  packet.push("RETURN FORMAT FOR TRAINING BOOK IMPORT:");
+  packet.push("Please return only plain text in this format:");
+  packet.push("WEEKLY PLAN:");
+  packet.push("monday: Routine Name or rest");
+  packet.push("tuesday: Routine Name or rest");
+  packet.push("wednesday: Routine Name or rest");
+  packet.push("thursday: Routine Name or rest");
+  packet.push("friday: Routine Name or rest");
+  packet.push("saturday: Routine Name or rest");
+  packet.push("sunday: Routine Name or rest");
+  packet.push("");
+  packet.push("ROUTINE: Routine Name");
+  packet.push("- Exercise Name: 3x8");
+  packet.push("- Cardio Name: 30 min");
+  packet.push("");
+  packet.push("Use exercise names when possible. Keep each routine exercise on one dash line.");
+
+  return packet.join("\n");
+}
+
+function copyTextToClipboard(text) {
+  if (navigator.clipboard?.writeText) {
+    return navigator.clipboard.writeText(text);
+  }
+
+  const textarea = document.createElement("textarea");
+  textarea.value = text;
+  textarea.style.position = "fixed";
+  textarea.style.opacity = "0";
+  document.body.appendChild(textarea);
+  textarea.select();
+  document.execCommand("copy");
+  document.body.removeChild(textarea);
+  return Promise.resolve();
+}
+
+async function exportReviewPacket() {
+  const packet = generateReviewPacket();
+  await copyTextToClipboard(packet);
+  alert("Review packet copied to clipboard! Paste it into your AI coach chat.");
+}
+
+function importUpdatedPlan() {
+  const text = prompt("Paste the AI's updated plan here:");
+  if (!text) return;
+
+  const data = getLocalData();
+
+  try {
+    const lines = text.split("\n").map((l) => l.trim()).filter((l) => l);
+    let currentRoutineName = "";
+    let currentRoutineExercises = [];
+
+    lines.forEach((line) => {
+      if (line.startsWith("ROUTINE:") || line.match(/^[A-Z][a-zA-Z\s]+:$/)) {
+        if (currentRoutineName && currentRoutineExercises.length > 0) {
+          const routineId = `routine-${Date.now()}-${randomString(5)}`;
+          const existingIndex = data.routines?.findIndex((r) => r.name === currentRoutineName);
+          const newRoutine = {
+            id: existingIndex >= 0 ? data.routines[existingIndex].id : routineId,
+            name: currentRoutineName,
+            location: "mixed",
+            exercises: currentRoutineExercises,
+            notes: "Updated by AI coach"
+          };
+
+          if (existingIndex >= 0) {
+            data.routines[existingIndex] = newRoutine;
+          } else {
+            data.routines?.push(newRoutine);
+          }
+        }
+
+        currentRoutineName = line.replace(/:$/, "");
+        currentRoutineExercises = [];
+      } else if (currentRoutineName && line.match(/[-•]/)) {
+        const exercise = line.replace(/^[-•]\s*/, "");
+        const parts = exercise.split(":");
+        if (parts.length >= 2) {
+          const exName = parts[0].trim();
+          const exDef = parts[1].trim();
+          const exerciseId = exercises.find((e) => e.name.toLowerCase() === exName.toLowerCase())?.id || exName.toLowerCase().replace(/\s+/g, "-");
+
+          if (exDef.includes("min")) {
+            currentRoutineExercises.push({
+              exerciseId,
+              targetDuration: parseInt(exDef) || 30
+            });
+          } else {
+            const match = exDef.match(/(\d+)\s*x\s*(\d+)/);
+            if (match) {
+              currentRoutineExercises.push({
+                exerciseId,
+                targetSets: parseInt(match[1]),
+                targetReps: parseInt(match[2])
+              });
+            }
+          }
+        }
+      }
+    });
+
+    if (currentRoutineName && currentRoutineExercises.length > 0) {
+      const routineId = `routine-${Date.now()}-${randomString(5)}`;
+      const existingIndex = data.routines?.findIndex((r) => r.name === currentRoutineName);
+      const newRoutine = {
+        id: existingIndex >= 0 ? data.routines[existingIndex].id : routineId,
+        name: currentRoutineName,
+        location: "mixed",
+        exercises: currentRoutineExercises,
+        notes: "Updated by AI coach"
+      };
+
+      if (existingIndex >= 0) {
+        data.routines[existingIndex] = newRoutine;
+      } else {
+        data.routines?.push(newRoutine);
+      }
+    }
+
+    data.updatedAt = new Date().toISOString();
+    data.updatedBy = getDeviceId();
+    saveLocalData(data);
+    markPendingData(data);
+
+    alert("Plan updated! Your routines have been refreshed from the AI coach.");
+  } catch (error) {
+    alert(`Error parsing plan: ${error.message}`);
+  }
+}
+
+function parseRoutineExerciseLine(line) {
+  const cleaned = line.replace(/^[-*]\s*/, "").trim();
+  const separatorIndex = cleaned.indexOf(":");
+  if (separatorIndex < 1) return null;
+
+  const exerciseName = cleaned.slice(0, separatorIndex).trim();
+  const target = cleaned.slice(separatorIndex + 1).trim().toLowerCase();
+  const exerciseId = findExerciseIdByName(exerciseName);
+
+  const durationMatch = target.match(/(\d+)\s*(min|minute|minutes)/);
+  if (durationMatch) {
+    return {
+      exerciseId,
+      targetDuration: Number(durationMatch[1])
+    };
+  }
+
+  const strengthMatch = target.match(/(\d+)\s*(x|sets?\s*(of)?|by)\s*(\d+)/);
+  if (strengthMatch) {
+    return {
+      exerciseId,
+      targetSets: Number(strengthMatch[1]),
+      targetReps: Number(strengthMatch[4])
+    };
+  }
+
+  return null;
+}
+
+function parseAiPlanText(text) {
+  const lines = text.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+  const routines = [];
+  const weeklyPlanNames = {};
+  let mode = "";
+  let currentRoutine = null;
+
+  lines.forEach((line) => {
+    const upper = line.toUpperCase();
+    if (upper === "WEEKLY PLAN:" || upper === "WEEKLY PLAN") {
+      mode = "weekly";
+      currentRoutine = null;
+      return;
+    }
+
+    if (upper.startsWith("ROUTINE:")) {
+      mode = "routine";
+      currentRoutine = {
+        name: line.slice(line.indexOf(":") + 1).trim(),
+        location: "mixed",
+        exercises: [],
+        notes: "Updated by AI coach"
+      };
+      if (currentRoutine.name) routines.push(currentRoutine);
+      return;
+    }
+
+    if (mode === "weekly") {
+      const match = line.match(/^(monday|tuesday|wednesday|thursday|friday|saturday|sunday)\s*:\s*(.+)$/i);
+      if (match) {
+        weeklyPlanNames[match[1].toLowerCase()] = match[2].trim();
+      }
+      return;
+    }
+
+    if (mode === "routine" && currentRoutine && /^[-*]\s*/.test(line)) {
+      const parsedExercise = parseRoutineExerciseLine(line);
+      if (parsedExercise) currentRoutine.exercises.push(parsedExercise);
+    }
+  });
+
+  return {
+    routines: routines.filter((routine) => routine.name && routine.exercises.length > 0),
+    weeklyPlanNames
+  };
+}
+
+function makeUniqueRoutineId(name, routines) {
+  const base = makeSlug(name);
+  let id = base;
+  let index = 2;
+  while (routines.some((routine) => routine.id === id)) {
+    id = `${base}-${index}`;
+    index += 1;
+  }
+  return id;
+}
+
+function importUpdatedPlan() {
+  const text = prompt("Paste the AI's updated plan here:");
+  if (!text) return;
+
+  try {
+    const parsed = parseAiPlanText(text);
+    if (parsed.routines.length === 0 && Object.keys(parsed.weeklyPlanNames).length === 0) {
+      throw new Error("No routines or weekly plan lines found. Use the export packet's return format.");
+    }
+
+    const data = getLocalData();
+    data.routines = Array.isArray(data.routines) ? data.routines : [];
+
+    parsed.routines.forEach((routine) => {
+      const existingIndex = data.routines.findIndex((item) => item.name.toLowerCase() === routine.name.toLowerCase());
+      const existing = existingIndex >= 0 ? data.routines[existingIndex] : null;
+      const nextRoutine = {
+        id: existing?.id || makeUniqueRoutineId(routine.name, data.routines),
+        name: routine.name,
+        location: existing?.location || routine.location,
+        exercises: routine.exercises,
+        notes: routine.notes
+      };
+
+      if (existingIndex >= 0) {
+        data.routines[existingIndex] = nextRoutine;
+      } else {
+        data.routines.push(nextRoutine);
+      }
+    });
+
+    if (Object.keys(parsed.weeklyPlanNames).length > 0) {
+      const nextWeeklyPlan = { ...(data.weeklyPlan || getStarterWeeklyPlan()) };
+      Object.entries(parsed.weeklyPlanNames).forEach(([day, routineName]) => {
+        if (!routineName || routineName.toLowerCase() === "rest" || routineName.toLowerCase() === "off") {
+          nextWeeklyPlan[day] = null;
+          return;
+        }
+
+        const routine = data.routines.find((item) => item.name.toLowerCase() === routineName.toLowerCase());
+        if (routine) {
+          nextWeeklyPlan[day] = routine.id;
+        }
+      });
+      data.weeklyPlan = nextWeeklyPlan;
+    }
+
+    data.updatedAt = new Date().toISOString();
+    data.updatedBy = getDeviceId();
+    saveLocalData(data);
+    markPendingData(data);
+    renderTodayRoutine();
+
+    alert("Plan imported. Today has been refreshed with the latest weekly plan.");
+  } catch (error) {
+    alert(`Could not import that plan: ${error.message}`);
+  }
+}
+
 tabs.forEach((tab) => {
   tab.addEventListener("click", () => {
     showScreen(tab.dataset.target);
@@ -1246,7 +1858,14 @@ saveWorkoutButton?.addEventListener("click", () => {
   });
 });
 
-todayRoutineList?.addEventListener("change", handleTodayExerciseCheck);
+todayRoutineList?.addEventListener("click", handleTodayWorkoutClick);
+todayRoutineList?.addEventListener("change", handleTodayWorkoutChange);
+
+addTodayExtraButton?.addEventListener("click", addTodayExtraExercise);
+
+todayExtraPicker?.addEventListener("change", () => {
+  if (todayExtraPicker.value) addTodayExtraExercise();
+});
 
 saveTodayWorkoutButton?.addEventListener("click", () => {
   saveTodayWorkout().catch((error) => {
@@ -1254,6 +1873,12 @@ saveTodayWorkoutButton?.addEventListener("click", () => {
     alert(`Error: ${error.message}`);
   });
 });
+
+const exportPacketButton = document.querySelector("#export-review-packet");
+const importPlanButton = document.querySelector("#import-plan");
+
+exportPacketButton?.addEventListener("click", exportReviewPacket);
+importPlanButton?.addEventListener("click", importUpdatedPlan);
 
 window.addEventListener("online", () => {
   updateConnectionState();
