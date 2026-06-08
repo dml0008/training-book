@@ -548,7 +548,23 @@ function readJson(key) {
 }
 
 function getLocalData() {
-  return readJson(STORAGE.localData) || makeEmptyData();
+  const data = readJson(STORAGE.localData) || makeEmptyData();
+
+  // Migrate old data to include routines and weekly plan if missing
+  if (!data.routines || !Array.isArray(data.routines) || data.routines.length === 0) {
+    data.routines = getStarterRoutines();
+  }
+  if (!data.weeklyPlan || typeof data.weeklyPlan !== 'object') {
+    data.weeklyPlan = getStarterWeeklyPlan();
+  }
+  if (!Array.isArray(data.completedWorkouts)) {
+    data.completedWorkouts = [];
+  }
+  if (!Array.isArray(data.missedWorkouts)) {
+    data.missedWorkouts = [];
+  }
+
+  return data;
 }
 
 function saveLocalData(data) {
@@ -1133,14 +1149,27 @@ async function downloadWorkoutData() {
 
 async function loadWorkoutData() {
   if (!navigator.onLine) {
-    setSyncStatus("Offline right now. Showing the local backup on this device.", "warn");
-    renderTestEntries();
     return;
   }
 
   const data = await downloadWorkoutData();
+
+  // Apply migration to ensure new structure exists
+  if (!data.routines || !Array.isArray(data.routines) || data.routines.length === 0) {
+    data.routines = getStarterRoutines();
+  }
+  if (!data.weeklyPlan || typeof data.weeklyPlan !== 'object') {
+    data.weeklyPlan = getStarterWeeklyPlan();
+  }
+  if (!Array.isArray(data.completedWorkouts)) {
+    data.completedWorkouts = [];
+  }
+  if (!Array.isArray(data.missedWorkouts)) {
+    data.missedWorkouts = [];
+  }
+
   saveLocalData(data);
-  setSyncStatus("Loaded the latest workout data from Dropbox.", "good");
+  markPendingData(data);
   updateConnectionState();
 }
 
