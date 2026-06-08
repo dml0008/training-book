@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Training Book app icon">
+  <rect width="512" height="512" rx="96" fill="#101413"/>
+  <rect x="112" y="84" width="288" height="344" rx="34" fill="#171d1b" stroke="#b7ff35" stroke-width="18"/>
+  <path d="M170 164h172M170 224h126M170 284h158" fill="none" stroke="#f3f7f2" stroke-width="22" stroke-linecap="round"/>
+  <path d="M352 84v344" fill="none" stroke="#b7ff35" stroke-width="18"/>
+  <circle cx="352" cy="366" r="20" fill="#b7ff35"/>
+</svg>

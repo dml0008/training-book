@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Training Book</title>
+  <meta name="description" content="A personal workout and training logbook.">
+  <meta name="theme-color" content="#101413">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Training Book">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/icon.svg">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Personal logbook</p>
+        <h1>Training Book</h1>
+      </div>
+      <div class="sync-pill" id="sync-pill" aria-label="Dropbox sync status">
+        <span class="sync-dot"></span>
+        Local only
+      </div>
+    </header>
+
+    <main class="screen-stack">
+      <section class="screen is-active" data-screen="today" aria-labelledby="today-title">
+        <div class="today-panel">
+          <div class="today-heading">
+            <p class="date-label" id="today-date">Today</p>
+            <h2 id="today-title">Ready when you are.</h2>
+            <p class="today-routine-name" id="today-routine-name">Loading your plan...</p>
+          </div>
+
+          <div class="today-routine-list" id="today-routine-list" aria-live="polite">
+            <div class="empty-routine">
+              <p class="eyebrow">No workout today</p>
+              <p>You have a rest day scheduled. Tap the Log tab if you want to log an extra workout.</p>
+            </div>
+          </div>
+
+          <div class="today-footer">
+            <div class="today-progress" id="today-progress" aria-live="polite">
+              <span id="today-progress-number">0%</span>
+              <span id="today-progress-label">ready to start</span>
+            </div>
+            <button class="primary-button" id="save-today-workout" type="button">Save workout</button>
+          </div>
+        </div>
+
+        <section class="sync-test-panel" aria-labelledby="sync-test-title">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Step 3 test</p>
+              <h3 id="sync-test-title">Dropbox save/load</h3>
+            </div>
+            <span class="connection-badge" id="connection-badge">Not connected</span>
+          </div>
+
+          <div class="sync-grid">
+            <div class="field-group">
+              <label for="dropbox-app-key">Dropbox app key</label>
+              <input id="dropbox-app-key" autocomplete="off" spellcheck="false" placeholder="Paste once on this device">
+            </div>
+            <div class="sync-actions">
+              <button class="primary-button" id="connect-dropbox" type="button">Connect</button>
+              <button class="quiet-button" id="forget-dropbox" type="button">Forget</button>
+            </div>
+          </div>
+
+          <div class="field-group">
+            <label for="test-entry">Test workout note</label>
+            <textarea id="test-entry" rows="3" placeholder="Example: Desktop test - chest day"></textarea>
+          </div>
+
+          <div class="sync-actions sync-actions-wide">
+            <button class="primary-button" id="save-test-entry" type="button">Save test entry</button>
+            <button class="quiet-button" id="load-workout-data" type="button">Load from Dropbox</button>
+            <button class="quiet-button" id="sync-pending" type="button">Sync pending</button>
+          </div>
+
+          <div class="sync-status" id="sync-status">Connect Dropbox, then save a test entry.</div>
+
+          <div class="saved-list-wrap">
+            <p class="saved-list-title">Saved test entries</p>
+            <div class="saved-list" id="saved-test-entries">
+              <p class="empty-list">No test entries yet.</p>
+            </div>
+          </div>
+        </section>
+      </section>
+
+      <section class="screen" data-screen="log" aria-labelledby="log-title">
+        <div class="log-panel">
+          <div class="log-heading">
+            <div>
+              <p class="eyebrow">Capture</p>
+              <h2 id="log-title">Log workout</h2>
+              <p class="log-copy" id="log-date">Today</p>
+            </div>
+            <div class="workout-progress" aria-live="polite">
+              <span id="workout-progress-number">0%</span>
+              <span id="workout-progress-label">nothing logged yet</span>
+            </div>
+          </div>
+
+          <div class="workout-tools">
+            <div class="field-group">
+              <label for="workout-name">Workout name</label>
+              <input id="workout-name" autocomplete="off" placeholder="Example: Push day">
+            </div>
+            <div class="field-group">
+              <label for="exercise-picker">Add exercise</label>
+              <select id="exercise-picker">
+                <option value="">Choose from the starter library</option>
+              </select>
+            </div>
+            <button class="primary-button" id="add-exercise" type="button">Add exercise</button>
+          </div>
+
+          <div class="active-workout-list" id="active-workout-list" aria-live="polite">
+            <div class="empty-workout">
+              <p class="eyebrow">Ready</p>
+              <h3>Start with one exercise.</h3>
+              <p>Pick from the library above, then log sets or cardio time as you go.</p>
+            </div>
+          </div>
+
+          <div class="workout-footer">
+            <div class="sync-status" id="workout-save-status">Workout saves will use the same Dropbox/local backup path as the test panel.</div>
+            <button class="primary-button" id="save-workout" type="button">Save workout</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen" data-screen="library" aria-labelledby="library-title">
+        <div class="library-panel">
+          <div class="library-heading">
+            <div>
+              <p class="eyebrow">Exercises</p>
+              <h2 id="library-title">Library</h2>
+              <p class="library-copy">Browse the starter list and narrow it to where you are training today.</p>
+            </div>
+            <span class="library-count" id="library-count">0 exercises</span>
+          </div>
+
+          <div class="filter-strip" aria-label="Exercise filters">
+            <button class="filter-chip is-active" type="button" data-filter="all">All</button>
+            <button class="filter-chip" type="button" data-filter="home">Home</button>
+            <button class="filter-chip" type="button" data-filter="gym">Gym</button>
+            <button class="filter-chip" type="button" data-filter="bodyweight">No equipment</button>
+            <button class="filter-chip" type="button" data-filter="dumbbells">Dumbbells</button>
+            <button class="filter-chip" type="button" data-filter="machine">Cable/machine</button>
+            <button class="filter-chip" type="button" data-filter="cardio">Cardio</button>
+          </div>
+
+          <div class="exercise-list" id="exercise-list" aria-live="polite"></div>
+        </div>
+      </section>
+
+      <section class="screen" data-screen="history" aria-labelledby="history-title">
+        <div class="blank-panel">
+          <p class="eyebrow">Review</p>
+          <h2 id="history-title">History</h2>
+          <p>Past workouts will show here once saving is added.</p>
+        </div>
+      </section>
+
+      <section class="screen" data-screen="progress" aria-labelledby="progress-title">
+        <div class="blank-panel">
+          <p class="eyebrow">Accountability</p>
+          <h2 id="progress-title">Progress</h2>
+          <p>Streaks, targets, and goals will show here later.</p>
+        </div>
+      </section>
+    </main>
+
+    <nav class="tabbar" aria-label="Main sections">
+      <button class="tab is-active" type="button" data-target="today" aria-current="page">
+        <span class="tab-icon" aria-hidden="true">T</span>
+        <span>Today</span>
+      </button>
+      <button class="tab" type="button" data-target="log">
+        <span class="tab-icon" aria-hidden="true">+</span>
+        <span>Log</span>
+      </button>
+      <button class="tab" type="button" data-target="library">
+        <span class="tab-icon" aria-hidden="true">L</span>
+        <span>Library</span>
+      </button>
+      <button class="tab" type="button" data-target="history">
+        <span class="tab-icon" aria-hidden="true">H</span>
+        <span>History</span>
+      </button>
+      <button class="tab" type="button" data-target="progress">
+        <span class="tab-icon" aria-hidden="true">P</span>
+        <span>Progress</span>
+      </button>
+    </nav>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
