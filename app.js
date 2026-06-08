@@ -25,16 +25,6 @@ const todayProgressNumber = document.querySelector("#today-progress-number");
 const todayProgressLabel = document.querySelector("#today-progress-label");
 const saveTodayWorkoutButton = document.querySelector("#save-today-workout");
 const syncPill = document.querySelector("#sync-pill");
-const connectionBadge = document.querySelector("#connection-badge");
-const appKeyInput = document.querySelector("#dropbox-app-key");
-const connectButton = document.querySelector("#connect-dropbox");
-const forgetButton = document.querySelector("#forget-dropbox");
-const testEntryInput = document.querySelector("#test-entry");
-const saveTestEntryButton = document.querySelector("#save-test-entry");
-const loadWorkoutDataButton = document.querySelector("#load-workout-data");
-const syncPendingButton = document.querySelector("#sync-pending");
-const syncStatus = document.querySelector("#sync-status");
-const savedTestEntries = document.querySelector("#saved-test-entries");
 const exerciseList = document.querySelector("#exercise-list");
 const libraryCount = document.querySelector("#library-count");
 const filterChips = Array.from(document.querySelectorAll(".filter-chip"));
@@ -563,7 +553,6 @@ function getLocalData() {
 
 function saveLocalData(data) {
   localStorage.setItem(STORAGE.localData, JSON.stringify(data));
-  renderTestEntries(data);
 }
 
 function markPendingData(data) {
@@ -578,34 +567,6 @@ function clearPendingData() {
 
 function hasPendingData() {
   return Boolean(localStorage.getItem(STORAGE.pendingData));
-}
-
-function renderTestEntries(data = getLocalData()) {
-  if (!savedTestEntries) return;
-
-  const entries = Array.isArray(data.testEntries) ? data.testEntries.slice().reverse() : [];
-  if (entries.length === 0) {
-    savedTestEntries.innerHTML = '<p class="empty-list">No test entries yet.</p>';
-    return;
-  }
-
-  savedTestEntries.innerHTML = entries.map((entry) => {
-    const date = entry.createdAt
-      ? new Intl.DateTimeFormat("en-US", {
-          month: "short",
-          day: "numeric",
-          hour: "numeric",
-          minute: "2-digit"
-        }).format(new Date(entry.createdAt))
-      : "Unknown time";
-
-    return `
-      <article class="saved-entry">
-        <p>${escapeHtml(entry.note || "Untitled test entry")}</p>
-        <span>${date}</span>
-      </article>
-    `;
-  }).join("");
 }
 
 function escapeHtml(value) {
@@ -1170,44 +1131,6 @@ async function downloadWorkoutData() {
   return response.json();
 }
 
-async function saveTestEntry() {
-  const note = testEntryInput?.value.trim();
-  if (!note) {
-    setSyncStatus("Type a short test note first.", "warn");
-    testEntryInput?.focus();
-    return;
-  }
-
-  const data = getLocalData();
-  const savedAt = new Date().toISOString();
-  data.updatedAt = savedAt;
-  data.updatedBy = getDeviceId();
-  data.testEntries = Array.isArray(data.testEntries) ? data.testEntries : [];
-  data.testEntries.push({
-    id: `test-${Date.now()}-${randomString(6)}`,
-    note,
-    createdAt: savedAt,
-    createdBy: getDeviceId()
-  });
-
-  saveLocalData(data);
-  testEntryInput.value = "";
-  markPendingData(data);
-
-  if (!navigator.onLine) {
-    setSyncStatus("Saved on this device. It will sync when internet is back.", "warn");
-    return;
-  }
-
-  try {
-    await uploadWorkoutData(data);
-    clearPendingData();
-    setSyncStatus("Saved to Dropbox and kept a local backup.", "good");
-  } catch (error) {
-    setSyncStatus(`${error.message} Saved locally for now.`, "warn");
-  }
-}
-
 async function loadWorkoutData() {
   if (!navigator.onLine) {
     setSyncStatus("Offline right now. Showing the local backup on this device.", "warn");
@@ -1283,32 +1206,6 @@ filterChips.forEach((chip) => {
   });
 });
 
-connectButton?.addEventListener("click", () => {
-  startDropboxConnect().catch((error) => {
-    setSyncStatus(error.message, "bad");
-  });
-});
-
-forgetButton?.addEventListener("click", forgetDropbox);
-
-saveTestEntryButton?.addEventListener("click", () => {
-  saveTestEntry().catch((error) => {
-    setSyncStatus(error.message, "bad");
-  });
-});
-
-loadWorkoutDataButton?.addEventListener("click", () => {
-  loadWorkoutData().catch((error) => {
-    setSyncStatus(error.message, "bad");
-  });
-});
-
-syncPendingButton?.addEventListener("click", () => {
-  syncPendingData().catch((error) => {
-    setSyncStatus(error.message, "bad");
-  });
-});
-
 addExerciseButton?.addEventListener("click", addExerciseToWorkout);
 
 exercisePicker?.addEventListener("change", () => {
@@ -1337,21 +1234,24 @@ saveTodayWorkoutButton?.addEventListener("click", () => {
 window.addEventListener("online", () => {
   updateConnectionState();
   syncPendingData().catch(() => {
-    setSyncStatus("Back online. Tap Sync pending when ready.", "warn");
+    // Sync failed but will retry when user saves next workout
   });
 });
 
 window.addEventListener("offline", updateConnectionState);
 
-renderTestEntries();
 renderExercises();
 renderExercisePicker();
 renderActiveWorkout();
 renderTodayRoutine();
+
 finishDropboxConnect().catch((error) => {
-  setSyncStatus(error.message, "bad");
+  console.error("Dropbox connection error:", error);
   updateConnectionState();
 });
+
+// Auto-authenticate with Dropbox if credentials exist
+updateConnectionState();
 
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
