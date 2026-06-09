@@ -1,4 +1,4 @@
-const CACHE_NAME = "training-book-shell-v11";
+const CACHE_NAME = "training-book-shell-v12";
 const STATIC_ASSETS = [
   "manifest.webmanifest",
   "icons/icon.svg"
@@ -12,7 +12,7 @@ const APP_FILES = [
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll([...STATIC_ASSETS, ...APP_FILES]))
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(STATIC_ASSETS))
   );
   self.skipWaiting();
 });
