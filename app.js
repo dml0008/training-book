@@ -2320,13 +2320,28 @@ async function initCloud() {
     }
   });
 
+  function showSignInError(error) {
+    console.error("Sign-in failed:", error);
+    if (syncStatus) {
+      syncStatus.textContent = `Could not sign in: ${error.message}`;
+      syncStatus.className = "sync-status bad";
+    }
+  }
+
   cloudSignInButton?.addEventListener("click", () => {
-    authMod.signInWithRedirect(fbAuth, provider).catch((error) => {
-      console.error("Sign-in failed:", error);
-      if (syncStatus) {
-        syncStatus.textContent = `Could not start sign-in: ${error.message}`;
-        syncStatus.className = "sync-status bad";
+    // Popup sign-in is the most reliable on desktop and avoids the redirect
+    // session being dropped. If a popup is blocked (some phone setups), fall
+    // back to the redirect style instead.
+    authMod.signInWithPopup(fbAuth, provider).catch((error) => {
+      const code = error?.code || "";
+      if (code === "auth/popup-closed-by-user" || code === "auth/cancelled-popup-request") {
+        return; // user backed out; nothing to report
       }
+      if (code === "auth/popup-blocked" || code === "auth/operation-not-supported-in-this-environment") {
+        authMod.signInWithRedirect(fbAuth, provider).catch(showSignInError);
+        return;
+      }
+      showSignInError(error);
     });
   });
 
