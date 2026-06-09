@@ -12,7 +12,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="icons/icon.svg">
-  <link rel="stylesheet" href="styles.css?v=2026.06.10-plan-save-date">
+  <link rel="stylesheet" href="styles.css?v=2026.06.10-global-reminder">
 </head>
 <body>
   <div class="app-shell">
@@ -46,20 +46,20 @@
       </div>
     </header>
 
+    <div class="review-reminder" id="review-reminder" hidden>
+      <div class="review-reminder-text">
+        <p class="review-reminder-title">Time for your weekly review</p>
+        <p class="review-reminder-sub" id="review-reminder-sub">Export a packet for your coach and load the updated plan.</p>
+      </div>
+      <div class="review-reminder-actions">
+        <button class="primary-button small-button" id="review-reminder-go" type="button">Go to Plan</button>
+        <button class="quiet-button small-button" id="review-reminder-dismiss" type="button">Dismiss</button>
+      </div>
+    </div>
+
     <main class="screen-stack">
       <section class="screen is-active" data-screen="today" aria-labelledby="today-title">
         <div class="today-panel">
-          <div class="review-reminder" id="review-reminder" hidden>
-            <div class="review-reminder-text">
-              <p class="review-reminder-title">Time for your weekly review</p>
-              <p class="review-reminder-sub" id="review-reminder-sub">Export a packet for your coach and load the updated plan.</p>
-            </div>
-            <div class="review-reminder-actions">
-              <button class="primary-button small-button" id="review-reminder-go" type="button">Go to Plan</button>
-              <button class="quiet-button small-button" id="review-reminder-dismiss" type="button">Dismiss</button>
-            </div>
-          </div>
-
           <div class="today-heading">
             <p class="date-label" id="today-date">Today</p>
             <h2 id="today-title">Ready when you are.</h2>
@@ -242,6 +242,6 @@
     </nav>
   </div>
 
-  <script src="app.js?v=2026.06.10-plan-save-date"></script>
+  <script src="app.js?v=2026.06.10-global-reminder"></script>
 </body>
 </html>

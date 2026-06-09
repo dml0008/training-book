@@ -3,7 +3,7 @@ const DROPBOX_TOKEN_URL = "https://api.dropboxapi.com/oauth2/token";
 const DROPBOX_UPLOAD_URL = "https://content.dropboxapi.com/2/files/upload";
 const DROPBOX_DOWNLOAD_URL = "https://content.dropboxapi.com/2/files/download";
 const DATA_FILE_PATH = "/04_Technical/06_Side_Projects/Workout and Nutrition App/data/workout-data.json";
-const APP_VERSION = "2026.06.10-plan-save-date";
+const APP_VERSION = "2026.06.10-global-reminder";
 
 const STORAGE = {
   appKey: "trainingBookDropboxAppKey",
@@ -740,6 +740,10 @@ function showScreen(name, remember = false) {
   if (validName === "progress") {
     renderProgress();
   }
+
+  // The review reminder is a global banner above the tabs, so keep it current
+  // on every navigation regardless of which screen we land on.
+  renderReviewReminder();
 }
 
 function setSyncStatus(message, tone = "") {
@@ -2054,6 +2058,7 @@ function saveActivePlanFromScreen() {
     notes: document.querySelector("#plan-notes-input")?.value.trim() || ""
   };
   commitProgressData(data);
+  renderReviewReminder();
 
   // Confirm the save in place rather than re-rendering (which looked like nothing happened).
   const status = planContent?.querySelector("#plan-save-status");
