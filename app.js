@@ -3,7 +3,7 @@ const DROPBOX_TOKEN_URL = "https://api.dropboxapi.com/oauth2/token";
 const DROPBOX_UPLOAD_URL = "https://content.dropboxapi.com/2/files/upload";
 const DROPBOX_DOWNLOAD_URL = "https://content.dropboxapi.com/2/files/download";
 const DATA_FILE_PATH = "/workout-data.json";
-const APP_VERSION = "2026.06.08-step6-sync-refresh";
+const APP_VERSION = "2026.06.09-history-list";
 
 const STORAGE = {
   appKey: "trainingBookDropboxAppKey",
