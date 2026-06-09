@@ -1968,6 +1968,93 @@ p {
   color: var(--muted);
 }
 
+.weight-card {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel-2);
+  padding: 16px 18px;
+  margin-top: 12px;
+}
+
+.weight-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.weight-head .card-kicker {
+  margin: 0;
+}
+
+.weight-mini {
+  min-height: 36px;
+  padding: 7px 12px;
+  font-size: 13px;
+}
+
+.weight-card .stat-number {
+  margin: 10px 0 4px;
+}
+
+.weight-empty {
+  margin: 12px 0 4px;
+}
+
+.weight-form {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 12px 0 4px;
+  flex-wrap: wrap;
+}
+
+.weight-input {
+  width: 110px;
+  min-height: 40px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: rgba(9, 12, 11, 0.42);
+  color: var(--text);
+  font: inherit;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.weight-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.weight-unit {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--muted);
+  margin-left: -2px;
+}
+
+.weight-target {
+  margin: 12px 0 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.weight-target strong {
+  color: var(--text);
+}
+
+.weight-link {
+  border: none;
+  background: none;
+  padding: 2px 4px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--accent);
+  cursor: pointer;
+}
+
 .cal-card {
   border: 1px solid var(--line);
   border-radius: 8px;

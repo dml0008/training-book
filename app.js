@@ -3,7 +3,7 @@ const DROPBOX_TOKEN_URL = "https://api.dropboxapi.com/oauth2/token";
 const DROPBOX_UPLOAD_URL = "https://content.dropboxapi.com/2/files/upload";
 const DROPBOX_DOWNLOAD_URL = "https://content.dropboxapi.com/2/files/download";
 const DATA_FILE_PATH = "/04_Technical/06_Side_Projects/Workout and Nutrition App/data/workout-data.json";
-const APP_VERSION = "2026.06.10-progress";
+const APP_VERSION = "2026.06.10-bodyweight";
 
 const STORAGE = {
   appKey: "trainingBookDropboxAppKey",
@@ -798,7 +798,9 @@ function makeEmptyData() {
     completedWorkouts: [],
     missedWorkouts: [],
     testEntries: [],
-    workouts: []
+    workouts: [],
+    bodyWeights: [],
+    weightTarget: null
   };
 }
 
@@ -904,6 +906,14 @@ function getLocalData() {
   }
   if (!Array.isArray(data.missedWorkouts)) {
     data.missedWorkouts = [];
+  }
+  // Body-weight tracking (Step 9): a list of { date, weight } and an optional
+  // target weight. Older saved data predates these, so seed them once.
+  if (!Array.isArray(data.bodyWeights)) {
+    data.bodyWeights = [];
+  }
+  if (typeof data.weightTarget === "undefined") {
+    data.weightTarget = null;
   }
 
   return data;
@@ -1870,6 +1880,10 @@ const DOW_NAMES = ["sunday", "monday", "tuesday", "wednesday", "thursday", "frid
 // Which month the calendar is showing (first-of-month, UTC). Null until first render.
 let progressMonthDate = null;
 
+// Body-weight card UI state: which inline box (if any) is open.
+// null = closed, "log" = the log-weight box, "target" = the set-target box.
+let weightBoxOpen = null;
+
 function dateKeyUTC(date) {
   return date.toISOString().slice(0, 10);
 }
@@ -1987,6 +2001,7 @@ function renderProgress(resetMonth = true) {
   if (resetMonth || !progressMonthDate) {
     const now = new Date();
     progressMonthDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+    weightBoxOpen = null;
   }
 
   const doneThisWeek = countCompletedInWeek(mondayOfWeek(new Date()), completedSet);
@@ -2022,6 +2037,7 @@ function renderProgress(resetMonth = true) {
         <p class="stat-note">${escapeHtml(streakNote)}</p>
       </div>
     </div>
+    ${renderBodyWeightCard(data)}
     ${renderProgressCalendar(completedSet)}
   `;
 
@@ -2036,6 +2052,201 @@ function renderProgress(resetMonth = true) {
       renderProgress(false);
     });
   });
+
+  wireBodyWeightCard();
+}
+
+// ===== Body weight (Step 9): log your weight over time + an optional target =====
+
+function getBodyWeights() {
+  const data = getLocalData();
+  const list = Array.isArray(data.bodyWeights) ? data.bodyWeights.slice() : [];
+  // Keep them oldest-to-newest by date so "latest" and "previous" are reliable.
+  return list.sort((a, b) => String(a.date).localeCompare(String(b.date)));
+}
+
+function saveBodyWeight(weight) {
+  const value = Number(weight);
+  if (!Number.isFinite(value) || value <= 0) return;
+  const data = getLocalData();
+  const today = getTodayDateString();
+  const list = Array.isArray(data.bodyWeights) ? data.bodyWeights.slice() : [];
+  // One entry per day: replace today's if it already exists.
+  const existing = list.findIndex((w) => w.date === today);
+  const rounded = Math.round(value * 10) / 10;
+  if (existing >= 0) {
+    list[existing] = { date: today, weight: rounded };
+  } else {
+    list.push({ date: today, weight: rounded });
+  }
+  data.bodyWeights = list;
+  commitProgressData(data);
+}
+
+function saveWeightTarget(target) {
+  const data = getLocalData();
+  if (target === null) {
+    data.weightTarget = null;
+  } else {
+    const value = Number(target);
+    if (!Number.isFinite(value) || value <= 0) return;
+    data.weightTarget = Math.round(value * 10) / 10;
+  }
+  commitProgressData(data);
+}
+
+// Save through the same local + cloud path the rest of the app uses.
+function commitProgressData(data) {
+  data.updatedAt = new Date().toISOString();
+  data.updatedBy = getDeviceId();
+  saveLocalData(data);
+  markPendingData(data);
+  if (navigator.onLine) {
+    uploadWorkoutData(data).then(clearPendingData).catch(() => {
+      // Not signed in or offline: the change is queued and syncs later.
+    });
+  }
+}
+
+function formatWeightDateLabel(dateKey) {
+  if (dateKey === getTodayDateString()) return "Logged today";
+  const parts = String(dateKey).split("-");
+  if (parts.length !== 3) return "Last logged";
+  const d = new Date(Date.UTC(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2])));
+  return "Last logged " + d.toLocaleDateString(undefined, { month: "short", day: "numeric", timeZone: "UTC" });
+}
+
+function renderBodyWeightCard(data) {
+  const weights = getBodyWeights();
+  const latest = weights[weights.length - 1] || null;
+  const previous = weights[weights.length - 2] || null;
+  const target = (typeof data.weightTarget === "number") ? data.weightTarget : null;
+
+  // Header changes its button label depending on whether the log box is open.
+  const head = `
+    <div class="weight-head">
+      <p class="card-kicker">Body weight</p>
+      <button class="quiet-button weight-mini" type="button" data-weight-open="log">${weightBoxOpen === "log" ? "Close" : (latest ? "Log weight" : "Log first")}</button>
+    </div>`;
+
+  // The big number (or a gentle empty state).
+  let body;
+  if (latest) {
+    let trend = previous
+      ? (() => {
+          const diff = Math.round((latest.weight - previous.weight) * 10) / 10;
+          if (diff === 0) return "No change since last time";
+          const arrow = diff < 0 ? "▼" : "▲";
+          return `${arrow} ${Math.abs(diff)} lb since last time`;
+        })()
+      : "First weigh-in";
+    body = `
+      <p class="stat-number">${latest.weight}<span class="stat-of"> lb</span></p>
+      <p class="stat-note">${escapeHtml(formatWeightDateLabel(latest.date))} · ${escapeHtml(trend)}</p>`;
+  } else {
+    body = `<p class="stat-note weight-empty">No weight logged yet. Tap “Log first” to start.</p>`;
+  }
+
+  // The inline log box.
+  let logBox = "";
+  if (weightBoxOpen === "log") {
+    const prefill = latest ? escapeHtml(latest.weight) : "";
+    logBox = `
+      <div class="weight-form">
+        <input class="weight-input" id="weight-log-input" type="number" inputmode="decimal" min="0" step="0.1" value="${prefill}" placeholder="e.g. 180" aria-label="Today's weight in pounds">
+        <span class="weight-unit">lb</span>
+        <button class="primary-button weight-mini" type="button" data-weight-save>Save</button>
+      </div>`;
+  }
+
+  // The target line, and its inline box when open.
+  let targetArea;
+  if (weightBoxOpen === "target") {
+    const prefill = target !== null ? escapeHtml(target) : "";
+    targetArea = `
+      <div class="weight-form">
+        <input class="weight-input" id="weight-target-input" type="number" inputmode="decimal" min="0" step="0.1" value="${prefill}" placeholder="e.g. 175" aria-label="Target weight in pounds">
+        <span class="weight-unit">lb</span>
+        <button class="primary-button weight-mini" type="button" data-target-save>Save</button>
+        ${target !== null ? `<button class="quiet-button weight-mini" type="button" data-target-clear>Remove</button>` : ""}
+      </div>`;
+  } else if (target !== null && latest) {
+    const diff = Math.round((latest.weight - target) * 10) / 10;
+    let note;
+    if (diff === 0) note = "Target reached!";
+    else if (diff > 0) note = `${Math.abs(diff)} lb above target`;
+    else note = `${Math.abs(diff)} lb below target`;
+    targetArea = `
+      <p class="weight-target">Target ${target} lb · <strong>${escapeHtml(note)}</strong>
+        <button class="weight-link" type="button" data-weight-open="target">Edit</button></p>`;
+  } else if (target !== null) {
+    targetArea = `
+      <p class="weight-target">Target ${target} lb
+        <button class="weight-link" type="button" data-weight-open="target">Edit</button></p>`;
+  } else {
+    targetArea = `
+      <p class="weight-target"><button class="weight-link" type="button" data-weight-open="target">Set a target</button></p>`;
+  }
+
+  return `
+    <div class="weight-card">
+      ${head}
+      ${body}
+      ${logBox}
+      ${targetArea}
+    </div>`;
+}
+
+function wireBodyWeightCard() {
+  if (!progressContent) return;
+
+  progressContent.querySelectorAll("[data-weight-open]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const which = button.dataset.weightOpen;
+      weightBoxOpen = (weightBoxOpen === which) ? null : which;
+      renderProgress(false);
+      const focusId = which === "target" ? "weight-target-input" : "weight-log-input";
+      const input = document.getElementById(focusId);
+      if (input && weightBoxOpen === which) input.focus();
+    });
+  });
+
+  const saveBtn = progressContent.querySelector("[data-weight-save]");
+  if (saveBtn) {
+    const input = progressContent.querySelector("#weight-log-input");
+    const commit = () => {
+      const value = Number(input && input.value);
+      if (!Number.isFinite(value) || value <= 0) return;
+      saveBodyWeight(value);
+      weightBoxOpen = null;
+      renderProgress(false);
+    };
+    saveBtn.addEventListener("click", commit);
+    if (input) input.addEventListener("keydown", (e) => { if (e.key === "Enter") commit(); });
+  }
+
+  const targetSaveBtn = progressContent.querySelector("[data-target-save]");
+  if (targetSaveBtn) {
+    const input = progressContent.querySelector("#weight-target-input");
+    const commit = () => {
+      const value = Number(input && input.value);
+      if (!Number.isFinite(value) || value <= 0) return;
+      saveWeightTarget(value);
+      weightBoxOpen = null;
+      renderProgress(false);
+    };
+    targetSaveBtn.addEventListener("click", commit);
+    if (input) input.addEventListener("keydown", (e) => { if (e.key === "Enter") commit(); });
+  }
+
+  const targetClearBtn = progressContent.querySelector("[data-target-clear]");
+  if (targetClearBtn) {
+    targetClearBtn.addEventListener("click", () => {
+      saveWeightTarget(null);
+      weightBoxOpen = null;
+      renderProgress(false);
+    });
+  }
 }
 
 function renderHistoryEntry(entry) {
