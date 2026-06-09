@@ -942,6 +942,157 @@ p {
   white-space: nowrap;
 }
 
+.history-card-button {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  text-align: left;
+}
+
+.history-detail-panel {
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(9, 12, 11, 0.44);
+}
+
+.history-detail-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.history-detail-header button {
+  flex: 0 0 auto;
+  padding: 8px 12px;
+}
+
+.history-detail-header h3 {
+  margin: 0;
+  font-size: 21px;
+  flex: 1;
+}
+
+.history-detail-body {
+  display: grid;
+  gap: 24px;
+}
+
+.detail-section {
+  display: grid;
+  gap: 12px;
+}
+
+.section-label {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.detail-field {
+  display: grid;
+  gap: 6px;
+}
+
+.detail-field label {
+  margin-bottom: 0;
+}
+
+.detail-exercise {
+  padding: 12px;
+  border: 1px solid rgba(155, 168, 161, 0.18);
+  border-radius: 8px;
+  background: rgba(16, 20, 19, 0.58);
+}
+
+.detail-exercise h5 {
+  margin: 0 0 12px;
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.compare-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.compare-col {
+  display: grid;
+  gap: 6px;
+}
+
+.compare-label {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.compare-col p:last-child {
+  margin: 0;
+}
+
+.strength-inputs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.strength-inputs label {
+  margin-bottom: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.strength-inputs span {
+  font-size: 12px;
+}
+
+.exercise-difficulty {
+  padding-top: 8px;
+  border-top: 1px solid rgba(155, 168, 161, 0.1);
+}
+
+.exercise-difficulty label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 0;
+}
+
+.exercise-difficulty input[type="range"] {
+  flex: 1;
+  width: auto;
+}
+
+.difficulty-value {
+  flex: 0 0 auto;
+  color: var(--accent);
+  font-weight: 850;
+  font-size: 14px;
+}
+
+.detail-actions {
+  display: flex;
+  gap: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+
+.detail-actions button {
+  flex: 1;
+}
+
 .filter-strip {
   display: flex;
   gap: 8px;

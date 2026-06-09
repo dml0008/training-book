@@ -2,8 +2,8 @@ const DROPBOX_AUTHORIZE_URL = "https://www.dropbox.com/oauth2/authorize";
 const DROPBOX_TOKEN_URL = "https://api.dropboxapi.com/oauth2/token";
 const DROPBOX_UPLOAD_URL = "https://content.dropboxapi.com/2/files/upload";
 const DROPBOX_DOWNLOAD_URL = "https://content.dropboxapi.com/2/files/download";
-const DATA_FILE_PATH = "/workout-data.json";
-const APP_VERSION = "2026.06.09-history-list";
+const DATA_FILE_PATH = "/04_Technical/06_Side_Projects/Workout and Nutrition App/data/workout-data.json";
+const APP_VERSION = "2026.06.10-new-dropbox-app";
 
 const STORAGE = {
   appKey: "trainingBookDropboxAppKey",
@@ -1709,23 +1709,224 @@ function renderHistory() {
         const entries = Array.isArray(workout.entries) ? workout.entries : [];
         const countLabel = entries.length === 1 ? "1 exercise" : `${entries.length} exercises`;
         return `
-          <article class="history-card">
-            <div class="history-card-head">
-              <div>
-                <p class="eyebrow">${escapeHtml(formatWorkoutDate(workout.date))}</p>
-                <h3>${escapeHtml(workout.name || workout.routineName || "Workout")}</h3>
+          <article class="history-card" data-workout-id="${escapeHtml(workout.id)}">
+            <button class="history-card-button" type="button">
+              <div class="history-card-head">
+                <div>
+                  <p class="eyebrow">${escapeHtml(formatWorkoutDate(workout.date))}</p>
+                  <h3>${escapeHtml(workout.name || workout.routineName || "Workout")}</h3>
+                </div>
+                <span>${escapeHtml(countLabel)}</span>
               </div>
-              <span>${escapeHtml(countLabel)}</span>
-            </div>
-            <ul class="history-entry-list">
-              ${entries.map(renderHistoryEntry).join("")}
-            </ul>
+              <ul class="history-entry-list">
+                ${entries.map(renderHistoryEntry).join("")}
+              </ul>
+            </button>
           </article>
         `;
       }).join("")}
     </div>
   `;
+
+  // Add click listeners to history cards
+  document.querySelectorAll(".history-card-button").forEach((button) => {
+    button.addEventListener("click", () => {
+      const card = button.closest(".history-card");
+      const workoutId = card?.dataset.workoutId;
+      if (workoutId) {
+        openHistoryDetail(workoutId);
+      }
+    });
+  });
 }
+
+function openHistoryDetail(workoutId) {
+  const data = getLocalData();
+  const workout = data.workouts?.find((w) => w.id === workoutId);
+  if (!workout) return;
+
+  const detailPanel = document.querySelector("#history-detail-panel");
+  if (detailPanel) {
+    renderHistoryDetail(workout);
+    detailPanel.hidden = false;
+    historyContent.style.display = "none";
+  }
+}
+
+function closeHistoryDetail() {
+  const detailPanel = document.querySelector("#history-detail-panel");
+  if (detailPanel) {
+    detailPanel.hidden = true;
+    historyContent.style.display = "block";
+  }
+}
+
+function renderHistoryDetail(workout) {
+  const detailBody = document.querySelector("#history-detail-body");
+  const detailTitle = document.querySelector("#history-detail-title");
+  const entries = Array.isArray(workout.entries) ? workout.entries : [];
+
+  if (detailTitle) {
+    detailTitle.textContent = `${workout.name || workout.routineName || "Workout"} • ${formatWorkoutDate(workout.date)}`;
+  }
+
+  if (!detailBody) return;
+
+  detailBody.innerHTML = `
+    <div class="detail-section">
+      <div class="detail-field">
+        <label for="detail-workout-date">Date</label>
+        <input id="detail-workout-date" type="date" value="${escapeHtml(workout.date)}" data-field="date">
+      </div>
+    </div>
+
+    <div class="detail-section">
+      <h4 class="section-label">Exercises</h4>
+      <div id="detail-exercises-list">
+        ${entries.map((entry, index) => renderDetailExercise(entry, index)).join("")}
+      </div>
+    </div>
+
+    <div class="detail-actions">
+      <button class="primary-button" id="detail-save-button" type="button">Save changes</button>
+    </div>
+  `;
+
+  // Store the workout ID for saving
+  detailBody.dataset.workoutId = workout.id;
+
+  // Add event listeners
+  document.querySelectorAll("#detail-exercises-list input, #detail-exercises-list select").forEach((field) => {
+    field.addEventListener("change", () => {
+      // Just mark as dirty for now
+    });
+  });
+
+  document.getElementById("detail-save-button")?.addEventListener("click", () => {
+    saveWorkoutChanges(workout.id);
+  });
+}
+
+function renderDetailExercise(entry, index) {
+  if (entry.type === "cardio") {
+    return `
+      <div class="detail-exercise" data-entry-index="${index}">
+        <h5>${escapeHtml(entry.exerciseName || "Exercise")}</h5>
+        <div class="compare-row">
+          <div class="compare-col">
+            <p class="compare-label">Planned</p>
+            <p>${escapeHtml(entry.planned?.durationMinutes ? `${entry.planned.durationMinutes} min` : "—")}</p>
+          </div>
+          <div class="compare-col">
+            <p class="compare-label">Actual</p>
+            <label>
+              <input type="number" min="0" step="1" value="${escapeHtml(entry.durationMinutes || 0)}" data-field="durationMinutes" placeholder="0">
+              <span>min</span>
+            </label>
+          </div>
+        </div>
+        <div class="exercise-difficulty">
+          <label>
+            <span>Difficulty</span>
+            <input type="range" min="1" max="10" value="${escapeHtml(entry.difficulty || 5)}" data-field="difficulty">
+            <span class="difficulty-value">${escapeHtml(entry.difficulty || 5)}/10</span>
+          </label>
+        </div>
+      </div>
+    `;
+  }
+
+  // Strength exercise
+  return `
+    <div class="detail-exercise" data-entry-index="${index}">
+      <h5>${escapeHtml(entry.exerciseName || "Exercise")}</h5>
+      <div class="compare-row">
+        <div class="compare-col">
+          <p class="compare-label">Planned</p>
+          <p>${escapeHtml(entry.planned?.sets ? `${entry.planned.sets}x${entry.planned.reps || 0}` : "—")}</p>
+        </div>
+        <div class="compare-col">
+          <p class="compare-label">Actual</p>
+          <div class="strength-inputs">
+            <label>
+              <span>Sets</span>
+              <input type="number" min="0" step="1" value="${escapeHtml(entry.actualSummary?.sets || 0)}" data-field="actualSets" placeholder="0">
+            </label>
+            <label>
+              <span>Reps</span>
+              <input type="number" min="0" step="1" value="${escapeHtml(entry.actualSummary?.reps || 0)}" data-field="actualReps" placeholder="0">
+            </label>
+            <label>
+              <span>Weight</span>
+              <input type="number" min="0" step="0.5" value="${escapeHtml(entry.actualSummary?.weight || 0)}" data-field="actualWeight" placeholder="0">
+              <span>lb</span>
+            </label>
+          </div>
+        </div>
+      </div>
+      <div class="exercise-difficulty">
+        <label>
+          <span>Difficulty</span>
+          <input type="range" min="1" max="10" value="${escapeHtml(entry.difficulty || 5)}" data-field="difficulty">
+          <span class="difficulty-value">${escapeHtml(entry.difficulty || 5)}/10</span>
+        </label>
+      </div>
+    </div>
+  `;
+}
+
+function saveWorkoutChanges(workoutId) {
+  const data = getLocalData();
+  const workoutIndex = data.workouts?.findIndex((w) => w.id === workoutId);
+  if (workoutIndex === undefined || workoutIndex < 0) return;
+
+  const workout = data.workouts[workoutIndex];
+  const detailBody = document.querySelector("#history-detail-body");
+
+  // Update date
+  const dateInput = detailBody?.querySelector('input[data-field="date"]');
+  if (dateInput) {
+    workout.date = dateInput.value;
+  }
+
+  // Update exercises
+  detailBody?.querySelectorAll(".detail-exercise").forEach((exerciseEl, index) => {
+    const entry = workout.entries?.[index];
+    if (!entry) return;
+
+    if (entry.type === "cardio") {
+      const durationInput = exerciseEl.querySelector('input[data-field="durationMinutes"]');
+      const difficultyInput = exerciseEl.querySelector('input[data-field="difficulty"]');
+      if (durationInput) entry.durationMinutes = Number(durationInput.value) || 0;
+      if (difficultyInput) entry.difficulty = Number(difficultyInput.value) || 5;
+    } else {
+      const setsInput = exerciseEl.querySelector('input[data-field="actualSets"]');
+      const repsInput = exerciseEl.querySelector('input[data-field="actualReps"]');
+      const weightInput = exerciseEl.querySelector('input[data-field="actualWeight"]');
+      const difficultyInput = exerciseEl.querySelector('input[data-field="difficulty"]');
+
+      if (setsInput || repsInput || weightInput) {
+        entry.actualSummary = {
+          sets: Number(setsInput?.value) || 0,
+          reps: Number(repsInput?.value) || 0,
+          weight: Number(weightInput?.value) || 0
+        };
+      }
+      if (difficultyInput) entry.difficulty = Number(difficultyInput.value) || 5;
+    }
+  });
+
+  data.updatedAt = new Date().toISOString();
+  data.updatedBy = getDeviceId();
+  saveLocalData(data);
+  markPendingData(data);
+
+  closeHistoryDetail();
+  renderHistory();
+}
+
+const historyDetailCloseButton = document.querySelector("#history-detail-close");
+historyDetailCloseButton?.addEventListener("click", closeHistoryDetail);
 
 function generateReviewPacket() {
   const data = getLocalData();
