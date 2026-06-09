@@ -3,7 +3,7 @@ const DROPBOX_TOKEN_URL = "https://api.dropboxapi.com/oauth2/token";
 const DROPBOX_UPLOAD_URL = "https://content.dropboxapi.com/2/files/upload";
 const DROPBOX_DOWNLOAD_URL = "https://content.dropboxapi.com/2/files/download";
 const DATA_FILE_PATH = "/04_Technical/06_Side_Projects/Workout and Nutrition App/data/workout-data.json";
-const APP_VERSION = "2026.06.15-reference-layer";
+const APP_VERSION = "2026.06.16-timed-holds";
 
 const STORAGE = {
   appKey: "trainingBookDropboxAppKey",
@@ -514,6 +514,7 @@ function makeTodayExercise(plannedEx, source = "planned") {
 }
 
 function formatTodayTarget(exercise) {
+  if (exercise.type === "timed") return `${(exercise.holds || []).length} x ${exercise.holdSeconds || 0} sec planned`;
   if (exercise.type === "cardio") return `${exercise.targetDuration || exercise.actualDuration} min planned`;
   if (exercise.targetReps) return `${exercise.targetSets} sets x ${exercise.targetReps} reps planned`;
   return `${exercise.targetSets} sets planned`;
@@ -1857,7 +1858,7 @@ function renderExerciseCard(exercise) {
 }
 
 function renderExerciseEditCard(exercise) {
-  const isCardio = exercise.type === "cardio";
+  const exerciseType = normalizeExerciseType(exercise.type);
   return `
     <article class="exercise-card is-editing">
       <div class="exercise-art">
@@ -1866,8 +1867,9 @@ function renderExerciseEditCard(exercise) {
       <div class="exercise-info">
         <input type="text" class="exercise-edit-name" value="${escapeHtml(exercise.name)}" maxlength="40" aria-label="Exercise name" />
         <div class="type-toggle" role="group" aria-label="Exercise type">
-          <button type="button" class="type-option${isCardio ? "" : " is-active"}" data-type="strength">Strength</button>
-          <button type="button" class="type-option${isCardio ? " is-active" : ""}" data-type="cardio">Cardio</button>
+          ${renderTypeOption("strength", exerciseType)}
+          ${renderTypeOption("cardio", exerciseType)}
+          ${renderTypeOption("timed", exerciseType)}
         </div>
         <div class="exercise-actions">
           <button type="button" class="exercise-action primary" data-action="save-exercise" data-id="${escapeHtml(exercise.id)}">Save</button>
@@ -1887,6 +1889,47 @@ function makeExerciseId(name) {
     .replace(/^-+|-+$/g, "")
     .slice(0, 30) || "exercise";
   return `${base}-${randomString(4)}`;
+}
+
+function normalizeExerciseType(type) {
+  return ["strength", "cardio", "timed"].includes(type) ? type : "strength";
+}
+
+function getExerciseTypeMeta(type) {
+  const normalized = normalizeExerciseType(type);
+  if (normalized === "cardio") {
+    return {
+      type: "cardio",
+      area: "Cardio",
+      icon: "treadmill",
+      tags: ["custom", "cardio"]
+    };
+  }
+  if (normalized === "timed") {
+    return {
+      type: "timed",
+      area: "Core / holds",
+      icon: "plank",
+      tags: ["custom", "bodyweight", "timed"]
+    };
+  }
+  return {
+    type: "strength",
+    area: "Strength",
+    icon: "pushup",
+    tags: ["custom"]
+  };
+}
+
+function formatExerciseType(type) {
+  if (type === "cardio") return "Cardio";
+  if (type === "timed") return "Timed hold";
+  return "Strength";
+}
+
+function renderTypeOption(type, activeType) {
+  const active = normalizeExerciseType(activeType) === type ? " is-active" : "";
+  return `<button type="button" class="type-option${active}" data-type="${type}">${formatExerciseType(type)}</button>`;
 }
 
 // Save the updated library everywhere: local backup, pending queue, and the
@@ -1911,14 +1954,11 @@ function persistLibrary(library) {
 function addLibraryExercise(name, type) {
   const cleanName = String(name).trim();
   if (!cleanName) return;
-  const isCardio = type === "cardio";
+  const meta = getExerciseTypeMeta(type);
   const newExercise = {
     id: makeExerciseId(cleanName),
     name: cleanName,
-    type: isCardio ? "cardio" : "strength",
-    area: isCardio ? "Cardio" : "Strength",
-    icon: isCardio ? "treadmill" : "pushup",
-    tags: isCardio ? ["custom", "cardio"] : ["custom"]
+    ...meta
   };
   persistLibrary([...exercises, newExercise]);
 }
@@ -1926,13 +1966,15 @@ function addLibraryExercise(name, type) {
 function saveLibraryExerciseEdit(id, name, type) {
   const cleanName = String(name).trim();
   if (!cleanName) return;
-  const isCardio = type === "cardio";
+  const nextType = normalizeExerciseType(type);
   const library = exercises.map((exercise) => {
     if (exercise.id !== id) return exercise;
+    const customExercise = (exercise.tags || []).includes("custom");
+    const typeMeta = customExercise ? getExerciseTypeMeta(nextType) : { type: nextType };
     return {
       ...exercise,
       name: cleanName,
-      type: isCardio ? "cardio" : "strength"
+      ...typeMeta
     };
   });
   editingExerciseId = null;
@@ -2003,7 +2045,7 @@ function setWorkoutStatus(message, tone = "") {
 }
 
 function makeWorkoutExercise(exercise) {
-  if (exercise.type === "cardio") {
+  if (exercise.type === "cardio" || exercise.type === "timed") {
     return {
       id: `workout-exercise-${Date.now()}-${randomString(5)}`,
       exerciseId: exercise.id,
@@ -2330,6 +2372,7 @@ async function saveWorkout() {
 function formatTag(tag) {
   if (tag === "bodyweight") return "no equipment";
   if (tag === "machine") return "cable/machine";
+  if (tag === "timed") return "timed hold";
   return tag;
 }
 
