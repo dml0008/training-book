@@ -21,10 +21,31 @@
         <p class="eyebrow">Personal logbook</p>
         <h1>Training Book</h1>
       </div>
-      <button class="sync-pill" id="sync-pill" type="button" aria-label="Dropbox sync status">
-        <span class="sync-dot"></span>
-        <span id="sync-pill-label">Local only</span>
-      </button>
+      <div class="sync-menu">
+        <button class="sync-pill" id="sync-pill" type="button" aria-label="Open sync panel" aria-expanded="false" aria-controls="sync-panel">
+          <span class="sync-dot"></span>
+          <span id="sync-pill-label">Local only</span>
+        </button>
+        <div class="sync-panel" id="sync-panel" hidden>
+          <div class="sync-panel-head">
+            <div>
+              <p class="eyebrow">Sync</p>
+              <h2>Dropbox</h2>
+            </div>
+            <span class="app-version" id="app-version">Build</span>
+          </div>
+          <p class="sync-status" id="sync-status">Local backup is ready on this device.</p>
+          <div class="sync-panel-actions">
+            <button class="primary-button" id="connect-dropbox" type="button">Connect Dropbox</button>
+            <button class="quiet-button" id="retry-sync" type="button">Retry sync</button>
+            <button class="quiet-button" id="load-latest" type="button">Load latest</button>
+            <button class="quiet-button" id="reset-dropbox" type="button">Reset connection</button>
+          </div>
+          <div class="sync-panel-foot">
+            <button class="quiet-button" id="refresh-app" type="button">Refresh app update</button>
+          </div>
+        </div>
+      </div>
     </header>
 
     <main class="screen-stack">

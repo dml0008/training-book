@@ -3,6 +3,7 @@ const DROPBOX_TOKEN_URL = "https://api.dropboxapi.com/oauth2/token";
 const DROPBOX_UPLOAD_URL = "https://content.dropboxapi.com/2/files/upload";
 const DROPBOX_DOWNLOAD_URL = "https://content.dropboxapi.com/2/files/download";
 const DATA_FILE_PATH = "/workout-data.json";
+const APP_VERSION = "2026.06.08-step6-sync-refresh";
 
 const STORAGE = {
   appKey: "trainingBookDropboxAppKey",
@@ -29,6 +30,13 @@ const todayExtraPicker = document.querySelector("#today-extra-picker");
 const addTodayExtraButton = document.querySelector("#add-today-extra");
 const syncPill = document.querySelector("#sync-pill");
 const syncPillLabel = document.querySelector("#sync-pill-label");
+const syncPanel = document.querySelector("#sync-panel");
+const appVersionLabel = document.querySelector("#app-version");
+const connectDropboxButton = document.querySelector("#connect-dropbox");
+const retrySyncButton = document.querySelector("#retry-sync");
+const loadLatestButton = document.querySelector("#load-latest");
+const resetDropboxButton = document.querySelector("#reset-dropbox");
+const refreshAppButton = document.querySelector("#refresh-app");
 const exerciseList = document.querySelector("#exercise-list");
 const libraryCount = document.querySelector("#library-count");
 const filterChips = Array.from(document.querySelectorAll(".filter-chip"));
@@ -43,6 +51,10 @@ const workoutSaveStatus = document.querySelector("#workout-save-status");
 const saveWorkoutButton = document.querySelector("#save-workout");
 const appKeyInput = document.querySelector("#app-key");
 const syncStatus = document.querySelector("#sync-status");
+
+if (appVersionLabel) {
+  appVersionLabel.textContent = `Build ${APP_VERSION}`;
+}
 
 const today = new Date();
 const todayDisplay = new Intl.DateTimeFormat("en-US", {
@@ -623,7 +635,6 @@ function setSyncStatus(message, tone = "") {
   if (syncStatus) {
     syncStatus.textContent = message;
     syncStatus.className = tone ? `sync-status ${tone}` : "sync-status";
-    return;
   }
 
   if (syncPill) {
@@ -636,15 +647,45 @@ function setConnectionUi(message, tone = "") {
     const hasDropbox = Boolean(localStorage.getItem(STORAGE.refreshToken) || getStoredAccessToken());
     syncPill.className = tone ? `sync-pill ${tone}` : "sync-pill";
     syncPill.disabled = false;
-    syncPill.title = !hasDropbox
-      ? "Tap to connect Dropbox"
-      : hasPendingData()
-      ? "Tap to sync pending Dropbox data"
-      : "Tap to load the latest Dropbox data";
+    syncPill.title = "Open sync panel";
     if (syncPillLabel) {
       syncPillLabel.textContent = message;
     }
+    if (connectDropboxButton) connectDropboxButton.disabled = !navigator.onLine || hasDropbox;
+    if (retrySyncButton) retrySyncButton.disabled = !navigator.onLine || !hasDropbox || !hasPendingData();
+    if (loadLatestButton) loadLatestButton.disabled = !navigator.onLine || !hasDropbox || hasPendingData();
+    if (resetDropboxButton) resetDropboxButton.disabled = !hasDropbox;
   }
+}
+
+function toggleSyncPanel(forceOpen) {
+  if (!syncPanel || !syncPill) return;
+  const shouldOpen = typeof forceOpen === "boolean" ? forceOpen : syncPanel.hidden;
+  syncPanel.hidden = !shouldOpen;
+  syncPill.setAttribute("aria-expanded", String(shouldOpen));
+}
+
+function closeSyncPanelFromOutside(event) {
+  if (!syncPanel || syncPanel.hidden) return;
+  if (event.target.closest(".sync-menu")) return;
+  toggleSyncPanel(false);
+}
+
+function describeCurrentSyncState() {
+  const hasDropbox = Boolean(localStorage.getItem(STORAGE.refreshToken) || getStoredAccessToken());
+  if (!navigator.onLine) {
+    return hasPendingData()
+      ? ["Offline. Changes are safe here and waiting to sync.", "warn"]
+      : ["Offline. Local backup is ready on this device.", "warn"];
+  }
+  if (hasPendingData()) return ["Changes are waiting to sync to Dropbox.", "warn"];
+  if (hasDropbox) return ["Dropbox is connected and ready.", "good"];
+  return ["Local backup is ready. Connect Dropbox to sync across devices.", ""];
+}
+
+function refreshSyncPanelText() {
+  const [message, tone] = describeCurrentSyncState();
+  setSyncStatus(message, tone);
 }
 
 function getRedirectUri() {
@@ -1463,36 +1504,87 @@ async function syncPendingData() {
   clearPendingData();
   setSyncStatus("Pending data synced to Dropbox.", "good");
   renderTodayRoutine();
+  updateConnectionState();
 }
 
 async function handleSyncPillClick() {
+  toggleSyncPanel();
+  refreshSyncPanelText();
+}
+
+async function connectDropboxFromPanel() {
   if (!navigator.onLine) {
-    setConnectionUi(hasPendingData() ? "Offline, pending" : "Offline", "warn");
-    alert("You are offline. Training Book will sync when internet is back.");
+    setSyncStatus("You are offline. Connect to the internet before connecting Dropbox.", "warn");
+    updateConnectionState();
+    return;
+  }
+  try {
+    setSyncStatus("Opening Dropbox connection...");
+    await startDropboxConnect();
+  } catch (error) {
+    updateConnectionState();
+    setSyncStatus(`${error.message} Your local data is still safe on this device.`, "bad");
+  }
+}
+
+async function retrySyncFromPanel() {
+  try {
+    setConnectionUi("Syncing...", "warn");
+    setSyncStatus("Retrying Dropbox sync...");
+    await syncPendingData();
+  } catch (error) {
+    updateConnectionState();
+    setSyncStatus(`${error.message} Your local data is still safe on this device.`, "bad");
+  }
+}
+
+async function loadLatestFromPanel() {
+  if (!navigator.onLine) {
+    setSyncStatus("You are offline. Connect to the internet before loading Dropbox data.", "warn");
+    updateConnectionState();
+    return;
+  }
+
+  if (hasPendingData()) {
+    setSyncStatus("Sync the pending changes first, then load latest.", "warn");
+    updateConnectionState();
     return;
   }
 
   try {
-    const hasDropbox = Boolean(localStorage.getItem(STORAGE.refreshToken) || getStoredAccessToken());
-    if (!hasDropbox) {
-      await startDropboxConnect();
-      return;
-    }
-
-    if (hasPendingData()) {
-      setConnectionUi("Syncing...", "warn");
-      await syncPendingData();
-      alert("Pending workout data synced to Dropbox.");
-      return;
-    }
-
     setConnectionUi("Loading...", "");
+    setSyncStatus("Loading the latest Dropbox data...");
     await loadWorkoutData();
-    alert("Latest Dropbox data loaded.");
+    setSyncStatus("Latest Dropbox data loaded.", "good");
   } catch (error) {
     updateConnectionState();
-    alert(`${error.message} Your local data is still safe on this device.`);
+    setSyncStatus(`${error.message} Your local data is still safe on this device.`, "bad");
   }
+}
+
+function resetDropboxFromPanel() {
+  forgetDropbox();
+  toggleSyncPanel(true);
+}
+
+async function refreshAppUpdate() {
+  setSyncStatus("Refreshing the saved app shell...");
+
+  try {
+    if ("serviceWorker" in navigator) {
+      const registrations = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(registrations.map((registration) => registration.unregister()));
+    }
+
+    if ("caches" in window) {
+      const keys = await caches.keys();
+      await Promise.all(keys.filter((key) => key.startsWith("training-book")).map((key) => caches.delete(key)));
+    }
+  } catch (error) {
+    setSyncStatus(`Could not clear the saved app shell: ${error.message}. Reloading anyway.`, "warn");
+  }
+
+  window.location.reload();
 }
 
 function forgetDropbox() {
@@ -1514,6 +1606,7 @@ function updateConnectionState() {
   const hasDropbox = Boolean(localStorage.getItem(STORAGE.refreshToken) || getStoredAccessToken());
   if (!navigator.onLine) {
     setConnectionUi(hasPendingData() ? "Offline, pending" : "Offline", "warn");
+    refreshSyncPanelText();
     return;
   }
 
@@ -1524,6 +1617,7 @@ function updateConnectionState() {
   } else {
     setConnectionUi("Local only");
   }
+  refreshSyncPanelText();
 }
 
 function makeSlug(value) {
@@ -1650,95 +1744,6 @@ async function exportReviewPacket() {
   const packet = generateReviewPacket();
   await copyTextToClipboard(packet);
   alert("Review packet copied to clipboard! Paste it into your AI coach chat.");
-}
-
-function importUpdatedPlan() {
-  const text = prompt("Paste the AI's updated plan here:");
-  if (!text) return;
-
-  const data = getLocalData();
-
-  try {
-    const lines = text.split("\n").map((l) => l.trim()).filter((l) => l);
-    let currentRoutineName = "";
-    let currentRoutineExercises = [];
-
-    lines.forEach((line) => {
-      if (line.startsWith("ROUTINE:") || line.match(/^[A-Z][a-zA-Z\s]+:$/)) {
-        if (currentRoutineName && currentRoutineExercises.length > 0) {
-          const routineId = `routine-${Date.now()}-${randomString(5)}`;
-          const existingIndex = data.routines?.findIndex((r) => r.name === currentRoutineName);
-          const newRoutine = {
-            id: existingIndex >= 0 ? data.routines[existingIndex].id : routineId,
-            name: currentRoutineName,
-            location: "mixed",
-            exercises: currentRoutineExercises,
-            notes: "Updated by AI coach"
-          };
-
-          if (existingIndex >= 0) {
-            data.routines[existingIndex] = newRoutine;
-          } else {
-            data.routines?.push(newRoutine);
-          }
-        }
-
-        currentRoutineName = line.replace(/:$/, "");
-        currentRoutineExercises = [];
-      } else if (currentRoutineName && line.match(/[-•]/)) {
-        const exercise = line.replace(/^[-•]\s*/, "");
-        const parts = exercise.split(":");
-        if (parts.length >= 2) {
-          const exName = parts[0].trim();
-          const exDef = parts[1].trim();
-          const exerciseId = exercises.find((e) => e.name.toLowerCase() === exName.toLowerCase())?.id || exName.toLowerCase().replace(/\s+/g, "-");
-
-          if (exDef.includes("min")) {
-            currentRoutineExercises.push({
-              exerciseId,
-              targetDuration: parseInt(exDef) || 30
-            });
-          } else {
-            const match = exDef.match(/(\d+)\s*x\s*(\d+)/);
-            if (match) {
-              currentRoutineExercises.push({
-                exerciseId,
-                targetSets: parseInt(match[1]),
-                targetReps: parseInt(match[2])
-              });
-            }
-          }
-        }
-      }
-    });
-
-    if (currentRoutineName && currentRoutineExercises.length > 0) {
-      const routineId = `routine-${Date.now()}-${randomString(5)}`;
-      const existingIndex = data.routines?.findIndex((r) => r.name === currentRoutineName);
-      const newRoutine = {
-        id: existingIndex >= 0 ? data.routines[existingIndex].id : routineId,
-        name: currentRoutineName,
-        location: "mixed",
-        exercises: currentRoutineExercises,
-        notes: "Updated by AI coach"
-      };
-
-      if (existingIndex >= 0) {
-        data.routines[existingIndex] = newRoutine;
-      } else {
-        data.routines?.push(newRoutine);
-      }
-    }
-
-    data.updatedAt = new Date().toISOString();
-    data.updatedBy = getDeviceId();
-    saveLocalData(data);
-    markPendingData(data);
-
-    alert("Plan updated! Your routines have been refreshed from the AI coach.");
-  } catch (error) {
-    alert(`Error parsing plan: ${error.message}`);
-  }
 }
 
 function parseRoutineExerciseLine(line) {
@@ -1942,9 +1947,16 @@ importPlanButton?.addEventListener("click", importUpdatedPlan);
 syncPill?.addEventListener("click", () => {
   handleSyncPillClick().catch((error) => {
     updateConnectionState();
-    alert(`${error.message} Your local data is still safe on this device.`);
+    setSyncStatus(`${error.message} Your local data is still safe on this device.`, "bad");
   });
 });
+
+connectDropboxButton?.addEventListener("click", connectDropboxFromPanel);
+retrySyncButton?.addEventListener("click", retrySyncFromPanel);
+loadLatestButton?.addEventListener("click", loadLatestFromPanel);
+resetDropboxButton?.addEventListener("click", resetDropboxFromPanel);
+refreshAppButton?.addEventListener("click", refreshAppUpdate);
+document.addEventListener("click", closeSyncPanelFromOutside);
 
 window.addEventListener("online", () => {
   updateConnectionState();
