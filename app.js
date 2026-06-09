@@ -95,7 +95,14 @@ const todayDisplay = new Intl.DateTimeFormat("en-US", {
   day: "numeric"
 }).format(today);
 
-const exercises = [
+// The exercise library now lives in Daniel's saved/synced data (data.library).
+// getStarterExercises() is the one-time seed used the first time the app runs
+// (or after a data reset). `exercises` is the live list the whole app reads;
+// refreshLibrary() reloads it from saved data after a change or a cloud sync.
+let exercises = getStarterExercises();
+
+function getStarterExercises() {
+  return [
   {
     id: "push-up",
     name: "Push-up",
@@ -192,7 +199,14 @@ const exercises = [
     icon: "treadmill",
     tags: ["gym", "cardio"]
   }
-];
+  ];
+}
+
+// Reload the live exercise list from saved data (after an edit or a cloud sync).
+function refreshLibrary() {
+  const data = getLocalData();
+  exercises = Array.isArray(data.library) ? data.library : getStarterExercises();
+}
 
 if (dateLabel) {
   dateLabel.textContent = todayDisplay;
@@ -272,7 +286,15 @@ function clampNumber(value, min, max) {
 }
 
 function makeTodayExercise(plannedEx, source = "planned") {
-  const exerciseInfo = getExerciseById(plannedEx.exerciseId) || exercises[0];
+  // If the planned exercise was removed from the library, show a clear
+  // placeholder rather than silently substituting a different exercise.
+  const exerciseInfo = getExerciseById(plannedEx.exerciseId) || {
+    id: plannedEx.exerciseId || "removed",
+    name: "(removed exercise)",
+    type: plannedEx.targetDuration ? "cardio" : "strength",
+    area: "Not in your library",
+    icon: "pushup"
+  };
   const isCardio = Boolean(plannedEx.targetDuration) || exerciseInfo.type === "cardio";
   const targetSets = Number(plannedEx.targetSets) || (isCardio ? 0 : 3);
   const targetReps = Number(plannedEx.targetReps) || 0;
@@ -767,6 +789,7 @@ function makeEmptyData() {
     updatedBy: getDeviceId(),
     routines: getStarterRoutines(),
     weeklyPlan: getStarterWeeklyPlan(),
+    library: getStarterExercises(),
     completedWorkouts: [],
     missedWorkouts: [],
     testEntries: [],
@@ -866,6 +889,11 @@ function getLocalData() {
   if (!data.weeklyPlan || typeof data.weeklyPlan !== 'object') {
     data.weeklyPlan = getStarterWeeklyPlan();
   }
+  // Older saved data predates the editable library: seed it once with the
+  // 12 starters. (An empty array is left alone - that means Daniel cleared it.)
+  if (!Array.isArray(data.library)) {
+    data.library = getStarterExercises();
+  }
   if (!Array.isArray(data.completedWorkouts)) {
     data.completedWorkouts = [];
   }
@@ -922,32 +950,178 @@ function getExerciseIcon(name) {
   return `<svg viewBox="0 0 116 116" role="img" aria-label="${escapeHtml(name)} line illustration">${icons[name] || icons.pushup}</svg>`;
 }
 
-function renderExercises(filter = "all") {
+// Library tab state: the filter currently selected, and the id of the
+// exercise being edited inline (null when nothing is being edited).
+let currentLibraryFilter = "all";
+let editingExerciseId = null;
+
+function renderExercises(filter = currentLibraryFilter) {
   if (!exerciseList) return;
+  currentLibraryFilter = filter;
 
   const visibleExercises = filter === "all"
     ? exercises
-    : exercises.filter((exercise) => exercise.tags.includes(filter));
+    : exercises.filter((exercise) => (exercise.tags || []).includes(filter));
 
   if (libraryCount) {
     const label = visibleExercises.length === 1 ? "exercise" : "exercises";
     libraryCount.textContent = `${visibleExercises.length} ${label}`;
   }
 
-  exerciseList.innerHTML = visibleExercises.map((exercise) => `
+  if (visibleExercises.length === 0) {
+    exerciseList.innerHTML = `<p class="library-empty">No exercises here yet. Add one above to get started.</p>`;
+    return;
+  }
+
+  exerciseList.innerHTML = visibleExercises.map((exercise) =>
+    exercise.id === editingExerciseId
+      ? renderExerciseEditCard(exercise)
+      : renderExerciseCard(exercise)
+  ).join("");
+}
+
+function renderExerciseCard(exercise) {
+  const tags = exercise.tags || [];
+  return `
     <article class="exercise-card">
       <div class="exercise-art">
         ${getExerciseIcon(exercise.icon)}
       </div>
       <div class="exercise-info">
         <h3>${escapeHtml(exercise.name)}</h3>
-        <p class="exercise-meta">${escapeHtml(exercise.area)}</p>
+        <p class="exercise-meta">${escapeHtml(exercise.area || "")}</p>
         <div class="tag-row">
-          ${exercise.tags.map((tag) => `<span class="exercise-tag">${escapeHtml(formatTag(tag))}</span>`).join("")}
+          ${tags.map((tag) => `<span class="exercise-tag">${escapeHtml(formatTag(tag))}</span>`).join("")}
+        </div>
+        <div class="exercise-actions">
+          <button type="button" class="exercise-action" data-action="edit-exercise" data-id="${escapeHtml(exercise.id)}">Edit</button>
+          <button type="button" class="exercise-action danger" data-action="remove-exercise" data-id="${escapeHtml(exercise.id)}">Remove</button>
         </div>
       </div>
     </article>
-  `).join("");
+  `;
+}
+
+function renderExerciseEditCard(exercise) {
+  const isCardio = exercise.type === "cardio";
+  return `
+    <article class="exercise-card is-editing">
+      <div class="exercise-art">
+        ${getExerciseIcon(exercise.icon)}
+      </div>
+      <div class="exercise-info">
+        <input type="text" class="exercise-edit-name" value="${escapeHtml(exercise.name)}" maxlength="40" aria-label="Exercise name" />
+        <div class="type-toggle" role="group" aria-label="Exercise type">
+          <button type="button" class="type-option${isCardio ? "" : " is-active"}" data-type="strength">Strength</button>
+          <button type="button" class="type-option${isCardio ? " is-active" : ""}" data-type="cardio">Cardio</button>
+        </div>
+        <div class="exercise-actions">
+          <button type="button" class="exercise-action primary" data-action="save-exercise" data-id="${escapeHtml(exercise.id)}">Save</button>
+          <button type="button" class="exercise-action" data-action="cancel-exercise">Cancel</button>
+        </div>
+      </div>
+    </article>
+  `;
+}
+
+// ===== Library add / edit / remove =====
+
+// Build a URL-safe-ish unique id from a name, e.g. "Bulgarian Split Squat".
+function makeExerciseId(name) {
+  const base = String(name).toLowerCase().trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 30) || "exercise";
+  return `${base}-${randomString(4)}`;
+}
+
+// Save the updated library everywhere: local backup, pending queue, and the
+// cloud (if signed in). Mirrors how workouts are persisted.
+function persistLibrary(library) {
+  const data = getLocalData();
+  data.library = library;
+  data.updatedAt = new Date().toISOString();
+  data.updatedBy = getDeviceId();
+  saveLocalData(data);
+  markPendingData(data);
+  exercises = library;
+  renderExercises();
+  renderExercisePicker();
+  if (navigator.onLine) {
+    uploadWorkoutData(data).then(clearPendingData).catch(() => {
+      // Not signed in or offline: the change is queued and syncs later.
+    });
+  }
+}
+
+function addLibraryExercise(name, type) {
+  const cleanName = String(name).trim();
+  if (!cleanName) return;
+  const isCardio = type === "cardio";
+  const newExercise = {
+    id: makeExerciseId(cleanName),
+    name: cleanName,
+    type: isCardio ? "cardio" : "strength",
+    area: isCardio ? "Cardio" : "Strength",
+    icon: isCardio ? "treadmill" : "pushup",
+    tags: isCardio ? ["custom", "cardio"] : ["custom"]
+  };
+  persistLibrary([...exercises, newExercise]);
+}
+
+function saveLibraryExerciseEdit(id, name, type) {
+  const cleanName = String(name).trim();
+  if (!cleanName) return;
+  const isCardio = type === "cardio";
+  const library = exercises.map((exercise) => {
+    if (exercise.id !== id) return exercise;
+    return {
+      ...exercise,
+      name: cleanName,
+      type: isCardio ? "cardio" : "strength"
+    };
+  });
+  editingExerciseId = null;
+  persistLibrary(library);
+}
+
+function removeLibraryExercise(id) {
+  const exercise = getExerciseById(id);
+  const name = exercise ? exercise.name : "this exercise";
+  if (!confirm(`Remove "${name}" from your library? Past workouts that used it are not affected.`)) return;
+  if (editingExerciseId === id) editingExerciseId = null;
+  persistLibrary(exercises.filter((item) => item.id !== id));
+}
+
+// One click handler for the whole library list (Edit / Remove / Save / Cancel
+// and the Strength/Cardio toggle inside an edit card).
+function handleLibraryListClick(event) {
+  const typeOption = event.target.closest(".type-option");
+  if (typeOption) {
+    const group = typeOption.parentElement;
+    group.querySelectorAll(".type-option").forEach((btn) => btn.classList.toggle("is-active", btn === typeOption));
+    return;
+  }
+
+  const button = event.target.closest("[data-action]");
+  if (!button) return;
+  const action = button.dataset.action;
+  const id = button.dataset.id;
+
+  if (action === "edit-exercise") {
+    editingExerciseId = id;
+    renderExercises();
+  } else if (action === "cancel-exercise") {
+    editingExerciseId = null;
+    renderExercises();
+  } else if (action === "remove-exercise") {
+    removeLibraryExercise(id);
+  } else if (action === "save-exercise") {
+    const card = button.closest(".exercise-card");
+    const name = card.querySelector(".exercise-edit-name")?.value || "";
+    const activeType = card.querySelector(".type-option.is-active")?.dataset.type || "strength";
+    saveLibraryExerciseEdit(id, name, activeType);
+  }
 }
 
 function renderExercisePicker() {
@@ -1489,6 +1663,11 @@ async function loadWorkoutData() {
   }
   if (!data.weeklyPlan || typeof data.weeklyPlan !== 'object') {
     data.weeklyPlan = getStarterWeeklyPlan();
+  }
+  // Older saved data predates the editable library: seed it once with the
+  // 12 starters. (An empty array is left alone - that means Daniel cleared it.)
+  if (!Array.isArray(data.library)) {
+    data.library = getStarterExercises();
   }
   if (!Array.isArray(data.completedWorkouts)) {
     data.completedWorkouts = [];
@@ -2167,6 +2346,26 @@ filterChips.forEach((chip) => {
   });
 });
 
+// Library: edit / remove / inline-edit actions on the exercise list.
+exerciseList?.addEventListener("click", handleLibraryListClick);
+
+// Library: the "Add your own exercise" form.
+const libraryAddForm = document.querySelector("#library-add-form");
+const newExerciseName = document.querySelector("#new-exercise-name");
+libraryAddForm?.addEventListener("click", (event) => {
+  const typeOption = event.target.closest(".type-option");
+  if (!typeOption) return;
+  libraryAddForm.querySelectorAll(".type-option").forEach((btn) => btn.classList.toggle("is-active", btn === typeOption));
+});
+libraryAddForm?.addEventListener("submit", (event) => {
+  event.preventDefault();
+  const name = newExerciseName?.value || "";
+  if (!name.trim()) return;
+  const type = libraryAddForm.querySelector(".type-option.is-active")?.dataset.type || "strength";
+  addLibraryExercise(name, type);
+  if (newExerciseName) newExerciseName.value = "";
+});
+
 addExerciseButton?.addEventListener("click", addExerciseToWorkout);
 
 exercisePicker?.addEventListener("change", () => {
@@ -2228,6 +2427,7 @@ window.addEventListener("online", () => {
 
 window.addEventListener("offline", updateConnectionState);
 
+refreshLibrary();
 renderExercises();
 renderExercisePicker();
 renderActiveWorkout();
@@ -2284,6 +2484,9 @@ async function initCloud() {
     if (remoteTime >= localTime) {
       // Cloud has the newest data: take it and refresh the screens.
       saveLocalData(remote);
+      refreshLibrary();
+      renderExercises();
+      renderExercisePicker();
       renderTodayRoutine();
       renderActiveWorkout();
       renderHistory();

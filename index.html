@@ -128,7 +128,7 @@
             <div>
               <p class="eyebrow">Exercises</p>
               <h2 id="library-title">Library</h2>
-              <p class="library-copy">Browse the starter list and narrow it to where you are training today.</p>
+              <p class="library-copy">Your exercise library. Add your own, edit or remove any of them, and filter by where you are training. Changes sync across your devices.</p>
             </div>
             <span class="library-count" id="library-count">0 exercises</span>
           </div>
@@ -142,6 +142,15 @@
             <button class="filter-chip" type="button" data-filter="machine">Cable/machine</button>
             <button class="filter-chip" type="button" data-filter="cardio">Cardio</button>
           </div>
+
+          <form class="library-add" id="library-add-form">
+            <input type="text" id="new-exercise-name" class="library-add-name" placeholder="Add your own exercise" autocomplete="off" maxlength="40" />
+            <div class="type-toggle" role="group" aria-label="Exercise type">
+              <button type="button" class="type-option is-active" data-type="strength">Strength</button>
+              <button type="button" class="type-option" data-type="cardio">Cardio</button>
+            </div>
+            <button type="submit" class="library-add-btn">Add</button>
+          </form>
 
           <div class="exercise-list" id="exercise-list" aria-live="polite"></div>
         </div>
