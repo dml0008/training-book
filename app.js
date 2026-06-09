@@ -37,6 +37,7 @@ const retrySyncButton = document.querySelector("#retry-sync");
 const loadLatestButton = document.querySelector("#load-latest");
 const resetDropboxButton = document.querySelector("#reset-dropbox");
 const refreshAppButton = document.querySelector("#refresh-app");
+const historyContent = document.querySelector("#history-content");
 const exerciseList = document.querySelector("#exercise-list");
 const libraryCount = document.querySelector("#library-count");
 const filterChips = Array.from(document.querySelectorAll(".filter-chip"));
@@ -605,8 +606,10 @@ async function saveTodayWorkout() {
     alert("Workout saved to Dropbox!");
     activeWorkout.exercises = [];
     renderTodayRoutine();
+    renderHistory();
   } catch (error) {
     alert(`${error.message} Workout is saved locally for now.`);
+    renderHistory();
   }
 }
 
@@ -629,6 +632,10 @@ function showScreen(name) {
       tab.removeAttribute("aria-current");
     }
   });
+
+  if (name === "history") {
+    renderHistory();
+  }
 }
 
 function setSyncStatus(message, tone = "") {
@@ -1661,6 +1668,63 @@ function formatWorkoutForExport(workout) {
   });
 
   return lines.join("\n");
+}
+
+function formatWorkoutDate(value) {
+  if (!value) return "Unknown date";
+  const parsedDate = new Date(`${value}T12:00:00`);
+  if (Number.isNaN(parsedDate.getTime())) return value;
+  return new Intl.DateTimeFormat("en-US", {
+    weekday: "short",
+    month: "short",
+    day: "numeric"
+  }).format(parsedDate);
+}
+
+function renderHistoryEntry(entry) {
+  const difficulty = entry.difficulty ? `Difficulty ${entry.difficulty}/10` : "Difficulty not logged";
+  return `
+    <li>
+      <span>${escapeHtml(entry.exerciseName || "Exercise")}</span>
+      <span>${escapeHtml(formatEntryDetails(entry))}</span>
+      <strong>${escapeHtml(difficulty)}</strong>
+    </li>
+  `;
+}
+
+function renderHistory() {
+  if (!historyContent) return;
+
+  const data = getLocalData();
+  const workouts = Array.isArray(data.workouts) ? data.workouts.slice().reverse() : [];
+
+  if (workouts.length === 0) {
+    historyContent.innerHTML = `<p class="empty-state">Past workouts will show here as you log.</p>`;
+    return;
+  }
+
+  historyContent.innerHTML = `
+    <div class="history-list">
+      ${workouts.map((workout) => {
+        const entries = Array.isArray(workout.entries) ? workout.entries : [];
+        const countLabel = entries.length === 1 ? "1 exercise" : `${entries.length} exercises`;
+        return `
+          <article class="history-card">
+            <div class="history-card-head">
+              <div>
+                <p class="eyebrow">${escapeHtml(formatWorkoutDate(workout.date))}</p>
+                <h3>${escapeHtml(workout.name || workout.routineName || "Workout")}</h3>
+              </div>
+              <span>${escapeHtml(countLabel)}</span>
+            </div>
+            <ul class="history-entry-list">
+              ${entries.map(renderHistoryEntry).join("")}
+            </ul>
+          </article>
+        `;
+      }).join("")}
+    </div>
+  `;
 }
 
 function generateReviewPacket() {
