@@ -272,7 +272,8 @@ p {
 .blank-panel,
 .library-panel,
 .log-panel,
-.history-panel {
+.history-panel,
+.plan-panel {
   border: 1px solid var(--line);
   border-radius: 8px;
   background: linear-gradient(145deg, rgba(23, 29, 27, 0.96), rgba(12, 16, 15, 0.98));
@@ -846,6 +847,7 @@ p {
 }
 
 .history-panel,
+.plan-panel,
 .history-heading {
   display: flex;
   flex-direction: column;
@@ -861,6 +863,105 @@ p {
 .history-actions button {
   flex: 1;
   min-width: 180px;
+}
+
+.plan-heading p:last-child,
+.plan-muted {
+  margin: 0;
+  color: var(--muted);
+}
+
+.plan-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.65fr);
+  gap: 12px;
+}
+
+.plan-card {
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(9, 12, 11, 0.5);
+}
+
+.plan-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.plan-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.plan-form label:last-child {
+  grid-column: 1 / -1;
+}
+
+.plan-actions {
+  display: grid;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.plan-week {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.plan-day {
+  min-height: 92px;
+  padding: 12px;
+  border: 1px solid rgba(155, 168, 161, 0.18);
+  border-radius: 8px;
+  background: rgba(23, 29, 27, 0.58);
+}
+
+.plan-day span {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.plan-day strong {
+  display: block;
+  font-size: 15px;
+  line-height: 1.25;
+}
+
+.plan-routines {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.plan-routine {
+  padding: 14px;
+  border: 1px solid rgba(155, 168, 161, 0.18);
+  border-radius: 8px;
+  background: rgba(23, 29, 27, 0.45);
+}
+
+.plan-routine h3 {
+  margin-top: 0;
+}
+
+.plan-routine ul {
+  margin: 12px 0 0;
+  padding-left: 18px;
+  color: var(--muted);
+}
+
+.plan-routine li + li {
+  margin-top: 6px;
 }
 
 .empty-state {
@@ -1356,7 +1457,7 @@ p {
   bottom: max(12px, env(safe-area-inset-bottom));
   left: max(12px, env(safe-area-inset-left));
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 6px;
   max-width: 720px;
   margin: 0 auto;
@@ -1779,7 +1880,11 @@ p {
 
   .quick-stats,
   .section-row,
-  .sync-grid {
+  .sync-grid,
+  .plan-grid,
+  .plan-form,
+  .plan-week,
+  .plan-routines {
     grid-template-columns: 1fr;
   }
 
@@ -1843,6 +1948,14 @@ p {
 
   .history-card-head > span {
     width: fit-content;
+  }
+
+  .plan-card-head {
+    flex-direction: column;
+  }
+
+  .plan-day {
+    min-height: auto;
   }
 
   .exercise-list {

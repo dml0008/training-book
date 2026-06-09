@@ -3,7 +3,7 @@ const DROPBOX_TOKEN_URL = "https://api.dropboxapi.com/oauth2/token";
 const DROPBOX_UPLOAD_URL = "https://content.dropboxapi.com/2/files/upload";
 const DROPBOX_DOWNLOAD_URL = "https://content.dropboxapi.com/2/files/download";
 const DATA_FILE_PATH = "/04_Technical/06_Side_Projects/Workout and Nutrition App/data/workout-data.json";
-const APP_VERSION = "2026.06.10-bodyweight";
+const APP_VERSION = "2026.06.10-plan-tab";
 
 const STORAGE = {
   appKey: "trainingBookDropboxAppKey",
@@ -39,6 +39,7 @@ const resetDropboxButton = document.querySelector("#reset-dropbox");
 const refreshAppButton = document.querySelector("#refresh-app");
 const historyContent = document.querySelector("#history-content");
 const progressContent = document.querySelector("#progress-content");
+const planContent = document.querySelector("#plan-content");
 const exerciseList = document.querySelector("#exercise-list");
 const libraryCount = document.querySelector("#library-count");
 const filterChips = Array.from(document.querySelectorAll(".filter-chip"));
@@ -691,6 +692,10 @@ function showScreen(name) {
     renderHistory();
   }
 
+  if (name === "plan") {
+    renderPlan();
+  }
+
   if (name === "progress") {
     renderProgress();
   }
@@ -792,6 +797,7 @@ function makeEmptyData() {
     appName: "Training Book",
     updatedAt: null,
     updatedBy: getDeviceId(),
+    activePlan: getStarterActivePlan(),
     routines: getStarterRoutines(),
     weeklyPlan: getStarterWeeklyPlan(),
     library: getStarterExercises(),
@@ -801,6 +807,16 @@ function makeEmptyData() {
     workouts: [],
     bodyWeights: [],
     weightTarget: null
+  };
+}
+
+function getStarterActivePlan() {
+  return {
+    name: "Current Training Plan",
+    mainGoal: "",
+    notes: "",
+    reviewCadence: "Weekly AI review",
+    nextReviewDate: ""
   };
 }
 
@@ -888,6 +904,12 @@ function readJson(key) {
 
 function getLocalData() {
   const data = readJson(STORAGE.localData) || makeEmptyData();
+
+  if (!data.activePlan || typeof data.activePlan !== "object") {
+    data.activePlan = getStarterActivePlan();
+  } else {
+    data.activePlan = { ...getStarterActivePlan(), ...data.activePlan };
+  }
 
   // Migrate old data to include routines and weekly plan if missing
   if (!data.routines || !Array.isArray(data.routines) || data.routines.length === 0) {
@@ -1673,6 +1695,11 @@ async function loadWorkoutData() {
   const data = await downloadWorkoutData();
 
   // Apply migration to ensure new structure exists
+  if (!data.activePlan || typeof data.activePlan !== "object") {
+    data.activePlan = getStarterActivePlan();
+  } else {
+    data.activePlan = { ...getStarterActivePlan(), ...data.activePlan };
+  }
   if (!data.routines || !Array.isArray(data.routines) || data.routines.length === 0) {
     data.routines = getStarterRoutines();
   }
@@ -1847,6 +1874,125 @@ function formatRoutineExercise(exercise) {
   const name = exerciseInfo?.name || exercise.exerciseId;
   if (exercise.targetDuration) return `- ${name}: ${exercise.targetDuration} min`;
   return `- ${name}: ${exercise.targetSets || 1}x${exercise.targetReps || 0}`;
+}
+
+function formatRoutineExerciseDisplay(exercise) {
+  return escapeHtml(formatRoutineExercise(exercise).replace(/^-\s*/, ""));
+}
+
+function formatDayName(day) {
+  return String(day || "").charAt(0).toUpperCase() + String(day || "").slice(1);
+}
+
+function getRoutineNameById(routineId, routines) {
+  if (!routineId) return "Rest";
+  return routines.find((routine) => routine.id === routineId)?.name || "(removed routine)";
+}
+
+function renderPlan() {
+  if (!planContent) return;
+
+  const data = getLocalData();
+  const activePlan = { ...getStarterActivePlan(), ...(data.activePlan || {}) };
+  const routines = Array.isArray(data.routines) ? data.routines : [];
+  const weeklyPlan = data.weeklyPlan || getStarterWeeklyPlan();
+
+  planContent.innerHTML = `
+    <div class="plan-grid">
+      <section class="plan-card">
+        <div class="plan-card-head">
+          <p class="card-kicker">Loaded plan</p>
+          <button class="primary-button small-button" type="button" data-plan-save>Save plan notes</button>
+        </div>
+        <div class="plan-form">
+          <label>
+            <span>Plan name</span>
+            <input id="plan-name-input" value="${escapeHtml(activePlan.name)}" autocomplete="off" placeholder="Current Training Plan">
+          </label>
+          <label>
+            <span>Main goal</span>
+            <input id="plan-goal-input" value="${escapeHtml(activePlan.mainGoal)}" autocomplete="off" placeholder="Example: build strength while staying consistent">
+          </label>
+          <label>
+            <span>Review rhythm</span>
+            <input id="plan-review-input" value="${escapeHtml(activePlan.reviewCadence)}" autocomplete="off" placeholder="Weekly AI review">
+          </label>
+          <label>
+            <span>Next review date</span>
+            <input id="plan-next-review-input" value="${escapeHtml(activePlan.nextReviewDate)}" autocomplete="off" placeholder="YYYY-MM-DD">
+          </label>
+          <label>
+            <span>Plan notes</span>
+            <textarea id="plan-notes-input" placeholder="Constraints, preferences, injuries, focus notes, or anything the AI coach should remember.">${escapeHtml(activePlan.notes)}</textarea>
+          </label>
+        </div>
+      </section>
+
+      <section class="plan-card">
+        <p class="card-kicker">AI review loop</p>
+        <h3>Coach packet</h3>
+        <p class="plan-muted">Export the current app context, review it in an AI chat, then paste the updated structured plan back here.</p>
+        <div class="plan-actions">
+          <button class="primary-button" id="export-review-packet" type="button">Export for AI review</button>
+          <button class="quiet-button" id="import-plan" type="button">Import updated plan</button>
+        </div>
+      </section>
+    </div>
+
+    <section class="plan-card">
+      <div class="plan-card-head">
+        <p class="card-kicker">Weekly schedule</p>
+        <span class="plan-muted">${Object.values(weeklyPlan).filter(Boolean).length} planned days</span>
+      </div>
+      <div class="plan-week">
+        ${DOW_NAMES.map((day) => `
+          <div class="plan-day">
+            <span>${formatDayName(day)}</span>
+            <strong>${escapeHtml(getRoutineNameById(weeklyPlan[day], routines))}</strong>
+          </div>
+        `).join("")}
+      </div>
+    </section>
+
+    <section class="plan-card">
+      <p class="card-kicker">Routines</p>
+      <div class="plan-routines">
+        ${routines.length ? routines.map((routine) => `
+          <article class="plan-routine">
+            <div>
+              <h3>${escapeHtml(routine.name)}</h3>
+              <p class="plan-muted">${escapeHtml(routine.location || "mixed")}${routine.notes ? ` - ${escapeHtml(routine.notes)}` : ""}</p>
+            </div>
+            <ul>
+              ${(routine.exercises || []).map((exercise) => `<li>${formatRoutineExerciseDisplay(exercise)}</li>`).join("")}
+            </ul>
+          </article>
+        `).join("") : `<p class="empty-state">No routines loaded yet. Import a plan or build routines with your AI coach.</p>`}
+      </div>
+    </section>
+  `;
+
+  wirePlanScreen();
+}
+
+function saveActivePlanFromScreen() {
+  const data = getLocalData();
+  data.activePlan = {
+    ...getStarterActivePlan(),
+    name: document.querySelector("#plan-name-input")?.value.trim() || "Current Training Plan",
+    mainGoal: document.querySelector("#plan-goal-input")?.value.trim() || "",
+    reviewCadence: document.querySelector("#plan-review-input")?.value.trim() || "",
+    nextReviewDate: document.querySelector("#plan-next-review-input")?.value.trim() || "",
+    notes: document.querySelector("#plan-notes-input")?.value.trim() || ""
+  };
+  commitProgressData(data);
+  renderPlan();
+}
+
+function wirePlanScreen() {
+  planContent?.querySelector("[data-plan-save]")?.addEventListener("click", saveActivePlanFromScreen);
+  planContent?.querySelector("#export-review-packet")?.addEventListener("click", exportReviewPacket);
+  planContent?.querySelector("#import-plan")?.addEventListener("click", importUpdatedPlan);
 }
 
 function formatWorkoutForExport(workout) {
@@ -2499,25 +2645,50 @@ historyDetailCloseButton?.addEventListener("click", closeHistoryDetail);
 function generateReviewPacket() {
   const data = getLocalData();
   const packet = [];
+  const activePlan = { ...getStarterActivePlan(), ...(data.activePlan || {}) };
+  const weeklyPlan = data.weeklyPlan || getStarterWeeklyPlan();
+  const routines = Array.isArray(data.routines) ? data.routines : [];
+  const library = Array.isArray(data.library) ? data.library : exercises;
 
   packet.push("=== TRAINING BOOK REVIEW PACKET ===");
   packet.push(`Exported: ${new Date().toISOString()}`);
   packet.push("");
 
+  packet.push("HOW TRAINING BOOK WORKS:");
+  packet.push("- Today reads from the weekly plan and loaded routines.");
+  packet.push("- Strength targets use sets x reps. Logged strength work includes actual sets, reps, weight, and difficulty.");
+  packet.push("- Cardio/time targets use minutes. Logged cardio work includes actual minutes and difficulty.");
+  packet.push("- Skipped exercises are omitted from saved workouts, so coach the work that was actually logged.");
+  packet.push("- Return the updated plan using the structured format at the end of this packet.");
+  packet.push("");
+
   packet.push("COACHING REQUEST:");
-  packet.push("Review the workouts I actually completed, the difficulty ratings, and my current plan. Suggest updated routines and a weekly plan. Focus feedback on what I did log, not on skipped or omitted exercises.");
+  packet.push("Review the workouts I actually completed, my difficulty ratings, my current loaded plan, and my exercise library. Suggest an updated active plan, weekly schedule, and routines. Keep daily logging quick and realistic.");
+  packet.push("");
+
+  packet.push("ACTIVE PLAN:");
+  packet.push(`name: ${activePlan.name || "Current Training Plan"}`);
+  packet.push(`main goal: ${activePlan.mainGoal || "(not set)"}`);
+  packet.push(`review cadence: ${activePlan.reviewCadence || "(not set)"}`);
+  packet.push(`next review date: ${activePlan.nextReviewDate || "(not set)"}`);
+  packet.push(`notes: ${activePlan.notes || "(none)"}`);
+  packet.push("");
+
+  packet.push("EXERCISE LIBRARY:");
+  library.forEach((exercise) => {
+    packet.push(`- ${exercise.name} (${exercise.type || "strength"}${exercise.area ? `, ${exercise.area}` : ""})`);
+  });
   packet.push("");
 
   packet.push("CURRENT WEEKLY PLAN:");
-  const weeklyPlan = data.weeklyPlan || getStarterWeeklyPlan();
   Object.entries(weeklyPlan).forEach(([day, routineId]) => {
-    const routine = data.routines?.find((r) => r.id === routineId);
+    const routine = routines.find((r) => r.id === routineId);
     packet.push(`${day}: ${routine?.name || "rest"}`);
   });
   packet.push("");
 
   packet.push("CURRENT ROUTINES:");
-  data.routines?.forEach((routine) => {
+  routines.forEach((routine) => {
     packet.push(`ROUTINE: ${routine.name}`);
     routine.exercises?.forEach((exercise) => {
       packet.push(formatRoutineExercise(exercise));
@@ -2539,6 +2710,13 @@ function generateReviewPacket() {
 
   packet.push("RETURN FORMAT FOR TRAINING BOOK IMPORT:");
   packet.push("Please return only plain text in this format:");
+  packet.push("ACTIVE PLAN:");
+  packet.push("name: Plan Name");
+  packet.push("main goal: One sentence goal");
+  packet.push("review cadence: Weekly AI review");
+  packet.push("next review date: YYYY-MM-DD or leave blank");
+  packet.push("notes: Short notes for the plan");
+  packet.push("");
   packet.push("WEEKLY PLAN:");
   packet.push("monday: Routine Name or rest");
   packet.push("tuesday: Routine Name or rest");
@@ -2552,7 +2730,7 @@ function generateReviewPacket() {
   packet.push("- Exercise Name: 3x8");
   packet.push("- Cardio Name: 30 min");
   packet.push("");
-  packet.push("Use exercise names when possible. Keep each routine exercise on one dash line.");
+  packet.push("Use exercise names from the library when possible. Keep each routine exercise on one dash line. Do not include extra commentary outside this format.");
 
   return packet.join("\n");
 }
@@ -2610,6 +2788,7 @@ function parseRoutineExerciseLine(line) {
 
 function parseAiPlanText(text) {
   const lines = text.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+  const activePlan = {};
   const routines = [];
   const weeklyPlanNames = {};
   let mode = "";
@@ -2617,6 +2796,12 @@ function parseAiPlanText(text) {
 
   lines.forEach((line) => {
     const upper = line.toUpperCase();
+    if (upper === "ACTIVE PLAN:" || upper === "ACTIVE PLAN" || upper === "PLAN:" || upper === "PLAN") {
+      mode = "active-plan";
+      currentRoutine = null;
+      return;
+    }
+
     if (upper === "WEEKLY PLAN:" || upper === "WEEKLY PLAN") {
       mode = "weekly";
       currentRoutine = null;
@@ -2635,6 +2820,19 @@ function parseAiPlanText(text) {
       return;
     }
 
+    if (mode === "active-plan") {
+      const separatorIndex = line.indexOf(":");
+      if (separatorIndex < 1) return;
+      const key = line.slice(0, separatorIndex).trim().toLowerCase();
+      const value = line.slice(separatorIndex + 1).trim();
+      if (key === "name" || key === "plan name") activePlan.name = value;
+      if (key === "main goal" || key === "goal") activePlan.mainGoal = value;
+      if (key === "review cadence" || key === "review rhythm") activePlan.reviewCadence = value;
+      if (key === "next review date") activePlan.nextReviewDate = value;
+      if (key === "notes" || key === "plan notes") activePlan.notes = value;
+      return;
+    }
+
     if (mode === "weekly") {
       const match = line.match(/^(monday|tuesday|wednesday|thursday|friday|saturday|sunday)\s*:\s*(.+)$/i);
       if (match) {
@@ -2650,6 +2848,7 @@ function parseAiPlanText(text) {
   });
 
   return {
+    activePlan,
     routines: routines.filter((routine) => routine.name && routine.exercises.length > 0),
     weeklyPlanNames
   };
@@ -2666,58 +2865,99 @@ function makeUniqueRoutineId(name, routines) {
   return id;
 }
 
+function buildImportedPlanData(currentData, parsed) {
+  const data = structuredClone(currentData);
+  data.activePlan = { ...getStarterActivePlan(), ...(data.activePlan || {}), ...(parsed.activePlan || {}) };
+  data.routines = Array.isArray(data.routines) ? data.routines : [];
+
+  parsed.routines.forEach((routine) => {
+    const existingIndex = data.routines.findIndex((item) => item.name.toLowerCase() === routine.name.toLowerCase());
+    const existing = existingIndex >= 0 ? data.routines[existingIndex] : null;
+    const nextRoutine = {
+      id: existing?.id || makeUniqueRoutineId(routine.name, data.routines),
+      name: routine.name,
+      location: existing?.location || routine.location,
+      exercises: routine.exercises,
+      notes: routine.notes
+    };
+
+    if (existingIndex >= 0) {
+      data.routines[existingIndex] = nextRoutine;
+    } else {
+      data.routines.push(nextRoutine);
+    }
+  });
+
+  if (Object.keys(parsed.weeklyPlanNames).length > 0) {
+    const nextWeeklyPlan = { ...(data.weeklyPlan || getStarterWeeklyPlan()) };
+    Object.entries(parsed.weeklyPlanNames).forEach(([day, routineName]) => {
+      if (!routineName || routineName.toLowerCase() === "rest" || routineName.toLowerCase() === "off") {
+        nextWeeklyPlan[day] = null;
+        return;
+      }
+
+      const routine = data.routines.find((item) => item.name.toLowerCase() === routineName.toLowerCase());
+      if (routine) {
+        nextWeeklyPlan[day] = routine.id;
+      }
+    });
+    data.weeklyPlan = nextWeeklyPlan;
+  }
+
+  return data;
+}
+
+function summarizePlanImport(parsed, nextData) {
+  const lines = [];
+  const activePlanKeys = Object.keys(parsed.activePlan || {}).filter((key) => parsed.activePlan[key]);
+  if (activePlanKeys.length > 0) {
+    lines.push(`Active plan: ${nextData.activePlan.name || "Current Training Plan"}`);
+    if (nextData.activePlan.mainGoal) lines.push(`Goal: ${nextData.activePlan.mainGoal}`);
+  } else {
+    lines.push("Active plan notes: no changes");
+  }
+
+  if (Object.keys(parsed.weeklyPlanNames).length > 0) {
+    lines.push("");
+    lines.push("Weekly schedule:");
+    DOW_NAMES.forEach((day) => {
+      lines.push(`${formatDayName(day)}: ${getRoutineNameById(nextData.weeklyPlan?.[day], nextData.routines || [])}`);
+    });
+  }
+
+  if (parsed.routines.length > 0) {
+    lines.push("");
+    lines.push("Routines to add/update:");
+    parsed.routines.forEach((routine) => {
+      lines.push(`- ${routine.name} (${routine.exercises.length} exercises)`);
+    });
+  }
+
+  lines.push("");
+  lines.push("Load this updated plan into Training Book?");
+  return lines.join("\n");
+}
+
 function importUpdatedPlan() {
   const text = prompt("Paste the AI's updated plan here:");
   if (!text) return;
 
   try {
     const parsed = parseAiPlanText(text);
-    if (parsed.routines.length === 0 && Object.keys(parsed.weeklyPlanNames).length === 0) {
-      throw new Error("No routines or weekly plan lines found. Use the export packet's return format.");
+    const hasActivePlan = Object.values(parsed.activePlan || {}).some(Boolean);
+    if (!hasActivePlan && parsed.routines.length === 0 && Object.keys(parsed.weeklyPlanNames).length === 0) {
+      throw new Error("No active plan, routines, or weekly plan lines found. Use the export packet's return format.");
     }
 
     const data = getLocalData();
-    data.routines = Array.isArray(data.routines) ? data.routines : [];
+    const nextData = buildImportedPlanData(data, parsed);
+    if (!confirm(summarizePlanImport(parsed, nextData))) return;
 
-    parsed.routines.forEach((routine) => {
-      const existingIndex = data.routines.findIndex((item) => item.name.toLowerCase() === routine.name.toLowerCase());
-      const existing = existingIndex >= 0 ? data.routines[existingIndex] : null;
-      const nextRoutine = {
-        id: existing?.id || makeUniqueRoutineId(routine.name, data.routines),
-        name: routine.name,
-        location: existing?.location || routine.location,
-        exercises: routine.exercises,
-        notes: routine.notes
-      };
-
-      if (existingIndex >= 0) {
-        data.routines[existingIndex] = nextRoutine;
-      } else {
-        data.routines.push(nextRoutine);
-      }
-    });
-
-    if (Object.keys(parsed.weeklyPlanNames).length > 0) {
-      const nextWeeklyPlan = { ...(data.weeklyPlan || getStarterWeeklyPlan()) };
-      Object.entries(parsed.weeklyPlanNames).forEach(([day, routineName]) => {
-        if (!routineName || routineName.toLowerCase() === "rest" || routineName.toLowerCase() === "off") {
-          nextWeeklyPlan[day] = null;
-          return;
-        }
-
-        const routine = data.routines.find((item) => item.name.toLowerCase() === routineName.toLowerCase());
-        if (routine) {
-          nextWeeklyPlan[day] = routine.id;
-        }
-      });
-      data.weeklyPlan = nextWeeklyPlan;
-    }
-
-    data.updatedAt = new Date().toISOString();
-    data.updatedBy = getDeviceId();
-    saveLocalData(data);
-    markPendingData(data);
+    nextData.updatedAt = new Date().toISOString();
+    nextData.updatedBy = getDeviceId();
+    commitProgressData(nextData);
     renderTodayRoutine();
+    renderPlan();
 
     alert("Plan imported. Today has been refreshed with the latest weekly plan.");
   } catch (error) {
@@ -2825,6 +3065,7 @@ renderExercises();
 renderExercisePicker();
 renderActiveWorkout();
 renderTodayRoutine();
+renderPlan();
 
 // ===== Firebase cloud sync setup =====
 // Daniel's Training Book Firebase project. The apiKey here is a public
@@ -2882,6 +3123,7 @@ async function initCloud() {
       renderExercisePicker();
       renderTodayRoutine();
       renderActiveWorkout();
+      renderPlan();
       renderHistory();
     } else if (local) {
       // This device has newer data (e.g. logged offline): push it up.
