@@ -3,7 +3,7 @@ const DROPBOX_TOKEN_URL = "https://api.dropboxapi.com/oauth2/token";
 const DROPBOX_UPLOAD_URL = "https://content.dropboxapi.com/2/files/upload";
 const DROPBOX_DOWNLOAD_URL = "https://content.dropboxapi.com/2/files/download";
 const DATA_FILE_PATH = "/04_Technical/06_Side_Projects/Workout and Nutrition App/data/workout-data.json";
-const APP_VERSION = "2026.06.12-live-workout";
+const APP_VERSION = "2026.06.13-built-in-timer";
 
 const STORAGE = {
   appKey: "trainingBookDropboxAppKey",
@@ -236,8 +236,33 @@ const activeWorkout = {
   // Slice 2 (focused workout): which exercise screen we're on, and whether
   // we're showing an exercise ("exercise") or the finish/summary ("finish").
   currentIndex: 0,
-  phase: "exercise"
+  phase: "exercise",
+  // Slice 2b (built-in timer for held moves like a plank). Lives outside the
+  // exercise list because it's about the live countdown, not saved data.
+  timer: {
+    total: 45000,      // chosen hold length in milliseconds
+    remaining: 45000,  // milliseconds left on the current countdown
+    running: false,    // true while counting down
+    raf: null,         // requestAnimationFrame handle
+    lastTs: 0,         // last animation timestamp, for accurate elapsed time
+    finished: false    // true for a moment after hitting zero (drives the flash)
+  }
 };
+
+// Held / "timed" moves are done for a number of seconds, not weight x reps
+// (e.g. a plank held 3 x 45 sec). We detect them by id so existing plans work
+// straight away; a future tweak can let custom exercises be tagged this way.
+const TIMED_HOLD_IDS = ["plank", "side-plank", "wall-sit", "hollow-hold", "dead-hang", "l-sit"];
+
+// True when an exercise should use the built-in countdown timer (a hold),
+// rather than weight/reps rows (strength) or a minutes box (steady cardio).
+function isTimedHoldExercise(exerciseInfo, plannedEx) {
+  if (!exerciseInfo) return false;
+  if (exerciseInfo.type === "timed") return true;
+  // A plain duration target (e.g. "30 min") is steady cardio, not a hold.
+  if (plannedEx && Number(plannedEx.targetDuration) > 0 && exerciseInfo.type === "cardio") return false;
+  return TIMED_HOLD_IDS.includes(exerciseInfo.id);
+}
 
 let planImportPreview = null;
 let planImportSummary = "";
@@ -317,25 +342,35 @@ function makeTodayExercise(plannedEx, source = "planned") {
     area: "Not in your library",
     icon: "pushup"
   };
-  const isCardio = Boolean(plannedEx.targetDuration) || exerciseInfo.type === "cardio";
+  const isTimed = isTimedHoldExercise(exerciseInfo, plannedEx);
+  const isCardio = !isTimed && (Boolean(plannedEx.targetDuration) || exerciseInfo.type === "cardio");
   const targetSets = Number(plannedEx.targetSets) || (isCardio ? 0 : 3);
   const targetReps = Number(plannedEx.targetReps) || 0;
   const targetDuration = Number(plannedEx.targetDuration) || 0;
 
+  // For a held move, the planned target reads like "3 x 45 sec": targetSets
+  // holds, each held for some seconds. The seconds come through as the reps
+  // number (e.g. "Plank: 3x45") or a duration; default to 45 if not given.
+  const holdSeconds = isTimed ? (targetDuration || targetReps || 45) : 0;
+  const holdCount = isTimed ? (targetSets || 1) : 0;
+  const holds = Array.from({ length: holdCount }).map(() => ({ done: false }));
+
   // One row per planned set, each holding the weight/reps actually done and a
   // done flag you tap to check off. Pre-filled with the planned reps.
-  const setCount = targetSets || (isCardio ? 0 : 1);
-  const sets = Array.from({ length: setCount }).map(() => ({
+  const setCount = targetSets || (isCardio || isTimed ? 0 : 1);
+  const sets = Array.from({ length: isTimed ? 0 : setCount }).map(() => ({
     weight: 0,
     reps: targetReps,
     done: false
   }));
 
+  const type = isTimed ? "timed" : (isCardio ? "cardio" : "strength");
+
   return {
     id: `today-${exerciseInfo.id}-${randomString(5)}`,
     exerciseId: exerciseInfo.id,
     name: exerciseInfo.name,
-    type: isCardio ? "cardio" : "strength",
+    type,
     area: exerciseInfo.area,
     icon: exerciseInfo.icon,
     source,
@@ -343,6 +378,8 @@ function makeTodayExercise(plannedEx, source = "planned") {
     targetReps,
     targetDuration,
     sets,
+    holds,
+    holdSeconds,
     actualDuration: targetDuration || 30,
     cardioDone: false,
     difficulty: 5,
@@ -459,6 +496,9 @@ function setTodayMode(mode) {
 
 // Plain-language target line for a preview card, e.g. "3 × 8" or "10 min".
 function formatPreviewMeta(exercise) {
+  if (exercise.type === "timed") {
+    return `${(exercise.holds || []).length} × ${exercise.holdSeconds || 0} sec`;
+  }
   if (exercise.type === "cardio") {
     const mins = exercise.targetDuration || exercise.actualDuration || 0;
     return `${mins} min`;
@@ -485,7 +525,7 @@ function renderTodayPreview(routine) {
         <h3 class="pv-name">${escapeHtml(ex.name)}</h3>
         <p class="pv-meta">${escapeHtml(formatPreviewMeta(ex))}</p>
       </div>
-      ${ex.type === "cardio" ? `<span class="pv-tag">TIMED</span>` : ""}
+      ${(ex.type === "cardio" || ex.type === "timed") ? `<span class="pv-tag">TIMED</span>` : ""}
     </article>
   `).join("");
 }
@@ -502,6 +542,7 @@ function startTodayWorkout() {
 }
 
 function exitTodayWorkout() {
+  stopTimer();
   activeWorkout.started = false;
   activeWorkout.exercises = [];
   activeWorkout.currentIndex = 0;
@@ -567,6 +608,7 @@ function handleTodayExerciseCheck(event) {
 // marked done. Used to decide what gets saved and how the recap reads.
 function isExerciseLogged(ex) {
   if (ex.type === "cardio") return Boolean(ex.cardioDone) && Number(ex.actualDuration) > 0;
+  if (ex.type === "timed") return Array.isArray(ex.holds) && ex.holds.some((hold) => hold.done);
   return Array.isArray(ex.sets) && ex.sets.some((set) => set.done);
 }
 
@@ -574,6 +616,10 @@ function isExerciseLogged(ex) {
 function formatExerciseRecap(ex) {
   if (ex.type === "cardio") {
     return ex.cardioDone ? `${Number(ex.actualDuration) || 0} min` : "Not logged";
+  }
+  if (ex.type === "timed") {
+    const doneHolds = (ex.holds || []).filter((hold) => hold.done).length;
+    return doneHolds ? `${doneHolds} × ${ex.holdSeconds || 0} sec` : "Not logged";
   }
   const doneSets = (ex.sets || []).filter((set) => set.done);
   if (doneSets.length === 0) return "Not logged";
@@ -585,6 +631,7 @@ function formatExerciseRecap(ex) {
 
 // Plain target line for the focused screen, e.g. "3 × 8" or "10 min".
 function formatFocusTarget(ex) {
+  if (ex.type === "timed") return `${(ex.holds || []).length} × ${ex.holdSeconds || 0} sec`;
   if (ex.type === "cardio") return `${ex.targetDuration || ex.actualDuration || 0} min`;
   if (ex.targetReps) return `${ex.targetSets || (ex.sets || []).length} × ${ex.targetReps}`;
   return `${ex.targetSets || (ex.sets || []).length} sets`;
@@ -613,7 +660,34 @@ function renderFocusedExercise() {
     : `Next: ${escapeHtml(exercises[i + 1].name)} &rarr;`;
 
   let body;
-  if (ex.type === "cardio") {
+  if (ex.type === "timed") {
+    // Held move (e.g. plank): a real countdown timer with presets and one
+    // tappable pill per hold. Point the timer at this exercise on first view.
+    if (activeWorkout.timer.exerciseId !== ex.id) initTimerForExercise(ex);
+    const t = activeWorkout.timer;
+    const running = t.running;
+    const lock = running ? " disabled" : "";
+    const presets = [30, 45, 60, 90];
+    const toggleLabel = running
+      ? "Pause"
+      : (t.remaining < t.total && t.remaining > 0 ? "Resume" : "Start");
+    body = `
+      <div class="lw-timer${running ? " is-running" : ""}${t.finished ? " is-finished" : ""}">
+        <div class="lw-timer-num${t.finished ? " flash" : ""}" id="lw-timer-num" aria-live="off">${formatTimer(t.remaining)}</div>
+        <div class="lw-presets">
+          ${presets.map((sec) => `<button class="lw-preset${ex.holdSeconds === sec ? " on" : ""}" type="button" data-action="timer-preset" data-seconds="${sec}"${lock}>${sec}s</button>`).join("")}
+        </div>
+        <div class="lw-timer-controls">
+          <button class="lw-tbtn primary" type="button" data-action="timer-toggle">${toggleLabel}</button>
+          <button class="lw-tbtn" type="button" data-action="timer-reset"${lock}>Reset</button>
+        </div>
+        <div class="lw-pills">
+          ${(ex.holds || []).map((hold, hi) => `<button class="lw-pill${hold.done ? " is-done" : ""}" type="button" data-action="toggle-hold" data-hold-index="${hi}"${lock} aria-label="Mark hold ${hi + 1} done">${hi + 1}</button>`).join("")}
+        </div>
+        <p class="lw-note">${t.finished ? "Time&rsquo;s up! Tap the hold below to log it, then start the next one." : "Tap a number to mark each hold done."}</p>
+      </div>
+    `;
+  } else if (ex.type === "cardio") {
     body = `
       <div class="lw-cardio">
         <label class="lw-field lw-field-lg">
@@ -622,7 +696,7 @@ function renderFocusedExercise() {
         </label>
         <button class="lw-bigcheck${ex.cardioDone ? " is-done" : ""}" type="button" data-action="toggle-cardio">${ex.cardioDone ? "Done &#10003;" : "Mark done"}</button>
       </div>
-      <p class="lw-note">Built-in timer coming next - for now, enter your minutes and mark it done.</p>
+      <p class="lw-note">Enter your minutes and mark it done. (Peloton/power stats are a planned add.)</p>
     `;
   } else {
     body = `
@@ -747,6 +821,71 @@ function handleTodayWorkoutChange(event) {
   }
 }
 
+// ---- Built-in countdown timer for held moves (Slice 2b) ----
+
+// "M:SS.cc" readout (minutes, seconds, hundredths) like the mockup.
+function formatTimer(ms) {
+  if (ms < 0) ms = 0;
+  const m = Math.floor(ms / 60000);
+  const s = Math.floor((ms % 60000) / 1000);
+  const cs = Math.floor((ms % 1000) / 10);
+  return `${m}:${String(s).padStart(2, "0")}.${String(cs).padStart(2, "0")}`;
+}
+
+// Point the live timer at a held exercise: set the countdown to its chosen
+// hold length and clear any previous run.
+function initTimerForExercise(ex) {
+  const t = activeWorkout.timer;
+  cancelAnimationFrame(t.raf);
+  const ms = Math.max(1, Number(ex.holdSeconds) || 45) * 1000;
+  t.total = ms;
+  t.remaining = ms;
+  t.running = false;
+  t.finished = false;
+  t.lastTs = 0;
+  t.exerciseId = ex.id;
+}
+
+// Pause and clear the timer (used when leaving an exercise screen).
+function stopTimer() {
+  const t = activeWorkout.timer;
+  t.running = false;
+  cancelAnimationFrame(t.raf);
+  t.lastTs = 0;
+  t.finished = false;
+}
+
+// The countdown itself: updates the readout each animation frame so it doesn't
+// trigger a full re-render while ticking. On reaching zero it flashes, buzzes,
+// resets ready for the next hold, then clears the flash.
+function timerLoop(ts) {
+  const t = activeWorkout.timer;
+  if (!t.running) return;
+  if (!t.lastTs) t.lastTs = ts;
+  t.remaining -= (ts - t.lastTs);
+  t.lastTs = ts;
+
+  const numEl = document.getElementById("lw-timer-num");
+  if (numEl) numEl.textContent = formatTimer(t.remaining);
+
+  if (t.remaining <= 0) {
+    t.remaining = t.total;
+    t.running = false;
+    t.finished = true;
+    t.lastTs = 0;
+    if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+    renderTodayWorkout();
+    setTimeout(() => {
+      if (activeWorkout.timer.finished) {
+        activeWorkout.timer.finished = false;
+        if (activeWorkout.started && activeWorkout.phase !== "finish") renderTodayWorkout();
+      }
+    }, 2200);
+    return;
+  }
+  t.raf = requestAnimationFrame(timerLoop);
+}
+
 function handleTodayWorkoutClick(event) {
   const button = event.target.closest("button");
   if (!button) return;
@@ -754,6 +893,7 @@ function handleTodayWorkoutClick(event) {
   const exercise = getActiveExercise();
 
   if (action === "lw-back") {
+    stopTimer();
     if (activeWorkout.currentIndex > 0) {
       activeWorkout.currentIndex -= 1;
       renderTodayWorkout();
@@ -764,11 +904,55 @@ function handleTodayWorkoutClick(event) {
   }
 
   if (action === "lw-next") {
+    stopTimer();
     if (activeWorkout.currentIndex < activeWorkout.exercises.length - 1) {
       activeWorkout.currentIndex += 1;
     } else {
       activeWorkout.phase = "finish";
     }
+    renderTodayWorkout();
+    return;
+  }
+
+  if (action === "timer-toggle" && exercise) {
+    const t = activeWorkout.timer;
+    if (t.exerciseId !== exercise.id) initTimerForExercise(exercise);
+    if (t.running) {
+      t.running = false;
+      cancelAnimationFrame(t.raf);
+    } else {
+      t.running = true;
+      t.finished = false;
+      t.lastTs = 0;
+      t.raf = requestAnimationFrame(timerLoop);
+    }
+    renderTodayWorkout();
+    return;
+  }
+
+  if (action === "timer-reset" && exercise) {
+    const t = activeWorkout.timer;
+    if (t.running) return;
+    t.remaining = t.total;
+    t.finished = false;
+    t.lastTs = 0;
+    renderTodayWorkout();
+    return;
+  }
+
+  if (action === "timer-preset" && exercise) {
+    if (activeWorkout.timer.running) return; // locked while running
+    exercise.holdSeconds = Number(button.dataset.seconds) || 45;
+    initTimerForExercise(exercise);
+    renderTodayWorkout();
+    return;
+  }
+
+  if (action === "toggle-hold" && exercise) {
+    if (activeWorkout.timer.running) return; // locked while running
+    const hi = Number(button.dataset.holdIndex);
+    const hold = exercise.holds?.[hi];
+    if (hold) hold.done = !hold.done;
     renderTodayWorkout();
     return;
   }
@@ -849,6 +1033,27 @@ async function saveTodayWorkout() {
           },
           durationMinutes: Number(ex.actualDuration) || 0,
           done: true,
+          difficulty: Number(ex.difficulty) || 5
+        };
+      }
+
+      // Held move: record how many holds were completed and the seconds each
+      // (e.g. "3 x 45 sec"). Kept separate from steady cardio minutes.
+      if (ex.type === "timed") {
+        const doneHolds = (ex.holds || []).filter((hold) => hold.done).length;
+        return {
+          id: ex.id,
+          type: "timed",
+          exerciseId: ex.exerciseId,
+          exerciseName: ex.name,
+          planned: {
+            sets: ex.targetSets || (ex.holds || []).length,
+            seconds: ex.holdSeconds || 0
+          },
+          actualSummary: {
+            sets: doneHolds,
+            seconds: Number(ex.holdSeconds) || 0
+          },
           difficulty: Number(ex.difficulty) || 5
         };
       }
@@ -1137,7 +1342,7 @@ function getStarterRoutines() {
       name: "Home Core",
       location: "home",
       exercises: [
-        { exerciseId: "plank", targetSets: 3 },
+        { exerciseId: "plank", targetSets: 3, targetReps: 45 },
         { exerciseId: "push-up", targetSets: 3, targetReps: 10 },
         { exerciseId: "squat", targetSets: 2, targetReps: 15 }
       ],
@@ -2129,6 +2334,12 @@ function formatEntryDetails(entry) {
     return `${planned}actual ${entry.durationMinutes || 0} min`;
   }
 
+  if (entry.type === "timed") {
+    const secs = entry.actualSummary?.seconds || entry.planned?.seconds || 0;
+    const planned = entry.planned?.sets ? `planned ${entry.planned.sets} × ${entry.planned.seconds || 0} sec, ` : "";
+    return `${planned}actual ${entry.actualSummary?.sets || 0} × ${secs} sec`;
+  }
+
   const summary = entry.actualSummary
     ? `${entry.actualSummary.sets}x${entry.actualSummary.reps} @ ${entry.actualSummary.weight} lb`
     : entry.sets?.map((set) => `${set.reps}@${set.weight}lb`).join(", ");
@@ -2866,6 +3077,40 @@ function renderDetailExercise(entry, index) {
     `;
   }
 
+  if (entry.type === "timed") {
+    return `
+      <div class="detail-exercise" data-entry-index="${index}">
+        <h5>${escapeHtml(entry.exerciseName || "Exercise")}</h5>
+        <div class="compare-row">
+          <div class="compare-col">
+            <p class="compare-label">Planned</p>
+            <p>${escapeHtml(entry.planned?.sets ? `${entry.planned.sets} × ${entry.planned.seconds || 0} sec` : "—")}</p>
+          </div>
+          <div class="compare-col">
+            <p class="compare-label">Actual</p>
+            <div class="strength-inputs">
+              <label>
+                <span>Holds</span>
+                <input type="number" min="0" step="1" value="${escapeHtml(entry.actualSummary?.sets || 0)}" data-field="timedSets" placeholder="0">
+              </label>
+              <label>
+                <span>Seconds</span>
+                <input type="number" min="0" step="1" value="${escapeHtml(entry.actualSummary?.seconds || 0)}" data-field="timedSeconds" placeholder="0">
+              </label>
+            </div>
+          </div>
+        </div>
+        <div class="exercise-difficulty">
+          <label>
+            <span>Difficulty</span>
+            <input type="range" min="1" max="10" value="${escapeHtml(entry.difficulty || 5)}" data-field="difficulty">
+            <span class="difficulty-value">${escapeHtml(entry.difficulty || 5)}/10</span>
+          </label>
+        </div>
+      </div>
+    `;
+  }
+
   // Strength exercise
   return `
     <div class="detail-exercise" data-entry-index="${index}">
@@ -2929,6 +3174,17 @@ function saveWorkoutChanges(workoutId) {
       const difficultyInput = exerciseEl.querySelector('input[data-field="difficulty"]');
       if (durationInput) entry.durationMinutes = Number(durationInput.value) || 0;
       if (difficultyInput) entry.difficulty = Number(difficultyInput.value) || 5;
+    } else if (entry.type === "timed") {
+      const holdsInput = exerciseEl.querySelector('input[data-field="timedSets"]');
+      const secondsInput = exerciseEl.querySelector('input[data-field="timedSeconds"]');
+      const difficultyInput = exerciseEl.querySelector('input[data-field="difficulty"]');
+      if (holdsInput || secondsInput) {
+        entry.actualSummary = {
+          sets: Number(holdsInput?.value) || 0,
+          seconds: Number(secondsInput?.value) || 0
+        };
+      }
+      if (difficultyInput) entry.difficulty = Number(difficultyInput.value) || 5;
     } else {
       const setsInput = exerciseEl.querySelector('input[data-field="actualSets"]');
       const repsInput = exerciseEl.querySelector('input[data-field="actualReps"]');
@@ -2976,6 +3232,7 @@ function generateReviewPacket() {
   packet.push("- Today reads from the weekly plan and loaded routines.");
   packet.push("- Strength targets use sets x reps. Logged strength work includes actual sets, reps, weight, and difficulty.");
   packet.push("- Cardio/time targets use minutes. Logged cardio work includes actual minutes and difficulty.");
+  packet.push("- Held moves (e.g. plank) are timed: targets read sets x seconds, and logged work records how many holds were completed and the seconds each.");
   packet.push("- Skipped exercises are omitted from saved workouts, so coach the work that was actually logged.");
   packet.push("- Return the updated plan using the structured format at the end of this packet.");
   packet.push("");
