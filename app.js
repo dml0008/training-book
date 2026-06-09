@@ -3,7 +3,7 @@ const DROPBOX_TOKEN_URL = "https://api.dropboxapi.com/oauth2/token";
 const DROPBOX_UPLOAD_URL = "https://content.dropboxapi.com/2/files/upload";
 const DROPBOX_DOWNLOAD_URL = "https://content.dropboxapi.com/2/files/download";
 const DATA_FILE_PATH = "/04_Technical/06_Side_Projects/Workout and Nutrition App/data/workout-data.json";
-const APP_VERSION = "2026.06.10-cache-fix";
+const APP_VERSION = "2026.06.10-export-buttons";
 
 const STORAGE = {
   appKey: "trainingBookDropboxAppKey",
@@ -1948,7 +1948,8 @@ function renderPlan() {
         <h3>Coach packet</h3>
         <p class="plan-muted">Export the current app context, review it in an AI chat, then paste the updated plan below.</p>
         <div class="plan-actions">
-          <button class="primary-button" id="export-review-packet" type="button">Copy + save coach packet</button>
+          <button class="quiet-button" id="copy-review-packet" type="button">Copy coach packet</button>
+          <button class="primary-button" id="save-review-packet" type="button">Save coach packet</button>
         </div>
       </section>
     </div>
@@ -2022,7 +2023,8 @@ function saveActivePlanFromScreen() {
 
 function wirePlanScreen() {
   planContent?.querySelector("[data-plan-save]")?.addEventListener("click", saveActivePlanFromScreen);
-  planContent?.querySelector("#export-review-packet")?.addEventListener("click", exportReviewPacket);
+  planContent?.querySelector("#copy-review-packet")?.addEventListener("click", copyReviewPacket);
+  planContent?.querySelector("#save-review-packet")?.addEventListener("click", saveReviewPacket);
   planContent?.querySelector("#plan-import-example")?.addEventListener("click", fillPlanImportExample);
   planContent?.querySelector("#plan-import-preview")?.addEventListener("click", previewPlanImportFromScreen);
   planContent?.querySelector("#plan-import-save")?.addEventListener("click", savePlanImportFromScreen);
@@ -2848,23 +2850,28 @@ async function saveTextFile(text, fileName) {
   return "downloaded";
 }
 
-async function exportReviewPacket() {
+async function copyReviewPacket() {
+  const packet = generateReviewPacket();
+  await copyTextToClipboard(packet);
+  alert("Coach packet copied to clipboard.");
+}
+
+async function saveReviewPacket() {
   const packet = generateReviewPacket();
   const fileName = getReviewPacketFileName();
-  await copyTextToClipboard(packet);
-
   try {
     const saveMode = await saveTextFile(packet, fileName);
-    const saveText = saveMode === "picked"
-      ? `saved as ${fileName}`
-      : `downloaded as ${fileName}`;
-    alert(`Coach packet copied to clipboard and ${saveText}. Save it in ai-fitness-coach/exports/ if you want to keep the weekly record.`);
+    if (saveMode === "picked") {
+      alert(`Coach packet saved as ${fileName}.`);
+    } else {
+      alert(`Coach packet downloaded as ${fileName}. Firefox and some mobile browsers do not support a Save As picker from web apps, so they use Downloads.`);
+    }
   } catch (error) {
     if (error?.name === "AbortError") {
-      alert("Coach packet copied to clipboard. File save was cancelled.");
+      alert("File save was cancelled.");
       return;
     }
-    alert(`Coach packet copied to clipboard, but the file save did not finish: ${error.message}`);
+    alert(`The file save did not finish: ${error.message}`);
   }
 }
 
@@ -3257,10 +3264,8 @@ saveTodayWorkoutButton?.addEventListener("click", () => {
   });
 });
 
-const exportPacketButton = document.querySelector("#export-review-packet");
 const importPlanButton = document.querySelector("#import-plan");
 
-exportPacketButton?.addEventListener("click", exportReviewPacket);
 importPlanButton?.addEventListener("click", importUpdatedPlan);
 
 syncPill?.addEventListener("click", () => {
