@@ -2013,6 +2013,7 @@ p {
 .live-workout {
   display: flex;
   flex-direction: column;
+  position: relative;
 }
 
 .lw-topbar {
@@ -2104,6 +2105,11 @@ p {
 }
 
 .lw-target {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
   background: var(--panel-2);
   border: 1px solid var(--line);
   border-radius: 12px;
@@ -2115,6 +2121,23 @@ p {
 
 .lw-target strong {
   color: var(--text);
+}
+
+.lw-edit-targets {
+  border: none;
+  background: none;
+  color: var(--accent);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  white-space: nowrap;
+  cursor: pointer;
+  padding: 4px 0;
+}
+
+.lw-edit-targets:disabled {
+  color: var(--dim);
+  cursor: not-allowed;
 }
 
 .lw-sets {
@@ -2395,6 +2418,118 @@ p {
   width: 100%;
   min-height: 52px;
   font-size: 16px;
+}
+
+.lw-sheet-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.58);
+  padding: 0;
+}
+
+.lw-sheet {
+  width: 100%;
+  max-width: 560px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-bottom: none;
+  border-radius: 20px 20px 0 0;
+  box-shadow: 0 -24px 50px rgba(0, 0, 0, 0.45);
+  padding: 18px 18px 22px;
+  animation: lw-sheet-up 0.18s ease-out;
+}
+
+@keyframes lw-sheet-up {
+  from { transform: translateY(18px); opacity: 0.75; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.lw-sheet-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.lw-sheet h3 {
+  margin: 0;
+  font-size: 17px;
+}
+
+.lw-sheet p {
+  margin: 3px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.lw-sheet-close {
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--panel-2);
+  color: var(--text);
+  font: inherit;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.lw-stepper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 9px 10px;
+  margin-bottom: 9px;
+}
+
+.lw-step-label {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.lw-step-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.lw-step-btn {
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.lw-step-num {
+  min-width: 54px;
+  text-align: center;
+  color: var(--text);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.lw-sheet-done {
+  width: 100%;
+  margin-top: 6px;
+  min-height: 48px;
 }
 
 /* finish / summary */

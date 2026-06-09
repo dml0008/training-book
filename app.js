@@ -3,7 +3,7 @@ const DROPBOX_TOKEN_URL = "https://api.dropboxapi.com/oauth2/token";
 const DROPBOX_UPLOAD_URL = "https://content.dropboxapi.com/2/files/upload";
 const DROPBOX_DOWNLOAD_URL = "https://content.dropboxapi.com/2/files/download";
 const DATA_FILE_PATH = "/04_Technical/06_Side_Projects/Workout and Nutrition App/data/workout-data.json";
-const APP_VERSION = "2026.06.13-built-in-timer";
+const APP_VERSION = "2026.06.14-edit-targets";
 
 const STORAGE = {
   appKey: "trainingBookDropboxAppKey",
@@ -237,6 +237,7 @@ const activeWorkout = {
   // we're showing an exercise ("exercise") or the finish/summary ("finish").
   currentIndex: 0,
   phase: "exercise",
+  editTargetsOpen: false,
   // Slice 2b (built-in timer for held moves like a plank). Lives outside the
   // exercise list because it's about the live countdown, not saved data.
   timer: {
@@ -377,6 +378,7 @@ function makeTodayExercise(plannedEx, source = "planned") {
     targetSets,
     targetReps,
     targetDuration,
+    targetWeight: 0,
     sets,
     holds,
     holdSeconds,
@@ -537,6 +539,7 @@ function startTodayWorkout() {
   activeWorkout.startedAt = new Date().toISOString();
   activeWorkout.currentIndex = 0;
   activeWorkout.phase = "exercise";
+  activeWorkout.editTargetsOpen = false;
   activeWorkout.exercises = routine.exercises.map((plannedEx) => makeTodayExercise(plannedEx));
   renderTodayRoutine();
 }
@@ -547,6 +550,7 @@ function exitTodayWorkout() {
   activeWorkout.exercises = [];
   activeWorkout.currentIndex = 0;
   activeWorkout.phase = "exercise";
+  activeWorkout.editTargetsOpen = false;
   renderTodayRoutine();
 }
 
@@ -648,6 +652,126 @@ function renderProgressDots(currentIndex, total, finished) {
   }).join("");
 }
 
+function renderTargetStepper(label, field, value, step, min, max, suffix = "") {
+  const displayValue = Number(value) || 0;
+  const safeLabel = escapeHtml(label);
+  return `
+    <div class="lw-stepper">
+      <span class="lw-step-label">${safeLabel}</span>
+      <div class="lw-step-controls">
+        <button class="lw-step-btn" type="button" data-action="target-step" data-field="${escapeHtml(field)}" data-delta="${-step}" data-min="${min}" data-max="${max}" aria-label="Decrease ${safeLabel}">-</button>
+        <span class="lw-step-num">${escapeHtml(displayValue)}${suffix ? ` ${escapeHtml(suffix)}` : ""}</span>
+        <button class="lw-step-btn" type="button" data-action="target-step" data-field="${escapeHtml(field)}" data-delta="${step}" data-min="${min}" data-max="${max}" aria-label="Increase ${safeLabel}">+</button>
+      </div>
+    </div>
+  `;
+}
+
+function renderEditTargetsSheet(ex) {
+  if (!activeWorkout.editTargetsOpen) return "";
+
+  let controls = "";
+  if (ex.type === "timed") {
+    controls = `
+      ${renderTargetStepper("Holds", "holds", (ex.holds || []).length, 1, 1, 10)}
+      ${renderTargetStepper("Seconds", "holdSeconds", ex.holdSeconds || 45, 5, 5, 300)}
+    `;
+  } else if (ex.type === "cardio") {
+    controls = renderTargetStepper("Minutes", "targetDuration", ex.targetDuration || ex.actualDuration || 0, 5, 0, 300);
+  } else {
+    controls = `
+      ${renderTargetStepper("Sets", "targetSets", ex.targetSets || (ex.sets || []).length, 1, 1, 12)}
+      ${renderTargetStepper("Reps", "targetReps", ex.targetReps || 0, 1, 0, 100)}
+      ${renderTargetStepper("Weight", "targetWeight", ex.targetWeight || 0, 5, 0, 1000, "lb")}
+    `;
+  }
+
+  return `
+    <div class="lw-sheet-scrim" role="presentation">
+      <section class="lw-sheet" role="dialog" aria-modal="true" aria-label="Edit targets for ${escapeHtml(ex.name)}">
+        <div class="lw-sheet-head">
+          <div>
+            <h3>Edit targets</h3>
+            <p>Changes apply to today only.</p>
+          </div>
+          <button class="lw-sheet-close" type="button" data-action="close-targets" aria-label="Close edit targets">&times;</button>
+        </div>
+        ${controls}
+        <button class="primary-button lw-sheet-done" type="button" data-action="close-targets">Done</button>
+      </section>
+    </div>
+  `;
+}
+
+function resizeTodaySets(ex, count) {
+  const sets = Array.isArray(ex.sets) ? ex.sets : [];
+  const safeCount = clampNumber(count, 1, 12);
+  while (sets.length < safeCount) {
+    const last = sets[sets.length - 1];
+    sets.push({
+      weight: last ? last.weight : (ex.targetWeight || 0),
+      reps: ex.targetReps || (last ? last.reps : 0),
+      done: false
+    });
+  }
+  while (sets.length > safeCount) sets.pop();
+  ex.sets = sets;
+  ex.targetSets = safeCount;
+}
+
+function resizeTodayHolds(ex, count) {
+  const holds = Array.isArray(ex.holds) ? ex.holds : [];
+  const safeCount = clampNumber(count, 1, 10);
+  while (holds.length < safeCount) holds.push({ done: false });
+  while (holds.length > safeCount) holds.pop();
+  ex.holds = holds;
+  ex.targetSets = safeCount;
+}
+
+function adjustTodayTarget(ex, field, delta, min, max) {
+  const current = field === "holds"
+    ? (ex.holds || []).length
+    : Number(ex[field]) || 0;
+  const next = clampNumber(current + delta, min, max);
+
+  if (field === "targetSets") {
+    resizeTodaySets(ex, next);
+    return;
+  }
+
+  if (field === "targetReps") {
+    ex.targetReps = next;
+    (ex.sets || []).forEach((set) => {
+      if (!set.done) set.reps = next;
+    });
+    return;
+  }
+
+  if (field === "targetWeight") {
+    ex.targetWeight = next;
+    (ex.sets || []).forEach((set) => {
+      if (!set.done) set.weight = next;
+    });
+    return;
+  }
+
+  if (field === "holds") {
+    resizeTodayHolds(ex, next);
+    return;
+  }
+
+  if (field === "holdSeconds") {
+    ex.holdSeconds = next;
+    initTimerForExercise(ex);
+    return;
+  }
+
+  if (field === "targetDuration") {
+    ex.targetDuration = next;
+    if (!ex.cardioDone) ex.actualDuration = next;
+  }
+}
+
 function renderFocusedExercise() {
   const exercises = activeWorkout.exercises;
   const i = activeWorkout.currentIndex;
@@ -737,11 +861,15 @@ function renderFocusedExercise() {
           <p class="lw-area">${escapeHtml(ex.area || "")}</p>
         </div>
       </div>
-      <div class="lw-target">Target: <strong>${escapeHtml(formatFocusTarget(ex))}</strong></div>
+      <div class="lw-target">
+        <span>Target: <strong>${escapeHtml(formatFocusTarget(ex))}</strong></span>
+        <button class="lw-edit-targets" type="button" data-action="open-targets"${activeWorkout.timer.running ? " disabled" : ""}>Edit targets</button>
+      </div>
       ${body}
       <div class="lw-next-row">
         <button class="primary-button lw-next" type="button" data-action="lw-next">${nextLabel}</button>
       </div>
+      ${renderEditTargetsSheet(ex)}
     </div>
   `;
 }
@@ -894,6 +1022,7 @@ function handleTodayWorkoutClick(event) {
 
   if (action === "lw-back") {
     stopTimer();
+    activeWorkout.editTargetsOpen = false;
     if (activeWorkout.currentIndex > 0) {
       activeWorkout.currentIndex -= 1;
       renderTodayWorkout();
@@ -905,6 +1034,7 @@ function handleTodayWorkoutClick(event) {
 
   if (action === "lw-next") {
     stopTimer();
+    activeWorkout.editTargetsOpen = false;
     if (activeWorkout.currentIndex < activeWorkout.exercises.length - 1) {
       activeWorkout.currentIndex += 1;
     } else {
@@ -953,6 +1083,30 @@ function handleTodayWorkoutClick(event) {
     const hi = Number(button.dataset.holdIndex);
     const hold = exercise.holds?.[hi];
     if (hold) hold.done = !hold.done;
+    renderTodayWorkout();
+    return;
+  }
+
+  if (action === "open-targets" && exercise) {
+    if (activeWorkout.timer.running) return;
+    activeWorkout.editTargetsOpen = true;
+    renderTodayWorkout();
+    return;
+  }
+
+  if (action === "close-targets") {
+    activeWorkout.editTargetsOpen = false;
+    renderTodayWorkout();
+    return;
+  }
+
+  if (action === "target-step" && exercise) {
+    if (activeWorkout.timer.running) return;
+    const field = button.dataset.field;
+    const delta = Number(button.dataset.delta) || 0;
+    const min = Number(button.dataset.min) || 0;
+    const max = Number(button.dataset.max) || 9999;
+    adjustTodayTarget(exercise, field, delta, min, max);
     renderTodayWorkout();
     return;
   }
@@ -1112,6 +1266,7 @@ async function saveTodayWorkout() {
     activeWorkout.started = false;
     activeWorkout.currentIndex = 0;
     activeWorkout.phase = "exercise";
+    activeWorkout.editTargetsOpen = false;
     renderTodayRoutine();
     renderHistory();
     return;
@@ -1125,6 +1280,7 @@ async function saveTodayWorkout() {
     activeWorkout.started = false;
     activeWorkout.currentIndex = 0;
     activeWorkout.phase = "exercise";
+    activeWorkout.editTargetsOpen = false;
     renderTodayRoutine();
     renderHistory();
   } catch (error) {
