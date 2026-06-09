@@ -3,7 +3,7 @@ const DROPBOX_TOKEN_URL = "https://api.dropboxapi.com/oauth2/token";
 const DROPBOX_UPLOAD_URL = "https://content.dropboxapi.com/2/files/upload";
 const DROPBOX_DOWNLOAD_URL = "https://content.dropboxapi.com/2/files/download";
 const DATA_FILE_PATH = "/04_Technical/06_Side_Projects/Workout and Nutrition App/data/workout-data.json";
-const APP_VERSION = "2026.06.10-review-reminder";
+const APP_VERSION = "2026.06.10-plan-save-date";
 
 const STORAGE = {
   appKey: "trainingBookDropboxAppKey",
@@ -419,7 +419,7 @@ function renderReviewReminder() {
   if (reviewReminderSub) {
     const overdue = today > reviewDate;
     reviewReminderSub.textContent = overdue
-      ? `Your review was due ${reviewDate}. Export a packet for your coach and load the updated plan.`
+      ? `Your review was due ${formatWorkoutDate(reviewDate)}. Export a packet for your coach and load the updated plan.`
       : "Export a packet for your coach and load the updated plan.";
   }
   reviewReminder.hidden = false;
@@ -1950,7 +1950,10 @@ function renderPlan() {
       <section class="plan-card">
         <div class="plan-card-head">
           <p class="card-kicker">Loaded plan</p>
-          <button class="primary-button small-button" type="button" data-plan-save>Save plan notes</button>
+          <div class="plan-save-row">
+            <span class="plan-save-status" id="plan-save-status" aria-live="polite"></span>
+            <button class="primary-button small-button" type="button" data-plan-save>Save plan notes</button>
+          </div>
         </div>
         <div class="plan-form">
           <label>
@@ -1967,7 +1970,7 @@ function renderPlan() {
           </label>
           <label>
             <span>Next review date</span>
-            <input id="plan-next-review-input" value="${escapeHtml(activePlan.nextReviewDate)}" autocomplete="off" placeholder="YYYY-MM-DD">
+            <input id="plan-next-review-input" type="date" value="${escapeHtml(activePlan.nextReviewDate)}">
           </label>
           <label>
             <span>Plan notes</span>
@@ -2051,7 +2054,18 @@ function saveActivePlanFromScreen() {
     notes: document.querySelector("#plan-notes-input")?.value.trim() || ""
   };
   commitProgressData(data);
-  renderPlan();
+
+  // Confirm the save in place rather than re-rendering (which looked like nothing happened).
+  const status = planContent?.querySelector("#plan-save-status");
+  if (status) {
+    status.textContent = "Saved";
+    status.classList.add("is-shown");
+    clearTimeout(saveActivePlanFromScreen._timer);
+    saveActivePlanFromScreen._timer = setTimeout(() => {
+      status.textContent = "";
+      status.classList.remove("is-shown");
+    }, 2500);
+  }
 }
 
 function wirePlanScreen() {
