@@ -2140,6 +2140,24 @@ p {
   cursor: not-allowed;
 }
 
+.lw-reference-button {
+  width: 100%;
+  min-height: 42px;
+  margin: -4px 0 14px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 800;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+.lw-reference-button:active {
+  transform: translateY(1px);
+}
+
 .lw-sets {
   display: flex;
   flex-direction: column;
@@ -2530,6 +2548,47 @@ p {
   width: 100%;
   margin-top: 6px;
   min-height: 48px;
+}
+
+.lw-reference-sheet {
+  max-height: 86vh;
+  overflow-y: auto;
+}
+
+.lw-ref-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.lw-ref-meta span,
+.lw-ref-cues span {
+  border: 1px solid var(--line);
+  background: var(--panel-2);
+  color: var(--muted);
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.lw-ref-steps {
+  margin: 0 0 14px;
+  padding-left: 22px;
+  color: var(--text);
+}
+
+.lw-ref-steps li {
+  margin-bottom: 9px;
+  line-height: 1.45;
+}
+
+.lw-ref-cues {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
 }
 
 /* finish / summary */

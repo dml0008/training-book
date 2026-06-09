@@ -3,7 +3,7 @@ const DROPBOX_TOKEN_URL = "https://api.dropboxapi.com/oauth2/token";
 const DROPBOX_UPLOAD_URL = "https://content.dropboxapi.com/2/files/upload";
 const DROPBOX_DOWNLOAD_URL = "https://content.dropboxapi.com/2/files/download";
 const DATA_FILE_PATH = "/04_Technical/06_Side_Projects/Workout and Nutrition App/data/workout-data.json";
-const APP_VERSION = "2026.06.14-edit-targets";
+const APP_VERSION = "2026.06.15-reference-layer";
 
 const STORAGE = {
   appKey: "trainingBookDropboxAppKey",
@@ -238,6 +238,7 @@ const activeWorkout = {
   currentIndex: 0,
   phase: "exercise",
   editTargetsOpen: false,
+  referenceOpen: false,
   // Slice 2b (built-in timer for held moves like a plank). Lives outside the
   // exercise list because it's about the live countdown, not saved data.
   timer: {
@@ -254,6 +255,129 @@ const activeWorkout = {
 // (e.g. a plank held 3 x 45 sec). We detect them by id so existing plans work
 // straight away; a future tweak can let custom exercises be tagged this way.
 const TIMED_HOLD_IDS = ["plank", "side-plank", "wall-sit", "hollow-hold", "dead-hang", "l-sit"];
+
+const EXERCISE_REFERENCES = {
+  "push-up": {
+    muscles: "Chest, shoulders, triceps, core",
+    equipment: "Bodyweight",
+    steps: [
+      "Set your hands just wider than your shoulders and make a straight line from head to heels.",
+      "Lower under control until your chest is close to the floor.",
+      "Press the floor away and keep your hips from sagging."
+    ],
+    cues: ["Brace your ribs down.", "Keep elbows angled back, not straight out.", "Stop if shoulder pain shows up."]
+  },
+  "dumbbell-bench-press": {
+    muscles: "Chest, shoulders, triceps",
+    equipment: "Bench and dumbbells",
+    steps: [
+      "Lie back with feet planted and dumbbells over your chest.",
+      "Lower the weights until your upper arms are just below the bench line.",
+      "Press up smoothly without letting the dumbbells crash together."
+    ],
+    cues: ["Shoulder blades stay tucked.", "Wrists stay stacked over elbows.", "Use a weight you can control."]
+  },
+  squat: {
+    muscles: "Quads, glutes, hamstrings, core",
+    equipment: "Bodyweight or loaded variation",
+    steps: [
+      "Stand with feet about shoulder width and brace your torso.",
+      "Sit down and back while your knees track in line with your toes.",
+      "Drive through the floor to stand tall."
+    ],
+    cues: ["Keep your whole foot planted.", "Chest stays proud.", "Use a comfortable depth."]
+  },
+  "goblet-squat": {
+    muscles: "Quads, glutes, core",
+    equipment: "Dumbbell or kettlebell",
+    steps: [
+      "Hold the weight close to your chest with elbows pointed down.",
+      "Squat between your hips while keeping the weight close.",
+      "Stand by pushing through your midfoot and heels."
+    ],
+    cues: ["Do not let the weight pull you forward.", "Knees follow toes.", "Pause briefly if balance feels shaky."]
+  },
+  deadlift: {
+    muscles: "Hamstrings, glutes, back, core",
+    equipment: "Barbell or dumbbells",
+    steps: [
+      "Stand close to the weight and hinge your hips back.",
+      "Grip the weight, brace, and keep your back neutral.",
+      "Stand by driving your hips forward, then lower with control."
+    ],
+    cues: ["The weight stays close.", "Hips and chest rise together.", "Skip heavy pulls if your back feels off."]
+  },
+  "lat-pulldown": {
+    muscles: "Lats, upper back, biceps",
+    equipment: "Cable pulldown machine",
+    steps: [
+      "Sit tall and grip the bar wider than your shoulders.",
+      "Pull elbows down toward your ribs until the bar reaches upper chest level.",
+      "Return slowly until your arms are long again."
+    ],
+    cues: ["Lead with elbows, not hands.", "Do not lean way back.", "Keep shoulders away from ears."]
+  },
+  "dumbbell-row": {
+    muscles: "Lats, upper back, biceps",
+    equipment: "Dumbbell",
+    steps: [
+      "Support yourself with one hand or hinge with a steady torso.",
+      "Pull the dumbbell toward your hip.",
+      "Lower until your arm is long without twisting your body."
+    ],
+    cues: ["Keep your torso quiet.", "Think elbow to back pocket.", "Avoid shrugging at the top."]
+  },
+  "shoulder-press": {
+    muscles: "Shoulders, triceps, upper chest",
+    equipment: "Dumbbells or barbell",
+    steps: [
+      "Start with the weight at shoulder height and ribs braced.",
+      "Press overhead until arms are long without arching hard.",
+      "Lower back to shoulder height with control."
+    ],
+    cues: ["Squeeze glutes lightly.", "Keep wrists stacked.", "Use a pain-free path."]
+  },
+  plank: {
+    muscles: "Core, shoulders, glutes",
+    equipment: "Bodyweight",
+    steps: [
+      "Set elbows under shoulders and step feet back.",
+      "Make a straight line from head to heels.",
+      "Brace your belly and breathe while holding the position."
+    ],
+    cues: ["Squeeze glutes.", "Do not let hips sag.", "End the hold when position breaks."]
+  },
+  "biceps-curl": {
+    muscles: "Biceps, forearms",
+    equipment: "Dumbbells",
+    steps: [
+      "Stand tall with arms by your sides and palms forward.",
+      "Curl the weights up without swinging your torso.",
+      "Lower slowly until your elbows are straight again."
+    ],
+    cues: ["Elbows stay close to your sides.", "Control the lowering.", "Do not chase weight with momentum."]
+  },
+  "triceps-pressdown": {
+    muscles: "Triceps",
+    equipment: "Cable machine",
+    steps: [
+      "Stand tall at the cable with elbows pinned near your sides.",
+      "Press the handle down until your arms are straight.",
+      "Return slowly without letting elbows drift forward."
+    ],
+    cues: ["Only your forearms move.", "Keep shoulders relaxed.", "Finish with a firm squeeze."]
+  },
+  "treadmill-walk": {
+    muscles: "Heart, legs, calves",
+    equipment: "Treadmill",
+    steps: [
+      "Start at an easy pace and settle into a steady rhythm.",
+      "Use incline or speed only if your breathing stays controlled.",
+      "Cool down for a minute or two before stepping off."
+    ],
+    cues: ["Tall posture.", "Relax your grip.", "Stop if dizzy or sharp pain appears."]
+  }
+};
 
 // True when an exercise should use the built-in countdown timer (a hold),
 // rather than weight/reps rows (strength) or a minutes box (steady cardio).
@@ -540,6 +664,7 @@ function startTodayWorkout() {
   activeWorkout.currentIndex = 0;
   activeWorkout.phase = "exercise";
   activeWorkout.editTargetsOpen = false;
+  activeWorkout.referenceOpen = false;
   activeWorkout.exercises = routine.exercises.map((plannedEx) => makeTodayExercise(plannedEx));
   renderTodayRoutine();
 }
@@ -551,6 +676,7 @@ function exitTodayWorkout() {
   activeWorkout.currentIndex = 0;
   activeWorkout.phase = "exercise";
   activeWorkout.editTargetsOpen = false;
+  activeWorkout.referenceOpen = false;
   renderTodayRoutine();
 }
 
@@ -698,6 +824,49 @@ function renderEditTargetsSheet(ex) {
         </div>
         ${controls}
         <button class="primary-button lw-sheet-done" type="button" data-action="close-targets">Done</button>
+      </section>
+    </div>
+  `;
+}
+
+function getExerciseReference(ex) {
+  return EXERCISE_REFERENCES[ex.exerciseId] || {
+    muscles: ex.area || "Main working area",
+    equipment: ex.type === "cardio" ? "Cardio equipment" : "As planned",
+    steps: [
+      "Set up in a comfortable, controlled position.",
+      "Move slowly enough that you can keep good form.",
+      "Stop the set if you feel sharp pain or lose control."
+    ],
+    cues: ["Smooth reps.", "Steady breathing.", "Good form first."]
+  };
+}
+
+function renderReferenceSheet(ex) {
+  if (!activeWorkout.referenceOpen) return "";
+  const ref = getExerciseReference(ex);
+
+  return `
+    <div class="lw-sheet-scrim" role="presentation">
+      <section class="lw-sheet lw-reference-sheet" role="dialog" aria-modal="true" aria-label="How to do ${escapeHtml(ex.name)}">
+        <div class="lw-sheet-head">
+          <div>
+            <h3>${escapeHtml(ex.name)}</h3>
+            <p>${escapeHtml(ref.muscles)}</p>
+          </div>
+          <button class="lw-sheet-close" type="button" data-action="close-reference" aria-label="Close how to do it">&times;</button>
+        </div>
+        <div class="lw-ref-meta">
+          <span>${escapeHtml(ref.equipment)}</span>
+          <span>${escapeHtml(ex.type === "timed" ? "Timed hold" : ex.type)}</span>
+        </div>
+        <ol class="lw-ref-steps">
+          ${ref.steps.map((step) => `<li>${escapeHtml(step)}</li>`).join("")}
+        </ol>
+        <div class="lw-ref-cues">
+          ${ref.cues.map((cue) => `<span>${escapeHtml(cue)}</span>`).join("")}
+        </div>
+        <button class="primary-button lw-sheet-done" type="button" data-action="close-reference">Done</button>
       </section>
     </div>
   `;
@@ -865,11 +1034,13 @@ function renderFocusedExercise() {
         <span>Target: <strong>${escapeHtml(formatFocusTarget(ex))}</strong></span>
         <button class="lw-edit-targets" type="button" data-action="open-targets"${activeWorkout.timer.running ? " disabled" : ""}>Edit targets</button>
       </div>
+      <button class="lw-reference-button" type="button" data-action="open-reference">How to do it</button>
       ${body}
       <div class="lw-next-row">
         <button class="primary-button lw-next" type="button" data-action="lw-next">${nextLabel}</button>
       </div>
       ${renderEditTargetsSheet(ex)}
+      ${renderReferenceSheet(ex)}
     </div>
   `;
 }
@@ -1023,6 +1194,7 @@ function handleTodayWorkoutClick(event) {
   if (action === "lw-back") {
     stopTimer();
     activeWorkout.editTargetsOpen = false;
+    activeWorkout.referenceOpen = false;
     if (activeWorkout.currentIndex > 0) {
       activeWorkout.currentIndex -= 1;
       renderTodayWorkout();
@@ -1035,6 +1207,7 @@ function handleTodayWorkoutClick(event) {
   if (action === "lw-next") {
     stopTimer();
     activeWorkout.editTargetsOpen = false;
+    activeWorkout.referenceOpen = false;
     if (activeWorkout.currentIndex < activeWorkout.exercises.length - 1) {
       activeWorkout.currentIndex += 1;
     } else {
@@ -1090,12 +1263,26 @@ function handleTodayWorkoutClick(event) {
   if (action === "open-targets" && exercise) {
     if (activeWorkout.timer.running) return;
     activeWorkout.editTargetsOpen = true;
+    activeWorkout.referenceOpen = false;
     renderTodayWorkout();
     return;
   }
 
   if (action === "close-targets") {
     activeWorkout.editTargetsOpen = false;
+    renderTodayWorkout();
+    return;
+  }
+
+  if (action === "open-reference" && exercise) {
+    activeWorkout.referenceOpen = true;
+    activeWorkout.editTargetsOpen = false;
+    renderTodayWorkout();
+    return;
+  }
+
+  if (action === "close-reference") {
+    activeWorkout.referenceOpen = false;
     renderTodayWorkout();
     return;
   }
@@ -1267,6 +1454,7 @@ async function saveTodayWorkout() {
     activeWorkout.currentIndex = 0;
     activeWorkout.phase = "exercise";
     activeWorkout.editTargetsOpen = false;
+    activeWorkout.referenceOpen = false;
     renderTodayRoutine();
     renderHistory();
     return;
@@ -1281,6 +1469,7 @@ async function saveTodayWorkout() {
     activeWorkout.currentIndex = 0;
     activeWorkout.phase = "exercise";
     activeWorkout.editTargetsOpen = false;
+    activeWorkout.referenceOpen = false;
     renderTodayRoutine();
     renderHistory();
   } catch (error) {
