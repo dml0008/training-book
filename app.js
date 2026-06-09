@@ -3,7 +3,7 @@ const DROPBOX_TOKEN_URL = "https://api.dropboxapi.com/oauth2/token";
 const DROPBOX_UPLOAD_URL = "https://content.dropboxapi.com/2/files/upload";
 const DROPBOX_DOWNLOAD_URL = "https://content.dropboxapi.com/2/files/download";
 const DATA_FILE_PATH = "/04_Technical/06_Side_Projects/Workout and Nutrition App/data/workout-data.json";
-const APP_VERSION = "2026.06.10-plan-import";
+const APP_VERSION = "2026.06.10-plan-export";
 
 const STORAGE = {
   appKey: "trainingBookDropboxAppKey",
@@ -2685,6 +2685,8 @@ function generateReviewPacket() {
   const weeklyPlan = data.weeklyPlan || getStarterWeeklyPlan();
   const routines = Array.isArray(data.routines) ? data.routines : [];
   const library = Array.isArray(data.library) ? data.library : exercises;
+  const bodyWeights = Array.isArray(data.bodyWeights) ? data.bodyWeights.slice() : [];
+  const weightTarget = typeof data.weightTarget === "number" ? data.weightTarget : null;
 
   packet.push("=== TRAINING BOOK REVIEW PACKET ===");
   packet.push(`Exported: ${new Date().toISOString()}`);
@@ -2700,6 +2702,13 @@ function generateReviewPacket() {
 
   packet.push("COACHING REQUEST:");
   packet.push("Review the workouts I actually completed, my difficulty ratings, my current loaded plan, and my exercise library. Suggest an updated active plan, weekly schedule, and routines. Keep daily logging quick and realistic.");
+  packet.push("");
+
+  packet.push("COACHING QUESTIONS:");
+  packet.push("- What should change in the plan based on the recent logged workouts?");
+  packet.push("- Are any days too heavy, too light, or missing recovery?");
+  packet.push("- What should Daniel focus on this week?");
+  packet.push("- Return an updated plan in the import format at the end.");
   packet.push("");
 
   packet.push("ACTIVE PLAN:");
@@ -2744,6 +2753,19 @@ function generateReviewPacket() {
     packet.push("");
   }
 
+  packet.push("BODY WEIGHT:");
+  if (bodyWeights.length > 0) {
+    if (weightTarget !== null) packet.push(`target: ${weightTarget} lb`);
+    bodyWeights
+      .sort((a, b) => String(a.date).localeCompare(String(b.date)))
+      .forEach((entry) => {
+        packet.push(`${entry.date}: ${entry.weight} lb`);
+      });
+  } else {
+    packet.push("(no body weight entries logged yet)");
+  }
+  packet.push("");
+
   packet.push("RETURN FORMAT FOR TRAINING BOOK IMPORT:");
   packet.push("Please return only plain text in this format:");
   packet.push("ACTIVE PLAN:");
@@ -2787,10 +2809,28 @@ function copyTextToClipboard(text) {
   return Promise.resolve();
 }
 
+function getReviewPacketFileName() {
+  return `training-book-review-${new Date().toISOString().slice(0, 10)}.md`;
+}
+
+function downloadTextFile(text, fileName) {
+  const blob = new Blob([text], { type: "text/markdown;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = fileName;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
 async function exportReviewPacket() {
   const packet = generateReviewPacket();
+  const fileName = getReviewPacketFileName();
   await copyTextToClipboard(packet);
-  alert("Review packet copied to clipboard! Paste it into your AI coach chat.");
+  downloadTextFile(packet, fileName);
+  alert(`Review packet copied and downloaded as ${fileName}. Save that file into ai-fitness-coach/exports/ if you want to keep the weekly record.`);
 }
 
 function getPlanImportExample() {
