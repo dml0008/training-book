@@ -633,9 +633,12 @@ function setSyncStatus(message, tone = "") {
 
 function setConnectionUi(message, tone = "") {
   if (syncPill) {
+    const hasDropbox = Boolean(localStorage.getItem(STORAGE.refreshToken) || getStoredAccessToken());
     syncPill.className = tone ? `sync-pill ${tone}` : "sync-pill";
     syncPill.disabled = false;
-    syncPill.title = hasPendingData()
+    syncPill.title = !hasDropbox
+      ? "Tap to connect Dropbox"
+      : hasPendingData()
       ? "Tap to sync pending Dropbox data"
       : "Tap to load the latest Dropbox data";
     if (syncPillLabel) {
@@ -1273,10 +1276,14 @@ async function getAccessToken() {
 }
 
 async function startDropboxConnect() {
-  const appKey = appKeyInput?.value.trim();
+  let appKey = appKeyInput?.value.trim() || localStorage.getItem(STORAGE.appKey) || "";
   if (!appKey) {
-    setSyncStatus("Paste the Dropbox app key first.", "warn");
-    appKeyInput?.focus();
+    appKey = prompt("Paste your Dropbox app key to connect this device:");
+  }
+
+  appKey = appKey?.trim();
+  if (!appKey) {
+    setSyncStatus("Dropbox connection needs an app key.", "warn");
     return;
   }
 
@@ -1466,6 +1473,12 @@ async function handleSyncPillClick() {
   }
 
   try {
+    const hasDropbox = Boolean(localStorage.getItem(STORAGE.refreshToken) || getStoredAccessToken());
+    if (!hasDropbox) {
+      await startDropboxConnect();
+      return;
+    }
+
     if (hasPendingData()) {
       setConnectionUi("Syncing...", "warn");
       await syncPendingData();
