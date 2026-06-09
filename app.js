@@ -3,7 +3,7 @@ const DROPBOX_TOKEN_URL = "https://api.dropboxapi.com/oauth2/token";
 const DROPBOX_UPLOAD_URL = "https://content.dropboxapi.com/2/files/upload";
 const DROPBOX_DOWNLOAD_URL = "https://content.dropboxapi.com/2/files/download";
 const DATA_FILE_PATH = "/04_Technical/06_Side_Projects/Workout and Nutrition App/data/workout-data.json";
-const APP_VERSION = "2026.06.10-plan-tab";
+const APP_VERSION = "2026.06.10-plan-import";
 
 const STORAGE = {
   appKey: "trainingBookDropboxAppKey",
@@ -222,6 +222,10 @@ const activeWorkout = {
   startedAt: new Date().toISOString(),
   exercises: []
 };
+
+let planImportPreview = null;
+let planImportSummary = "";
+let planImportMessage = "";
 
 function getTodayDateString() {
   const today = new Date();
@@ -1896,6 +1900,13 @@ function renderPlan() {
   const activePlan = { ...getStarterActivePlan(), ...(data.activePlan || {}) };
   const routines = Array.isArray(data.routines) ? data.routines : [];
   const weeklyPlan = data.weeklyPlan || getStarterWeeklyPlan();
+  const importText = planContent.querySelector("#plan-import-text")?.value || "";
+  const importMessageHtml = planImportMessage
+    ? `<p class="plan-import-message">${escapeHtml(planImportMessage)}</p>`
+    : "";
+  const importPreviewHtml = planImportSummary
+    ? `<pre class="plan-import-preview">${escapeHtml(planImportSummary)}</pre>`
+    : `<p class="plan-muted">Preview the pasted plan before saving. Nothing changes until you press Save imported plan.</p>`;
 
   planContent.innerHTML = `
     <div class="plan-grid">
@@ -1931,13 +1942,29 @@ function renderPlan() {
       <section class="plan-card">
         <p class="card-kicker">AI review loop</p>
         <h3>Coach packet</h3>
-        <p class="plan-muted">Export the current app context, review it in an AI chat, then paste the updated structured plan back here.</p>
+        <p class="plan-muted">Export the current app context, review it in an AI chat, then paste the updated plan below.</p>
         <div class="plan-actions">
           <button class="primary-button" id="export-review-packet" type="button">Export for AI review</button>
-          <button class="quiet-button" id="import-plan" type="button">Import updated plan</button>
         </div>
       </section>
     </div>
+
+    <section class="plan-card plan-import-card">
+      <div class="plan-card-head">
+        <div>
+          <p class="card-kicker">Import updated plan</p>
+          <p class="plan-muted">Paste the AI coach's plan here, preview what Training Book understands, then save it.</p>
+        </div>
+        <button class="quiet-button small-button" id="plan-import-example" type="button">Use example</button>
+      </div>
+      <textarea id="plan-import-text" class="plan-import-text" spellcheck="false" placeholder="Paste the AI coach's updated plan here.">${escapeHtml(importText)}</textarea>
+      <div class="plan-import-actions">
+        <button class="primary-button" id="plan-import-preview" type="button">Preview changes</button>
+        <button class="quiet-button" id="plan-import-save" type="button" ${planImportPreview ? "" : "disabled"}>Save imported plan</button>
+      </div>
+      ${importMessageHtml}
+      ${importPreviewHtml}
+    </section>
 
     <section class="plan-card">
       <div class="plan-card-head">
@@ -1992,7 +2019,16 @@ function saveActivePlanFromScreen() {
 function wirePlanScreen() {
   planContent?.querySelector("[data-plan-save]")?.addEventListener("click", saveActivePlanFromScreen);
   planContent?.querySelector("#export-review-packet")?.addEventListener("click", exportReviewPacket);
-  planContent?.querySelector("#import-plan")?.addEventListener("click", importUpdatedPlan);
+  planContent?.querySelector("#plan-import-example")?.addEventListener("click", fillPlanImportExample);
+  planContent?.querySelector("#plan-import-preview")?.addEventListener("click", previewPlanImportFromScreen);
+  planContent?.querySelector("#plan-import-save")?.addEventListener("click", savePlanImportFromScreen);
+  planContent?.querySelector("#plan-import-text")?.addEventListener("input", () => {
+    planImportPreview = null;
+    planImportSummary = "";
+    planImportMessage = "Text changed. Preview again before saving.";
+    const saveButton = planContent.querySelector("#plan-import-save");
+    if (saveButton) saveButton.disabled = true;
+  });
 }
 
 function formatWorkoutForExport(workout) {
@@ -2757,8 +2793,51 @@ async function exportReviewPacket() {
   alert("Review packet copied to clipboard! Paste it into your AI coach chat.");
 }
 
+function getPlanImportExample() {
+  return `ACTIVE PLAN:
+name: 4-Week Strength & Consistency Plan
+main goal: Build a steady 3-day strength routine while keeping workouts short enough to complete.
+review cadence: Weekly AI review
+next review date: 2026-06-16
+notes: Focus on good form, repeatable effort, and slowly adding reps or weight when sets feel comfortable.
+
+WEEKLY PLAN:
+monday: Full Body A
+tuesday: rest
+wednesday: Full Body B
+thursday: rest
+friday: Full Body A
+saturday: Optional Walk
+sunday: rest
+
+ROUTINE: Full Body A
+- Goblet Squat: 3x8
+- Push-up: 3x8
+- Dumbbell Row: 3x10
+- Plank: 3x30
+
+ROUTINE: Full Body B
+- Deadlift: 3x8
+- Shoulder Press: 3x8
+- Squat: 3x8
+- Plank: 2x30
+
+ROUTINE: Optional Walk
+- Treadmill Walk: 30 min`;
+}
+
+function fillPlanImportExample() {
+  const textarea = planContent?.querySelector("#plan-import-text");
+  if (!textarea) return;
+  textarea.value = getPlanImportExample();
+  planImportPreview = null;
+  planImportSummary = "";
+  planImportMessage = "Example loaded. Press Preview changes to see what would be saved.";
+  renderPlan();
+}
+
 function parseRoutineExerciseLine(line) {
-  const cleaned = line.replace(/^[-*]\s*/, "").trim();
+  const cleaned = line.replace(/^[-*•]\s*/, "").trim();
   const separatorIndex = cleaned.indexOf(":");
   if (separatorIndex < 1) return null;
 
@@ -2786,6 +2865,25 @@ function parseRoutineExerciseLine(line) {
   return null;
 }
 
+function normalizeImportHeading(line) {
+  return line
+    .replace(/^#+\s*/, "")
+    .replace(/^[*-]\s*/, "")
+    .replace(/\*\*/g, "")
+    .trim()
+    .toUpperCase();
+}
+
+function readKeyValueLine(line) {
+  const cleaned = line.replace(/^[*-]\s*/, "").trim();
+  const separatorIndex = cleaned.indexOf(":");
+  if (separatorIndex < 1) return null;
+  return {
+    key: cleaned.slice(0, separatorIndex).trim().toLowerCase(),
+    value: cleaned.slice(separatorIndex + 1).trim()
+  };
+}
+
 function parseAiPlanText(text) {
   const lines = text.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
   const activePlan = {};
@@ -2795,7 +2893,7 @@ function parseAiPlanText(text) {
   let currentRoutine = null;
 
   lines.forEach((line) => {
-    const upper = line.toUpperCase();
+    const upper = normalizeImportHeading(line);
     if (upper === "ACTIVE PLAN:" || upper === "ACTIVE PLAN" || upper === "PLAN:" || upper === "PLAN") {
       mode = "active-plan";
       currentRoutine = null;
@@ -2811,7 +2909,7 @@ function parseAiPlanText(text) {
     if (upper.startsWith("ROUTINE:")) {
       mode = "routine";
       currentRoutine = {
-        name: line.slice(line.indexOf(":") + 1).trim(),
+        name: line.slice(line.indexOf(":") + 1).replace(/\*\*/g, "").trim(),
         location: "mixed",
         exercises: [],
         notes: "Updated by AI coach"
@@ -2821,10 +2919,9 @@ function parseAiPlanText(text) {
     }
 
     if (mode === "active-plan") {
-      const separatorIndex = line.indexOf(":");
-      if (separatorIndex < 1) return;
-      const key = line.slice(0, separatorIndex).trim().toLowerCase();
-      const value = line.slice(separatorIndex + 1).trim();
+      const parsedLine = readKeyValueLine(line);
+      if (!parsedLine) return;
+      const { key, value } = parsedLine;
       if (key === "name" || key === "plan name") activePlan.name = value;
       if (key === "main goal" || key === "goal") activePlan.mainGoal = value;
       if (key === "review cadence" || key === "review rhythm") activePlan.reviewCadence = value;
@@ -2834,7 +2931,8 @@ function parseAiPlanText(text) {
     }
 
     if (mode === "weekly") {
-      const match = line.match(/^(monday|tuesday|wednesday|thursday|friday|saturday|sunday)\s*:\s*(.+)$/i);
+      const cleaned = line.replace(/^[*-]\s*/, "").trim();
+      const match = cleaned.match(/^(monday|tuesday|wednesday|thursday|friday|saturday|sunday)\s*:\s*(.+)$/i);
       if (match) {
         weeklyPlanNames[match[1].toLowerCase()] = match[2].trim();
       }
@@ -2936,6 +3034,59 @@ function summarizePlanImport(parsed, nextData) {
   lines.push("");
   lines.push("Load this updated plan into Training Book?");
   return lines.join("\n");
+}
+
+function getPlanImportText() {
+  return planContent?.querySelector("#plan-import-text")?.value.trim() || "";
+}
+
+function previewPlanImportFromScreen() {
+  const text = getPlanImportText();
+  if (!text) {
+    planImportPreview = null;
+    planImportSummary = "";
+    planImportMessage = "Paste a plan first, or press Use example.";
+    renderPlan();
+    return;
+  }
+
+  try {
+    const parsed = parseAiPlanText(text);
+    const hasActivePlan = Object.values(parsed.activePlan || {}).some(Boolean);
+    if (!hasActivePlan && parsed.routines.length === 0 && Object.keys(parsed.weeklyPlanNames).length === 0) {
+      throw new Error("I could not find plan notes, routine names, or weekly schedule lines.");
+    }
+
+    const data = getLocalData();
+    const nextData = buildImportedPlanData(data, parsed);
+    planImportPreview = { parsed, nextData };
+    planImportSummary = summarizePlanImport(parsed, nextData).replace(/\nLoad this updated plan into Training Book\?$/, "");
+    planImportMessage = "Preview ready. If this looks right, save the imported plan.";
+  } catch (error) {
+    planImportPreview = null;
+    planImportSummary = "";
+    planImportMessage = `Could not read that plan yet: ${error.message}`;
+  }
+
+  renderPlan();
+}
+
+function savePlanImportFromScreen() {
+  if (!planImportPreview) {
+    previewPlanImportFromScreen();
+    return;
+  }
+
+  const nextData = planImportPreview.nextData;
+  nextData.updatedAt = new Date().toISOString();
+  nextData.updatedBy = getDeviceId();
+  commitProgressData(nextData);
+  renderTodayRoutine();
+
+  planImportPreview = null;
+  planImportSummary = "";
+  planImportMessage = "Imported plan saved. Today has been refreshed from the latest weekly plan.";
+  renderPlan();
 }
 
 function importUpdatedPlan() {

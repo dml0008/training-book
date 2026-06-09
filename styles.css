@@ -908,6 +908,57 @@ p {
   margin-top: 16px;
 }
 
+.plan-import-card {
+  display: grid;
+  gap: 12px;
+}
+
+.plan-import-text {
+  min-height: 260px;
+  font-family: ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.plan-import-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.plan-import-actions button {
+  flex: 1 1 180px;
+}
+
+.primary-button:disabled,
+.quiet-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+
+.plan-import-message {
+  margin: 0;
+  padding: 10px 12px;
+  border-left: 3px solid var(--accent);
+  background: rgba(183, 255, 53, 0.08);
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.plan-import-preview {
+  max-height: 320px;
+  margin: 0;
+  overflow: auto;
+  white-space: pre-wrap;
+  border: 1px solid rgba(155, 168, 161, 0.18);
+  border-radius: 8px;
+  background: rgba(16, 20, 19, 0.72);
+  color: var(--text);
+  font: 13px/1.45 ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  padding: 12px;
+}
+
 .plan-week {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
