@@ -3,7 +3,7 @@ const DROPBOX_TOKEN_URL = "https://api.dropboxapi.com/oauth2/token";
 const DROPBOX_UPLOAD_URL = "https://content.dropboxapi.com/2/files/upload";
 const DROPBOX_DOWNLOAD_URL = "https://content.dropboxapi.com/2/files/download";
 const DATA_FILE_PATH = "/04_Technical/06_Side_Projects/Workout and Nutrition App/data/workout-data.json";
-const APP_VERSION = "2026.06.11-today-preview";
+const APP_VERSION = "2026.06.12-live-workout";
 
 const STORAGE = {
   appKey: "trainingBookDropboxAppKey",
@@ -232,7 +232,11 @@ if (logDate) {
 const activeWorkout = {
   startedAt: new Date().toISOString(),
   exercises: [],
-  started: false
+  started: false,
+  // Slice 2 (focused workout): which exercise screen we're on, and whether
+  // we're showing an exercise ("exercise") or the finish/summary ("finish").
+  currentIndex: 0,
+  phase: "exercise"
 };
 
 let planImportPreview = null;
@@ -318,6 +322,15 @@ function makeTodayExercise(plannedEx, source = "planned") {
   const targetReps = Number(plannedEx.targetReps) || 0;
   const targetDuration = Number(plannedEx.targetDuration) || 0;
 
+  // One row per planned set, each holding the weight/reps actually done and a
+  // done flag you tap to check off. Pre-filled with the planned reps.
+  const setCount = targetSets || (isCardio ? 0 : 1);
+  const sets = Array.from({ length: setCount }).map(() => ({
+    weight: 0,
+    reps: targetReps,
+    done: false
+  }));
+
   return {
     id: `today-${exerciseInfo.id}-${randomString(5)}`,
     exerciseId: exerciseInfo.id,
@@ -329,10 +342,9 @@ function makeTodayExercise(plannedEx, source = "planned") {
     targetSets,
     targetReps,
     targetDuration,
-    actualSets: targetSets || 1,
-    actualReps: targetReps,
-    actualWeight: 0,
+    sets,
     actualDuration: targetDuration || 30,
+    cardioDone: false,
     difficulty: 5,
     checked: false
   };
@@ -436,9 +448,12 @@ function renderReviewReminder() {
 // overview with a Start button, "active" = the live logging view.
 function setTodayMode(mode) {
   if (todayStartRow) todayStartRow.hidden = mode !== "preview";
-  if (todayBackButton) todayBackButton.hidden = mode !== "active";
-  if (todayAddExtra) todayAddExtra.hidden = mode !== "active";
-  if (todayFooter) todayFooter.hidden = mode !== "active";
+  // The focused workout (Slice 2) draws its own back / next / save buttons
+  // inside the routine list, so the old header back button, add-extra picker,
+  // and footer Save bar stay hidden in every mode now.
+  if (todayBackButton) todayBackButton.hidden = true;
+  if (todayAddExtra) todayAddExtra.hidden = true;
+  if (todayFooter) todayFooter.hidden = true;
   if (todayPreviewSub) todayPreviewSub.hidden = mode !== "preview";
 }
 
@@ -480,6 +495,8 @@ function startTodayWorkout() {
   if (!routine) return;
   activeWorkout.started = true;
   activeWorkout.startedAt = new Date().toISOString();
+  activeWorkout.currentIndex = 0;
+  activeWorkout.phase = "exercise";
   activeWorkout.exercises = routine.exercises.map((plannedEx) => makeTodayExercise(plannedEx));
   renderTodayRoutine();
 }
@@ -487,6 +504,8 @@ function startTodayWorkout() {
 function exitTodayWorkout() {
   activeWorkout.started = false;
   activeWorkout.exercises = [];
+  activeWorkout.currentIndex = 0;
+  activeWorkout.phase = "exercise";
   renderTodayRoutine();
 }
 
@@ -544,117 +563,257 @@ function handleTodayExerciseCheck(event) {
   }
 }
 
+// True once at least one set is checked off (strength) or the cardio move is
+// marked done. Used to decide what gets saved and how the recap reads.
+function isExerciseLogged(ex) {
+  if (ex.type === "cardio") return Boolean(ex.cardioDone) && Number(ex.actualDuration) > 0;
+  return Array.isArray(ex.sets) && ex.sets.some((set) => set.done);
+}
+
+// Plain one-line summary of what actually happened, for the finish recap.
+function formatExerciseRecap(ex) {
+  if (ex.type === "cardio") {
+    return ex.cardioDone ? `${Number(ex.actualDuration) || 0} min` : "Not logged";
+  }
+  const doneSets = (ex.sets || []).filter((set) => set.done);
+  if (doneSets.length === 0) return "Not logged";
+  const topWeight = Math.max(...doneSets.map((set) => Number(set.weight) || 0));
+  const repsAtTop = doneSets.find((set) => (Number(set.weight) || 0) === topWeight)?.reps || 0;
+  const weightPart = topWeight > 0 ? ` · ${topWeight} lb × ${repsAtTop}` : "";
+  return `${doneSets.length} set${doneSets.length === 1 ? "" : "s"}${weightPart}`;
+}
+
+// Plain target line for the focused screen, e.g. "3 × 8" or "10 min".
+function formatFocusTarget(ex) {
+  if (ex.type === "cardio") return `${ex.targetDuration || ex.actualDuration || 0} min`;
+  if (ex.targetReps) return `${ex.targetSets || (ex.sets || []).length} × ${ex.targetReps}`;
+  return `${ex.targetSets || (ex.sets || []).length} sets`;
+}
+
+// The progress bar across the top: a filled dot per exercise, with done ones
+// solid, the current one highlighted, and upcoming ones dim.
+function renderProgressDots(currentIndex, total, finished) {
+  return Array.from({ length: total }).map((_, i) => {
+    let cls = "lw-dot";
+    if (finished || i < currentIndex) cls += " is-done";
+    else if (i === currentIndex) cls += " is-active";
+    return `<span class="${cls}"></span>`;
+  }).join("");
+}
+
+function renderFocusedExercise() {
+  const exercises = activeWorkout.exercises;
+  const i = activeWorkout.currentIndex;
+  const ex = exercises[i];
+  const total = exercises.length;
+  const routineName = todayRoutineName?.textContent || "Workout";
+  const isLast = i >= total - 1;
+  const nextLabel = isLast
+    ? "Finish workout &rarr;"
+    : `Next: ${escapeHtml(exercises[i + 1].name)} &rarr;`;
+
+  let body;
+  if (ex.type === "cardio") {
+    body = `
+      <div class="lw-cardio">
+        <label class="lw-field lw-field-lg">
+          <input type="number" inputmode="numeric" min="0" step="1" value="${escapeHtml(ex.actualDuration)}" data-action="cardio-minutes" aria-label="Minutes for ${escapeHtml(ex.name)}">
+          <span>min</span>
+        </label>
+        <button class="lw-bigcheck${ex.cardioDone ? " is-done" : ""}" type="button" data-action="toggle-cardio">${ex.cardioDone ? "Done &#10003;" : "Mark done"}</button>
+      </div>
+      <p class="lw-note">Built-in timer coming next - for now, enter your minutes and mark it done.</p>
+    `;
+  } else {
+    body = `
+      <div class="lw-sets">
+        ${(ex.sets || []).map((set, si) => `
+          <div class="lw-setrow${set.done ? " is-done" : ""}" data-set-index="${si}">
+            <span class="lw-sn">Set ${si + 1}</span>
+            <label class="lw-field">
+              <input type="number" inputmode="decimal" min="0" step="5" value="${escapeHtml(set.weight)}" data-action="set-field" data-field="weight" data-set-index="${si}" aria-label="Set ${si + 1} weight in pounds">
+              <span>lb</span>
+            </label>
+            <label class="lw-field">
+              <input type="number" inputmode="numeric" min="0" step="1" value="${escapeHtml(set.reps)}" data-action="set-field" data-field="reps" data-set-index="${si}" aria-label="Set ${si + 1} reps">
+              <span>reps</span>
+            </label>
+            <button class="lw-check" type="button" data-action="toggle-set" data-set-index="${si}" aria-label="Mark set ${si + 1} done">${set.done ? "&#10003;" : "&rsaquo;"}</button>
+          </div>
+        `).join("")}
+      </div>
+      <div class="lw-setactions">
+        <button class="lw-add" type="button" data-action="add-set">+ Add set</button>
+        ${(ex.sets || []).length > 1 ? `<button class="lw-remove" type="button" data-action="remove-set">&minus; Remove last</button>` : ""}
+      </div>
+    `;
+  }
+
+  todayRoutineList.innerHTML = `
+    <div class="live-workout">
+      <div class="lw-topbar">
+        <button class="lw-back" type="button" data-action="lw-back">&larr; ${escapeHtml(routineName)}</button>
+        <span class="lw-count">${i + 1} of ${total}</span>
+      </div>
+      <div class="lw-dots">${renderProgressDots(i, total, false)}</div>
+      <div class="lw-hero">
+        <div class="lw-hero-icon" aria-hidden="true">${getExerciseIcon(ex.icon)}</div>
+        <div class="lw-hero-text">
+          <h3 class="lw-name">${escapeHtml(ex.name)}</h3>
+          <p class="lw-area">${escapeHtml(ex.area || "")}</p>
+        </div>
+      </div>
+      <div class="lw-target">Target: <strong>${escapeHtml(formatFocusTarget(ex))}</strong></div>
+      ${body}
+      <div class="lw-next-row">
+        <button class="primary-button lw-next" type="button" data-action="lw-next">${nextLabel}</button>
+      </div>
+    </div>
+  `;
+}
+
+function renderFinishScreen() {
+  const exercises = activeWorkout.exercises;
+  const total = exercises.length;
+  const routineName = todayRoutineName?.textContent || "Workout";
+  const loggedCount = exercises.filter(isExerciseLogged).length;
+
+  todayRoutineList.innerHTML = `
+    <div class="live-workout lw-finish-screen">
+      <div class="lw-dots">${renderProgressDots(total, total, true)}</div>
+      <div class="lw-finish">
+        <div class="lw-ring" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l4 4 10-10"/></svg>
+        </div>
+        <h3 class="lw-finish-title">Workout complete</h3>
+        <p class="lw-finish-sub">${escapeHtml(routineName)} · ${loggedCount} of ${total} logged</p>
+        <div class="lw-recap">
+          ${exercises.map((ex) => `
+            <div class="lw-recap-row">
+              <span>${escapeHtml(ex.name)}</span>
+              <b>${escapeHtml(formatExerciseRecap(ex))}</b>
+            </div>
+          `).join("")}
+        </div>
+        <button class="primary-button lw-save" type="button" data-action="finish-save">Save workout</button>
+        <button class="quiet-button lw-finish-back" type="button" data-action="finish-back">Back to plan</button>
+      </div>
+    </div>
+  `;
+}
+
 function renderTodayWorkout() {
   if (!todayRoutineList) return;
 
-  todayRoutineList.innerHTML = activeWorkout.exercises.map((ex) => `
-    <article class="today-exercise-card${ex.checked ? " is-done" : ""}" data-exercise-id="${escapeHtml(ex.id)}">
-      <div class="today-exercise-art">
-        <div class="exercise-icon-small" aria-hidden="true">
-          ${getExerciseIcon(ex.icon)}
-        </div>
-        <button class="today-done-button${ex.checked ? " is-done" : ""}" type="button" data-action="toggle-today">${ex.checked ? "Done" : "Log"}</button>
-      </div>
-      <div class="exercise-details">
-        <div class="today-card-topline">
-          <div>
-            <h3>${escapeHtml(ex.name)}</h3>
-            <p class="exercise-meta">${escapeHtml(ex.area)}${ex.source === "extra" ? " - extra" : ""}</p>
-          </div>
-          <button class="quiet-button small-button today-skip-button" type="button" data-action="skip-today">Skip</button>
-        </div>
-        <p class="exercise-target">${escapeHtml(formatTodayTarget(ex))}</p>
-        ${renderTodayActualControls(ex)}
-        ${renderDifficultyScale(ex)}
-        <div class="today-swap-row">
-          <label>
-            <span>Swap</span>
-            <select data-action="swap-today" aria-label="Swap ${escapeHtml(ex.name)}">${renderExerciseSwapOptions(ex.exerciseId)}</select>
-          </label>
-        </div>
-      </div>
-    </article>
-  `).join("");
+  if (!activeWorkout.exercises.length) {
+    exitTodayWorkout();
+    return;
+  }
 
-  updateTodayProgress();
+  // Keep the current index inside the list even if it somehow drifts.
+  activeWorkout.currentIndex = clampNumber(activeWorkout.currentIndex, 0, activeWorkout.exercises.length - 1);
+
+  if (activeWorkout.phase === "finish") {
+    renderFinishScreen();
+  } else {
+    renderFocusedExercise();
+  }
 }
 
-function addTodayExtraExercise() {
-  const exerciseId = todayExtraPicker?.value;
-  if (!exerciseId) return;
-
-  const exercise = getExerciseById(exerciseId);
-  if (!exercise) return;
-
-  activeWorkout.exercises.push(makeTodayExercise({
-    exerciseId: exercise.id,
-    targetSets: exercise.type === "cardio" ? undefined : 3,
-    targetReps: exercise.type === "cardio" ? undefined : 10,
-    targetDuration: exercise.type === "cardio" ? 30 : undefined
-  }, "extra"));
-
-  if (todayExtraPicker) todayExtraPicker.value = "";
-  renderTodayWorkout();
+function getActiveExercise() {
+  return activeWorkout.exercises[activeWorkout.currentIndex] || null;
 }
 
+// Live-update set weight/reps and cardio minutes as Daniel types, without
+// re-rendering (so the field he's editing keeps focus).
 function handleTodayWorkoutChange(event) {
-  const card = event.target.closest(".today-exercise-card");
-  if (!card) return;
-
-  const exercise = activeWorkout.exercises.find((ex) => ex.id === card.dataset.exerciseId);
+  const input = event.target;
+  const action = input.dataset?.action;
+  const exercise = getActiveExercise();
   if (!exercise) return;
 
-  if (event.target.matches("select[data-action='swap-today']")) {
-    const swapTo = getExerciseById(event.target.value);
-    if (!swapTo) return;
+  if (action === "set-field") {
+    const si = Number(input.dataset.setIndex);
+    const field = input.dataset.field;
+    const set = exercise.sets?.[si];
+    if (set && (field === "weight" || field === "reps")) {
+      set[field] = clampNumber(input.value, 0, 9999);
+    }
+    return;
+  }
 
-    const replacement = makeTodayExercise({
-      exerciseId: swapTo.id,
-      targetSets: swapTo.type === "cardio" ? undefined : exercise.targetSets || 3,
-      targetReps: swapTo.type === "cardio" ? undefined : exercise.targetReps || 10,
-      targetDuration: swapTo.type === "cardio" ? exercise.targetDuration || 30 : undefined
-    }, exercise.source === "extra" ? "extra" : "swapped");
-
-    replacement.id = exercise.id;
-    replacement.checked = exercise.checked;
-    activeWorkout.exercises = activeWorkout.exercises.map((item) => item.id === exercise.id ? replacement : item);
-    renderTodayWorkout();
+  if (action === "cardio-minutes") {
+    exercise.actualDuration = clampNumber(input.value, 0, 1000);
   }
 }
 
 function handleTodayWorkoutClick(event) {
   const button = event.target.closest("button");
   if (!button) return;
-
-  const card = button.closest(".today-exercise-card");
-  const exercise = activeWorkout.exercises.find((ex) => ex.id === card?.dataset.exerciseId);
   const action = button.dataset.action;
+  const exercise = getActiveExercise();
 
-  if (action === "skip-today" && exercise) {
-    activeWorkout.exercises = activeWorkout.exercises.filter((item) => item.id !== exercise.id);
+  if (action === "lw-back") {
+    if (activeWorkout.currentIndex > 0) {
+      activeWorkout.currentIndex -= 1;
+      renderTodayWorkout();
+    } else {
+      exitTodayWorkout();
+    }
+    return;
+  }
+
+  if (action === "lw-next") {
+    if (activeWorkout.currentIndex < activeWorkout.exercises.length - 1) {
+      activeWorkout.currentIndex += 1;
+    } else {
+      activeWorkout.phase = "finish";
+    }
     renderTodayWorkout();
     return;
   }
 
-  if (action === "toggle-today" && exercise) {
-    exercise.checked = !exercise.checked;
+  if (action === "toggle-set" && exercise) {
+    const si = Number(button.dataset.setIndex);
+    const set = exercise.sets?.[si];
+    if (set) set.done = !set.done;
     renderTodayWorkout();
     return;
   }
 
-  if (action === "adjust-today" && exercise) {
-    const field = button.dataset.field;
-    const delta = Number(button.dataset.delta) || 0;
-    const min = Number(button.dataset.min) || 0;
-    const max = Number(button.dataset.max) || 999;
-    exercise[field] = clampNumber((Number(exercise[field]) || 0) + delta, min, max);
+  if (action === "add-set" && exercise) {
+    const last = exercise.sets?.[exercise.sets.length - 1];
+    exercise.sets.push({
+      weight: last ? last.weight : 0,
+      reps: last ? last.reps : (exercise.targetReps || 0),
+      done: false
+    });
     renderTodayWorkout();
     return;
   }
 
-  if (action === "set-difficulty" && exercise) {
-    exercise.difficulty = Number(button.dataset.value) || 5;
+  if (action === "remove-set" && exercise) {
+    if ((exercise.sets || []).length > 1) exercise.sets.pop();
     renderTodayWorkout();
+    return;
+  }
+
+  if (action === "toggle-cardio" && exercise) {
+    exercise.cardioDone = !exercise.cardioDone;
+    renderTodayWorkout();
+    return;
+  }
+
+  if (action === "finish-back") {
+    exitTodayWorkout();
+    return;
+  }
+
+  if (action === "finish-save") {
+    saveTodayWorkout().catch((error) => {
+      console.error("Error saving today's workout:", error);
+      alert(`Error: ${error.message}`);
+    });
   }
 }
 
@@ -665,9 +824,9 @@ async function saveTodayWorkout() {
     return;
   }
 
-  const loggedExercises = activeWorkout.exercises.filter((ex) => ex.checked);
+  const loggedExercises = activeWorkout.exercises.filter(isExerciseLogged);
   if (loggedExercises.length === 0) {
-    alert("Log at least one exercise before saving.");
+    alert("Check off at least one set before saving.");
     return;
   }
 
@@ -693,6 +852,13 @@ async function saveTodayWorkout() {
           difficulty: Number(ex.difficulty) || 5
         };
       }
+
+      // Save the sets that were actually checked off, each with its own
+      // weight and reps. The summary keeps History's one-line view working.
+      const doneSets = (ex.sets || []).filter((set) => set.done);
+      const topWeight = doneSets.reduce((max, set) => Math.max(max, Number(set.weight) || 0), 0);
+      const repsAtTop = doneSets.find((set) => (Number(set.weight) || 0) === topWeight)?.reps || 0;
+
       return {
         id: ex.id,
         type: "strength",
@@ -703,15 +869,15 @@ async function saveTodayWorkout() {
           reps: ex.targetReps || 0
         },
         actualSummary: {
-          sets: Number(ex.actualSets) || 0,
-          reps: Number(ex.actualReps) || 0,
-          weight: Number(ex.actualWeight) || 0
+          sets: doneSets.length,
+          reps: Number(repsAtTop) || 0,
+          weight: Number(topWeight) || 0
         },
-        sets: Array.from({ length: Number(ex.actualSets) || 1 }).map((_, i) => ({
+        sets: doneSets.map((set, i) => ({
           id: `set-${i + 1}`,
           setNumber: i + 1,
-          reps: Number(ex.actualReps) || 0,
-          weight: Number(ex.actualWeight) || 0,
+          reps: Number(set.reps) || 0,
+          weight: Number(set.weight) || 0,
           done: true
         })),
         difficulty: Number(ex.difficulty) || 5
@@ -737,6 +903,12 @@ async function saveTodayWorkout() {
 
   if (!navigator.onLine) {
     alert("Workout saved on this device. It will sync when internet is back.");
+    activeWorkout.exercises = [];
+    activeWorkout.started = false;
+    activeWorkout.currentIndex = 0;
+    activeWorkout.phase = "exercise";
+    renderTodayRoutine();
+    renderHistory();
     return;
   }
 
@@ -746,6 +918,8 @@ async function saveTodayWorkout() {
     alert("Workout saved and synced!");
     activeWorkout.exercises = [];
     activeWorkout.started = false;
+    activeWorkout.currentIndex = 0;
+    activeWorkout.phase = "exercise";
     renderTodayRoutine();
     renderHistory();
   } catch (error) {
@@ -3360,18 +3534,9 @@ reviewReminderDismiss?.addEventListener("click", () => {
 startTodayButton?.addEventListener("click", startTodayWorkout);
 todayBackButton?.addEventListener("click", exitTodayWorkout);
 
-addTodayExtraButton?.addEventListener("click", addTodayExtraExercise);
-
-todayExtraPicker?.addEventListener("change", () => {
-  if (todayExtraPicker.value) addTodayExtraExercise();
-});
-
-saveTodayWorkoutButton?.addEventListener("click", () => {
-  saveTodayWorkout().catch((error) => {
-    console.error("Error saving today's workout:", error);
-    alert(`Error: ${error.message}`);
-  });
-});
+// The focused workout (Slice 2) draws Next / Back / Save inside the routine
+// list and is wired through handleTodayWorkoutClick above. The old add-extra
+// picker and footer Save bar are no longer used.
 
 const importPlanButton = document.querySelector("#import-plan");
 
