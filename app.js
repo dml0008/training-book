@@ -3,7 +3,7 @@ const DROPBOX_TOKEN_URL = "https://api.dropboxapi.com/oauth2/token";
 const DROPBOX_UPLOAD_URL = "https://content.dropboxapi.com/2/files/upload";
 const DROPBOX_DOWNLOAD_URL = "https://content.dropboxapi.com/2/files/download";
 const DATA_FILE_PATH = "/04_Technical/06_Side_Projects/Workout and Nutrition App/data/workout-data.json";
-const APP_VERSION = "2026.06.10-plan-export";
+const APP_VERSION = "2026.06.10-plan-export-tabs";
 
 const STORAGE = {
   appKey: "trainingBookDropboxAppKey",
@@ -14,7 +14,8 @@ const STORAGE = {
   refreshToken: "trainingBookDropboxRefreshToken",
   localData: "trainingBookWorkoutData",
   pendingData: "trainingBookPendingWorkoutData",
-  deviceId: "trainingBookDeviceId"
+  deviceId: "trainingBookDeviceId",
+  activeTab: "trainingBookActiveTab"
 };
 
 const screens = Array.from(document.querySelectorAll(".screen"));
@@ -677,13 +678,16 @@ if (savedAppKey && appKeyInput) {
   appKeyInput.value = savedAppKey;
 }
 
-function showScreen(name) {
+function showScreen(name, remember = false) {
+  const validName = screens.some((screen) => screen.dataset.screen === name) ? name : "today";
+  if (remember) localStorage.setItem(STORAGE.activeTab, validName);
+
   screens.forEach((screen) => {
-    screen.classList.toggle("is-active", screen.dataset.screen === name);
+    screen.classList.toggle("is-active", screen.dataset.screen === validName);
   });
 
   tabs.forEach((tab) => {
-    const isActive = tab.dataset.target === name;
+    const isActive = tab.dataset.target === validName;
     tab.classList.toggle("is-active", isActive);
     if (isActive) {
       tab.setAttribute("aria-current", "page");
@@ -692,15 +696,15 @@ function showScreen(name) {
     }
   });
 
-  if (name === "history") {
+  if (validName === "history") {
     renderHistory();
   }
 
-  if (name === "plan") {
+  if (validName === "plan") {
     renderPlan();
   }
 
-  if (name === "progress") {
+  if (validName === "progress") {
     renderProgress();
   }
 }
@@ -1944,7 +1948,7 @@ function renderPlan() {
         <h3>Coach packet</h3>
         <p class="plan-muted">Export the current app context, review it in an AI chat, then paste the updated plan below.</p>
         <div class="plan-actions">
-          <button class="primary-button" id="export-review-packet" type="button">Export for AI review</button>
+          <button class="primary-button" id="export-review-packet" type="button">Copy + save coach packet</button>
         </div>
       </section>
     </div>
@@ -2825,12 +2829,43 @@ function downloadTextFile(text, fileName) {
   URL.revokeObjectURL(url);
 }
 
+async function saveTextFile(text, fileName) {
+  if (window.showSaveFilePicker) {
+    const handle = await window.showSaveFilePicker({
+      suggestedName: fileName,
+      types: [{
+        description: "Markdown file",
+        accept: { "text/markdown": [".md"] }
+      }]
+    });
+    const writable = await handle.createWritable();
+    await writable.write(text);
+    await writable.close();
+    return "picked";
+  }
+
+  downloadTextFile(text, fileName);
+  return "downloaded";
+}
+
 async function exportReviewPacket() {
   const packet = generateReviewPacket();
   const fileName = getReviewPacketFileName();
   await copyTextToClipboard(packet);
-  downloadTextFile(packet, fileName);
-  alert(`Review packet copied and downloaded as ${fileName}. Save that file into ai-fitness-coach/exports/ if you want to keep the weekly record.`);
+
+  try {
+    const saveMode = await saveTextFile(packet, fileName);
+    const saveText = saveMode === "picked"
+      ? `saved as ${fileName}`
+      : `downloaded as ${fileName}`;
+    alert(`Coach packet copied to clipboard and ${saveText}. Save it in ai-fitness-coach/exports/ if you want to keep the weekly record.`);
+  } catch (error) {
+    if (error?.name === "AbortError") {
+      alert("Coach packet copied to clipboard. File save was cancelled.");
+      return;
+    }
+    alert(`Coach packet copied to clipboard, but the file save did not finish: ${error.message}`);
+  }
 }
 
 function getPlanImportExample() {
@@ -3158,7 +3193,7 @@ function importUpdatedPlan() {
 
 tabs.forEach((tab) => {
   tab.addEventListener("click", () => {
-    showScreen(tab.dataset.target);
+    showScreen(tab.dataset.target, true);
   });
 });
 
@@ -3257,6 +3292,7 @@ renderExercisePicker();
 renderActiveWorkout();
 renderTodayRoutine();
 renderPlan();
+showScreen(localStorage.getItem(STORAGE.activeTab) || "today");
 
 // ===== Firebase cloud sync setup =====
 // Daniel's Training Book Firebase project. The apiKey here is a public
