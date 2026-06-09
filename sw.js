@@ -1,4 +1,4 @@
-const CACHE_NAME = "training-book-shell-v6";
+const CACHE_NAME = "training-book-shell-v7";
 const STATIC_ASSETS = [
   "manifest.webmanifest",
   "icons/icon.svg"
@@ -30,6 +30,12 @@ self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
 
   const url = new URL(event.request.url);
+
+  // Only handle our own app's files. Let everything else (Firebase sign-in,
+  // the live database connection, the Firebase code on Google's CDN) go
+  // straight to the network untouched, so real-time sync is never cached.
+  if (url.origin !== self.location.origin) return;
+
   const isAppFile = APP_FILES.some((file) => url.pathname.endsWith(file) || file === "./");
 
   event.respondWith(

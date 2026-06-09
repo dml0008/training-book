@@ -3,7 +3,7 @@ const DROPBOX_TOKEN_URL = "https://api.dropboxapi.com/oauth2/token";
 const DROPBOX_UPLOAD_URL = "https://content.dropboxapi.com/2/files/upload";
 const DROPBOX_DOWNLOAD_URL = "https://content.dropboxapi.com/2/files/download";
 const DATA_FILE_PATH = "/04_Technical/06_Side_Projects/Workout and Nutrition App/data/workout-data.json";
-const APP_VERSION = "2026.06.10-new-dropbox-app";
+const APP_VERSION = "2026.06.10-firebase-sync";
 
 const STORAGE = {
   appKey: "trainingBookDropboxAppKey",
@@ -52,6 +52,37 @@ const workoutSaveStatus = document.querySelector("#workout-save-status");
 const saveWorkoutButton = document.querySelector("#save-workout");
 const appKeyInput = document.querySelector("#app-key");
 const syncStatus = document.querySelector("#sync-status");
+const cloudSignInButton = document.querySelector("#cloud-signin");
+const cloudSignOutButton = document.querySelector("#cloud-signout");
+
+// ===== Firebase cloud sync state (replaces the old Dropbox sync) =====
+// These hold the signed-in user and the live database connection. They are
+// filled in once Firebase loads (see initCloud at the bottom of this file).
+let cloudUser = null;     // { uid, email } when signed in, else null
+let _fbDoc = null;        // reference to this user's data document
+let _setDoc = null;       // Firebase's save function, captured after it loads
+let _cloudUnsub = null;   // function to stop listening for remote changes
+
+// Save the whole data blob to the cloud database for the signed-in user.
+async function cloudSave(data) {
+  if (!_fbDoc || !_setDoc) throw new Error("Sign in to sync across your devices.");
+  await _setDoc(_fbDoc, data);
+}
+
+// Update the header pill and the sync panel to reflect signed-in / signed-out.
+function updateCloudUi() {
+  const signedIn = Boolean(cloudUser);
+  if (cloudSignInButton) cloudSignInButton.hidden = signedIn;
+  if (cloudSignOutButton) cloudSignOutButton.hidden = !signedIn;
+  if (syncPillLabel) syncPillLabel.textContent = signedIn ? "Synced" : "Sign in";
+  if (syncPill) syncPill.className = signedIn ? "sync-pill good" : "sync-pill";
+  if (syncStatus) {
+    syncStatus.textContent = signedIn
+      ? `Signed in as ${cloudUser.email}. Your workouts sync automatically across your devices.`
+      : "Sign in with Google to sync your workouts across your phone and desktop.";
+    syncStatus.className = signedIn ? "sync-status good" : "sync-status";
+  }
+}
 
 if (appVersionLabel) {
   appVersionLabel.textContent = `Build ${APP_VERSION}`;
@@ -603,12 +634,12 @@ async function saveTodayWorkout() {
   try {
     await uploadWorkoutData(data);
     clearPendingData();
-    alert("Workout saved to Dropbox!");
+    alert("Workout saved and synced!");
     activeWorkout.exercises = [];
     renderTodayRoutine();
     renderHistory();
   } catch (error) {
-    alert(`${error.message} Workout is saved locally for now.`);
+    alert(`${error.message} Workout is saved on this device for now.`);
     renderHistory();
   }
 }
@@ -691,8 +722,7 @@ function describeCurrentSyncState() {
 }
 
 function refreshSyncPanelText() {
-  const [message, tone] = describeCurrentSyncState();
-  setSyncStatus(message, tone);
+  updateCloudUi();
 }
 
 function getRedirectUri() {
@@ -1250,7 +1280,7 @@ async function saveWorkout() {
 
   saveLocalData(data);
   markPendingData(data);
-  setWorkoutStatus("Saved on this device. Syncing to Dropbox...", "warn");
+  setWorkoutStatus("Saved on this device. Syncing...", "warn");
 
   if (!navigator.onLine) {
     resetActiveWorkout();
@@ -1262,10 +1292,10 @@ async function saveWorkout() {
     await uploadWorkoutData(data);
     clearPendingData();
     resetActiveWorkout();
-    setWorkoutStatus("Workout saved to Dropbox and kept as a local backup.", "good");
+    setWorkoutStatus("Workout saved and synced, with a local backup kept on this device.", "good");
   } catch (error) {
     resetActiveWorkout();
-    setWorkoutStatus(`${error.message} Workout is saved locally for now.`, "warn");
+    setWorkoutStatus(`${error.message} Workout is saved on this device for now.`, "warn");
   }
 }
 
@@ -1412,29 +1442,8 @@ async function finishDropboxConnect() {
 }
 
 async function uploadWorkoutData(data) {
-  const token = await getAccessToken();
-  if (!token) throw new Error("Connect Dropbox before syncing.");
-
-  const response = await fetch(DROPBOX_UPLOAD_URL, {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${token}`,
-      "Content-Type": "application/octet-stream",
-      "Dropbox-API-Arg": JSON.stringify({
-        path: DATA_FILE_PATH,
-        mode: "overwrite",
-        autorename: false,
-        mute: false,
-        strict_conflict: false
-      })
-    },
-    body: JSON.stringify(data, null, 2)
-  });
-
-  if (!response.ok) {
-    const message = await response.text();
-    throw new Error(`Dropbox save failed: ${message}`);
-  }
+  // Saves now go to the Firebase cloud database for the signed-in user.
+  await cloudSave(data);
 }
 
 async function downloadWorkoutData() {
@@ -1509,7 +1518,7 @@ async function syncPendingData() {
 
   await uploadWorkoutData(pendingData);
   clearPendingData();
-  setSyncStatus("Pending data synced to Dropbox.", "good");
+  setSyncStatus("Pending changes synced.", "good");
   renderTodayRoutine();
   updateConnectionState();
 }
@@ -1610,21 +1619,8 @@ function forgetDropbox() {
 }
 
 function updateConnectionState() {
-  const hasDropbox = Boolean(localStorage.getItem(STORAGE.refreshToken) || getStoredAccessToken());
-  if (!navigator.onLine) {
-    setConnectionUi(hasPendingData() ? "Offline, pending" : "Offline", "warn");
-    refreshSyncPanelText();
-    return;
-  }
-
-  if (hasPendingData()) {
-    setConnectionUi("Pending sync", "warn");
-  } else if (hasDropbox) {
-    setConnectionUi("Dropbox ready", "good");
-  } else {
-    setConnectionUi("Local only");
-  }
-  refreshSyncPanelText();
+  // Sync status is now driven by the Firebase sign-in state.
+  updateCloudUi();
 }
 
 function makeSlug(value) {
@@ -2237,13 +2233,112 @@ renderExercisePicker();
 renderActiveWorkout();
 renderTodayRoutine();
 
-finishDropboxConnect().catch((error) => {
-  console.error("Dropbox connection error:", error);
-  updateConnectionState();
-});
+// ===== Firebase cloud sync setup =====
+// Daniel's Training Book Firebase project. The apiKey here is a public
+// identifier (not a secret password); data is protected by security rules
+// that only let a signed-in user read and write their own document.
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyDY1q5RtpXcMXUvA-WKlRSs1ijgVPhat_M",
+  authDomain: "training-book-6c456.firebaseapp.com",
+  projectId: "training-book-6c456",
+  storageBucket: "training-book-6c456.firebasestorage.app",
+  messagingSenderId: "824749397256",
+  appId: "1:824749397256:web:db7d9cae4fedd63ae4c8bd"
+};
 
-// Auto-authenticate with Dropbox if credentials exist
-updateConnectionState();
+async function initCloud() {
+  let appMod, authMod, fsMod;
+  try {
+    [appMod, authMod, fsMod] = await Promise.all([
+      import("https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js"),
+      import("https://www.gstatic.com/firebasejs/12.14.0/firebase-auth.js"),
+      import("https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js")
+    ]);
+  } catch (error) {
+    // Offline or the Firebase code could not load: the app still works
+    // fully on this device using the local backup. Sync resumes next launch.
+    console.error("Cloud sync could not load right now:", error);
+    updateCloudUi();
+    return;
+  }
+
+  const fbApp = appMod.initializeApp(FIREBASE_CONFIG);
+  const fbAuth = authMod.getAuth(fbApp);
+  const fbDb = fsMod.getFirestore(fbApp);
+  const provider = new authMod.GoogleAuthProvider();
+  _setDoc = fsMod.setDoc;
+
+  // Decide what to do when the cloud sends us the latest saved data.
+  function reconcile(remote) {
+    const local = readJson(STORAGE.localData);
+    const localTime = local?.updatedAt ? Date.parse(local.updatedAt) : 0;
+    const remoteTime = remote?.updatedAt ? Date.parse(remote.updatedAt) : 0;
+
+    if (!remote) {
+      // Nothing saved in the cloud yet: push this device's data up as the
+      // starting point (this carries over existing local workouts).
+      if (local) cloudSave(local).catch((e) => console.error("Initial cloud push failed:", e));
+      return;
+    }
+
+    if (remoteTime >= localTime) {
+      // Cloud has the newest data: take it and refresh the screens.
+      saveLocalData(remote);
+      renderTodayRoutine();
+      renderActiveWorkout();
+      renderHistory();
+    } else if (local) {
+      // This device has newer data (e.g. logged offline): push it up.
+      cloudSave(local).catch((e) => console.error("Cloud push failed:", e));
+    }
+  }
+
+  authMod.onAuthStateChanged(fbAuth, (user) => {
+    if (_cloudUnsub) { _cloudUnsub(); _cloudUnsub = null; }
+
+    if (user) {
+      cloudUser = { uid: user.uid, email: user.email };
+      _fbDoc = fsMod.doc(fbDb, "users", user.uid);
+      // Listen for changes so the other device updates automatically.
+      _cloudUnsub = fsMod.onSnapshot(_fbDoc, (snap) => {
+        if (snap.metadata.hasPendingWrites) return; // ignore our own just-made save
+        reconcile(snap.exists() ? snap.data() : null);
+      }, (error) => console.error("Cloud listener error:", error));
+    } else {
+      cloudUser = null;
+      _fbDoc = null;
+    }
+    updateCloudUi();
+  });
+
+  // Finish a Google sign-in that returned via redirect.
+  authMod.getRedirectResult(fbAuth).catch((error) => {
+    console.error("Google sign-in error:", error);
+    if (syncStatus) {
+      syncStatus.textContent = `Sign-in did not finish: ${error.message}`;
+      syncStatus.className = "sync-status bad";
+    }
+  });
+
+  cloudSignInButton?.addEventListener("click", () => {
+    authMod.signInWithRedirect(fbAuth, provider).catch((error) => {
+      console.error("Sign-in failed:", error);
+      if (syncStatus) {
+        syncStatus.textContent = `Could not start sign-in: ${error.message}`;
+        syncStatus.className = "sync-status bad";
+      }
+    });
+  });
+
+  cloudSignOutButton?.addEventListener("click", () => {
+    authMod.signOut(fbAuth).catch((error) => console.error("Sign-out failed:", error));
+  });
+
+  updateCloudUi();
+}
+
+initCloud();
+updateCloudUi();
 
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
