@@ -3,7 +3,7 @@ const DROPBOX_TOKEN_URL = "https://api.dropboxapi.com/oauth2/token";
 const DROPBOX_UPLOAD_URL = "https://content.dropboxapi.com/2/files/upload";
 const DROPBOX_DOWNLOAD_URL = "https://content.dropboxapi.com/2/files/download";
 const DATA_FILE_PATH = "/04_Technical/06_Side_Projects/Workout and Nutrition App/data/workout-data.json";
-const APP_VERSION = "2026.06.10-firebase-sync";
+const APP_VERSION = "2026.06.10-progress";
 
 const STORAGE = {
   appKey: "trainingBookDropboxAppKey",
@@ -38,6 +38,7 @@ const loadLatestButton = document.querySelector("#load-latest");
 const resetDropboxButton = document.querySelector("#reset-dropbox");
 const refreshAppButton = document.querySelector("#refresh-app");
 const historyContent = document.querySelector("#history-content");
+const progressContent = document.querySelector("#progress-content");
 const exerciseList = document.querySelector("#exercise-list");
 const libraryCount = document.querySelector("#library-count");
 const filterChips = Array.from(document.querySelectorAll(".filter-chip"));
@@ -688,6 +689,10 @@ function showScreen(name) {
 
   if (name === "history") {
     renderHistory();
+  }
+
+  if (name === "progress") {
+    renderProgress();
   }
 }
 
@@ -1854,6 +1859,183 @@ function formatWorkoutDate(value) {
     month: "short",
     day: "numeric"
   }).format(parsedDate);
+}
+
+// ===== Progress tab (Step 9): streak, weekly target, calendar =====
+// All date math here is done in UTC so it lines up with the stored date keys
+// (completedWorkouts holds "YYYY-MM-DD" strings made the same UTC way).
+
+const DOW_NAMES = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
+
+// Which month the calendar is showing (first-of-month, UTC). Null until first render.
+let progressMonthDate = null;
+
+function dateKeyUTC(date) {
+  return date.toISOString().slice(0, 10);
+}
+
+function addDaysUTC(date, days) {
+  const next = new Date(date);
+  next.setUTCDate(next.getUTCDate() + days);
+  return next;
+}
+
+function mondayOfWeek(date) {
+  // Monday-based week start (the plan runs Mon-Fri with weekend rest).
+  const back = (date.getUTCDay() + 6) % 7;
+  return addDaysUTC(date, -back);
+}
+
+function getWeeklyTarget() {
+  const data = getLocalData();
+  const weeklyPlan = data.weeklyPlan || getStarterWeeklyPlan();
+  return DOW_NAMES.reduce((count, day) => count + (weeklyPlan[day] ? 1 : 0), 0);
+}
+
+function countCompletedInWeek(mondayDate, completedSet) {
+  let count = 0;
+  for (let i = 0; i < 7; i++) {
+    if (completedSet.has(dateKeyUTC(addDaysUTC(mondayDate, i)))) count++;
+  }
+  return count;
+}
+
+function computeWeekStreak(target, completedSet) {
+  // Consecutive weeks that hit the weekly target. The current week is still in
+  // progress, so it only adds to the streak once hit - never breaks it early.
+  if (target <= 0) return 0;
+  const weekHit = (monday) => countCompletedInWeek(monday, completedSet) >= target;
+
+  let streak = 0;
+  let cursor = mondayOfWeek(new Date());
+
+  if (weekHit(cursor)) streak++;
+  cursor = addDaysUTC(cursor, -7);
+
+  let guard = 0;
+  while (weekHit(cursor) && guard < 260) {
+    streak++;
+    cursor = addDaysUTC(cursor, -7);
+    guard++;
+  }
+  return streak;
+}
+
+function renderProgressCalendar(completedSet) {
+  const data = getLocalData();
+  const weeklyPlan = data.weeklyPlan || getStarterWeeklyPlan();
+  const todayKey = getTodayDateString();
+
+  const year = progressMonthDate.getUTCFullYear();
+  const month = progressMonthDate.getUTCMonth();
+  const first = new Date(Date.UTC(year, month, 1));
+  const leadBlanks = (first.getUTCDay() + 6) % 7; // Monday = 0
+  const daysInMonth = new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
+  const monthLabel = first.toLocaleDateString(undefined, { month: "long", year: "numeric", timeZone: "UTC" });
+
+  const weekdayHeaders = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+    .map((d) => `<span class="cal-weekday">${d}</span>`).join("");
+
+  let cells = "";
+  for (let i = 0; i < leadBlanks; i++) {
+    cells += `<span class="cal-cell is-blank" aria-hidden="true"></span>`;
+  }
+  for (let day = 1; day <= daysInMonth; day++) {
+    const cellDate = new Date(Date.UTC(year, month, day));
+    const key = dateKeyUTC(cellDate);
+    const isPlanned = Boolean(weeklyPlan[DOW_NAMES[cellDate.getUTCDay()]]);
+    const isDone = completedSet.has(key);
+    const isToday = key === todayKey;
+    const isPast = key < todayKey;
+
+    let state = "is-rest";
+    let label = "Rest day";
+    if (isDone) { state = "is-done"; label = "Workout done"; }
+    else if (isPlanned && isPast) { state = "is-missed"; label = "Planned - missed"; }
+    else if (isPlanned) { state = "is-planned"; label = "Planned"; }
+
+    const todayClass = isToday ? " is-today" : "";
+    cells += `<span class="cal-cell ${state}${todayClass}" title="${escapeHtml(`${key}: ${label}`)}">${day}</span>`;
+  }
+
+  return `
+    <div class="cal-card">
+      <div class="cal-nav">
+        <button class="quiet-button cal-arrow" type="button" data-cal-step="-1" aria-label="Previous month">&#8592;</button>
+        <strong class="cal-month">${escapeHtml(monthLabel)}</strong>
+        <button class="quiet-button cal-arrow" type="button" data-cal-step="1" aria-label="Next month">&#8594;</button>
+      </div>
+      <div class="cal-grid cal-weekdays">${weekdayHeaders}</div>
+      <div class="cal-grid">${cells}</div>
+      <div class="cal-legend">
+        <span><i class="dot is-done"></i>Done</span>
+        <span><i class="dot is-planned"></i>Planned</span>
+        <span><i class="dot is-missed"></i>Missed</span>
+        <span><i class="dot is-rest"></i>Rest</span>
+      </div>
+    </div>
+  `;
+}
+
+function renderProgress(resetMonth = true) {
+  if (!progressContent) return;
+
+  const data = getLocalData();
+  const completedSet = new Set(Array.isArray(data.completedWorkouts) ? data.completedWorkouts : []);
+  const target = getWeeklyTarget();
+
+  if (resetMonth || !progressMonthDate) {
+    const now = new Date();
+    progressMonthDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+  }
+
+  const doneThisWeek = countCompletedInWeek(mondayOfWeek(new Date()), completedSet);
+  const streak = computeWeekStreak(target, completedSet);
+
+  // This-week card text
+  let weekNote;
+  if (target <= 0) {
+    weekNote = "No workout days planned";
+  } else if (doneThisWeek >= target) {
+    weekNote = "Target hit - nice work!";
+  } else {
+    const remaining = target - doneThisWeek;
+    weekNote = `${remaining} more to hit your target`;
+  }
+  const weekHitClass = target > 0 && doneThisWeek >= target ? " is-hit" : "";
+
+  // Streak card text
+  const streakNote = streak === 0
+    ? "Hit this week's target to start a streak"
+    : `${streak === 1 ? "week" : "weeks"} hitting your target in a row`;
+
+  progressContent.innerHTML = `
+    <div class="progress-stats">
+      <div class="stat-card${weekHitClass}">
+        <p class="card-kicker">This week</p>
+        <p class="stat-number">${doneThisWeek}<span class="stat-of"> / ${target}</span></p>
+        <p class="stat-note">${escapeHtml(weekNote)}</p>
+      </div>
+      <div class="stat-card">
+        <p class="card-kicker">Streak</p>
+        <p class="stat-number">${streak}<span class="stat-of"> ${streak === 1 ? "wk" : "wks"}</span></p>
+        <p class="stat-note">${escapeHtml(streakNote)}</p>
+      </div>
+    </div>
+    ${renderProgressCalendar(completedSet)}
+  `;
+
+  progressContent.querySelectorAll("[data-cal-step]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const step = Number(button.dataset.calStep) || 0;
+      progressMonthDate = new Date(Date.UTC(
+        progressMonthDate.getUTCFullYear(),
+        progressMonthDate.getUTCMonth() + step,
+        1
+      ));
+      renderProgress(false);
+    });
+  });
 }
 
 function renderHistoryEntry(entry) {

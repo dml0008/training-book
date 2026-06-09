@@ -1905,3 +1905,179 @@ p {
     }
   }
 }
+
+/* ===== Progress tab (Step 9) ===== */
+.progress-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: linear-gradient(145deg, rgba(23, 29, 27, 0.96), rgba(12, 16, 15, 0.98));
+  box-shadow: var(--shadow);
+  padding: clamp(18px, 5vw, 42px);
+  min-height: min(680px, calc(100svh - 142px));
+}
+
+.progress-heading {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.progress-heading p:last-child {
+  margin: 0;
+  color: var(--muted);
+}
+
+.progress-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.stat-card {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel-2);
+  padding: 16px 18px;
+}
+
+.stat-card.is-hit {
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 1px rgba(183, 255, 53, 0.25);
+}
+
+.stat-number {
+  margin: 6px 0 4px;
+  font-size: clamp(34px, 9vw, 46px);
+  font-weight: 800;
+  line-height: 1;
+  color: var(--accent);
+}
+
+.stat-of {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.stat-note {
+  margin: 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.cal-card {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel-2);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.cal-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.cal-month {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.cal-arrow {
+  min-width: 44px;
+  min-height: 40px;
+}
+
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+}
+
+.cal-weekdays {
+  margin-bottom: 2px;
+}
+
+.cal-weekday {
+  text-align: center;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+
+.cal-cell {
+  aspect-ratio: 1 / 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  border: 1px solid transparent;
+}
+
+.cal-cell.is-blank {
+  border: none;
+  background: none;
+}
+
+.cal-cell.is-rest {
+  color: var(--dim);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.cal-cell.is-planned {
+  color: var(--text);
+  border-color: var(--accent-2);
+}
+
+.cal-cell.is-missed {
+  color: var(--danger);
+  border-color: rgba(255, 107, 107, 0.4);
+  background: rgba(255, 107, 107, 0.08);
+}
+
+.cal-cell.is-done {
+  color: #0c0f0e;
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.cal-cell.is-today {
+  outline: 2px solid var(--text);
+  outline-offset: 1px;
+}
+
+.cal-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.cal-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cal-legend .dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 4px;
+  border: 1px solid transparent;
+}
+
+.cal-legend .dot.is-done { background: var(--accent); }
+.cal-legend .dot.is-planned { border-color: var(--accent-2); }
+.cal-legend .dot.is-missed { background: rgba(255, 107, 107, 0.18); border-color: rgba(255, 107, 107, 0.4); }
+.cal-legend .dot.is-rest { background: rgba(255, 255, 255, 0.05); }
