@@ -12,7 +12,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="icons/icon.svg">
-  <link rel="stylesheet" href="styles.css?v=2026.06.10-global-reminder">
+  <link rel="stylesheet" href="styles.css?v=2026.06.11-today-preview">
 </head>
 <body>
   <div class="app-shell">
@@ -61,9 +61,11 @@
       <section class="screen is-active" data-screen="today" aria-labelledby="today-title">
         <div class="today-panel">
           <div class="today-heading">
+            <button class="quiet-button small-button today-back-button" id="today-back-button" type="button" hidden>&larr; Back to plan</button>
             <p class="date-label" id="today-date">Today</p>
             <h2 id="today-title">Ready when you are.</h2>
             <p class="today-routine-name" id="today-routine-name">Loading your plan...</p>
+            <p class="today-preview-sub" id="today-preview-sub" hidden></p>
           </div>
 
           <div class="today-routine-list" id="today-routine-list" aria-live="polite">
@@ -71,6 +73,10 @@
               <p class="eyebrow">No workout today</p>
               <p>You have a rest day scheduled. Tap the Log tab if you want to log an extra workout.</p>
             </div>
+          </div>
+
+          <div class="today-start-row" id="today-start-row" hidden>
+            <button class="primary-button today-start-button" id="start-today-workout" type="button">Start workout</button>
           </div>
 
           <div class="today-add-extra">
@@ -242,6 +248,6 @@
     </nav>
   </div>
 
-  <script src="app.js?v=2026.06.10-global-reminder"></script>
+  <script src="app.js?v=2026.06.11-today-preview"></script>
 </body>
 </html>

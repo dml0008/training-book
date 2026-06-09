@@ -1925,6 +1925,90 @@ p {
   text-transform: uppercase;
 }
 
+/* These elements set their own display, so the hidden attribute alone
+   won't hide them. Force it when the Today tab switches modes. */
+.today-add-extra[hidden],
+.today-footer[hidden],
+.today-start-row[hidden],
+.today-preview-sub[hidden],
+.today-back-button[hidden] {
+  display: none;
+}
+
+/* ---------- Today: calm preview (Slice 1) ---------- */
+.today-preview-sub {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.today-back-button {
+  margin-bottom: 12px;
+}
+
+.today-preview-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(9, 12, 11, 0.44);
+}
+
+.today-preview-card .pv-num {
+  flex: 0 0 auto;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: rgba(155, 168, 161, 0.14);
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.today-preview-card .pv-info {
+  min-width: 0;
+}
+
+.today-preview-card .pv-name {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.today-preview-card .pv-meta {
+  margin: 2px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.today-preview-card .pv-tag {
+  margin-left: auto;
+  flex: 0 0 auto;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  color: var(--accent);
+  background: rgba(183, 255, 53, 0.1);
+  border: 1px solid rgba(183, 255, 53, 0.4);
+  border-radius: 999px;
+  padding: 3px 9px;
+}
+
+.today-start-row {
+  margin-bottom: 18px;
+}
+
+.today-start-button {
+  width: 100%;
+  min-height: 52px;
+  font-size: 16px;
+}
+
 @media (min-width: 860px) {
   .app-shell {
     padding-bottom: 112px;

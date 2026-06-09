@@ -3,7 +3,7 @@ const DROPBOX_TOKEN_URL = "https://api.dropboxapi.com/oauth2/token";
 const DROPBOX_UPLOAD_URL = "https://content.dropboxapi.com/2/files/upload";
 const DROPBOX_DOWNLOAD_URL = "https://content.dropboxapi.com/2/files/download";
 const DATA_FILE_PATH = "/04_Technical/06_Side_Projects/Workout and Nutrition App/data/workout-data.json";
-const APP_VERSION = "2026.06.10-global-reminder";
+const APP_VERSION = "2026.06.11-today-preview";
 
 const STORAGE = {
   appKey: "trainingBookDropboxAppKey",
@@ -31,6 +31,11 @@ const reviewReminderDismiss = document.querySelector("#review-reminder-dismiss")
 const todayProgressNumber = document.querySelector("#today-progress-number");
 const todayProgressLabel = document.querySelector("#today-progress-label");
 const saveTodayWorkoutButton = document.querySelector("#save-today-workout");
+const todayStartRow = document.querySelector("#today-start-row");
+const startTodayButton = document.querySelector("#start-today-workout");
+const todayBackButton = document.querySelector("#today-back-button");
+const todayPreviewSub = document.querySelector("#today-preview-sub");
+const todayFooter = document.querySelector(".today-footer");
 const todayAddExtra = document.querySelector(".today-add-extra");
 const todayExtraPicker = document.querySelector("#today-extra-picker");
 const addTodayExtraButton = document.querySelector("#add-today-extra");
@@ -226,7 +231,8 @@ if (logDate) {
 
 const activeWorkout = {
   startedAt: new Date().toISOString(),
-  exercises: []
+  exercises: [],
+  started: false
 };
 
 let planImportPreview = null;
@@ -425,6 +431,65 @@ function renderReviewReminder() {
   reviewReminder.hidden = false;
 }
 
+// Switches the Today tab between its three states and shows/hides the
+// matching controls. "rest" = nothing planned, "preview" = the calm read-only
+// overview with a Start button, "active" = the live logging view.
+function setTodayMode(mode) {
+  if (todayStartRow) todayStartRow.hidden = mode !== "preview";
+  if (todayBackButton) todayBackButton.hidden = mode !== "active";
+  if (todayAddExtra) todayAddExtra.hidden = mode !== "active";
+  if (todayFooter) todayFooter.hidden = mode !== "active";
+  if (todayPreviewSub) todayPreviewSub.hidden = mode !== "preview";
+}
+
+// Plain-language target line for a preview card, e.g. "3 × 8" or "10 min".
+function formatPreviewMeta(exercise) {
+  if (exercise.type === "cardio") {
+    const mins = exercise.targetDuration || exercise.actualDuration || 0;
+    return `${mins} min`;
+  }
+  if (exercise.targetReps) {
+    return `${exercise.targetSets} × ${exercise.targetReps}`;
+  }
+  return exercise.targetSets ? `${exercise.targetSets} sets` : "";
+}
+
+function renderTodayPreview(routine) {
+  // Resolve each planned exercise to read-only display info.
+  const items = routine.exercises.map((plannedEx) => makeTodayExercise(plannedEx));
+
+  if (todayPreviewSub) {
+    const count = items.length;
+    todayPreviewSub.textContent = `${count} exercise${count === 1 ? "" : "s"} planned`;
+  }
+
+  todayRoutineList.innerHTML = items.map((ex, index) => `
+    <article class="today-preview-card">
+      <span class="pv-num">${index + 1}</span>
+      <div class="pv-info">
+        <h3 class="pv-name">${escapeHtml(ex.name)}</h3>
+        <p class="pv-meta">${escapeHtml(formatPreviewMeta(ex))}</p>
+      </div>
+      ${ex.type === "cardio" ? `<span class="pv-tag">TIMED</span>` : ""}
+    </article>
+  `).join("");
+}
+
+function startTodayWorkout() {
+  const routine = getTodayPlannedRoutine();
+  if (!routine) return;
+  activeWorkout.started = true;
+  activeWorkout.startedAt = new Date().toISOString();
+  activeWorkout.exercises = routine.exercises.map((plannedEx) => makeTodayExercise(plannedEx));
+  renderTodayRoutine();
+}
+
+function exitTodayWorkout() {
+  activeWorkout.started = false;
+  activeWorkout.exercises = [];
+  renderTodayRoutine();
+}
+
 function renderTodayRoutine() {
   renderReviewReminder();
 
@@ -434,6 +499,7 @@ function renderTodayRoutine() {
 
   if (!routine) {
     activeWorkout.exercises = [];
+    activeWorkout.started = false;
     todayRoutineList.innerHTML = `
       <div class="empty-routine">
         <p class="eyebrow">No workout today</p>
@@ -443,9 +509,7 @@ function renderTodayRoutine() {
     if (todayRoutineName) {
       todayRoutineName.textContent = "Rest day";
     }
-    if (todayAddExtra) {
-      todayAddExtra.hidden = true;
-    }
+    setTodayMode("rest");
     updateTodayProgress();
     return;
   }
@@ -453,33 +517,16 @@ function renderTodayRoutine() {
   if (todayRoutineName) {
     todayRoutineName.textContent = routine.name;
   }
-  if (todayAddExtra) {
-    todayAddExtra.hidden = false;
+
+  if (!activeWorkout.started) {
+    renderTodayPreview(routine);
+    setTodayMode("preview");
+    updateTodayProgress();
+    return;
   }
 
-  activeWorkout.startedAt = new Date().toISOString();
-  activeWorkout.exercises = routine.exercises.map((plannedEx) => makeTodayExercise(plannedEx));
+  setTodayMode("active");
   renderTodayWorkout();
-  return;
-
-  todayRoutineList.innerHTML = activeWorkout.exercises.map((ex) => `
-    <article class="today-exercise-card" data-exercise-id="${escapeHtml(ex.id)}">
-      <label class="exercise-checkbox-wrapper">
-        <input type="checkbox" class="today-exercise-checkbox" ${ex.checked ? "checked" : ""}>
-        <div class="exercise-icon-small" aria-hidden="true">
-          ${getExerciseIcon(ex.icon)}
-        </div>
-      </label>
-      <div class="exercise-details">
-        <h3>${escapeHtml(ex.name)}</h3>
-        <p class="exercise-meta">${escapeHtml(ex.area)}</p>
-        ${ex.targetSets ? `<p class="exercise-target">${ex.targetSets} sets × ${ex.targetReps} reps</p>` : ""}
-        ${ex.targetDuration ? `<p class="exercise-target">${ex.targetDuration} minutes</p>` : ""}
-      </div>
-    </article>
-  `).join("");
-
-  updateTodayProgress();
 }
 
 function handleTodayExerciseCheck(event) {
@@ -698,6 +745,7 @@ async function saveTodayWorkout() {
     clearPendingData();
     alert("Workout saved and synced!");
     activeWorkout.exercises = [];
+    activeWorkout.started = false;
     renderTodayRoutine();
     renderHistory();
   } catch (error) {
@@ -3308,6 +3356,9 @@ reviewReminderDismiss?.addEventListener("click", () => {
   localStorage.setItem(STORAGE.reviewReminderDismissed, getTodayDateString());
   renderReviewReminder();
 });
+
+startTodayButton?.addEventListener("click", startTodayWorkout);
+todayBackButton?.addEventListener("click", exitTodayWorkout);
 
 addTodayExtraButton?.addEventListener("click", addTodayExtraExercise);
 
