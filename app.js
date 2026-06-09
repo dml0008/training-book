@@ -3,7 +3,7 @@ const DROPBOX_TOKEN_URL = "https://api.dropboxapi.com/oauth2/token";
 const DROPBOX_UPLOAD_URL = "https://content.dropboxapi.com/2/files/upload";
 const DROPBOX_DOWNLOAD_URL = "https://content.dropboxapi.com/2/files/download";
 const DATA_FILE_PATH = "/04_Technical/06_Side_Projects/Workout and Nutrition App/data/workout-data.json";
-const APP_VERSION = "2026.06.10-export-buttons";
+const APP_VERSION = "2026.06.10-review-reminder";
 
 const STORAGE = {
   appKey: "trainingBookDropboxAppKey",
@@ -15,7 +15,8 @@ const STORAGE = {
   localData: "trainingBookWorkoutData",
   pendingData: "trainingBookPendingWorkoutData",
   deviceId: "trainingBookDeviceId",
-  activeTab: "trainingBookActiveTab"
+  activeTab: "trainingBookActiveTab",
+  reviewReminderDismissed: "trainingBookReviewReminderDismissed"
 };
 
 const screens = Array.from(document.querySelectorAll(".screen"));
@@ -23,6 +24,10 @@ const tabs = Array.from(document.querySelectorAll(".tab"));
 const dateLabel = document.querySelector("#today-date");
 const todayRoutineName = document.querySelector("#today-routine-name");
 const todayRoutineList = document.querySelector("#today-routine-list");
+const reviewReminder = document.querySelector("#review-reminder");
+const reviewReminderSub = document.querySelector("#review-reminder-sub");
+const reviewReminderGo = document.querySelector("#review-reminder-go");
+const reviewReminderDismiss = document.querySelector("#review-reminder-dismiss");
 const todayProgressNumber = document.querySelector("#today-progress-number");
 const todayProgressLabel = document.querySelector("#today-progress-label");
 const saveTodayWorkoutButton = document.querySelector("#save-today-workout");
@@ -394,7 +399,35 @@ function updateTodayProgress() {
   }
 }
 
+function renderReviewReminder() {
+  if (!reviewReminder) return;
+
+  const data = getLocalData();
+  const activePlan = { ...getStarterActivePlan(), ...(data.activePlan || {}) };
+  const reviewDate = (activePlan.nextReviewDate || "").trim();
+  const today = getTodayDateString();
+
+  // Only show when a valid review date is set and today is on or past it.
+  const isDue = /^\d{4}-\d{2}-\d{2}$/.test(reviewDate) && today >= reviewDate;
+  const dismissedToday = localStorage.getItem(STORAGE.reviewReminderDismissed) === today;
+
+  if (!isDue || dismissedToday) {
+    reviewReminder.hidden = true;
+    return;
+  }
+
+  if (reviewReminderSub) {
+    const overdue = today > reviewDate;
+    reviewReminderSub.textContent = overdue
+      ? `Your review was due ${reviewDate}. Export a packet for your coach and load the updated plan.`
+      : "Export a packet for your coach and load the updated plan.";
+  }
+  reviewReminder.hidden = false;
+}
+
 function renderTodayRoutine() {
+  renderReviewReminder();
+
   if (!todayRoutineList) return;
 
   const routine = getTodayPlannedRoutine();
@@ -3250,6 +3283,12 @@ saveWorkoutButton?.addEventListener("click", () => {
 
 todayRoutineList?.addEventListener("click", handleTodayWorkoutClick);
 todayRoutineList?.addEventListener("change", handleTodayWorkoutChange);
+
+reviewReminderGo?.addEventListener("click", () => showScreen("plan", true));
+reviewReminderDismiss?.addEventListener("click", () => {
+  localStorage.setItem(STORAGE.reviewReminderDismissed, getTodayDateString());
+  renderReviewReminder();
+});
 
 addTodayExtraButton?.addEventListener("click", addTodayExtraExercise);
 

@@ -1581,6 +1581,42 @@ p {
   padding: clamp(18px, 5vw, 42px);
 }
 
+.review-reminder {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 22px;
+  padding: 14px 16px;
+  border: 1px solid var(--accent);
+  border-left: 3px solid var(--accent);
+  border-radius: 8px;
+  background: rgba(183, 255, 53, 0.08);
+}
+
+.review-reminder[hidden] {
+  display: none;
+}
+
+.review-reminder-title {
+  margin: 0 0 2px;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.review-reminder-sub {
+  margin: 0;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.review-reminder-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
 .today-heading {
   margin-bottom: 24px;
 }
