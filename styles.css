@@ -1566,11 +1566,12 @@ p {
   width: 24px;
   height: 24px;
   place-items: center;
-  border: 1px solid var(--line);
-  border-radius: 50%;
   color: var(--muted);
-  font-size: 13px;
-  font-weight: 900;
+}
+
+.tab-icon svg {
+  width: 22px;
+  height: 22px;
 }
 
 .tab.is-active {
@@ -1579,9 +1580,7 @@ p {
 }
 
 .tab.is-active .tab-icon {
-  border-color: rgba(183, 255, 53, 0.62);
-  background: var(--accent);
-  color: #101413;
+  color: var(--accent);
 }
 
 .tab:focus-visible {
