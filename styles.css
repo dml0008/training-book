@@ -2178,14 +2178,14 @@ body.in-workout .today-panel {
 .lw-hero {
   display: flex;
   align-items: center;
-  gap: 13px;
-  margin-bottom: 12px;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
 }
 
 .lw-hero-icon {
   flex: 0 0 auto;
-  width: 58px;
-  height: 58px;
+  width: 68px;
+  height: 68px;
   border-radius: var(--radius-md);
   background: var(--panel-2);
   border: 1px solid var(--line);
@@ -2196,8 +2196,8 @@ body.in-workout .today-panel {
 }
 
 .lw-hero-icon svg {
-  width: 34px;
-  height: 34px;
+  width: 40px;
+  height: 40px;
 }
 
 /* Without this the illustration's lines have no stroke and its circles fill
@@ -2222,14 +2222,15 @@ body.in-workout .today-panel {
 
 .lw-name {
   margin: 0;
-  font-size: 20px;
-  font-weight: 700;
+  font-size: 23px;
+  font-weight: 800;
+  line-height: 1.15;
 }
 
 .lw-area {
-  margin: 2px 0 0;
+  margin: 3px 0 0;
   color: var(--muted);
-  font-size: 13px;
+  font-size: 14px;
 }
 
 .lw-target {
@@ -2271,7 +2272,7 @@ body.in-workout .today-panel {
 .lw-reference-button {
   width: 100%;
   min-height: 42px;
-  margin: -4px 0 14px;
+  margin: 0 0 var(--space-3);
   border: 1px solid var(--line);
   background: rgba(255, 255, 255, 0.03);
   color: var(--text);
@@ -2280,6 +2281,12 @@ body.in-workout .today-panel {
   font-weight: 800;
   border-radius: var(--radius-sm);
   cursor: pointer;
+}
+
+/* Leading help icon (the .btn-ico component handles inline-flex + gap). */
+.lw-reference-button svg {
+  width: 16px;
+  height: 16px;
 }
 
 .lw-reference-button:active {

@@ -3,7 +3,7 @@ const DROPBOX_TOKEN_URL = "https://api.dropboxapi.com/oauth2/token";
 const DROPBOX_UPLOAD_URL = "https://content.dropboxapi.com/2/files/upload";
 const DROPBOX_DOWNLOAD_URL = "https://content.dropboxapi.com/2/files/download";
 const DATA_FILE_PATH = "/04_Technical/06_Side_Projects/Workout and Nutrition App/data/workout-data.json";
-const APP_VERSION = "2026.06.22-set-pages";
+const APP_VERSION = "2026.06.22-header-icons";
 
 const STORAGE = {
   appKey: "trainingBookDropboxAppKey",
@@ -1222,7 +1222,7 @@ function renderFocusedExercise() {
           </div>
           <div class="lw-setpage-actions">
             <button class="lw-skip" type="button" data-action="skip-set">Skip set</button>
-            <button class="primary-button lw-complete" type="button" data-action="complete-set">Complete set &#10003;</button>
+            <button class="primary-button lw-complete btn-ico" type="button" data-action="complete-set">${getUiIcon("check")}Complete set</button>
           </div>
         </div>
       `;
@@ -1244,11 +1244,11 @@ function renderFocusedExercise() {
           <p class="lw-area">${escapeHtml(ex.area || "")}</p>
         </div>
       </div>
+      <button class="lw-reference-button btn-ico" type="button" data-action="open-reference">${getUiIcon("help-circle")}How to do it</button>
       <div class="lw-target">
         <span>Target: <strong>${escapeHtml(formatFocusTarget(ex))}</strong></span>
         <button class="lw-edit-targets" type="button" data-action="open-targets"${activeWorkout.timer.running ? " disabled" : ""}>Edit targets</button>
       </div>
-      <button class="lw-reference-button" type="button" data-action="open-reference">How to do it</button>
       ${body}
       ${ex.type === "strength" ? "" : `
       <div class="lw-next-row">
@@ -2175,7 +2175,8 @@ const UI_ICONS = {
   "trash-2": '<path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/>',
   plus: '<path d="M5 12h14"/><path d="M12 5v14"/>',
   check: '<path d="M20 6 9 17l-5-5"/>',
-  x: '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>'
+  x: '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
+  "help-circle": '<circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/>'
 };
 
 function getUiIcon(name) {
