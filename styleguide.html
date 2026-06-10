@@ -218,6 +218,24 @@
       justify-content: center;
     }
     .day-arrow svg { width: 18px; height: 18px; }
+
+    /* symbol buttons that now hold a Lucide icon */
+    .sg-stepper button { display: inline-flex; align-items: center; justify-content: center; }
+    .sg-stepper button svg { width: 18px; height: 18px; }
+    /* invert on hover, like the other buttons */
+    .sg-stepper button:hover { background: var(--accent); color: #101413; border-color: var(--accent); }
+
+    .lw-check svg { width: 18px; height: 18px; }
+    .lw-check:not(.is-done):hover { border-color: rgba(183, 255, 53, 0.55); color: var(--text); }
+
+    .lw-add, .lw-remove { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+    .lw-add svg { width: 15px; height: 15px; }
+
+    .lw-tbtn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+    .lw-tbtn svg { width: 18px; height: 18px; }
+
+    .lw-reference-button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+    .lw-reference-button svg { width: 16px; height: 16px; }
   </style>
 </head>
 <body>
@@ -377,9 +395,9 @@
 
       <div style="margin-top:16px;">
         <div class="sg-stepper">
-          <button type="button">-</button>
+          <button type="button" aria-label="Decrease"><span class="sg-ico" data-icon="minus"></span></button>
           <strong>40</strong>
-          <button type="button">+</button>
+          <button type="button" aria-label="Increase"><span class="sg-ico" data-icon="plus"></span></button>
         </div>
         <span class="sg-cap">Plus / minus stepper</span>
       </div>
@@ -499,7 +517,7 @@
             <span>Target <strong>3 &times; 8</strong> at <strong>135 lb</strong></span>
             <button class="lw-edit-targets" type="button">Edit targets</button>
           </div>
-          <button class="lw-reference-button" type="button">How to do it</button>
+          <button class="lw-reference-button" type="button"><span class="sg-ico" data-icon="help-circle"></span>How to do it</button>
           <span class="sg-cap">Exercise header, target bar, reference button</span>
         </div>
 
@@ -509,17 +527,17 @@
               <span class="lw-sn">Set 1</span>
               <span class="lw-field"><input type="number" value="135"><span>lb</span></span>
               <span class="lw-field"><input type="number" value="8"><span>reps</span></span>
-              <button class="lw-check" type="button">&check;</button>
+              <button class="lw-check" type="button" aria-label="Mark set done"><span class="sg-ico" data-icon="check"></span></button>
             </div>
             <div class="lw-setrow">
               <span class="lw-sn">Set 2</span>
               <span class="lw-field"><input type="number" value="135"><span>lb</span></span>
               <span class="lw-field"><input type="number" value="8"><span>reps</span></span>
-              <button class="lw-check" type="button">&check;</button>
+              <button class="lw-check" type="button" aria-label="Mark set done"><span class="sg-ico" data-icon="check"></span></button>
             </div>
           </div>
           <div class="lw-setactions">
-            <button class="lw-add" type="button">+ Add set</button>
+            <button class="lw-add" type="button"><span class="sg-ico" data-icon="plus"></span>Add set</button>
             <button class="lw-remove" type="button">Remove last</button>
           </div>
           <span class="sg-cap">Set rows + tick buttons</span>
@@ -554,8 +572,8 @@
               <button class="lw-preset" type="button">90</button>
             </div>
             <div class="lw-timer-controls">
-              <button class="lw-tbtn primary" type="button">Start</button>
-              <button class="lw-tbtn" type="button">Reset</button>
+              <button class="lw-tbtn primary" type="button"><span class="sg-ico" data-icon="play"></span>Start</button>
+              <button class="lw-tbtn" type="button"><span class="sg-ico" data-icon="rotate-ccw"></span>Reset</button>
             </div>
             <div class="lw-pills">
               <button class="lw-pill is-done" type="button">1</button>
@@ -635,7 +653,13 @@
       "trending-up": '<polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/>',
       "arrow-left": '<path d="m12 19-7-7 7-7"/><path d="M19 12H5"/>',
       "chevron-left": '<path d="m15 18-6-6 6-6"/>',
-      "chevron-right": '<path d="m9 18 6-6-6-6"/>'
+      "chevron-right": '<path d="m9 18 6-6-6-6"/>',
+      plus: '<path d="M5 12h14"/><path d="M12 5v14"/>',
+      minus: '<path d="M5 12h14"/>',
+      check: '<path d="M20 6 9 17l-5-5"/>',
+      play: '<polygon points="6 3 20 12 6 21 6 3"/>',
+      "rotate-ccw": '<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>',
+      "help-circle": '<circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/>'
     };
     document.querySelectorAll("[data-icon]").forEach((el) => {
       const inner = UI_ICONS[el.dataset.icon];
