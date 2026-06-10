@@ -3,7 +3,7 @@ const DROPBOX_TOKEN_URL = "https://api.dropboxapi.com/oauth2/token";
 const DROPBOX_UPLOAD_URL = "https://content.dropboxapi.com/2/files/upload";
 const DROPBOX_DOWNLOAD_URL = "https://content.dropboxapi.com/2/files/download";
 const DATA_FILE_PATH = "/04_Technical/06_Side_Projects/Workout and Nutrition App/data/workout-data.json";
-const APP_VERSION = "2026.06.16-timed-holds";
+const APP_VERSION = "2026.06.17-cardio-stats";
 
 const STORAGE = {
   appKey: "trainingBookDropboxAppKey",
@@ -508,6 +508,11 @@ function makeTodayExercise(plannedEx, source = "planned") {
     holdSeconds,
     actualDuration: targetDuration || 30,
     cardioDone: false,
+    // Optional Peloton/cardio summary numbers, typed by hand off the
+    // machine's summary screen. Blank by default; never required.
+    cardioOutput: "",
+    cardioAvgPower: "",
+    cardioDistance: "",
     difficulty: 5,
     checked: false
   };
@@ -746,7 +751,7 @@ function isExerciseLogged(ex) {
 // Plain one-line summary of what actually happened, for the finish recap.
 function formatExerciseRecap(ex) {
   if (ex.type === "cardio") {
-    return ex.cardioDone ? `${Number(ex.actualDuration) || 0} min` : "Not logged";
+    return ex.cardioDone ? `${Number(ex.actualDuration) || 0} min${formatCardioStats(collectCardioStats(ex))}` : "Not logged";
   }
   if (ex.type === "timed") {
     const doneHolds = (ex.holds || []).filter((hold) => hold.done).length;
@@ -990,7 +995,25 @@ function renderFocusedExercise() {
         </label>
         <button class="lw-bigcheck${ex.cardioDone ? " is-done" : ""}" type="button" data-action="toggle-cardio">${ex.cardioDone ? "Done &#10003;" : "Mark done"}</button>
       </div>
-      <p class="lw-note">Enter your minutes and mark it done. (Peloton/power stats are a planned add.)</p>
+      <details class="lw-cardio-stats"${(ex.cardioOutput || ex.cardioAvgPower || ex.cardioDistance) ? " open" : ""}>
+        <summary>Peloton stats (optional)</summary>
+        <div class="lw-cardio-stat-grid">
+          <label class="lw-field">
+            <input type="number" inputmode="decimal" min="0" step="1" value="${escapeHtml(ex.cardioOutput)}" data-action="cardio-stat" data-field="cardioOutput" aria-label="Total output in kilojoules" placeholder="0">
+            <span>kJ</span>
+          </label>
+          <label class="lw-field">
+            <input type="number" inputmode="decimal" min="0" step="1" value="${escapeHtml(ex.cardioAvgPower)}" data-action="cardio-stat" data-field="cardioAvgPower" aria-label="Average power in watts" placeholder="0">
+            <span>watts</span>
+          </label>
+          <label class="lw-field">
+            <input type="number" inputmode="decimal" min="0" step="0.1" value="${escapeHtml(ex.cardioDistance)}" data-action="cardio-stat" data-field="cardioDistance" aria-label="Distance in miles" placeholder="0">
+            <span>mi</span>
+          </label>
+        </div>
+        <p class="lw-cardio-stat-hint">Total output, average power, and distance from your Peloton summary. Leave any blank.</p>
+      </details>
+      <p class="lw-note">Enter your minutes and mark it done.</p>
     `;
   } else {
     body = `
@@ -1118,7 +1141,40 @@ function handleTodayWorkoutChange(event) {
 
   if (action === "cardio-minutes") {
     exercise.actualDuration = clampNumber(input.value, 0, 1000);
+    return;
   }
+
+  if (action === "cardio-stat") {
+    const field = input.dataset.field;
+    if (field === "cardioOutput" || field === "cardioAvgPower" || field === "cardioDistance") {
+      // Keep as a string so an empty box stays empty rather than becoming 0.
+      exercise[field] = input.value;
+    }
+  }
+}
+
+// Pull the filled-in Peloton numbers off a live cardio exercise into a small
+// object (only the ones actually entered). Returns null if none were filled.
+function collectCardioStats(ex) {
+  const stats = {};
+  const output = Number(ex.cardioOutput);
+  const avgPower = Number(ex.cardioAvgPower);
+  const distance = Number(ex.cardioDistance);
+  if (output > 0) stats.output = output;
+  if (avgPower > 0) stats.avgPower = avgPower;
+  if (distance > 0) stats.distance = distance;
+  return Object.keys(stats).length ? stats : null;
+}
+
+// Plain one-line "· 245 kJ · 136 w · 8.4 mi" tail for recaps/history, from a
+// saved stats object. Empty string when there are no stats.
+function formatCardioStats(stats) {
+  if (!stats) return "";
+  const parts = [];
+  if (Number(stats.output) > 0) parts.push(`${stats.output} kJ`);
+  if (Number(stats.avgPower) > 0) parts.push(`${stats.avgPower} w`);
+  if (Number(stats.distance) > 0) parts.push(`${stats.distance} mi`);
+  return parts.length ? ` · ${parts.join(" · ")}` : "";
 }
 
 // ---- Built-in countdown timer for held moves (Slice 2b) ----
@@ -1365,7 +1421,8 @@ async function saveTodayWorkout() {
   const loggedEntries = loggedExercises
     .map((ex) => {
       if (ex.type === "cardio") {
-        return {
+        const stats = collectCardioStats(ex);
+        const entry = {
           id: ex.id,
           type: "cardio",
           exerciseId: ex.exerciseId,
@@ -1377,6 +1434,8 @@ async function saveTodayWorkout() {
           done: true,
           difficulty: Number(ex.difficulty) || 5
         };
+        if (stats) entry.stats = stats;
+        return entry;
       }
 
       // Held move: record how many holds were completed and the seconds each
@@ -2719,7 +2778,7 @@ function findExerciseIdByName(name) {
 function formatEntryDetails(entry) {
   if (entry.type === "cardio") {
     const planned = entry.planned?.durationMinutes ? `planned ${entry.planned.durationMinutes} min, ` : "";
-    return `${planned}actual ${entry.durationMinutes || 0} min`;
+    return `${planned}actual ${entry.durationMinutes || 0} min${formatCardioStats(entry.stats)}`;
   }
 
   if (entry.type === "timed") {
@@ -3454,6 +3513,20 @@ function renderDetailExercise(entry, index) {
             </label>
           </div>
         </div>
+        <div class="cardio-stats-edit">
+          <label>
+            <input type="number" min="0" step="1" value="${escapeHtml(entry.stats?.output || "")}" data-field="cardioOutput" placeholder="0">
+            <span>kJ</span>
+          </label>
+          <label>
+            <input type="number" min="0" step="1" value="${escapeHtml(entry.stats?.avgPower || "")}" data-field="cardioAvgPower" placeholder="0">
+            <span>watts</span>
+          </label>
+          <label>
+            <input type="number" min="0" step="0.1" value="${escapeHtml(entry.stats?.distance || "")}" data-field="cardioDistance" placeholder="0">
+            <span>mi</span>
+          </label>
+        </div>
         <div class="exercise-difficulty">
           <label>
             <span>Difficulty</span>
@@ -3562,6 +3635,16 @@ function saveWorkoutChanges(workoutId) {
       const difficultyInput = exerciseEl.querySelector('input[data-field="difficulty"]');
       if (durationInput) entry.durationMinutes = Number(durationInput.value) || 0;
       if (difficultyInput) entry.difficulty = Number(difficultyInput.value) || 5;
+      // Optional Peloton numbers: keep only the ones above zero.
+      const stats = {};
+      const output = Number(exerciseEl.querySelector('input[data-field="cardioOutput"]')?.value);
+      const avgPower = Number(exerciseEl.querySelector('input[data-field="cardioAvgPower"]')?.value);
+      const distance = Number(exerciseEl.querySelector('input[data-field="cardioDistance"]')?.value);
+      if (output > 0) stats.output = output;
+      if (avgPower > 0) stats.avgPower = avgPower;
+      if (distance > 0) stats.distance = distance;
+      if (Object.keys(stats).length) entry.stats = stats;
+      else delete entry.stats;
     } else if (entry.type === "timed") {
       const holdsInput = exerciseEl.querySelector('input[data-field="timedSets"]');
       const secondsInput = exerciseEl.querySelector('input[data-field="timedSeconds"]');
