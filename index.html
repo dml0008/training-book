@@ -12,7 +12,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="icons/icon.svg">
-  <link rel="stylesheet" href="styles.css?v=2026.06.17-cardio-stats">
+  <link rel="stylesheet" href="styles.css?v=2026.06.18-change-day-soccer">
 </head>
 <body>
   <div class="app-shell">
@@ -63,6 +63,14 @@
           <div class="today-heading">
             <button class="quiet-button small-button today-back-button" id="today-back-button" type="button" hidden>&larr; Back to plan</button>
             <p class="date-label" id="today-date">Today</p>
+            <div class="today-day-switch" id="today-day-switch" hidden>
+              <div class="day-switch-row">
+                <button class="day-arrow" id="day-prev" type="button" aria-label="Previous day">&lsaquo;</button>
+                <span class="day-switch-name" id="today-day-name">Today</span>
+                <button class="day-arrow" id="day-next" type="button" aria-label="Next day">&rsaquo;</button>
+              </div>
+              <button class="day-today-reset" id="day-today-reset" type="button" hidden>Back to today</button>
+            </div>
             <h2 id="today-title">Ready when you are.</h2>
             <p class="today-routine-name" id="today-routine-name">Loading your plan...</p>
             <p class="today-preview-sub" id="today-preview-sub" hidden></p>
@@ -166,6 +174,7 @@
               <button type="button" class="type-option is-active" data-type="strength">Strength</button>
               <button type="button" class="type-option" data-type="cardio">Cardio</button>
               <button type="button" class="type-option" data-type="timed">Timed hold</button>
+              <button type="button" class="type-option" data-type="sport">Sport</button>
             </div>
             <button type="submit" class="library-add-btn">Add</button>
           </form>
@@ -249,6 +258,6 @@
     </nav>
   </div>
 
-  <script src="app.js?v=2026.06.17-cardio-stats"></script>
+  <script src="app.js?v=2026.06.18-change-day-soccer"></script>
 </body>
 </html>

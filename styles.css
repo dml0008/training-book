@@ -3187,3 +3187,112 @@ p {
 .cal-legend .dot.is-planned { border-color: var(--accent-2); }
 .cal-legend .dot.is-missed { background: rgba(255, 107, 107, 0.18); border-color: rgba(255, 107, 107, 0.4); }
 .cal-legend .dot.is-rest { background: rgba(255, 255, 255, 0.05); }
+
+/* ===== Change-day control on Today ===== */
+.today-day-switch {
+  margin: 8px 0 4px;
+}
+
+.day-switch-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--line);
+  background: var(--panel-2);
+  border-radius: 999px;
+  padding: 4px 6px;
+}
+
+.day-arrow {
+  border: none;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 20px;
+  line-height: 1;
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.day-arrow:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.day-switch-name {
+  min-width: 122px;
+  text-align: center;
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--text);
+}
+
+.day-today-reset {
+  display: block;
+  margin-top: 6px;
+  border: none;
+  background: transparent;
+  color: var(--accent);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 2px 0;
+  cursor: pointer;
+}
+
+/* ===== Sport (e.g. soccer) notes in the live workout ===== */
+.lw-sport-notes {
+  display: block;
+  margin-top: 12px;
+}
+
+.lw-sport-notes > span {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+
+.lw-sport-notes textarea {
+  width: 100%;
+  resize: vertical;
+  border: 1px solid var(--line);
+  background: var(--panel-2);
+  color: var(--text);
+  font: inherit;
+  font-size: 14px;
+  border-radius: 12px;
+  padding: 10px 12px;
+}
+
+.lw-sport-notes textarea:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+/* Sport notes in the History edit view */
+.detail-sport-notes {
+  display: block;
+  margin-top: 10px;
+}
+
+.detail-sport-notes > span {
+  display: block;
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+.detail-sport-notes textarea {
+  width: 100%;
+  resize: vertical;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  color: var(--text);
+  font: inherit;
+  font-size: 14px;
+  border-radius: 10px;
+  padding: 8px 10px;
+}

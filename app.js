@@ -3,7 +3,7 @@ const DROPBOX_TOKEN_URL = "https://api.dropboxapi.com/oauth2/token";
 const DROPBOX_UPLOAD_URL = "https://content.dropboxapi.com/2/files/upload";
 const DROPBOX_DOWNLOAD_URL = "https://content.dropboxapi.com/2/files/download";
 const DATA_FILE_PATH = "/04_Technical/06_Side_Projects/Workout and Nutrition App/data/workout-data.json";
-const APP_VERSION = "2026.06.17-cardio-stats";
+const APP_VERSION = "2026.06.18-change-day-soccer";
 
 const STORAGE = {
   appKey: "trainingBookDropboxAppKey",
@@ -16,7 +16,8 @@ const STORAGE = {
   pendingData: "trainingBookPendingWorkoutData",
   deviceId: "trainingBookDeviceId",
   activeTab: "trainingBookActiveTab",
-  reviewReminderDismissed: "trainingBookReviewReminderDismissed"
+  reviewReminderDismissed: "trainingBookReviewReminderDismissed",
+  soccerSeeded: "trainingBookSoccerSeeded"
 };
 
 const screens = Array.from(document.querySelectorAll(".screen"));
@@ -35,6 +36,11 @@ const todayStartRow = document.querySelector("#today-start-row");
 const startTodayButton = document.querySelector("#start-today-workout");
 const todayBackButton = document.querySelector("#today-back-button");
 const todayPreviewSub = document.querySelector("#today-preview-sub");
+const todayDaySwitch = document.querySelector("#today-day-switch");
+const todayDayName = document.querySelector("#today-day-name");
+const dayPrevButton = document.querySelector("#day-prev");
+const dayNextButton = document.querySelector("#day-next");
+const dayTodayResetButton = document.querySelector("#day-today-reset");
 const todayFooter = document.querySelector(".today-footer");
 const todayAddExtra = document.querySelector(".today-add-extra");
 const todayExtraPicker = document.querySelector("#today-extra-picker");
@@ -211,8 +217,84 @@ function getStarterExercises() {
     area: "Cardio",
     icon: "treadmill",
     tags: ["gym", "cardio"]
-  }
+  },
+  getSoccerStarterExercise()
   ];
+}
+
+// The Soccer move: a "sport" activity logged as a duration plus free notes
+// (no Peloton power numbers). Kept as its own helper so the one-time seeding
+// for existing saves and the new-install starter list stay in sync.
+function getSoccerStarterExercise() {
+  return {
+    id: "soccer",
+    name: "Soccer",
+    type: "sport",
+    area: "Sport",
+    icon: "soccer",
+    tags: ["sport"]
+  };
+}
+
+// One-time, additive seeding so Daniel can try the new soccer flow without
+// hand-editing his data. It (1) adds the Soccer exercise to the library if it
+// is missing and (2) drops a 60-minute Soccer move onto Thursday's routine so
+// there is a real day to test. Guarded by a localStorage flag, so it never
+// re-imposes itself if Daniel later removes soccer or reschedules via his AI
+// coach. Never overwrites existing exercises or routines.
+function seedSoccerOnce() {
+  if (localStorage.getItem(STORAGE.soccerSeeded)) return;
+
+  const data = getLocalData();
+  let changed = false;
+
+  // 1. Ensure the Soccer exercise exists in the library.
+  if (Array.isArray(data.library) && !data.library.some((ex) => ex.id === "soccer")) {
+    data.library = [...data.library, getSoccerStarterExercise()];
+    changed = true;
+  }
+
+  // 2. Put Soccer on Thursday for an easy first test (additive).
+  const routines = Array.isArray(data.routines) ? data.routines : [];
+  const thursdayId = data.weeklyPlan?.thursday;
+  const thursdayRoutine = routines.find((r) => r.id === thursdayId);
+  if (thursdayRoutine) {
+    const list = Array.isArray(thursdayRoutine.exercises) ? thursdayRoutine.exercises : [];
+    if (!list.some((ex) => ex.exerciseId === "soccer")) {
+      thursdayRoutine.exercises = [...list, { exerciseId: "soccer", targetDuration: 60 }];
+      changed = true;
+    }
+  } else {
+    // No routine on Thursday: make a dedicated Soccer day.
+    routines.push({
+      id: "soccer-day",
+      name: "Soccer",
+      location: "home",
+      exercises: [{ exerciseId: "soccer", targetDuration: 60 }],
+      notes: "Weekly soccer match"
+    });
+    data.routines = routines;
+    data.weeklyPlan = { ...(data.weeklyPlan || {}), thursday: "soccer-day" };
+    changed = true;
+  }
+
+  if (changed) {
+    data.updatedAt = new Date().toISOString();
+    data.updatedBy = getDeviceId();
+    saveLocalData(data);
+    markPendingData(data);
+    exercises = data.library;
+    renderExercises();
+    renderExercisePicker();
+    renderTodayRoutine();
+    if (navigator.onLine) {
+      uploadWorkoutData(data).then(clearPendingData).catch(() => {
+        // Not signed in yet or offline: the change is queued and syncs later.
+      });
+    }
+  }
+
+  localStorage.setItem(STORAGE.soccerSeeded, "1");
 }
 
 // Reload the live exercise list from saved data (after an edit or a cloud sync).
@@ -403,6 +485,43 @@ function getDayOfWeek() {
   return days[new Date().getDay()];
 }
 
+// Which day's planned workout the Today tab is currently showing. Defaults to
+// the real today, but the day-switcher lets Daniel preview/start any day (e.g.
+// do tomorrow's workout today). Saving always records the real today's date.
+let viewedDay = getDayOfWeek();
+
+// Week order for the prev/next day arrows (Monday-first, as Daniel reads a week).
+const WEEK_ORDER = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
+
+function shiftViewedDay(delta) {
+  const current = WEEK_ORDER.indexOf(viewedDay);
+  const base = current === -1 ? 0 : current;
+  const next = (base + delta + WEEK_ORDER.length) % WEEK_ORDER.length;
+  viewedDay = WEEK_ORDER[next];
+}
+
+function resetViewedDayToToday() {
+  viewedDay = getDayOfWeek();
+}
+
+// Update the day-switcher row: the day name, a "today" hint, and the reset
+// button. Hidden while a live workout is in progress (you can't change day
+// mid-workout) and shown in the calm preview / rest states.
+function updateDaySwitch(mode) {
+  if (!todayDaySwitch) return;
+  const show = mode === "preview" || mode === "rest";
+  todayDaySwitch.hidden = !show;
+  if (!show) return;
+
+  const isRealToday = viewedDay === getDayOfWeek();
+  if (todayDayName) {
+    todayDayName.textContent = isRealToday
+      ? `${formatDayName(viewedDay)} (today)`
+      : formatDayName(viewedDay);
+  }
+  if (dayTodayResetButton) dayTodayResetButton.hidden = isRealToday;
+}
+
 function getRoutineById(routineId) {
   const data = getLocalData();
   return data.routines?.find((r) => r.id === routineId) || null;
@@ -410,7 +529,7 @@ function getRoutineById(routineId) {
 
 function getTodayPlannedRoutine() {
   const data = getLocalData();
-  const dayOfWeek = getDayOfWeek();
+  const dayOfWeek = viewedDay || getDayOfWeek();
   const weeklyPlan = data.weeklyPlan || getStarterWeeklyPlan();
   const routineId = weeklyPlan[dayOfWeek];
 
@@ -467,9 +586,13 @@ function makeTodayExercise(plannedEx, source = "planned") {
     area: "Not in your library",
     icon: "pushup"
   };
-  const isTimed = isTimedHoldExercise(exerciseInfo, plannedEx);
-  const isCardio = !isTimed && (Boolean(plannedEx.targetDuration) || exerciseInfo.type === "cardio");
-  const targetSets = Number(plannedEx.targetSets) || (isCardio ? 0 : 3);
+  // Soccer and other "sport" moves log like cardio (a duration) but with free
+  // notes instead of Peloton power numbers.
+  const isSport = exerciseInfo.type === "sport";
+  const isTimed = !isSport && isTimedHoldExercise(exerciseInfo, plannedEx);
+  const isCardio = !isTimed && !isSport && (Boolean(plannedEx.targetDuration) || exerciseInfo.type === "cardio");
+  const durationLike = isCardio || isSport;
+  const targetSets = Number(plannedEx.targetSets) || (durationLike ? 0 : 3);
   const targetReps = Number(plannedEx.targetReps) || 0;
   const targetDuration = Number(plannedEx.targetDuration) || 0;
 
@@ -482,14 +605,14 @@ function makeTodayExercise(plannedEx, source = "planned") {
 
   // One row per planned set, each holding the weight/reps actually done and a
   // done flag you tap to check off. Pre-filled with the planned reps.
-  const setCount = targetSets || (isCardio || isTimed ? 0 : 1);
-  const sets = Array.from({ length: isTimed ? 0 : setCount }).map(() => ({
+  const setCount = targetSets || (durationLike || isTimed ? 0 : 1);
+  const sets = Array.from({ length: (isTimed || isSport) ? 0 : setCount }).map(() => ({
     weight: 0,
     reps: targetReps,
     done: false
   }));
 
-  const type = isTimed ? "timed" : (isCardio ? "cardio" : "strength");
+  const type = isSport ? "sport" : (isTimed ? "timed" : (isCardio ? "cardio" : "strength"));
 
   return {
     id: `today-${exerciseInfo.id}-${randomString(5)}`,
@@ -513,6 +636,10 @@ function makeTodayExercise(plannedEx, source = "planned") {
     cardioOutput: "",
     cardioAvgPower: "",
     cardioDistance: "",
+    // Sport moves (e.g. soccer): a "done" flag and a free-text note, alongside
+    // the shared actualDuration minutes above.
+    sportDone: false,
+    sportNotes: "",
     difficulty: 5,
     checked: false
   };
@@ -520,7 +647,7 @@ function makeTodayExercise(plannedEx, source = "planned") {
 
 function formatTodayTarget(exercise) {
   if (exercise.type === "timed") return `${(exercise.holds || []).length} x ${exercise.holdSeconds || 0} sec planned`;
-  if (exercise.type === "cardio") return `${exercise.targetDuration || exercise.actualDuration} min planned`;
+  if (exercise.type === "cardio" || exercise.type === "sport") return `${exercise.targetDuration || exercise.actualDuration} min planned`;
   if (exercise.targetReps) return `${exercise.targetSets} sets x ${exercise.targetReps} reps planned`;
   return `${exercise.targetSets} sets planned`;
 }
@@ -624,6 +751,7 @@ function setTodayMode(mode) {
   if (todayAddExtra) todayAddExtra.hidden = true;
   if (todayFooter) todayFooter.hidden = true;
   if (todayPreviewSub) todayPreviewSub.hidden = mode !== "preview";
+  updateDaySwitch(mode);
 }
 
 // Plain-language target line for a preview card, e.g. "3 × 8" or "10 min".
@@ -631,7 +759,7 @@ function formatPreviewMeta(exercise) {
   if (exercise.type === "timed") {
     return `${(exercise.holds || []).length} × ${exercise.holdSeconds || 0} sec`;
   }
-  if (exercise.type === "cardio") {
+  if (exercise.type === "cardio" || exercise.type === "sport") {
     const mins = exercise.targetDuration || exercise.actualDuration || 0;
     return `${mins} min`;
   }
@@ -657,7 +785,7 @@ function renderTodayPreview(routine) {
         <h3 class="pv-name">${escapeHtml(ex.name)}</h3>
         <p class="pv-meta">${escapeHtml(formatPreviewMeta(ex))}</p>
       </div>
-      ${(ex.type === "cardio" || ex.type === "timed") ? `<span class="pv-tag">TIMED</span>` : ""}
+      ${ex.type === "sport" ? `<span class="pv-tag">SPORT</span>` : ((ex.type === "cardio" || ex.type === "timed") ? `<span class="pv-tag">TIMED</span>` : "")}
     </article>
   `).join("");
 }
@@ -744,6 +872,7 @@ function handleTodayExerciseCheck(event) {
 // marked done. Used to decide what gets saved and how the recap reads.
 function isExerciseLogged(ex) {
   if (ex.type === "cardio") return Boolean(ex.cardioDone) && Number(ex.actualDuration) > 0;
+  if (ex.type === "sport") return Boolean(ex.sportDone) && Number(ex.actualDuration) > 0;
   if (ex.type === "timed") return Array.isArray(ex.holds) && ex.holds.some((hold) => hold.done);
   return Array.isArray(ex.sets) && ex.sets.some((set) => set.done);
 }
@@ -752,6 +881,11 @@ function isExerciseLogged(ex) {
 function formatExerciseRecap(ex) {
   if (ex.type === "cardio") {
     return ex.cardioDone ? `${Number(ex.actualDuration) || 0} min${formatCardioStats(collectCardioStats(ex))}` : "Not logged";
+  }
+  if (ex.type === "sport") {
+    if (!ex.sportDone) return "Not logged";
+    const note = (ex.sportNotes || "").trim();
+    return `${Number(ex.actualDuration) || 0} min${note ? " · note" : ""}`;
   }
   if (ex.type === "timed") {
     const doneHolds = (ex.holds || []).filter((hold) => hold.done).length;
@@ -768,7 +902,7 @@ function formatExerciseRecap(ex) {
 // Plain target line for the focused screen, e.g. "3 × 8" or "10 min".
 function formatFocusTarget(ex) {
   if (ex.type === "timed") return `${(ex.holds || []).length} × ${ex.holdSeconds || 0} sec`;
-  if (ex.type === "cardio") return `${ex.targetDuration || ex.actualDuration || 0} min`;
+  if (ex.type === "cardio" || ex.type === "sport") return `${ex.targetDuration || ex.actualDuration || 0} min`;
   if (ex.targetReps) return `${ex.targetSets || (ex.sets || []).length} × ${ex.targetReps}`;
   return `${ex.targetSets || (ex.sets || []).length} sets`;
 }
@@ -808,7 +942,7 @@ function renderEditTargetsSheet(ex) {
       ${renderTargetStepper("Holds", "holds", (ex.holds || []).length, 1, 1, 10)}
       ${renderTargetStepper("Seconds", "holdSeconds", ex.holdSeconds || 45, 5, 5, 300)}
     `;
-  } else if (ex.type === "cardio") {
+  } else if (ex.type === "cardio" || ex.type === "sport") {
     controls = renderTargetStepper("Minutes", "targetDuration", ex.targetDuration || ex.actualDuration || 0, 5, 0, 300);
   } else {
     controls = `
@@ -943,7 +1077,7 @@ function adjustTodayTarget(ex, field, delta, min, max) {
 
   if (field === "targetDuration") {
     ex.targetDuration = next;
-    if (!ex.cardioDone) ex.actualDuration = next;
+    if (!ex.cardioDone && !ex.sportDone) ex.actualDuration = next;
   }
 }
 
@@ -1014,6 +1148,21 @@ function renderFocusedExercise() {
         <p class="lw-cardio-stat-hint">Total output, average power, and distance from your Peloton summary. Leave any blank.</p>
       </details>
       <p class="lw-note">Enter your minutes and mark it done.</p>
+    `;
+  } else if (ex.type === "sport") {
+    body = `
+      <div class="lw-cardio">
+        <label class="lw-field lw-field-lg">
+          <input type="number" inputmode="numeric" min="0" step="1" value="${escapeHtml(ex.actualDuration)}" data-action="cardio-minutes" aria-label="Minutes for ${escapeHtml(ex.name)}">
+          <span>min</span>
+        </label>
+        <button class="lw-bigcheck${ex.sportDone ? " is-done" : ""}" type="button" data-action="toggle-sport">${ex.sportDone ? "Done &#10003;" : "Mark done"}</button>
+      </div>
+      <label class="lw-sport-notes">
+        <span>Notes (optional)</span>
+        <textarea rows="3" data-action="sport-notes" placeholder="How it went, score, who you played, how you felt...">${escapeHtml(ex.sportNotes || "")}</textarea>
+      </label>
+      <p class="lw-note">Enter how long you played and mark it done.</p>
     `;
   } else {
     body = `
@@ -1141,6 +1290,12 @@ function handleTodayWorkoutChange(event) {
 
   if (action === "cardio-minutes") {
     exercise.actualDuration = clampNumber(input.value, 0, 1000);
+    return;
+  }
+
+  if (action === "sport-notes") {
+    // Keep notes as typed (free text); never required.
+    exercise.sportNotes = input.value;
     return;
   }
 
@@ -1386,6 +1541,12 @@ function handleTodayWorkoutClick(event) {
     return;
   }
 
+  if (action === "toggle-sport" && exercise) {
+    exercise.sportDone = !exercise.sportDone;
+    renderTodayWorkout();
+    return;
+  }
+
   if (action === "finish-back") {
     exitTodayWorkout();
     return;
@@ -1435,6 +1596,25 @@ async function saveTodayWorkout() {
           difficulty: Number(ex.difficulty) || 5
         };
         if (stats) entry.stats = stats;
+        return entry;
+      }
+
+      // Sport (e.g. soccer): a duration plus an optional free-text note.
+      if (ex.type === "sport") {
+        const note = (ex.sportNotes || "").trim();
+        const entry = {
+          id: ex.id,
+          type: "sport",
+          exerciseId: ex.exerciseId,
+          exerciseName: ex.name,
+          planned: {
+            durationMinutes: ex.targetDuration || 0
+          },
+          durationMinutes: Number(ex.actualDuration) || 0,
+          done: true,
+          difficulty: Number(ex.difficulty) || 5
+        };
+        if (note) entry.notes = note;
         return entry;
       }
 
@@ -1515,6 +1695,7 @@ async function saveTodayWorkout() {
     activeWorkout.phase = "exercise";
     activeWorkout.editTargetsOpen = false;
     activeWorkout.referenceOpen = false;
+    resetViewedDayToToday();
     renderTodayRoutine();
     renderHistory();
     return;
@@ -1530,6 +1711,7 @@ async function saveTodayWorkout() {
     activeWorkout.phase = "exercise";
     activeWorkout.editTargetsOpen = false;
     activeWorkout.referenceOpen = false;
+    resetViewedDayToToday();
     renderTodayRoutine();
     renderHistory();
   } catch (error) {
@@ -1858,7 +2040,8 @@ function getExerciseIcon(name) {
     plank: '<line x1="22" y1="76" x2="94" y2="76"></line><circle cx="35" cy="47" r="8"></circle><line x1="43" y1="50" x2="68" y2="55"></line><line x1="68" y1="55" x2="91" y2="64"></line><line x1="50" y1="51" x2="42" y2="76"></line><line x1="85" y1="62" x2="80" y2="76"></line>',
     curl: '<circle cx="58" cy="31" r="8"></circle><line x1="58" y1="39" x2="58" y2="66"></line><line x1="49" y1="45" x2="41" y2="66"></line><line x1="67" y1="45" x2="79" y2="60"></line><rect x="77" y="56" width="13" height="12" rx="3"></rect><line x1="51" y1="67" x2="43" y2="92"></line><line x1="65" y1="67" x2="75" y2="92"></line>',
     pressdown: '<line x1="58" y1="20" x2="58" y2="40"></line><line x1="43" y1="40" x2="73" y2="40"></line><circle cx="58" cy="52" r="8"></circle><line x1="58" y1="60" x2="58" y2="82"></line><line x1="43" y1="57" x2="49" y2="79"></line><line x1="73" y1="57" x2="67" y2="79"></line><line x1="48" y1="80" x2="39" y2="90"></line><line x1="68" y1="80" x2="77" y2="90"></line>',
-    treadmill: '<rect x="22" y="70" width="70" height="16" rx="5"></rect><line x1="77" y1="70" x2="66" y2="44"></line><line x1="66" y1="44" x2="82" y2="44"></line><circle cx="49" cy="28" r="8"></circle><line x1="49" y1="36" x2="54" y2="57"></line><line x1="54" y1="57" x2="43" y2="70"></line><line x1="55" y1="57" x2="68" y2="70"></line>'
+    treadmill: '<rect x="22" y="70" width="70" height="16" rx="5"></rect><line x1="77" y1="70" x2="66" y2="44"></line><line x1="66" y1="44" x2="82" y2="44"></line><circle cx="49" cy="28" r="8"></circle><line x1="49" y1="36" x2="54" y2="57"></line><line x1="54" y1="57" x2="43" y2="70"></line><line x1="55" y1="57" x2="68" y2="70"></line>',
+    soccer: '<circle cx="58" cy="58" r="30"></circle><polygon points="58,44 70,53 65,67 51,67 46,53"></polygon><line x1="58" y1="44" x2="58" y2="30"></line><line x1="70" y1="53" x2="83" y2="46"></line><line x1="65" y1="67" x2="74" y2="80"></line><line x1="51" y1="67" x2="42" y2="80"></line><line x1="46" y1="53" x2="33" y2="46"></line>'
   };
 
   return `<svg viewBox="0 0 116 116" role="img" aria-label="${escapeHtml(name)} line illustration">${icons[name] || icons.pushup}</svg>`;
@@ -1951,7 +2134,7 @@ function makeExerciseId(name) {
 }
 
 function normalizeExerciseType(type) {
-  return ["strength", "cardio", "timed"].includes(type) ? type : "strength";
+  return ["strength", "cardio", "timed", "sport"].includes(type) ? type : "strength";
 }
 
 function getExerciseTypeMeta(type) {
@@ -1972,6 +2155,14 @@ function getExerciseTypeMeta(type) {
       tags: ["custom", "bodyweight", "timed"]
     };
   }
+  if (normalized === "sport") {
+    return {
+      type: "sport",
+      area: "Sport",
+      icon: "soccer",
+      tags: ["custom", "sport"]
+    };
+  }
   return {
     type: "strength",
     area: "Strength",
@@ -1983,6 +2174,7 @@ function getExerciseTypeMeta(type) {
 function formatExerciseType(type) {
   if (type === "cardio") return "Cardio";
   if (type === "timed") return "Timed hold";
+  if (type === "sport") return "Sport";
   return "Strength";
 }
 
@@ -2104,7 +2296,7 @@ function setWorkoutStatus(message, tone = "") {
 }
 
 function makeWorkoutExercise(exercise) {
-  if (exercise.type === "cardio" || exercise.type === "timed") {
+  if (exercise.type === "cardio" || exercise.type === "timed" || exercise.type === "sport") {
     return {
       id: `workout-exercise-${Date.now()}-${randomString(5)}`,
       exerciseId: exercise.id,
@@ -2779,6 +2971,12 @@ function formatEntryDetails(entry) {
   if (entry.type === "cardio") {
     const planned = entry.planned?.durationMinutes ? `planned ${entry.planned.durationMinutes} min, ` : "";
     return `${planned}actual ${entry.durationMinutes || 0} min${formatCardioStats(entry.stats)}`;
+  }
+
+  if (entry.type === "sport") {
+    const planned = entry.planned?.durationMinutes ? `planned ${entry.planned.durationMinutes} min, ` : "";
+    const note = (entry.notes || "").trim();
+    return `${planned}actual ${entry.durationMinutes || 0} min${note ? ` · ${note}` : ""}`;
   }
 
   if (entry.type === "timed") {
@@ -3538,6 +3736,38 @@ function renderDetailExercise(entry, index) {
     `;
   }
 
+  if (entry.type === "sport") {
+    return `
+      <div class="detail-exercise" data-entry-index="${index}">
+        <h5>${escapeHtml(entry.exerciseName || "Exercise")}</h5>
+        <div class="compare-row">
+          <div class="compare-col">
+            <p class="compare-label">Planned</p>
+            <p>${escapeHtml(entry.planned?.durationMinutes ? `${entry.planned.durationMinutes} min` : "—")}</p>
+          </div>
+          <div class="compare-col">
+            <p class="compare-label">Actual</p>
+            <label>
+              <input type="number" min="0" step="1" value="${escapeHtml(entry.durationMinutes || 0)}" data-field="durationMinutes" placeholder="0">
+              <span>min</span>
+            </label>
+          </div>
+        </div>
+        <label class="detail-sport-notes">
+          <span>Notes</span>
+          <textarea rows="2" data-field="sportNotes" placeholder="Optional notes">${escapeHtml(entry.notes || "")}</textarea>
+        </label>
+        <div class="exercise-difficulty">
+          <label>
+            <span>Difficulty</span>
+            <input type="range" min="1" max="10" value="${escapeHtml(entry.difficulty || 5)}" data-field="difficulty">
+            <span class="difficulty-value">${escapeHtml(entry.difficulty || 5)}/10</span>
+          </label>
+        </div>
+      </div>
+    `;
+  }
+
   if (entry.type === "timed") {
     return `
       <div class="detail-exercise" data-entry-index="${index}">
@@ -3645,6 +3875,17 @@ function saveWorkoutChanges(workoutId) {
       if (distance > 0) stats.distance = distance;
       if (Object.keys(stats).length) entry.stats = stats;
       else delete entry.stats;
+    } else if (entry.type === "sport") {
+      const durationInput = exerciseEl.querySelector('input[data-field="durationMinutes"]');
+      const notesInput = exerciseEl.querySelector('textarea[data-field="sportNotes"]');
+      const difficultyInput = exerciseEl.querySelector('input[data-field="difficulty"]');
+      if (durationInput) entry.durationMinutes = Number(durationInput.value) || 0;
+      if (notesInput) {
+        const note = notesInput.value.trim();
+        if (note) entry.notes = note;
+        else delete entry.notes;
+      }
+      if (difficultyInput) entry.difficulty = Number(difficultyInput.value) || 5;
     } else if (entry.type === "timed") {
       const holdsInput = exerciseEl.querySelector('input[data-field="timedSets"]');
       const secondsInput = exerciseEl.querySelector('input[data-field="timedSeconds"]');
@@ -4262,6 +4503,24 @@ reviewReminderDismiss?.addEventListener("click", () => {
 startTodayButton?.addEventListener("click", startTodayWorkout);
 todayBackButton?.addEventListener("click", exitTodayWorkout);
 
+// Change-day control: preview/start any day's planned workout. Only active in
+// the preview/rest states (the switcher is hidden during a live workout).
+dayPrevButton?.addEventListener("click", () => {
+  if (activeWorkout.started) return;
+  shiftViewedDay(-1);
+  renderTodayRoutine();
+});
+dayNextButton?.addEventListener("click", () => {
+  if (activeWorkout.started) return;
+  shiftViewedDay(1);
+  renderTodayRoutine();
+});
+dayTodayResetButton?.addEventListener("click", () => {
+  if (activeWorkout.started) return;
+  resetViewedDayToToday();
+  renderTodayRoutine();
+});
+
 // The focused workout (Slice 2) draws Next / Back / Save inside the routine
 // list and is wired through handleTodayWorkoutClick above. The old add-extra
 // picker and footer Save bar are no longer used.
@@ -4326,6 +4585,8 @@ async function initCloud() {
     // Offline or the Firebase code could not load: the app still works
     // fully on this device using the local backup. Sync resumes next launch.
     console.error("Cloud sync could not load right now:", error);
+    // No cloud to reconcile against, so it is safe to seed locally now.
+    seedSoccerOnce();
     updateCloudUi();
     return;
   }
@@ -4375,10 +4636,15 @@ async function initCloud() {
       _cloudUnsub = fsMod.onSnapshot(_fbDoc, (snap) => {
         if (snap.metadata.hasPendingWrites) return; // ignore our own just-made save
         reconcile(snap.exists() ? snap.data() : null);
+        // Seed soccer on top of the freshest synced data (runs once). Doing it
+        // here, not at startup, avoids a stale device overwriting newer data.
+        seedSoccerOnce();
       }, (error) => console.error("Cloud listener error:", error));
     } else {
       cloudUser = null;
       _fbDoc = null;
+      // Signed out: no cloud to reconcile against, so seed locally now.
+      seedSoccerOnce();
     }
     updateCloudUi();
   });
