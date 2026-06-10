@@ -1,4 +1,4 @@
-const CACHE_NAME = "training-book-shell-v26";
+const CACHE_NAME = "training-book-shell-v27";
 const STATIC_ASSETS = [
   "manifest.webmanifest",
   "icons/icon.svg"
@@ -7,7 +7,9 @@ const APP_FILES = [
   "./",
   "index.html",
   "styles.css",
-  "app.js"
+  "app.js",
+  // throwaway style-guide page: network-first so edits show fresh while iterating
+  "styleguide.html"
 ];
 
 self.addEventListener("install", (event) => {

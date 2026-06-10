@@ -9,18 +9,32 @@
     ============================================================
     THROWAWAY STYLE-GUIDE PAGE - DELETE AFTER SIGN-OFF.
     This file is NOT part of the real app. It exists only so
-    Daniel can agree the shared design tokens (spacing, text
-    sizes, accent shade, button/card/form styles) on desktop
-    and phone before they are rolled out screen by screen.
-    To remove later: delete this file AND the temporary
-    "View style guide" banner block in index.html.
+    Daniel can agree the shared design tokens (font, spacing,
+    text sizes, accent, button/card/form styles, hover/click
+    effects) on desktop and phone before they are rolled out
+    screen by screen. To remove later: delete this file AND the
+    temporary "View style guide" banner block in index.html.
     ============================================================
   -->
-  <link rel="stylesheet" href="styles.css?v=2026.06.20-styleguide">
+  <link rel="stylesheet" href="styles.css?v=2026.06.21-styleguide-v2">
+
+  <!-- Proposed new typeface: Figtree (cleaner than the current Inter) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
   <style>
+    /* ============================================================
+       1. PROPOSED TYPEFACE - Figtree everywhere on this page
+       ============================================================ */
+    body,
+    h1, h2, h3, h4, h5, p, span, div,
+    input, textarea, select, button, a {
+      font-family: "Figtree", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    }
+
     /* ---- Proposed shared tokens (the whole point of this page) ---- */
     :root {
-      /* Spacing rhythm - everything snaps to one of these */
       --sg-space-1: 4px;
       --sg-space-2: 8px;
       --sg-space-3: 12px;
@@ -29,7 +43,6 @@
       --sg-space-6: 32px;
       --sg-space-7: 48px;
 
-      /* Text-size scale */
       --sg-text-label: 12px;
       --sg-text-small: 13px;
       --sg-text-body: 15px;
@@ -39,187 +52,147 @@
       --sg-text-number: 48px;
     }
 
-    /* page chrome */
+    /* ============================================================
+       2. SLEEK HOVER + CLICK (active) EFFECTS FOR EVERY BUTTON
+       Previewed here; these would move into the shared system.
+       ============================================================ */
+    .primary-button, .quiet-button, .small-button, .library-add-btn,
+    .exercise-action, .filter-chip, .type-option, .day-arrow,
+    .day-today-reset, .lw-check, .lw-bigcheck, .lw-tbtn, .lw-preset,
+    .lw-pill, .lw-add, .lw-remove, .stepper-button, .difficulty-chip,
+    .today-done-button, .sync-pill, .sg-stepper button,
+    .sg-accent-card button, .lw-back, .lw-reference-button, .lw-edit-targets {
+      transition: transform .14s ease, box-shadow .14s ease,
+                  background-color .14s ease, border-color .14s ease,
+                  color .14s ease, filter .14s ease;
+    }
+
+    /* Accent (lime) buttons: lift + subtle lime glow on hover */
+    .primary-button:not(:disabled):hover,
+    .library-add-btn:hover,
+    .sg-accent-card button:hover,
+    .lw-tbtn.primary:hover {
+      transform: translateY(-1px);
+      filter: brightness(1.05);
+      box-shadow: 0 6px 20px rgba(183, 255, 53, 0.28);
+    }
+
+    /* Quiet / outline buttons: border + surface lift on hover */
+    .quiet-button:not(:disabled):hover,
+    .small-button:not(:disabled):hover,
+    .lw-tbtn:not(.primary):hover,
+    .lw-preset:not(.on):hover,
+    .lw-pill:not(.is-done):hover,
+    .stepper-button:hover,
+    .difficulty-chip:not(.is-active):hover,
+    .today-done-button:not(.is-done):hover,
+    .exercise-action:not(.primary):hover,
+    .lw-bigcheck:not(.is-done):hover,
+    .lw-reference-button:hover {
+      transform: translateY(-1px);
+      border-color: rgba(183, 255, 53, 0.55);
+      background: rgba(183, 255, 53, 0.07);
+      color: var(--text);
+    }
+
+    /* Chips / toggles: gentle highlight on hover */
+    .filter-chip:not(.is-active):hover,
+    .type-option:not(.is-active):hover {
+      border-color: rgba(183, 255, 53, 0.55);
+      color: var(--text);
+    }
+
+    .sync-pill:hover { border-color: rgba(183, 255, 53, 0.45); color: var(--text); }
+
+    .lw-back:hover, .lw-edit-targets:not(:disabled):hover,
+    .day-today-reset:hover { filter: brightness(1.2); }
+
+    /* On-click: every button presses in slightly */
+    .primary-button:not(:disabled):active,
+    .quiet-button:not(:disabled):active,
+    .small-button:not(:disabled):active,
+    .library-add-btn:active,
+    .exercise-action:active,
+    .filter-chip:active,
+    .type-option:active,
+    .day-arrow:active,
+    .lw-check:active,
+    .lw-bigcheck:active,
+    .lw-tbtn:not(:disabled):active,
+    .lw-preset:not(:disabled):active,
+    .lw-pill:not(:disabled):active,
+    .lw-add:active, .lw-remove:active,
+    .stepper-button:active,
+    .difficulty-chip:active,
+    .today-done-button:active,
+    .sg-stepper button:active,
+    .sg-accent-card button:active,
+    .lw-reference-button:active {
+      transform: translateY(1px) scale(0.985);
+      box-shadow: none;
+      filter: brightness(0.95);
+    }
+
+    /* ---- page chrome ---- */
     .sg-banner {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: space-between;
-      gap: var(--sg-space-3);
-      margin-bottom: var(--sg-space-5);
-      padding: var(--sg-space-4);
-      border: 1px dashed rgba(255, 211, 106, 0.55);
-      border-radius: 8px;
+      display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+      gap: var(--sg-space-3); margin-bottom: var(--sg-space-5); padding: var(--sg-space-4);
+      border: 1px dashed rgba(255, 211, 106, 0.55); border-radius: 8px;
       background: rgba(255, 211, 106, 0.08);
     }
     .sg-banner p { margin: 0; }
-    .sg-banner .sg-banner-title {
-      color: #ffd36a;
-      font-weight: 800;
-      font-size: var(--sg-text-body);
-    }
-    .sg-banner .sg-banner-sub {
-      color: var(--muted);
-      font-size: var(--sg-text-small);
-      margin-top: 2px;
-    }
+    .sg-banner .sg-banner-title { color: #ffd36a; font-weight: 800; font-size: var(--sg-text-body); }
+    .sg-banner .sg-banner-sub { color: var(--muted); font-size: var(--sg-text-small); margin-top: 2px; }
 
     .sg-section {
-      margin: 0 0 var(--sg-space-6);
-      padding: var(--sg-space-5);
-      border: 1px solid var(--line);
-      border-radius: 8px;
+      margin: 0 0 var(--sg-space-6); padding: var(--sg-space-5);
+      border: 1px solid var(--line); border-radius: 8px;
       background: linear-gradient(145deg, rgba(23, 29, 27, 0.96), rgba(12, 16, 15, 0.98));
     }
-    .sg-section > h2 {
-      margin: 0 0 var(--sg-space-2);
-      font-size: var(--sg-text-bigheading);
-      line-height: 1.05;
-    }
-    .sg-section > .sg-note {
-      margin: 0 0 var(--sg-space-5);
-      color: var(--muted);
-      font-size: var(--sg-text-small);
-      max-width: 640px;
-    }
+    .sg-section > h2 { margin: 0 0 var(--sg-space-2); font-size: var(--sg-text-bigheading); line-height: 1.05; }
+    .sg-section > .sg-note { margin: 0 0 var(--sg-space-5); color: var(--muted); font-size: var(--sg-text-small); max-width: 640px; }
 
-    /* a small caption under each demo element */
     .sg-cap {
-      display: block;
-      margin-top: var(--sg-space-2);
-      color: var(--dim);
-      font-size: 11px;
-      font-weight: 750;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
+      display: block; margin-top: var(--sg-space-2); color: var(--dim);
+      font-size: 11px; font-weight: 750; text-transform: uppercase; letter-spacing: 0.05em;
     }
-
-    .sg-row {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: var(--sg-space-3);
-    }
+    .sg-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sg-space-3); }
     .sg-stack { display: grid; gap: var(--sg-space-4); }
+    .sg-grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: var(--sg-space-4); }
 
-    /* two-up grid that collapses to one column on phones */
-    .sg-grid2 {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-      gap: var(--sg-space-4);
-    }
-
-    /* typography ladder rows */
     .sg-type-row {
-      display: grid;
-      grid-template-columns: 92px minmax(0, 1fr);
-      gap: var(--sg-space-4);
-      align-items: baseline;
-      padding: var(--sg-space-2) 0;
-      border-bottom: 1px solid rgba(155, 168, 161, 0.12);
+      display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: var(--sg-space-4);
+      align-items: baseline; padding: var(--sg-space-2) 0; border-bottom: 1px solid rgba(155, 168, 161, 0.12);
     }
-    .sg-type-row code {
-      color: var(--dim);
-      font-size: 11px;
-      font-family: ui-monospace, Consolas, monospace;
-    }
-    .t-title { font-size: var(--sg-text-title); font-weight: 850; line-height: 1; }
+    .sg-type-row code { color: var(--dim); font-size: 11px; font-family: ui-monospace, Consolas, monospace; }
+    .t-title { font-size: var(--sg-text-title); font-weight: 800; line-height: 1; }
     .t-bigheading { font-size: var(--sg-text-bigheading); font-weight: 800; line-height: 1.05; }
-    .t-heading { font-size: var(--sg-text-heading); font-weight: 800; }
+    .t-heading { font-size: var(--sg-text-heading); font-weight: 700; }
     .t-body { font-size: var(--sg-text-body); color: var(--text); }
     .t-muted { font-size: var(--sg-text-body); color: var(--muted); }
     .t-label { font-size: var(--sg-text-label); font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); }
-    .t-number { font-size: var(--sg-text-number); font-weight: 850; color: var(--accent); line-height: 0.95; }
+    .t-number { font-size: var(--sg-text-number); font-weight: 800; color: var(--accent); line-height: 0.95; }
 
-    /* spacing swatches */
-    .sg-space-row {
-      display: flex;
-      align-items: center;
-      gap: var(--sg-space-3);
-      margin-bottom: var(--sg-space-2);
-    }
-    .sg-space-bar {
-      height: 18px;
-      border-radius: 4px;
-      background: var(--accent);
-      opacity: 0.85;
-    }
-    .sg-space-row code {
-      color: var(--muted);
-      font-size: var(--sg-text-small);
-      font-family: ui-monospace, Consolas, monospace;
-      min-width: 78px;
-    }
+    .sg-space-row { display: flex; align-items: center; gap: var(--sg-space-3); margin-bottom: var(--sg-space-2); }
+    .sg-space-bar { height: 18px; border-radius: 4px; background: var(--accent); opacity: 0.85; }
+    .sg-space-row code { color: var(--muted); font-size: var(--sg-text-small); font-family: ui-monospace, Consolas, monospace; min-width: 78px; }
 
-    /* accent comparison swatches */
-    .sg-accent-card {
-      padding: var(--sg-space-4);
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: rgba(9, 12, 11, 0.5);
-      text-align: center;
-    }
-    .sg-accent-chip {
-      height: 64px;
-      border-radius: 8px;
-      margin-bottom: var(--sg-space-3);
-    }
-    .sg-accent-card button {
-      width: 100%;
-      min-height: 44px;
-      border: none;
-      border-radius: 7px;
-      color: #101413;
-      font-weight: 800;
-      font-size: 14px;
-      cursor: pointer;
-    }
+    .sg-accent-card { padding: var(--sg-space-4); border: 1px solid var(--line); border-radius: 8px; background: rgba(9, 12, 11, 0.5); text-align: center; }
+    .sg-accent-card.is-chosen { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
+    .sg-accent-chip { height: 64px; border-radius: 8px; margin-bottom: var(--sg-space-3); }
+    .sg-accent-card button { width: 100%; min-height: 44px; border: none; border-radius: 7px; color: #101413; font-weight: 800; font-size: 14px; cursor: pointer; }
     .sg-accent-name { font-weight: 800; font-size: var(--sg-text-body); margin: 0 0 2px; }
     .sg-accent-hex { color: var(--muted); font-size: 12px; font-family: ui-monospace, Consolas, monospace; }
+    .sg-chosen-tag { display: inline-block; margin-top: 8px; font-size: 11px; font-weight: 800; color: var(--accent); text-transform: uppercase; letter-spacing: 0.05em; }
 
-    /* list row sample */
-    .sg-listrow {
-      display: flex;
-      align-items: center;
-      gap: var(--sg-space-3);
-      padding: var(--sg-space-3) var(--sg-space-4);
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: rgba(9, 12, 11, 0.44);
-    }
-    .sg-listrow .sg-listrow-num {
-      flex: 0 0 auto;
-      width: 28px; height: 28px;
-      display: grid; place-items: center;
-      border-radius: 8px;
-      background: rgba(155, 168, 161, 0.14);
-      color: var(--muted);
-      font-weight: 800; font-size: 13px;
-    }
-    .sg-listrow .sg-listrow-main { min-width: 0; flex: 1; }
-    .sg-listrow .sg-listrow-name { margin: 0; font-weight: 700; font-size: var(--sg-text-body); }
-    .sg-listrow .sg-listrow-meta { margin: 2px 0 0; color: var(--muted); font-size: var(--sg-text-small); }
-
-    /* a demo stepper that mirrors the app's stepper */
-    .sg-stepper {
-      display: grid;
-      grid-template-columns: 34px minmax(0, 1fr) 34px;
-      gap: var(--sg-space-2);
-      align-items: center;
-      max-width: 200px;
-    }
-    .sg-stepper button {
-      min-height: 34px;
-      border: 1px solid rgba(183, 255, 53, 0.28);
-      border-radius: 7px;
-      background: rgba(9, 12, 11, 0.55);
-      color: var(--accent);
-      font-size: 20px; font-weight: 900;
-      cursor: pointer;
-    }
+    .sg-stepper { display: grid; grid-template-columns: 34px minmax(0, 1fr) 34px; gap: var(--sg-space-2); align-items: center; max-width: 200px; }
+    .sg-stepper button { min-height: 34px; border: 1px solid rgba(183, 255, 53, 0.28); border-radius: 7px; background: rgba(9, 12, 11, 0.55); color: var(--accent); font-size: 20px; font-weight: 900; cursor: pointer; }
     .sg-stepper strong { text-align: center; font-size: 18px; font-weight: 900; }
 
     .sg-toplink { margin-bottom: var(--sg-space-5); }
+
+    /* a contained example of the live-workout block (it's normally full-bleed) */
+    .sg-live-demo { max-width: 460px; }
   </style>
 </head>
 <body>
@@ -230,12 +203,15 @@
         <p class="eyebrow">Design system</p>
         <h1>Style guide</h1>
       </div>
+      <div class="sync-menu">
+        <button class="sync-pill good" type="button"><span class="sync-dot"></span><span>Synced</span></button>
+      </div>
     </header>
 
     <div class="sg-banner">
       <div>
         <p class="sg-banner-title">Throwaway page - here to agree the look, then delete</p>
-        <p class="sg-banner-sub">Open this on your desktop and your phone. Everything below uses the real app's dark theme plus the proposed shared spacing &amp; text sizes. React to what looks right; nothing here changes the real app yet.</p>
+        <p class="sg-banner-sub">Open this on your desktop and your phone. Font is now Figtree; the dark theme + current lime are kept. Hover or tap any button to feel the new hover/click effects. Nothing here changes the real app yet.</p>
       </div>
     </div>
 
@@ -243,8 +219,8 @@
 
     <!-- 1. TYPOGRAPHY -->
     <section class="sg-section">
-      <h2>1. Typography</h2>
-      <p class="sg-note">One ladder of text sizes used everywhere, instead of dozens of one-off sizes scattered through the app. Left column is the name we'd use in the code.</p>
+      <h2>1. Typography (now Figtree)</h2>
+      <p class="sg-note">Swapped the main typeface to <strong>Figtree</strong> - cleaner than the old one, with bold weights still available for headings. One ladder of sizes, used everywhere instead of dozens of one-off sizes. Left column is the name we'd use in the code.</p>
       <div class="sg-type-row"><code>title 34</code><div class="t-title">Ready when you are.</div></div>
       <div class="sg-type-row"><code>big 28</code><div class="t-bigheading">Today's workout</div></div>
       <div class="sg-type-row"><code>heading 20</code><div class="t-heading">Gym Bench</div></div>
@@ -270,7 +246,7 @@
     <!-- 3. ACCENT -->
     <section class="sg-section">
       <h2>3. Accent shade</h2>
-      <p class="sg-note">The single bright colour used for highlights and primary buttons. Compare the three on a real button and pick the one you want as the final accent. (Middle is the current app colour.)</p>
+      <p class="sg-note">You're keeping the current lime for now (middle). The other two stay here just for reference if you ever want to revisit.</p>
       <div class="sg-grid2">
         <div class="sg-accent-card">
           <div class="sg-accent-chip" style="background:#a8e90c;"></div>
@@ -279,12 +255,13 @@
           <div style="height:12px;"></div>
           <button style="background:#a8e90c;">Start workout</button>
         </div>
-        <div class="sg-accent-card">
+        <div class="sg-accent-card is-chosen">
           <div class="sg-accent-chip" style="background:#b7ff35;"></div>
           <p class="sg-accent-name">B - Current</p>
           <p class="sg-accent-hex">#b7ff35</p>
           <div style="height:12px;"></div>
           <button style="background:#b7ff35;">Start workout</button>
+          <span class="sg-chosen-tag">Keeping this</span>
         </div>
         <div class="sg-accent-card">
           <div class="sg-accent-chip" style="background:#c8ff66;"></div>
@@ -299,7 +276,7 @@
     <!-- 4. BUTTONS -->
     <section class="sg-section">
       <h2>4. Buttons</h2>
-      <p class="sg-note">The button styles already in the app, gathered in one place. These reuse the real app classes.</p>
+      <p class="sg-note">Hover with a mouse, or tap on your phone, to feel the new effects: lime buttons lift with a soft glow, outline buttons highlight their border, and every button presses in slightly when clicked.</p>
       <div class="sg-stack">
         <div>
           <div class="sg-row">
@@ -315,7 +292,7 @@
             <button class="primary-button" type="button" disabled>Primary disabled</button>
             <button class="quiet-button" type="button" disabled>Quiet disabled</button>
           </div>
-          <span class="sg-cap">Disabled states</span>
+          <span class="sg-cap">Disabled states (no hover effect)</span>
         </div>
         <div>
           <button class="primary-button today-start-button" type="button" style="max-width:420px;">Start workout</button>
@@ -386,7 +363,7 @@
     <!-- 6. CARDS, PANELS, LIST ROWS -->
     <section class="sg-section">
       <h2>6. Cards &amp; rows</h2>
-      <p class="sg-note">The boxes content sits inside: an inner card, a numbered list row (like Today's preview), and a stat block.</p>
+      <p class="sg-note">The boxes content sits inside: an inner card, a numbered list row (like Today's preview), and stat blocks.</p>
       <div class="sg-stack">
         <div class="preview-card">
           <p class="eyebrow">Inner card</p>
@@ -394,36 +371,186 @@
           <p style="margin:6px 0 0;">A panel-within-a-panel for grouping related details.</p>
         </div>
 
-        <div class="sg-listrow">
-          <span class="sg-listrow-num">1</span>
-          <div class="sg-listrow-main">
-            <p class="sg-listrow-name">Bench press</p>
-            <p class="sg-listrow-meta">3 &times; 8 &middot; 135 lb</p>
+        <div class="today-preview-card">
+          <span class="pv-num">1</span>
+          <div class="pv-info">
+            <p class="pv-name">Bench press</p>
+            <p class="pv-meta">3 &times; 8 &middot; 135 lb</p>
           </div>
-          <span class="today-pv-tag" style="font-size:10px;font-weight:800;color:var(--accent);background:rgba(183,255,53,0.1);border:1px solid rgba(183,255,53,0.4);border-radius:999px;padding:3px 9px;">STRENGTH</span>
+          <span class="pv-tag">STRENGTH</span>
         </div>
+        <span class="sg-cap">Today preview row (real app component)</span>
 
         <div class="quick-stats" style="margin-top:0;">
-          <div>
-            <span class="stat-number">5</span>
-            <span class="stat-label">This week</span>
-          </div>
-          <div>
-            <span class="stat-number">12</span>
-            <span class="stat-label">Week streak</span>
-          </div>
-          <div>
-            <span class="stat-number">183</span>
-            <span class="stat-label">Body weight</span>
-          </div>
+          <div><span class="stat-number">5</span><span class="stat-label">This week</span></div>
+          <div><span class="stat-number">12</span><span class="stat-label">Week streak</span></div>
+          <div><span class="stat-number">183</span><span class="stat-label">Body weight</span></div>
         </div>
         <span class="sg-cap">Stat blocks (Progress tab)</span>
       </div>
     </section>
 
-    <!-- 7. BADGES / PILLS / TAGS -->
+    <!-- 7. EXERCISE CARD WITH ILLUSTRATION -->
     <section class="sg-section">
-      <h2>7. Badges, pills &amp; tags</h2>
+      <h2>7. Exercise card</h2>
+      <p class="sg-note">A real Library card, including the line-illustration icon, meta line, tags, and the add/edit/remove action buttons.</p>
+      <div class="exercise-list" style="grid-template-columns:minmax(0,1fr);">
+        <div class="exercise-card">
+          <div class="exercise-art">
+            <svg viewBox="0 0 116 116" role="img" aria-label="Bench press line illustration"><line x1="20" y1="75" x2="94" y2="75"></line><line x1="30" y1="75" x2="26" y2="93"></line><line x1="82" y1="75" x2="88" y2="93"></line><circle cx="40" cy="49" r="8"></circle><line x1="48" y1="52" x2="72" y2="60"></line><line x1="31" y1="43" x2="84" y2="43"></line><line x1="31" y1="37" x2="31" y2="49"></line><line x1="84" y1="37" x2="84" y2="49"></line></svg>
+          </div>
+          <div class="exercise-info">
+            <h3>Bench Press</h3>
+            <p class="exercise-meta">Chest &middot; Barbell</p>
+            <div class="tag-row">
+              <span class="exercise-tag">Gym</span>
+              <span class="exercise-tag">Barbell</span>
+              <span class="exercise-tag">Strength</span>
+            </div>
+            <div class="exercise-actions">
+              <button class="exercise-action primary" type="button">Edit</button>
+              <button class="exercise-action" type="button">Swap</button>
+              <button class="exercise-action danger" type="button">Remove</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 8. DAY SWITCHER + BACK CONTROLS -->
+    <section class="sg-section">
+      <h2>8. Day switcher &amp; back controls</h2>
+      <p class="sg-note">The Today date arrows (with "Back to today"), and the "Back" buttons used on Today and in History. The arrows are next on the icon list - shown here with the current characters so we can judge them in context.</p>
+      <div class="sg-stack">
+        <div>
+          <div class="today-day-switch" style="display:block;">
+            <div class="day-switch-row">
+              <button class="day-arrow" type="button" aria-label="Previous day">&lsaquo;</button>
+              <span class="day-switch-name">Wednesday</span>
+              <button class="day-arrow" type="button" aria-label="Next day">&rsaquo;</button>
+            </div>
+            <button class="day-today-reset" type="button">Back to today</button>
+          </div>
+          <span class="sg-cap">Day switcher</span>
+        </div>
+        <div>
+          <div class="sg-row">
+            <button class="quiet-button small-button" type="button">&larr; Back to plan</button>
+            <button class="quiet-button" type="button">&larr; Back</button>
+          </div>
+          <span class="sg-cap">Back buttons (Today / History)</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 9. LIVE WORKOUT PIECES -->
+    <section class="sg-section">
+      <h2>9. Live workout pieces</h2>
+      <p class="sg-note">The focused one-exercise-at-a-time screen: progress dots, exercise header, target bar, set rows with their tick buttons, the difficulty scale, the held-move timer, and the Next button.</p>
+
+      <div class="sg-live-demo sg-stack">
+        <div>
+          <div class="lw-dots">
+            <span class="lw-dot is-done"></span>
+            <span class="lw-dot is-done"></span>
+            <span class="lw-dot is-active"></span>
+            <span class="lw-dot"></span>
+            <span class="lw-dot"></span>
+          </div>
+          <span class="sg-cap">Progress dots</span>
+        </div>
+
+        <div>
+          <div class="lw-hero">
+            <div class="lw-hero-icon">
+              <svg viewBox="0 0 116 116" aria-hidden="true"><line x1="20" y1="75" x2="94" y2="75"></line><circle cx="40" cy="49" r="8"></circle><line x1="48" y1="52" x2="72" y2="60"></line><line x1="31" y1="43" x2="84" y2="43"></line></svg>
+            </div>
+            <div class="lw-hero-text">
+              <p class="lw-name">Bench Press</p>
+              <p class="lw-area">Chest &middot; Barbell</p>
+            </div>
+          </div>
+          <div class="lw-target">
+            <span>Target <strong>3 &times; 8</strong> at <strong>135 lb</strong></span>
+            <button class="lw-edit-targets" type="button">Edit targets</button>
+          </div>
+          <button class="lw-reference-button" type="button">How to do it</button>
+          <span class="sg-cap">Exercise header, target bar, reference button</span>
+        </div>
+
+        <div>
+          <div class="lw-sets">
+            <div class="lw-setrow is-done">
+              <span class="lw-sn">Set 1</span>
+              <span class="lw-field"><input type="number" value="135"><span>lb</span></span>
+              <span class="lw-field"><input type="number" value="8"><span>reps</span></span>
+              <button class="lw-check" type="button">&check;</button>
+            </div>
+            <div class="lw-setrow">
+              <span class="lw-sn">Set 2</span>
+              <span class="lw-field"><input type="number" value="135"><span>lb</span></span>
+              <span class="lw-field"><input type="number" value="8"><span>reps</span></span>
+              <button class="lw-check" type="button">&check;</button>
+            </div>
+          </div>
+          <div class="lw-setactions">
+            <button class="lw-add" type="button">+ Add set</button>
+            <button class="lw-remove" type="button">Remove last</button>
+          </div>
+          <span class="sg-cap">Set rows + tick buttons</span>
+        </div>
+
+        <div>
+          <div class="today-difficulty">
+            <span>Difficulty</span>
+            <div class="difficulty-scale">
+              <button class="difficulty-chip" type="button">1</button>
+              <button class="difficulty-chip" type="button">2</button>
+              <button class="difficulty-chip" type="button">3</button>
+              <button class="difficulty-chip" type="button">4</button>
+              <button class="difficulty-chip" type="button">5</button>
+              <button class="difficulty-chip" type="button">6</button>
+              <button class="difficulty-chip is-active" type="button">7</button>
+              <button class="difficulty-chip" type="button">8</button>
+              <button class="difficulty-chip" type="button">9</button>
+              <button class="difficulty-chip" type="button">10</button>
+            </div>
+          </div>
+          <span class="sg-cap">Difficulty 1-10 scale</span>
+        </div>
+
+        <div>
+          <div class="lw-timer">
+            <div class="lw-timer-num">0:45.00</div>
+            <div class="lw-presets">
+              <button class="lw-preset" type="button">30</button>
+              <button class="lw-preset on" type="button">45</button>
+              <button class="lw-preset" type="button">60</button>
+              <button class="lw-preset" type="button">90</button>
+            </div>
+            <div class="lw-timer-controls">
+              <button class="lw-tbtn primary" type="button">Start</button>
+              <button class="lw-tbtn" type="button">Reset</button>
+            </div>
+            <div class="lw-pills">
+              <button class="lw-pill is-done" type="button">1</button>
+              <button class="lw-pill" type="button">2</button>
+              <button class="lw-pill" type="button">3</button>
+            </div>
+          </div>
+          <span class="sg-cap">Held-move countdown timer</span>
+        </div>
+
+        <div>
+          <button class="primary-button lw-next" type="button">Next</button>
+          <span class="sg-cap">Next button</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 10. BADGES / PILLS / TAGS -->
+    <section class="sg-section">
+      <h2>10. Badges, pills &amp; tags</h2>
       <p class="sg-note">Small status markers used across the app.</p>
       <div class="sg-stack">
         <div>
@@ -454,8 +581,38 @@
       </div>
     </section>
 
+    <!-- 11. BOTTOM TAB BAR -->
+    <section class="sg-section">
+      <h2>11. Bottom navigation</h2>
+      <p class="sg-note">The bottom tab bar with the Lucide icons (active tab glows lime). Shown inline here rather than fixed to the screen.</p>
+      <nav class="tabbar" style="position:static;max-width:none;box-shadow:none;" aria-label="Example nav">
+        <button class="tab is-active" type="button"><span class="tab-icon" data-icon="dumbbell"></span><span>Today</span></button>
+        <button class="tab" type="button"><span class="tab-icon" data-icon="circle-plus"></span><span>Log</span></button>
+        <button class="tab" type="button"><span class="tab-icon" data-icon="layout-grid"></span><span>Library</span></button>
+        <button class="tab" type="button"><span class="tab-icon" data-icon="clipboard-list"></span><span>Plan</span></button>
+        <button class="tab" type="button"><span class="tab-icon" data-icon="history"></span><span>History</span></button>
+        <button class="tab" type="button"><span class="tab-icon" data-icon="trending-up"></span><span>Progress</span></button>
+      </nav>
+    </section>
+
     <p style="text-align:center;color:var(--dim);font-size:13px;margin:8px 0 0;">End of style guide - throwaway page, safe to delete.</p>
 
   </div>
+
+  <!-- Render the Lucide nav icons (same inline set the app uses). -->
+  <script>
+    const UI_ICONS = {
+      dumbbell: '<path d="M14.4 14.4 9.6 9.6"/><path d="M18.657 21.485a2 2 0 1 1-2.829-2.828l-1.768 1.768a2 2 0 1 1-2.828-2.829l6.364-6.364a2 2 0 1 1 2.829 2.829l-1.768 1.767a2 2 0 1 1 2.828 2.829z"/><path d="m21.5 21.5-1.4-1.4"/><path d="M3.9 3.9 2.5 2.5"/><path d="M6.404 12.768a2 2 0 1 1-2.829-2.829l1.768-1.767a2 2 0 1 1-2.828-2.829l2.828-2.828a2 2 0 1 1 2.829 2.828l1.767-1.768a2 2 0 1 1 2.829 2.829z"/>',
+      "circle-plus": '<circle cx="12" cy="12" r="10"/><path d="M8 12h8"/><path d="M12 8v8"/>',
+      "layout-grid": '<rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/>',
+      "clipboard-list": '<rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/>',
+      history: '<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/>',
+      "trending-up": '<polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/>'
+    };
+    document.querySelectorAll("[data-icon]").forEach((el) => {
+      const inner = UI_ICONS[el.dataset.icon];
+      if (inner) el.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${inner}</svg>`;
+    });
+  </script>
 </body>
 </html>
