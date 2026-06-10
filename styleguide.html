@@ -182,6 +182,12 @@
     .sg-space-bar { height: 18px; border-radius: 4px; background: var(--accent); opacity: 0.85; }
     .sg-space-row code { color: var(--muted); font-size: var(--sg-text-small); font-family: ui-monospace, Consolas, monospace; min-width: 78px; }
 
+    .sg-radius-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: var(--sg-space-4); }
+    .sg-radius-grid > div { display: grid; gap: 6px; justify-items: start; }
+    .sg-radius-swatch { width: 100%; height: 64px; border: 1px solid var(--accent); background: rgba(183, 255, 53, 0.08); }
+    .sg-radius-grid code { color: var(--text); font-size: 12px; font-weight: 800; font-family: ui-monospace, Consolas, monospace; }
+    .sg-radius-grid span { color: var(--dim); font-size: 11px; line-height: 1.3; }
+
     .sg-accent-card { padding: var(--sg-space-4); border: 1px solid var(--line); border-radius: 8px; background: rgba(9, 12, 11, 0.5); text-align: center; }
     .sg-accent-card.is-chosen { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
     .sg-accent-chip { height: 64px; border-radius: 8px; margin-bottom: var(--sg-space-3); }
@@ -286,9 +292,22 @@
       <div class="sg-space-row"><code>48 (3xl)</code><div class="sg-space-bar" style="width:48px;"></div></div>
     </section>
 
-    <!-- 3. ACCENT -->
+    <!-- 3. CORNER RADIUS -->
     <section class="sg-section">
-      <h2>3. Accent shade</h2>
+      <h2>3. Corner radius</h2>
+      <p class="sg-note">One ladder for every rounded corner, mirroring the Tailwind/Radix convention. Controls (buttons, inputs, chips, badges) use <code>sm</code>; cards and list rows use <code>md</code>; the outer page panels use <code>lg</code>. The old fully-round "pill" shapes are gone - <code>full</code> is now reserved only for things that are genuinely circular (status dots, the live-workout progress track, slider thumbs).</p>
+      <div class="sg-radius-grid">
+        <div><div class="sg-radius-swatch" style="border-radius:var(--radius-xs);"></div><code>xs &middot; 6</code><span>tags</span></div>
+        <div><div class="sg-radius-swatch" style="border-radius:var(--radius-sm);"></div><code>sm &middot; 8</code><span>buttons, inputs, chips, badges</span></div>
+        <div><div class="sg-radius-swatch" style="border-radius:var(--radius-md);"></div><code>md &middot; 12</code><span>cards, list rows</span></div>
+        <div><div class="sg-radius-swatch" style="border-radius:var(--radius-lg);"></div><code>lg &middot; 16</code><span>outer panels, sheets</span></div>
+        <div><div class="sg-radius-swatch" style="border-radius:var(--radius-full);"></div><code>full</code><span>dots, tracks, thumbs only</span></div>
+      </div>
+    </section>
+
+    <!-- 4. ACCENT -->
+    <section class="sg-section">
+      <h2>4. Accent shade</h2>
       <p class="sg-note">You're keeping the current lime for now (middle). The other two stay here just for reference if you ever want to revisit.</p>
       <div class="sg-grid2">
         <div class="sg-accent-card">
@@ -318,7 +337,7 @@
 
     <!-- 4. BUTTONS -->
     <section class="sg-section">
-      <h2>4. Buttons</h2>
+      <h2>5. Buttons</h2>
       <p class="sg-note">Hover with a mouse, or tap on your phone, to feel the new effects: lime buttons lift with a soft glow, outline buttons highlight their border, and every button presses in slightly when clicked.</p>
       <div class="sg-stack">
         <div>
@@ -346,7 +365,7 @@
 
     <!-- 5. FORM CONTROLS -->
     <section class="sg-section">
-      <h2>5. Form controls</h2>
+      <h2>6. Form controls</h2>
       <p class="sg-note">Inputs, the filter chips, the type toggle, and a stepper - the things you tap and type into.</p>
       <div class="sg-grid2">
         <div>
@@ -405,7 +424,7 @@
 
     <!-- 6. CARDS, PANELS, LIST ROWS -->
     <section class="sg-section">
-      <h2>6. Cards &amp; rows</h2>
+      <h2>7. Cards &amp; rows</h2>
       <p class="sg-note">The boxes content sits inside: an inner card, a numbered list row (like Today's preview), and stat blocks.</p>
       <div class="sg-stack">
         <div class="preview-card">
@@ -435,8 +454,8 @@
 
     <!-- 7. EXERCISE CARD WITH ILLUSTRATION -->
     <section class="sg-section">
-      <h2>7. Exercise card</h2>
-      <p class="sg-note">A real Library card, including the line-illustration icon, meta line, tags, and the add/edit/remove action buttons.</p>
+      <h2>8. Exercise card</h2>
+      <p class="sg-note">A real Library card, including the line-illustration icon, meta line, tags, and the Edit / Swap / Remove action buttons. Each action now carries a Lucide icon. On desktop you get icon + label; on a phone (resize the window narrow to see it) the labels hide and the buttons shrink to compact icon-only controls.</p>
       <div class="exercise-list" style="grid-template-columns:minmax(0,1fr);">
         <div class="exercise-card">
           <div class="exercise-art">
@@ -451,9 +470,9 @@
               <span class="exercise-tag">Strength</span>
             </div>
             <div class="exercise-actions">
-              <button class="exercise-action primary" type="button">Edit</button>
-              <button class="exercise-action" type="button">Swap</button>
-              <button class="exercise-action danger" type="button">Remove</button>
+              <button class="exercise-action" type="button" aria-label="Edit"><span class="sg-ico" data-icon="pencil"></span><span class="btn-label">Edit</span></button>
+              <button class="exercise-action" type="button" aria-label="Swap"><span class="sg-ico" data-icon="repeat"></span><span class="btn-label">Swap</span></button>
+              <button class="exercise-action danger" type="button" aria-label="Remove"><span class="sg-ico" data-icon="trash-2"></span><span class="btn-label">Remove</span></button>
             </div>
           </div>
         </div>
@@ -462,7 +481,7 @@
 
     <!-- 8. DAY SWITCHER + BACK CONTROLS -->
     <section class="sg-section">
-      <h2>8. Day switcher &amp; back controls</h2>
+      <h2>9. Day switcher &amp; back controls</h2>
       <p class="sg-note">The Today date arrows (with "Back to today"), and the "Back" buttons used on Today and in History. The arrows are next on the icon list - shown here with the current characters so we can judge them in context.</p>
       <div class="sg-stack">
         <div>
@@ -488,7 +507,7 @@
 
     <!-- 9. LIVE WORKOUT PIECES -->
     <section class="sg-section">
-      <h2>9. Live workout pieces</h2>
+      <h2>10. Live workout pieces</h2>
       <p class="sg-note">The focused one-exercise-at-a-time screen: progress dots, exercise header, target bar, set rows with their tick buttons, the difficulty scale, the held-move timer, and the Next button.</p>
 
       <div class="sg-live-demo sg-stack">
@@ -593,7 +612,7 @@
 
     <!-- 10. BADGES / PILLS / TAGS -->
     <section class="sg-section">
-      <h2>10. Badges, pills &amp; tags</h2>
+      <h2>11. Badges, pills &amp; tags</h2>
       <p class="sg-note">Small status markers used across the app.</p>
       <div class="sg-stack">
         <div>
@@ -626,7 +645,7 @@
 
     <!-- 11. BOTTOM TAB BAR -->
     <section class="sg-section">
-      <h2>11. Bottom navigation</h2>
+      <h2>12. Bottom navigation</h2>
       <p class="sg-note">The bottom tab bar with the Lucide icons (active tab glows lime). Shown inline here rather than fixed to the screen.</p>
       <nav class="tabbar" style="position:static;max-width:none;box-shadow:none;" aria-label="Example nav">
         <button class="tab is-active" type="button"><span class="tab-icon" data-icon="dumbbell"></span><span>Today</span></button>
@@ -659,7 +678,11 @@
       check: '<path d="M20 6 9 17l-5-5"/>',
       play: '<polygon points="6 3 20 12 6 21 6 3"/>',
       "rotate-ccw": '<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>',
-      "help-circle": '<circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/>'
+      "help-circle": '<circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/>',
+      pencil: '<path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/>',
+      repeat: '<path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/>',
+      "trash-2": '<path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/>',
+      x: '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>'
     };
     document.querySelectorAll("[data-icon]").forEach((el) => {
       const inner = UI_ICONS[el.dataset.icon];

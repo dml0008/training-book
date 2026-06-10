@@ -1,7 +1,8 @@
 const CACHE_NAME = "training-book-shell-v31";
 const STATIC_ASSETS = [
   "manifest.webmanifest",
-  "icons/icon.svg"
+  "icons/icon.svg",
+  "fonts/figtree-latin.woff2"
 ];
 const APP_FILES = [
   "./",

@@ -2061,7 +2061,16 @@ const UI_ICONS = {
   history: '<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/>',
   "trending-up": '<polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/>',
   // Arrows / marks (used on back buttons; more of the sweep to follow)
-  "arrow-left": '<path d="m12 19-7-7 7-7"/><path d="M19 12H5"/>'
+  "arrow-left": '<path d="m12 19-7-7 7-7"/><path d="M19 12H5"/>',
+  "chevron-left": '<path d="m15 18-6-6 6-6"/>',
+  "chevron-right": '<path d="m9 18 6-6-6-6"/>',
+  // Row actions (Edit / Swap / Remove + the edit-mode Save / Cancel)
+  pencil: '<path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/>',
+  "repeat": '<path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/>',
+  "trash-2": '<path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/>',
+  plus: '<path d="M5 12h14"/><path d="M12 5v14"/>',
+  check: '<path d="M20 6 9 17l-5-5"/>',
+  x: '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>'
 };
 
 function getUiIcon(name) {
@@ -2123,8 +2132,8 @@ function renderExerciseCard(exercise) {
           ${tags.map((tag) => `<span class="exercise-tag">${escapeHtml(formatTag(tag))}</span>`).join("")}
         </div>
         <div class="exercise-actions">
-          <button type="button" class="exercise-action" data-action="edit-exercise" data-id="${escapeHtml(exercise.id)}">Edit</button>
-          <button type="button" class="exercise-action danger" data-action="remove-exercise" data-id="${escapeHtml(exercise.id)}">Remove</button>
+          <button type="button" class="exercise-action" data-action="edit-exercise" data-id="${escapeHtml(exercise.id)}" aria-label="Edit ${escapeHtml(exercise.name)}">${getUiIcon("pencil")}<span class="btn-label">Edit</span></button>
+          <button type="button" class="exercise-action danger" data-action="remove-exercise" data-id="${escapeHtml(exercise.id)}" aria-label="Remove ${escapeHtml(exercise.name)}">${getUiIcon("trash-2")}<span class="btn-label">Remove</span></button>
         </div>
       </div>
     </article>
@@ -2146,8 +2155,8 @@ function renderExerciseEditCard(exercise) {
           ${renderTypeOption("timed", exerciseType)}
         </div>
         <div class="exercise-actions">
-          <button type="button" class="exercise-action primary" data-action="save-exercise" data-id="${escapeHtml(exercise.id)}">Save</button>
-          <button type="button" class="exercise-action" data-action="cancel-exercise">Cancel</button>
+          <button type="button" class="exercise-action primary" data-action="save-exercise" data-id="${escapeHtml(exercise.id)}" aria-label="Save changes">${getUiIcon("check")}<span class="btn-label">Save</span></button>
+          <button type="button" class="exercise-action" data-action="cancel-exercise" aria-label="Cancel editing">${getUiIcon("x")}<span class="btn-label">Cancel</span></button>
         </div>
       </div>
     </article>
@@ -2438,8 +2447,8 @@ function renderActiveWorkout() {
         ${exercise.type === "cardio" ? renderCardioFields(exercise) : renderStrengthFields(exercise)}
 
         <div class="workout-card-actions">
-          ${exercise.type === "strength" ? '<button class="quiet-button small-button" type="button" data-action="add-set">Add set</button>' : ""}
-          <button class="quiet-button small-button" type="button" data-action="remove-exercise">Remove</button>
+          ${exercise.type === "strength" ? `<button class="quiet-button small-button btn-ico" type="button" data-action="add-set">${getUiIcon("plus")}<span class="btn-label">Add set</span></button>` : ""}
+          <button class="quiet-button small-button btn-ico" type="button" data-action="remove-exercise" aria-label="Remove exercise">${getUiIcon("trash-2")}<span class="btn-label">Remove</span></button>
         </div>
       </article>
     `;
@@ -3325,9 +3334,9 @@ function renderProgressCalendar(completedSet) {
   return `
     <div class="cal-card">
       <div class="cal-nav">
-        <button class="quiet-button cal-arrow" type="button" data-cal-step="-1" aria-label="Previous month">&#8592;</button>
+        <button class="quiet-button cal-arrow btn-ico" type="button" data-cal-step="-1" aria-label="Previous month">${getUiIcon("chevron-left")}</button>
         <strong class="cal-month">${escapeHtml(monthLabel)}</strong>
-        <button class="quiet-button cal-arrow" type="button" data-cal-step="1" aria-label="Next month">&#8594;</button>
+        <button class="quiet-button cal-arrow btn-ico" type="button" data-cal-step="1" aria-label="Next month">${getUiIcon("chevron-right")}</button>
       </div>
       <div class="cal-grid cal-weekdays">${weekdayHeaders}</div>
       <div class="cal-grid">${cells}</div>
