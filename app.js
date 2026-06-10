@@ -3,7 +3,7 @@ const DROPBOX_TOKEN_URL = "https://api.dropboxapi.com/oauth2/token";
 const DROPBOX_UPLOAD_URL = "https://content.dropboxapi.com/2/files/upload";
 const DROPBOX_DOWNLOAD_URL = "https://content.dropboxapi.com/2/files/download";
 const DATA_FILE_PATH = "/04_Technical/06_Side_Projects/Workout and Nutrition App/data/workout-data.json";
-const APP_VERSION = "2026.06.22-zoom-lock";
+const APP_VERSION = "2026.06.22-focus-mode";
 
 const STORAGE = {
   appKey: "trainingBookDropboxAppKey",
@@ -743,6 +743,10 @@ function renderReviewReminder() {
 // matching controls. "rest" = nothing planned, "preview" = the calm read-only
 // overview with a Start button, "active" = the live logging view.
 function setTodayMode(mode) {
+  // Full-screen focus: while a workout is running, hide the app chrome (header,
+  // banners, bottom nav) via a body class so the live workout reads as its own
+  // program. CSS in styles.css keys off body.in-workout.
+  document.body.classList.toggle("in-workout", mode === "active");
   if (todayStartRow) todayStartRow.hidden = mode !== "preview";
   // The focused workout (Slice 2) draws its own back / next / save buttons
   // inside the routine list, so the old header back button, add-extra picker,
@@ -1192,8 +1196,9 @@ function renderFocusedExercise() {
   todayRoutineList.innerHTML = `
     <div class="live-workout">
       <div class="lw-topbar">
-        <button class="quiet-button small-button btn-ico lw-back" type="button" data-action="lw-back">${getUiIcon("arrow-left")}<span>${escapeHtml(routineName)}</span></button>
+        <button class="quiet-button small-button btn-ico lw-back" type="button" data-action="lw-back" aria-label="${i > 0 ? "Previous exercise" : "Back to plan"}">${getUiIcon("arrow-left")}</button>
         <span class="lw-count">${i + 1} of ${total}</span>
+        <button class="lw-exit" type="button" data-action="lw-exit">Exit</button>
       </div>
       <div class="lw-dots">${renderProgressDots(i, total, false)}</div>
       <div class="lw-hero">
@@ -1413,6 +1418,12 @@ function handleTodayWorkoutClick(event) {
     } else {
       exitTodayWorkout();
     }
+    return;
+  }
+
+  if (action === "lw-exit") {
+    if (!window.confirm("Exit this workout? Anything you haven't saved will be cleared.")) return;
+    exitTodayWorkout();
     return;
   }
 

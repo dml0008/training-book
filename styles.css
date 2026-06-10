@@ -2074,6 +2074,32 @@ p {
 }
 
 /* ---------- Today: live focused workout (Slice 2) ---------- */
+/* ===== Full-screen focus mode (body.in-workout) =====
+   While a workout is running, hide the app's header, banners and bottom nav so
+   the live workout fills the screen like its own program. Toggled in JS by
+   setTodayMode(). */
+body.in-workout .topbar,
+body.in-workout .review-reminder,
+body.in-workout .today-heading,
+body.in-workout .tabbar {
+  display: none;
+}
+
+body.in-workout .app-shell {
+  padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom);
+}
+
+/* The today panel goes edge-to-edge: drop the card border/shadow/rounding and
+   let the workout own the whole viewport. */
+body.in-workout .today-panel {
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  background: none;
+  min-height: 100svh;
+  padding: var(--space-4) var(--space-4) var(--space-6);
+}
+
 .live-workout {
   display: flex;
   flex-direction: column;
@@ -2100,6 +2126,24 @@ p {
   font-size: 13px;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
+}
+
+/* Small, deliberately low-key exit so the focus stays on the workout, not on
+   leaving it. */
+.lw-exit {
+  border: 1px solid var(--line);
+  background: none;
+  color: var(--muted);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  border-radius: var(--radius-sm);
+  padding: var(--space-1) var(--space-3);
+  cursor: pointer;
+}
+
+.lw-exit:active {
+  transform: translateY(1px);
 }
 
 .lw-dots {
