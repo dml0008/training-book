@@ -72,7 +72,6 @@
     .library-add-btn:hover,
     .sg-accent-card button:hover,
     .lw-tbtn.primary:hover {
-      transform: translateY(-1px);
       filter: brightness(1.05);
       box-shadow: 0 6px 20px rgba(183, 255, 53, 0.28);
     }
@@ -86,13 +85,19 @@
     .stepper-button:hover,
     .difficulty-chip:not(.is-active):hover,
     .today-done-button:not(.is-done):hover,
-    .exercise-action:not(.primary):hover,
+    .exercise-action:not(.primary):not(.danger):hover,
     .lw-bigcheck:not(.is-done):hover,
     .lw-reference-button:hover {
-      transform: translateY(-1px);
       border-color: rgba(183, 255, 53, 0.55);
       background: rgba(183, 255, 53, 0.07);
       color: var(--text);
+    }
+
+    /* Danger (Remove) buttons keep their red identity on hover */
+    .exercise-action.danger:hover {
+      border-color: rgba(255, 107, 107, 0.6);
+      background: rgba(255, 107, 107, 0.1);
+      color: var(--danger);
     }
 
     /* Chips / toggles: gentle highlight on hover */
@@ -193,6 +198,26 @@
 
     /* a contained example of the live-workout block (it's normally full-bleed) */
     .sg-live-demo { max-width: 460px; }
+
+    /* inline Lucide icons inside buttons (arrows on the back / day controls) */
+    .sg-ico { display: inline-flex; }
+    .sg-ico svg { width: 16px; height: 16px; }
+
+    /* back buttons: icon + label, all the same height */
+    .sg-iconbtn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    /* centre the chevrons inside the day-switcher pills */
+    .day-arrow {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .day-arrow svg { width: 18px; height: 18px; }
   </style>
 </head>
 <body>
@@ -425,20 +450,20 @@
         <div>
           <div class="today-day-switch" style="display:block;">
             <div class="day-switch-row">
-              <button class="day-arrow" type="button" aria-label="Previous day">&lsaquo;</button>
+              <button class="day-arrow" type="button" aria-label="Previous day"><span class="sg-ico" data-icon="chevron-left"></span></button>
               <span class="day-switch-name">Wednesday</span>
-              <button class="day-arrow" type="button" aria-label="Next day">&rsaquo;</button>
+              <button class="day-arrow" type="button" aria-label="Next day"><span class="sg-ico" data-icon="chevron-right"></span></button>
             </div>
             <button class="day-today-reset" type="button">Back to today</button>
           </div>
-          <span class="sg-cap">Day switcher</span>
+          <span class="sg-cap">Day switcher (Lucide chevrons, centred)</span>
         </div>
         <div>
           <div class="sg-row">
-            <button class="quiet-button small-button" type="button">&larr; Back to plan</button>
-            <button class="quiet-button" type="button">&larr; Back</button>
+            <button class="quiet-button small-button sg-iconbtn" type="button"><span class="sg-ico" data-icon="arrow-left"></span>Back to plan</button>
+            <button class="quiet-button small-button sg-iconbtn" type="button"><span class="sg-ico" data-icon="arrow-left"></span>Back</button>
           </div>
-          <span class="sg-cap">Back buttons (Today / History)</span>
+          <span class="sg-cap">Back buttons (Lucide arrow, matched height)</span>
         </div>
       </div>
     </section>
@@ -607,7 +632,10 @@
       "layout-grid": '<rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/>',
       "clipboard-list": '<rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/>',
       history: '<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/>',
-      "trending-up": '<polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/>'
+      "trending-up": '<polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/>',
+      "arrow-left": '<path d="m12 19-7-7 7-7"/><path d="M19 12H5"/>',
+      "chevron-left": '<path d="m15 18-6-6 6-6"/>',
+      "chevron-right": '<path d="m9 18 6-6-6-6"/>'
     };
     document.querySelectorAll("[data-icon]").forEach((el) => {
       const inner = UI_ICONS[el.dataset.icon];
