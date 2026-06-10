@@ -3,7 +3,7 @@ const DROPBOX_TOKEN_URL = "https://api.dropboxapi.com/oauth2/token";
 const DROPBOX_UPLOAD_URL = "https://content.dropboxapi.com/2/files/upload";
 const DROPBOX_DOWNLOAD_URL = "https://content.dropboxapi.com/2/files/download";
 const DATA_FILE_PATH = "/04_Technical/06_Side_Projects/Workout and Nutrition App/data/workout-data.json";
-const APP_VERSION = "2026.06.22-header-icons";
+const APP_VERSION = "2026.06.22-set-steps";
 
 const STORAGE = {
   appKey: "trainingBookDropboxAppKey",
@@ -1091,6 +1091,25 @@ function adjustTodayTarget(ex, field, delta, min, max) {
   }
 }
 
+// The set "breadcrumb": a row of right-pointing arrow segments, one per set,
+// with the current one highlighted. Capped at 6 arrows (more than that and we
+// fall back to a plain label). A single set shows one tidy box instead.
+function renderSetSteps(current, total) {
+  const label = `Set ${current + 1} of ${total}`;
+  if (total === 1) {
+    return `<div class="lw-steps"><span class="lw-step-single">${escapeHtml(label)}</span></div>`;
+  }
+  if (total > 6) {
+    return `<p class="lw-setpage-num">${escapeHtml(label)}</p>`;
+  }
+  let segs = "";
+  for (let k = 0; k < total; k++) {
+    const state = k < current ? "is-done" : (k === current ? "is-current" : "is-upcoming");
+    segs += `<span class="lw-step ${state}">${k + 1}</span>`;
+  }
+  return `<div class="lw-steps" role="group" aria-label="${escapeHtml(label)}">${segs}</div>`;
+}
+
 function renderFocusedExercise() {
   const exercises = activeWorkout.exercises;
   const i = activeWorkout.currentIndex;
@@ -1203,7 +1222,7 @@ function renderFocusedExercise() {
       const set = sets[s];
       body = `
         <div class="lw-setpage" data-set-index="${s}">
-          <p class="lw-setpage-num">Set ${s + 1} of ${n}</p>
+          ${renderSetSteps(s, n)}
           <div class="lw-bigstep">
             <span class="lw-bigstep-label">Weight</span>
             <div class="lw-bigstep-row">

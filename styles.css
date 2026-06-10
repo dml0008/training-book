@@ -2425,6 +2425,62 @@ body.in-workout .today-panel {
   letter-spacing: 0.05em;
 }
 
+/* Set breadcrumb: a row of right-pointing arrow segments, current highlighted.
+   No borders (clip-path clips them messily) — state is shown by fill colour. */
+.lw-steps {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-1);
+}
+
+.lw-step {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 48px;
+  height: 36px;
+  padding: 0 10px 0 16px;
+  font-size: 15px;
+  font-weight: 850;
+  font-variant-numeric: tabular-nums;
+  background: var(--panel-2);
+  color: var(--dim);
+  /* notch on the left, point on the right -> arrow shape */
+  clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 50%, calc(100% - 10px) 100%, 0 100%, 10px 50%);
+}
+
+/* The first arrow gets a flat left edge so the row doesn't look cut off. */
+.lw-step:first-child {
+  padding-left: 12px;
+  clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 50%, calc(100% - 10px) 100%, 0 100%);
+}
+
+.lw-step.is-done {
+  background: rgba(183, 211, 50, 0.28);
+  color: var(--text);
+}
+
+.lw-step.is-current {
+  background: var(--accent);
+  color: #0c100f;
+}
+
+/* Single-set case: one tidy rounded box rather than a lone arrow. */
+.lw-step-single {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-sm);
+  background: var(--accent);
+  color: #0c100f;
+  font-size: 13px;
+  font-weight: 850;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
 .lw-bigstep {
   display: flex;
   flex-direction: column;
