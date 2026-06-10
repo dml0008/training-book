@@ -2115,7 +2115,14 @@ body.in-workout .today-panel {
 
 /* The live-workout back button now reuses the shared quiet/small button look
    (it carries .quiet-button .small-button .btn-ico in the markup); this only
-   sizes its Lucide arrow to match the other back buttons. */
+   sizes its Lucide arrow to match the other back buttons. The extra specificity
+   keeps it content-width: the mobile rule that stretches .quiet-button to 100%
+   would otherwise swallow the whole topbar. */
+.lw-topbar .lw-back {
+  width: auto;
+  flex: 0 0 auto;
+}
+
 .lw-back svg {
   width: 16px;
   height: 16px;
@@ -2343,6 +2350,52 @@ body.in-workout .today-panel {
   font-weight: 600;
   color: var(--dim);
   flex: 0 0 auto;
+}
+
+/* Weight is adjusted with -/+ steps of 5 (no manual typing), so the value reads
+   like a target you nudge rather than a box you fill in. */
+.lw-weight {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.lw-wbtn {
+  flex: 0 0 auto;
+  width: 38px;
+  height: 38px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.lw-wval {
+  flex: 1 1 auto;
+  min-width: 0;
+  text-align: center;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.lw-wval strong {
+  color: var(--text);
+  font-size: 17px;
+}
+
+/* Reps stays a typed box but compact, so the weight stepper gets the room. */
+.lw-setrow > .lw-field {
+  flex: 0 1 78px;
 }
 
 .lw-check {

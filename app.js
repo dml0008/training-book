@@ -3,7 +3,7 @@ const DROPBOX_TOKEN_URL = "https://api.dropboxapi.com/oauth2/token";
 const DROPBOX_UPLOAD_URL = "https://content.dropboxapi.com/2/files/upload";
 const DROPBOX_DOWNLOAD_URL = "https://content.dropboxapi.com/2/files/download";
 const DATA_FILE_PATH = "/04_Technical/06_Side_Projects/Workout and Nutrition App/data/workout-data.json";
-const APP_VERSION = "2026.06.22-focus-mode";
+const APP_VERSION = "2026.06.22-input-controls";
 
 const STORAGE = {
   appKey: "trainingBookDropboxAppKey",
@@ -1174,21 +1174,22 @@ function renderFocusedExercise() {
         ${(ex.sets || []).map((set, si) => `
           <div class="lw-setrow${set.done ? " is-done" : ""}" data-set-index="${si}">
             <span class="lw-sn">Set ${si + 1}</span>
-            <label class="lw-field">
-              <input type="number" inputmode="decimal" min="0" step="5" value="${escapeHtml(set.weight)}" data-action="set-field" data-field="weight" data-set-index="${si}" aria-label="Set ${si + 1} weight in pounds">
-              <span>lb</span>
-            </label>
+            <div class="lw-weight" role="group" aria-label="Set ${si + 1} weight in pounds">
+              <button class="lw-wbtn" type="button" data-action="set-weight-step" data-set-index="${si}" data-delta="-5" aria-label="Lower weight 5 pounds">&minus;</button>
+              <span class="lw-wval"><strong>${escapeHtml(set.weight)}</strong> lb</span>
+              <button class="lw-wbtn" type="button" data-action="set-weight-step" data-set-index="${si}" data-delta="5" aria-label="Raise weight 5 pounds">+</button>
+            </div>
             <label class="lw-field">
               <input type="number" inputmode="numeric" min="0" step="1" value="${escapeHtml(set.reps)}" data-action="set-field" data-field="reps" data-set-index="${si}" aria-label="Set ${si + 1} reps">
               <span>reps</span>
             </label>
-            <button class="lw-check" type="button" data-action="toggle-set" data-set-index="${si}" aria-label="Mark set ${si + 1} done">${set.done ? "&#10003;" : "&rsaquo;"}</button>
+            <button class="lw-check${set.done ? " is-done" : ""}" type="button" data-action="toggle-set" data-set-index="${si}" aria-label="Mark set ${si + 1} done">${set.done ? "&#10003;" : ""}</button>
           </div>
         `).join("")}
       </div>
       <div class="lw-setactions">
-        <button class="lw-add" type="button" data-action="add-set">+ Add set</button>
         ${(ex.sets || []).length > 1 ? `<button class="lw-remove" type="button" data-action="remove-set">&minus; Remove last</button>` : ""}
+        <button class="lw-add" type="button" data-action="add-set">+ Add set</button>
       </div>
     `;
   }
@@ -1518,6 +1519,17 @@ function handleTodayWorkoutClick(event) {
     const max = Number(button.dataset.max) || 9999;
     adjustTodayTarget(exercise, field, delta, min, max);
     renderTodayWorkout();
+    return;
+  }
+
+  if (action === "set-weight-step" && exercise) {
+    const si = Number(button.dataset.setIndex);
+    const set = exercise.sets?.[si];
+    if (set) {
+      const delta = Number(button.dataset.delta) || 0;
+      set.weight = clampNumber((Number(set.weight) || 0) + delta, 0, 9999);
+      renderTodayWorkout();
+    }
     return;
   }
 
