@@ -3,7 +3,7 @@ const DROPBOX_TOKEN_URL = "https://api.dropboxapi.com/oauth2/token";
 const DROPBOX_UPLOAD_URL = "https://content.dropboxapi.com/2/files/upload";
 const DROPBOX_DOWNLOAD_URL = "https://content.dropboxapi.com/2/files/download";
 const DATA_FILE_PATH = "/04_Technical/06_Side_Projects/Workout and Nutrition App/data/workout-data.json";
-const APP_VERSION = "2026.06.21-styleguide-v4";
+const APP_VERSION = "2026.06.22-consistency-1";
 
 const STORAGE = {
   appKey: "trainingBookDropboxAppKey",
@@ -1192,7 +1192,7 @@ function renderFocusedExercise() {
   todayRoutineList.innerHTML = `
     <div class="live-workout">
       <div class="lw-topbar">
-        <button class="lw-back" type="button" data-action="lw-back">&larr; ${escapeHtml(routineName)}</button>
+        <button class="quiet-button small-button btn-ico lw-back" type="button" data-action="lw-back">${getUiIcon("arrow-left")}<span>${escapeHtml(routineName)}</span></button>
         <span class="lw-count">${i + 1} of ${total}</span>
       </div>
       <div class="lw-dots">${renderProgressDots(i, total, false)}</div>
@@ -2059,7 +2059,9 @@ const UI_ICONS = {
   "layout-grid": '<rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/>',
   "clipboard-list": '<rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/>',
   history: '<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/>',
-  "trending-up": '<polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/>'
+  "trending-up": '<polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/>',
+  // Arrows / marks (used on back buttons; more of the sweep to follow)
+  "arrow-left": '<path d="m12 19-7-7 7-7"/><path d="M19 12H5"/>'
 };
 
 function getUiIcon(name) {

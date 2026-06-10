@@ -11,6 +11,22 @@
   --accent-2: #a3b551;
   --danger: #c43939;
   --shadow: 0 20px 70px rgba(0, 0, 0, 0.32);
+
+  /* ===== Shared design tokens (the style-guide scale) =====
+     Spacing rhythm: every gap/padding should use one of these. */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+
+  /* One shared treatment for every screen's main container, so all six
+     pages match and a single edit here updates them everywhere. */
+  --panel-pad: clamp(18px, 5vw, 42px);
+  --panel-min-h: min(680px, calc(100svh - 142px));
+
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
@@ -268,16 +284,24 @@ p {
   display: block;
 }
 
+/* Every screen's main container shares one look: border, surface, shadow,
+   padding and minimum height all come from the tokens above. Edit the tokens
+   to change all pages at once. (hero-panel / blank-panel set their own size
+   below and override where they need to.) */
 .hero-panel,
 .blank-panel,
+.today-panel,
 .library-panel,
 .log-panel,
 .history-panel,
-.plan-panel {
+.plan-panel,
+.progress-panel {
   border: 1px solid var(--line);
   border-radius: 8px;
   background: linear-gradient(145deg, rgba(23, 29, 27, 0.96), rgba(12, 16, 15, 0.98));
   box-shadow: var(--shadow);
+  padding: var(--panel-pad);
+  min-height: var(--panel-min-h);
 }
 
 .hero-panel {
@@ -424,6 +448,21 @@ p {
   color: #101413;
 }
 
+/* Reusable: any button that holds a Lucide icon next to its label. Keeps the
+   icon + text centred and the icon a consistent size everywhere (back buttons,
+   etc.) so the same component looks identical across the app. */
+.btn-ico {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.btn-ico svg {
+  width: 16px;
+  height: 16px;
+}
+
 .quiet-button {
   background: rgba(9, 12, 11, 0.35);
   color: var(--text);
@@ -500,15 +539,7 @@ p {
   padding: clamp(24px, 7vw, 64px);
 }
 
-.library-panel {
-  min-height: min(680px, calc(100svh - 142px));
-  padding: clamp(18px, 5vw, 42px);
-}
-
-.log-panel {
-  min-height: min(720px, calc(100svh - 142px));
-  padding: clamp(18px, 5vw, 42px);
-}
+/* library-panel / log-panel size now comes from the shared container tokens. */
 
 .library-heading {
   display: flex;
@@ -1273,7 +1304,7 @@ p {
 
 .filter-chip {
   flex: 0 0 auto;
-  min-height: 42px;
+  min-height: 24px;
   border: 1px solid var(--line);
   border-radius: 999px;
   background: rgba(9, 12, 11, 0.36);
@@ -1588,14 +1619,7 @@ p {
   outline-offset: 2px;
 }
 
-.today-panel {
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: linear-gradient(145deg, rgba(23, 29, 27, 0.96), rgba(12, 16, 15, 0.98));
-  box-shadow: var(--shadow);
-  min-height: min(680px, calc(100svh - 142px));
-  padding: clamp(18px, 5vw, 42px);
-}
+/* today-panel look + size now come from the shared container tokens. */
 
 .review-reminder {
   display: flex;
@@ -2022,15 +2046,12 @@ p {
   margin-bottom: 8px;
 }
 
-.lw-back {
-  border: none;
-  background: none;
-  color: var(--text);
-  font: inherit;
-  font-weight: 600;
-  font-size: 14px;
-  padding: 4px 0;
-  cursor: pointer;
+/* The live-workout back button now reuses the shared quiet/small button look
+   (it carries .quiet-button .small-button .btn-ico in the markup); this only
+   sizes its Lucide arrow to match the other back buttons. */
+.lw-back svg {
+  width: 16px;
+  height: 16px;
 }
 
 .lw-count {
@@ -2085,6 +2106,22 @@ p {
 .lw-hero-icon svg {
   width: 34px;
   height: 34px;
+}
+
+/* Without this the illustration's lines have no stroke and its circles fill
+   solid - which showed as a blank box with a black dot. Match the Library
+   line-illustration treatment so the exercise icon actually draws. */
+.lw-hero-icon path,
+.lw-hero-icon line,
+.lw-hero-icon circle,
+.lw-hero-icon polyline,
+.lw-hero-icon polygon,
+.lw-hero-icon rect {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 3.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .lw-hero-text {
@@ -2926,15 +2963,10 @@ p {
 
 /* ===== Progress tab (Step 9) ===== */
 .progress-panel {
+  /* look + size from the shared container tokens; this only adds layout. */
   display: flex;
   flex-direction: column;
   gap: 18px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: linear-gradient(145deg, rgba(23, 29, 27, 0.96), rgba(12, 16, 15, 0.98));
-  box-shadow: var(--shadow);
-  padding: clamp(18px, 5vw, 42px);
-  min-height: min(680px, calc(100svh - 142px));
 }
 
 .progress-heading {

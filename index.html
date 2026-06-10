@@ -12,7 +12,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="icons/icon.svg">
-  <link rel="stylesheet" href="styles.css?v=2026.06.21-styleguide-v4">
+  <link rel="stylesheet" href="styles.css?v=2026.06.22-consistency-1">
 </head>
 <body>
   <div class="app-shell">
@@ -73,7 +73,7 @@
       <section class="screen is-active" data-screen="today" aria-labelledby="today-title">
         <div class="today-panel">
           <div class="today-heading">
-            <button class="quiet-button small-button today-back-button" id="today-back-button" type="button" hidden>&larr; Back to plan</button>
+            <button class="quiet-button small-button btn-ico today-back-button" id="today-back-button" type="button" hidden><span data-icon="arrow-left" aria-hidden="true"></span>Back to plan</button>
             <p class="date-label" id="today-date">Today</p>
             <div class="today-day-switch" id="today-day-switch" hidden>
               <div class="day-switch-row">
@@ -222,7 +222,7 @@
         </div>
         <div id="history-detail-panel" class="history-detail-panel" hidden>
           <div class="history-detail-header">
-            <button class="quiet-button" id="history-detail-close" type="button" aria-label="Close workout details">← Back</button>
+            <button class="quiet-button small-button btn-ico" id="history-detail-close" type="button" aria-label="Close workout details"><span data-icon="arrow-left" aria-hidden="true"></span>Back</button>
             <h3 id="history-detail-title">Workout details</h3>
           </div>
           <div id="history-detail-body" class="history-detail-body">
@@ -270,6 +270,6 @@
     </nav>
   </div>
 
-  <script src="app.js?v=2026.06.21-styleguide-v4"></script>
+  <script src="app.js?v=2026.06.22-consistency-1"></script>
 </body>
 </html>
