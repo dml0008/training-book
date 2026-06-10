@@ -902,6 +902,14 @@ p {
   color: var(--muted);
 }
 
+/* Stack the Plan page's sections (loaded plan, import, schedule, routines)
+   with the same rhythm the cards use, so they aren't flush against each other. */
+#plan-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
 .plan-grid {
   display: grid;
   grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.65fr);
@@ -1981,12 +1989,12 @@ p {
 
 .today-preview-card .pv-num {
   flex: 0 0 auto;
-  width: 28px;
-  height: 28px;
+  width: 45px;
+  height: 45px;
   border-radius: 8px;
   background: rgba(155, 168, 161, 0.14);
   color: var(--muted);
-  font-size: 13px;
+  font-size: 16px;
   font-weight: 800;
   display: flex;
   align-items: center;
@@ -2004,7 +2012,7 @@ p {
 }
 
 .today-preview-card .pv-meta {
-  margin: 2px 0 0;
+  margin: -2px 0 0;
   color: var(--muted);
   font-size: 13px;
 }
