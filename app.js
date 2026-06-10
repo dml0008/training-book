@@ -3,7 +3,7 @@ const DROPBOX_TOKEN_URL = "https://api.dropboxapi.com/oauth2/token";
 const DROPBOX_UPLOAD_URL = "https://content.dropboxapi.com/2/files/upload";
 const DROPBOX_DOWNLOAD_URL = "https://content.dropboxapi.com/2/files/download";
 const DATA_FILE_PATH = "/04_Technical/06_Side_Projects/Workout and Nutrition App/data/workout-data.json";
-const APP_VERSION = "2026.06.22-set-steps";
+const APP_VERSION = "2026.06.22-plan-weight";
 
 const STORAGE = {
   appKey: "trainingBookDropboxAppKey",
@@ -598,6 +598,7 @@ function makeTodayExercise(plannedEx, source = "planned") {
   const durationLike = isCardio || isSport;
   const targetSets = Number(plannedEx.targetSets) || (durationLike ? 0 : 3);
   const targetReps = Number(plannedEx.targetReps) || 0;
+  const targetWeight = Number(plannedEx.targetWeight) || 0;
   const targetDuration = Number(plannedEx.targetDuration) || 0;
 
   // For a held move, the planned target reads like "3 x 45 sec": targetSets
@@ -611,7 +612,7 @@ function makeTodayExercise(plannedEx, source = "planned") {
   // done flag you tap to check off. Pre-filled with the planned reps.
   const setCount = targetSets || (durationLike || isTimed ? 0 : 1);
   const sets = Array.from({ length: (isTimed || isSport) ? 0 : setCount }).map(() => ({
-    weight: 0,
+    weight: targetWeight,
     reps: targetReps,
     done: false
   }));
@@ -629,7 +630,7 @@ function makeTodayExercise(plannedEx, source = "planned") {
     targetSets,
     targetReps,
     targetDuration,
-    targetWeight: 0,
+    targetWeight,
     sets,
     holds,
     holdSeconds,
@@ -909,11 +910,14 @@ function formatExerciseRecap(ex) {
   return `${doneSets.length} set${doneSets.length === 1 ? "" : "s"}${weightPart}`;
 }
 
-// Plain target line for the focused screen, e.g. "3 × 8" or "10 min".
+// Plain target line for the focused screen, e.g. "3 × 8 · 135 lb" or "10 min".
 function formatFocusTarget(ex) {
   if (ex.type === "timed") return `${(ex.holds || []).length} × ${ex.holdSeconds || 0} sec`;
   if (ex.type === "cardio" || ex.type === "sport") return `${ex.targetDuration || ex.actualDuration || 0} min`;
-  if (ex.targetReps) return `${ex.targetSets || (ex.sets || []).length} × ${ex.targetReps}`;
+  if (ex.targetReps) {
+    const weight = Number(ex.targetWeight) > 0 ? ` · ${ex.targetWeight} lb` : "";
+    return `${ex.targetSets || (ex.sets || []).length} × ${ex.targetReps}${weight}`;
+  }
   return `${ex.targetSets || (ex.sets || []).length} sets`;
 }
 
@@ -1105,7 +1109,7 @@ function renderSetSteps(current, total) {
   let segs = "";
   for (let k = 0; k < total; k++) {
     const state = k < current ? "is-done" : (k === current ? "is-current" : "is-upcoming");
-    segs += `<span class="lw-step ${state}">${k + 1}</span>`;
+    segs += `<button class="lw-step ${state}" type="button" data-action="goto-set" data-set-index="${k}" aria-label="Go to set ${k + 1}"${k === current ? ' aria-current="step"' : ""}>${k + 1}</button>`;
   }
   return `<div class="lw-steps" role="group" aria-label="${escapeHtml(label)}">${segs}</div>`;
 }
@@ -1618,6 +1622,12 @@ function handleTodayWorkoutClick(event) {
     const set = exercise.sets?.[s];
     if (set) set.done = action === "complete-set";
     activeWorkout.currentSet = s + 1;
+    renderTodayWorkout();
+    return;
+  }
+
+  if (action === "goto-set" && exercise) {
+    activeWorkout.currentSet = clampNumber(Number(button.dataset.setIndex), 0, (exercise.sets || []).length);
     renderTodayWorkout();
     return;
   }
@@ -3162,7 +3172,8 @@ function formatRoutineExercise(exercise) {
   const exerciseInfo = getExerciseById(exercise.exerciseId);
   const name = exerciseInfo?.name || exercise.exerciseId;
   if (exercise.targetDuration) return `- ${name}: ${exercise.targetDuration} min`;
-  return `- ${name}: ${exercise.targetSets || 1}x${exercise.targetReps || 0}`;
+  const weight = Number(exercise.targetWeight) > 0 ? ` @ ${exercise.targetWeight} lb` : "";
+  return `- ${name}: ${exercise.targetSets || 1}x${exercise.targetReps || 0}${weight}`;
 }
 
 function formatRoutineExerciseDisplay(exercise) {
@@ -3242,7 +3253,7 @@ function renderPlan() {
       <div class="plan-card-head">
         <div>
           <p class="card-kicker">Import updated plan</p>
-          <p class="plan-muted">Paste the AI coach's plan here, preview what Training Book understands, then save it.</p>
+          <p class="plan-muted">Paste the AI coach's plan here, preview what Training Book understands, then save it. Add a starting weight with "@", e.g. <code>Bench Press: 3x8 @ 135</code>.</p>
         </div>
         <button class="quiet-button small-button" id="plan-import-example" type="button">Use example</button>
       </div>
@@ -4302,15 +4313,15 @@ saturday: Optional Walk
 sunday: rest
 
 ROUTINE: Full Body A
-- Goblet Squat: 3x8
+- Goblet Squat: 3x8 @ 35
 - Push-up: 3x8
-- Dumbbell Row: 3x10
+- Dumbbell Row: 3x10 @ 30
 - Plank: 3x30
 
 ROUTINE: Full Body B
-- Deadlift: 3x8
-- Shoulder Press: 3x8
-- Squat: 3x8
+- Deadlift: 3x8 @ 95
+- Shoulder Press: 3x8 @ 20
+- Squat: 3x8 @ 45
 - Plank: 2x30
 
 ROUTINE: Optional Walk
@@ -4346,11 +4357,16 @@ function parseRoutineExerciseLine(line) {
 
   const strengthMatch = target.match(/(\d+)\s*(x|sets?\s*(of)?|by)\s*(\d+)/);
   if (strengthMatch) {
-    return {
+    const parsed = {
       exerciseId,
       targetSets: Number(strengthMatch[1]),
       targetReps: Number(strengthMatch[4])
     };
+    // Optional starting weight: "3x8 @ 135", "3x8 at 135", or "3x8 135 lb".
+    const weightMatch = target.match(/(?:@|at)\s*(\d+(?:\.\d+)?)|(\d+(?:\.\d+)?)\s*(?:lb|lbs|pounds?)\b/);
+    const weight = weightMatch ? Number(weightMatch[1] || weightMatch[2]) : 0;
+    if (weight > 0) parsed.targetWeight = weight;
+    return parsed;
   }
 
   return null;

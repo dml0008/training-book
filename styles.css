@@ -2441,13 +2441,20 @@ body.in-workout .today-panel {
   min-width: 48px;
   height: 36px;
   padding: 0 10px 0 16px;
+  border: none;
+  font: inherit;
   font-size: 15px;
   font-weight: 850;
   font-variant-numeric: tabular-nums;
   background: var(--panel-2);
   color: var(--dim);
+  cursor: pointer;
   /* notch on the left, point on the right -> arrow shape */
   clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 50%, calc(100% - 10px) 100%, 0 100%, 10px 50%);
+}
+
+.lw-step:active {
+  filter: brightness(1.15);
 }
 
 /* The first arrow gets a flat left edge so the row doesn't look cut off. */
