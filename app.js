@@ -3,7 +3,7 @@ const DROPBOX_TOKEN_URL = "https://api.dropboxapi.com/oauth2/token";
 const DROPBOX_UPLOAD_URL = "https://content.dropboxapi.com/2/files/upload";
 const DROPBOX_DOWNLOAD_URL = "https://content.dropboxapi.com/2/files/download";
 const DATA_FILE_PATH = "/04_Technical/06_Side_Projects/Workout and Nutrition App/data/workout-data.json";
-const APP_VERSION = "2026.06.22-input-controls";
+const APP_VERSION = "2026.06.22-set-pages";
 
 const STORAGE = {
   appKey: "trainingBookDropboxAppKey",
@@ -318,6 +318,10 @@ const activeWorkout = {
   // Slice 2 (focused workout): which exercise screen we're on, and whether
   // we're showing an exercise ("exercise") or the finish/summary ("finish").
   currentIndex: 0,
+  // Strength exercises page one set at a time: which set of the current
+  // exercise is on screen. currentSet === sets.length is the "add another set
+  // or move on" wrap page shown after the last set.
+  currentSet: 0,
   phase: "exercise",
   editTargetsOpen: false,
   referenceOpen: false,
@@ -800,6 +804,7 @@ function startTodayWorkout() {
   activeWorkout.started = true;
   activeWorkout.startedAt = new Date().toISOString();
   activeWorkout.currentIndex = 0;
+  activeWorkout.currentSet = 0;
   activeWorkout.phase = "exercise";
   activeWorkout.editTargetsOpen = false;
   activeWorkout.referenceOpen = false;
@@ -812,6 +817,7 @@ function exitTodayWorkout() {
   activeWorkout.started = false;
   activeWorkout.exercises = [];
   activeWorkout.currentIndex = 0;
+  activeWorkout.currentSet = 0;
   activeWorkout.phase = "exercise";
   activeWorkout.editTargetsOpen = false;
   activeWorkout.referenceOpen = false;
@@ -1092,6 +1098,12 @@ function renderFocusedExercise() {
   const total = exercises.length;
   const routineName = todayRoutineName?.textContent || "Workout";
   const isLast = i >= total - 1;
+
+  // Strength exercises page one set at a time; keep the set index in range
+  // (0..sets.length, where sets.length is the wrap "add another set?" page).
+  if (ex.type === "strength") {
+    activeWorkout.currentSet = clampNumber(activeWorkout.currentSet, 0, (ex.sets || []).length);
+  }
   const nextLabel = isLast
     ? "Finish workout &rarr;"
     : `Next: ${escapeHtml(exercises[i + 1].name)} &rarr;`;
@@ -1169,29 +1181,52 @@ function renderFocusedExercise() {
       <p class="lw-note">Enter how long you played and mark it done.</p>
     `;
   } else {
-    body = `
-      <div class="lw-sets">
-        ${(ex.sets || []).map((set, si) => `
-          <div class="lw-setrow${set.done ? " is-done" : ""}" data-set-index="${si}">
-            <span class="lw-sn">Set ${si + 1}</span>
-            <div class="lw-weight" role="group" aria-label="Set ${si + 1} weight in pounds">
-              <button class="lw-wbtn" type="button" data-action="set-weight-step" data-set-index="${si}" data-delta="-5" aria-label="Lower weight 5 pounds">&minus;</button>
-              <span class="lw-wval"><strong>${escapeHtml(set.weight)}</strong> lb</span>
-              <button class="lw-wbtn" type="button" data-action="set-weight-step" data-set-index="${si}" data-delta="5" aria-label="Raise weight 5 pounds">+</button>
-            </div>
-            <label class="lw-field">
-              <input type="number" inputmode="numeric" min="0" step="1" value="${escapeHtml(set.reps)}" data-action="set-field" data-field="reps" data-set-index="${si}" aria-label="Set ${si + 1} reps">
-              <span>reps</span>
-            </label>
-            <button class="lw-check${set.done ? " is-done" : ""}" type="button" data-action="toggle-set" data-set-index="${si}" aria-label="Mark set ${si + 1} done">${set.done ? "&#10003;" : ""}</button>
+    // Strength: one set per page. Big -/+ steppers for weight (by 5) and reps
+    // (by 1), with Skip / Complete at the bottom. After the last set we show a
+    // wrap page that offers another set or moving on.
+    const sets = ex.sets || [];
+    const n = sets.length;
+    const s = activeWorkout.currentSet;
+
+    if (s >= n) {
+      body = `
+        <div class="lw-wrap">
+          <p class="lw-wrap-title">That&rsquo;s all ${n} set${n === 1 ? "" : "s"} of ${escapeHtml(ex.name)}.</p>
+          <p class="lw-wrap-sub">Add another set, or move on.</p>
+          <div class="lw-wrap-actions">
+            <button class="lw-skip" type="button" data-action="add-set-page">+ Another set</button>
+            <button class="primary-button lw-complete" type="button" data-action="lw-next">${nextLabel}</button>
           </div>
-        `).join("")}
-      </div>
-      <div class="lw-setactions">
-        ${(ex.sets || []).length > 1 ? `<button class="lw-remove" type="button" data-action="remove-set">&minus; Remove last</button>` : ""}
-        <button class="lw-add" type="button" data-action="add-set">+ Add set</button>
-      </div>
-    `;
+        </div>
+      `;
+    } else {
+      const set = sets[s];
+      body = `
+        <div class="lw-setpage" data-set-index="${s}">
+          <p class="lw-setpage-num">Set ${s + 1} of ${n}</p>
+          <div class="lw-bigstep">
+            <span class="lw-bigstep-label">Weight</span>
+            <div class="lw-bigstep-row">
+              <button class="lw-wbtn lw-wbtn-lg" type="button" data-action="set-weight-step" data-set-index="${s}" data-delta="-5" aria-label="Lower weight 5 pounds">&minus;</button>
+              <span class="lw-bigstep-val"><strong>${escapeHtml(set.weight)}</strong> lb</span>
+              <button class="lw-wbtn lw-wbtn-lg" type="button" data-action="set-weight-step" data-set-index="${s}" data-delta="5" aria-label="Raise weight 5 pounds">+</button>
+            </div>
+          </div>
+          <div class="lw-bigstep">
+            <span class="lw-bigstep-label">Reps</span>
+            <div class="lw-bigstep-row">
+              <button class="lw-wbtn lw-wbtn-lg" type="button" data-action="set-reps-step" data-set-index="${s}" data-delta="-1" aria-label="Lower reps">&minus;</button>
+              <span class="lw-bigstep-val"><strong>${escapeHtml(set.reps)}</strong></span>
+              <button class="lw-wbtn lw-wbtn-lg" type="button" data-action="set-reps-step" data-set-index="${s}" data-delta="1" aria-label="Raise reps">+</button>
+            </div>
+          </div>
+          <div class="lw-setpage-actions">
+            <button class="lw-skip" type="button" data-action="skip-set">Skip set</button>
+            <button class="primary-button lw-complete" type="button" data-action="complete-set">Complete set &#10003;</button>
+          </div>
+        </div>
+      `;
+    }
   }
 
   todayRoutineList.innerHTML = `
@@ -1215,9 +1250,10 @@ function renderFocusedExercise() {
       </div>
       <button class="lw-reference-button" type="button" data-action="open-reference">How to do it</button>
       ${body}
+      ${ex.type === "strength" ? "" : `
       <div class="lw-next-row">
         <button class="primary-button lw-next" type="button" data-action="lw-next">${nextLabel}</button>
-      </div>
+      </div>`}
       ${renderEditTargetsSheet(ex)}
       ${renderReferenceSheet(ex)}
     </div>
@@ -1413,8 +1449,19 @@ function handleTodayWorkoutClick(event) {
     stopTimer();
     activeWorkout.editTargetsOpen = false;
     activeWorkout.referenceOpen = false;
+    // Within a strength exercise, step back one set page first.
+    if (exercise && exercise.type === "strength" && activeWorkout.currentSet > 0) {
+      activeWorkout.currentSet -= 1;
+      renderTodayWorkout();
+      return;
+    }
     if (activeWorkout.currentIndex > 0) {
       activeWorkout.currentIndex -= 1;
+      // Land on the previous exercise's last set, if it's a strength move.
+      const prev = activeWorkout.exercises[activeWorkout.currentIndex];
+      activeWorkout.currentSet = (prev && prev.type === "strength")
+        ? Math.max(0, (prev.sets || []).length - 1)
+        : 0;
       renderTodayWorkout();
     } else {
       exitTodayWorkout();
@@ -1434,6 +1481,7 @@ function handleTodayWorkoutClick(event) {
     activeWorkout.referenceOpen = false;
     if (activeWorkout.currentIndex < activeWorkout.exercises.length - 1) {
       activeWorkout.currentIndex += 1;
+      activeWorkout.currentSet = 0;
     } else {
       activeWorkout.phase = "finish";
     }
@@ -1530,6 +1578,40 @@ function handleTodayWorkoutClick(event) {
       set.weight = clampNumber((Number(set.weight) || 0) + delta, 0, 9999);
       renderTodayWorkout();
     }
+    return;
+  }
+
+  if (action === "set-reps-step" && exercise) {
+    const si = Number(button.dataset.setIndex);
+    const set = exercise.sets?.[si];
+    if (set) {
+      const delta = Number(button.dataset.delta) || 0;
+      set.reps = clampNumber((Number(set.reps) || 0) + delta, 0, 9999);
+      renderTodayWorkout();
+    }
+    return;
+  }
+
+  // Complete / Skip drive the one-set-per-page flow: mark the set, then advance
+  // to the next set (or the wrap page once past the last set).
+  if ((action === "complete-set" || action === "skip-set") && exercise) {
+    const s = activeWorkout.currentSet;
+    const set = exercise.sets?.[s];
+    if (set) set.done = action === "complete-set";
+    activeWorkout.currentSet = s + 1;
+    renderTodayWorkout();
+    return;
+  }
+
+  if (action === "add-set-page" && exercise) {
+    const last = exercise.sets?.[exercise.sets.length - 1];
+    exercise.sets.push({
+      weight: last ? last.weight : 0,
+      reps: last ? last.reps : (exercise.targetReps || 0),
+      done: false
+    });
+    activeWorkout.currentSet = exercise.sets.length - 1;
+    renderTodayWorkout();
     return;
   }
 
