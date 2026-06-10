@@ -1,0 +1,461 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Style guide (throwaway) - Training Book</title>
+  <meta name="theme-color" content="#101413">
+  <!--
+    ============================================================
+    THROWAWAY STYLE-GUIDE PAGE - DELETE AFTER SIGN-OFF.
+    This file is NOT part of the real app. It exists only so
+    Daniel can agree the shared design tokens (spacing, text
+    sizes, accent shade, button/card/form styles) on desktop
+    and phone before they are rolled out screen by screen.
+    To remove later: delete this file AND the temporary
+    "View style guide" banner block in index.html.
+    ============================================================
+  -->
+  <link rel="stylesheet" href="styles.css?v=2026.06.20-styleguide">
+  <style>
+    /* ---- Proposed shared tokens (the whole point of this page) ---- */
+    :root {
+      /* Spacing rhythm - everything snaps to one of these */
+      --sg-space-1: 4px;
+      --sg-space-2: 8px;
+      --sg-space-3: 12px;
+      --sg-space-4: 16px;
+      --sg-space-5: 24px;
+      --sg-space-6: 32px;
+      --sg-space-7: 48px;
+
+      /* Text-size scale */
+      --sg-text-label: 12px;
+      --sg-text-small: 13px;
+      --sg-text-body: 15px;
+      --sg-text-heading: 20px;
+      --sg-text-bigheading: 28px;
+      --sg-text-title: 34px;
+      --sg-text-number: 48px;
+    }
+
+    /* page chrome */
+    .sg-banner {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--sg-space-3);
+      margin-bottom: var(--sg-space-5);
+      padding: var(--sg-space-4);
+      border: 1px dashed rgba(255, 211, 106, 0.55);
+      border-radius: 8px;
+      background: rgba(255, 211, 106, 0.08);
+    }
+    .sg-banner p { margin: 0; }
+    .sg-banner .sg-banner-title {
+      color: #ffd36a;
+      font-weight: 800;
+      font-size: var(--sg-text-body);
+    }
+    .sg-banner .sg-banner-sub {
+      color: var(--muted);
+      font-size: var(--sg-text-small);
+      margin-top: 2px;
+    }
+
+    .sg-section {
+      margin: 0 0 var(--sg-space-6);
+      padding: var(--sg-space-5);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: linear-gradient(145deg, rgba(23, 29, 27, 0.96), rgba(12, 16, 15, 0.98));
+    }
+    .sg-section > h2 {
+      margin: 0 0 var(--sg-space-2);
+      font-size: var(--sg-text-bigheading);
+      line-height: 1.05;
+    }
+    .sg-section > .sg-note {
+      margin: 0 0 var(--sg-space-5);
+      color: var(--muted);
+      font-size: var(--sg-text-small);
+      max-width: 640px;
+    }
+
+    /* a small caption under each demo element */
+    .sg-cap {
+      display: block;
+      margin-top: var(--sg-space-2);
+      color: var(--dim);
+      font-size: 11px;
+      font-weight: 750;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .sg-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: var(--sg-space-3);
+    }
+    .sg-stack { display: grid; gap: var(--sg-space-4); }
+
+    /* two-up grid that collapses to one column on phones */
+    .sg-grid2 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: var(--sg-space-4);
+    }
+
+    /* typography ladder rows */
+    .sg-type-row {
+      display: grid;
+      grid-template-columns: 92px minmax(0, 1fr);
+      gap: var(--sg-space-4);
+      align-items: baseline;
+      padding: var(--sg-space-2) 0;
+      border-bottom: 1px solid rgba(155, 168, 161, 0.12);
+    }
+    .sg-type-row code {
+      color: var(--dim);
+      font-size: 11px;
+      font-family: ui-monospace, Consolas, monospace;
+    }
+    .t-title { font-size: var(--sg-text-title); font-weight: 850; line-height: 1; }
+    .t-bigheading { font-size: var(--sg-text-bigheading); font-weight: 800; line-height: 1.05; }
+    .t-heading { font-size: var(--sg-text-heading); font-weight: 800; }
+    .t-body { font-size: var(--sg-text-body); color: var(--text); }
+    .t-muted { font-size: var(--sg-text-body); color: var(--muted); }
+    .t-label { font-size: var(--sg-text-label); font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); }
+    .t-number { font-size: var(--sg-text-number); font-weight: 850; color: var(--accent); line-height: 0.95; }
+
+    /* spacing swatches */
+    .sg-space-row {
+      display: flex;
+      align-items: center;
+      gap: var(--sg-space-3);
+      margin-bottom: var(--sg-space-2);
+    }
+    .sg-space-bar {
+      height: 18px;
+      border-radius: 4px;
+      background: var(--accent);
+      opacity: 0.85;
+    }
+    .sg-space-row code {
+      color: var(--muted);
+      font-size: var(--sg-text-small);
+      font-family: ui-monospace, Consolas, monospace;
+      min-width: 78px;
+    }
+
+    /* accent comparison swatches */
+    .sg-accent-card {
+      padding: var(--sg-space-4);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(9, 12, 11, 0.5);
+      text-align: center;
+    }
+    .sg-accent-chip {
+      height: 64px;
+      border-radius: 8px;
+      margin-bottom: var(--sg-space-3);
+    }
+    .sg-accent-card button {
+      width: 100%;
+      min-height: 44px;
+      border: none;
+      border-radius: 7px;
+      color: #101413;
+      font-weight: 800;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    .sg-accent-name { font-weight: 800; font-size: var(--sg-text-body); margin: 0 0 2px; }
+    .sg-accent-hex { color: var(--muted); font-size: 12px; font-family: ui-monospace, Consolas, monospace; }
+
+    /* list row sample */
+    .sg-listrow {
+      display: flex;
+      align-items: center;
+      gap: var(--sg-space-3);
+      padding: var(--sg-space-3) var(--sg-space-4);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(9, 12, 11, 0.44);
+    }
+    .sg-listrow .sg-listrow-num {
+      flex: 0 0 auto;
+      width: 28px; height: 28px;
+      display: grid; place-items: center;
+      border-radius: 8px;
+      background: rgba(155, 168, 161, 0.14);
+      color: var(--muted);
+      font-weight: 800; font-size: 13px;
+    }
+    .sg-listrow .sg-listrow-main { min-width: 0; flex: 1; }
+    .sg-listrow .sg-listrow-name { margin: 0; font-weight: 700; font-size: var(--sg-text-body); }
+    .sg-listrow .sg-listrow-meta { margin: 2px 0 0; color: var(--muted); font-size: var(--sg-text-small); }
+
+    /* a demo stepper that mirrors the app's stepper */
+    .sg-stepper {
+      display: grid;
+      grid-template-columns: 34px minmax(0, 1fr) 34px;
+      gap: var(--sg-space-2);
+      align-items: center;
+      max-width: 200px;
+    }
+    .sg-stepper button {
+      min-height: 34px;
+      border: 1px solid rgba(183, 255, 53, 0.28);
+      border-radius: 7px;
+      background: rgba(9, 12, 11, 0.55);
+      color: var(--accent);
+      font-size: 20px; font-weight: 900;
+      cursor: pointer;
+    }
+    .sg-stepper strong { text-align: center; font-size: 18px; font-weight: 900; }
+
+    .sg-toplink { margin-bottom: var(--sg-space-5); }
+  </style>
+</head>
+<body>
+  <div class="app-shell" style="padding-bottom:48px;">
+
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Design system</p>
+        <h1>Style guide</h1>
+      </div>
+    </header>
+
+    <div class="sg-banner">
+      <div>
+        <p class="sg-banner-title">Throwaway page - here to agree the look, then delete</p>
+        <p class="sg-banner-sub">Open this on your desktop and your phone. Everything below uses the real app's dark theme plus the proposed shared spacing &amp; text sizes. React to what looks right; nothing here changes the real app yet.</p>
+      </div>
+    </div>
+
+    <p class="sg-toplink"><a class="lw-back" href="index.html" style="color:var(--accent);font-weight:800;text-decoration:none;">&larr; Back to the app</a></p>
+
+    <!-- 1. TYPOGRAPHY -->
+    <section class="sg-section">
+      <h2>1. Typography</h2>
+      <p class="sg-note">One ladder of text sizes used everywhere, instead of dozens of one-off sizes scattered through the app. Left column is the name we'd use in the code.</p>
+      <div class="sg-type-row"><code>title 34</code><div class="t-title">Ready when you are.</div></div>
+      <div class="sg-type-row"><code>big 28</code><div class="t-bigheading">Today's workout</div></div>
+      <div class="sg-type-row"><code>heading 20</code><div class="t-heading">Gym Bench</div></div>
+      <div class="sg-type-row"><code>label 12</code><div class="t-label">Personal logbook</div></div>
+      <div class="sg-type-row"><code>body 15</code><div class="t-body">Bench press, lat pulldowns and dumbbell curls. Tap an exercise to log your sets as you go.</div></div>
+      <div class="sg-type-row"><code>muted 15</code><div class="t-muted">Last done 3 days ago - 3 of 4 exercises completed.</div></div>
+      <div class="sg-type-row"><code>number 48</code><div class="t-number">245</div></div>
+    </section>
+
+    <!-- 2. SPACING -->
+    <section class="sg-section">
+      <h2>2. Spacing rhythm</h2>
+      <p class="sg-note">Every gap and padding snaps to one of these seven steps. This is the single biggest fix for the "rough" feel - right now spacing is hand-picked per screen, so nothing lines up between tabs.</p>
+      <div class="sg-space-row"><code>4 (xs)</code><div class="sg-space-bar" style="width:4px;"></div></div>
+      <div class="sg-space-row"><code>8 (sm)</code><div class="sg-space-bar" style="width:8px;"></div></div>
+      <div class="sg-space-row"><code>12 (md)</code><div class="sg-space-bar" style="width:12px;"></div></div>
+      <div class="sg-space-row"><code>16 (lg)</code><div class="sg-space-bar" style="width:16px;"></div></div>
+      <div class="sg-space-row"><code>24 (xl)</code><div class="sg-space-bar" style="width:24px;"></div></div>
+      <div class="sg-space-row"><code>32 (2xl)</code><div class="sg-space-bar" style="width:32px;"></div></div>
+      <div class="sg-space-row"><code>48 (3xl)</code><div class="sg-space-bar" style="width:48px;"></div></div>
+    </section>
+
+    <!-- 3. ACCENT -->
+    <section class="sg-section">
+      <h2>3. Accent shade</h2>
+      <p class="sg-note">The single bright colour used for highlights and primary buttons. Compare the three on a real button and pick the one you want as the final accent. (Middle is the current app colour.)</p>
+      <div class="sg-grid2">
+        <div class="sg-accent-card">
+          <div class="sg-accent-chip" style="background:#a8e90c;"></div>
+          <p class="sg-accent-name">A - Deeper</p>
+          <p class="sg-accent-hex">#a8e90c</p>
+          <div style="height:12px;"></div>
+          <button style="background:#a8e90c;">Start workout</button>
+        </div>
+        <div class="sg-accent-card">
+          <div class="sg-accent-chip" style="background:#b7ff35;"></div>
+          <p class="sg-accent-name">B - Current</p>
+          <p class="sg-accent-hex">#b7ff35</p>
+          <div style="height:12px;"></div>
+          <button style="background:#b7ff35;">Start workout</button>
+        </div>
+        <div class="sg-accent-card">
+          <div class="sg-accent-chip" style="background:#c8ff66;"></div>
+          <p class="sg-accent-name">C - Softer</p>
+          <p class="sg-accent-hex">#c8ff66</p>
+          <div style="height:12px;"></div>
+          <button style="background:#c8ff66;">Start workout</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. BUTTONS -->
+    <section class="sg-section">
+      <h2>4. Buttons</h2>
+      <p class="sg-note">The button styles already in the app, gathered in one place. These reuse the real app classes.</p>
+      <div class="sg-stack">
+        <div>
+          <div class="sg-row">
+            <button class="primary-button" type="button">Primary action</button>
+            <button class="quiet-button" type="button">Quiet action</button>
+            <button class="primary-button small-button" type="button">Small primary</button>
+            <button class="quiet-button small-button" type="button">Small quiet</button>
+          </div>
+          <span class="sg-cap">Primary / quiet / small</span>
+        </div>
+        <div>
+          <div class="sg-row">
+            <button class="primary-button" type="button" disabled>Primary disabled</button>
+            <button class="quiet-button" type="button" disabled>Quiet disabled</button>
+          </div>
+          <span class="sg-cap">Disabled states</span>
+        </div>
+        <div>
+          <button class="primary-button today-start-button" type="button" style="max-width:420px;">Start workout</button>
+          <span class="sg-cap">Full-width primary (used on Today / live workout)</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. FORM CONTROLS -->
+    <section class="sg-section">
+      <h2>5. Form controls</h2>
+      <p class="sg-note">Inputs, the filter chips, the type toggle, and a stepper - the things you tap and type into.</p>
+      <div class="sg-grid2">
+        <div>
+          <label for="sg-input">Text input</label>
+          <input id="sg-input" type="text" placeholder="Example: Push day" autocomplete="off">
+          <span class="sg-cap">Text input</span>
+        </div>
+        <div>
+          <label for="sg-select">Select</label>
+          <select id="sg-select">
+            <option>Choose from the starter library</option>
+            <option>Bench press</option>
+            <option>Lat pulldown</option>
+          </select>
+          <span class="sg-cap">Dropdown / select</span>
+        </div>
+      </div>
+
+      <div style="margin-top:16px;">
+        <label for="sg-textarea">Notes</label>
+        <textarea id="sg-textarea" placeholder="How did it feel? Score, who you played, anything worth noting."></textarea>
+        <span class="sg-cap">Text area</span>
+      </div>
+
+      <div style="margin-top:16px;">
+        <div class="filter-strip" aria-label="Example filters">
+          <button class="filter-chip is-active" type="button">All</button>
+          <button class="filter-chip" type="button">Home</button>
+          <button class="filter-chip" type="button">Gym</button>
+          <button class="filter-chip" type="button">No equipment</button>
+          <button class="filter-chip" type="button">Dumbbells</button>
+          <button class="filter-chip" type="button">Cardio</button>
+        </div>
+        <span class="sg-cap">Filter chips (active = lime)</span>
+      </div>
+
+      <div style="margin-top:16px;">
+        <div class="type-toggle" role="group" aria-label="Example type">
+          <button type="button" class="type-option is-active">Strength</button>
+          <button type="button" class="type-option">Cardio</button>
+          <button type="button" class="type-option">Timed hold</button>
+          <button type="button" class="type-option">Sport</button>
+        </div>
+        <span class="sg-cap">Type toggle group</span>
+      </div>
+
+      <div style="margin-top:16px;">
+        <div class="sg-stepper">
+          <button type="button">-</button>
+          <strong>40</strong>
+          <button type="button">+</button>
+        </div>
+        <span class="sg-cap">Plus / minus stepper</span>
+      </div>
+    </section>
+
+    <!-- 6. CARDS, PANELS, LIST ROWS -->
+    <section class="sg-section">
+      <h2>6. Cards &amp; rows</h2>
+      <p class="sg-note">The boxes content sits inside: an inner card, a numbered list row (like Today's preview), and a stat block.</p>
+      <div class="sg-stack">
+        <div class="preview-card">
+          <p class="eyebrow">Inner card</p>
+          <h3 style="margin-top:6px;">Gym Bench</h3>
+          <p style="margin:6px 0 0;">A panel-within-a-panel for grouping related details.</p>
+        </div>
+
+        <div class="sg-listrow">
+          <span class="sg-listrow-num">1</span>
+          <div class="sg-listrow-main">
+            <p class="sg-listrow-name">Bench press</p>
+            <p class="sg-listrow-meta">3 &times; 8 &middot; 135 lb</p>
+          </div>
+          <span class="today-pv-tag" style="font-size:10px;font-weight:800;color:var(--accent);background:rgba(183,255,53,0.1);border:1px solid rgba(183,255,53,0.4);border-radius:999px;padding:3px 9px;">STRENGTH</span>
+        </div>
+
+        <div class="quick-stats" style="margin-top:0;">
+          <div>
+            <span class="stat-number">5</span>
+            <span class="stat-label">This week</span>
+          </div>
+          <div>
+            <span class="stat-number">12</span>
+            <span class="stat-label">Week streak</span>
+          </div>
+          <div>
+            <span class="stat-number">183</span>
+            <span class="stat-label">Body weight</span>
+          </div>
+        </div>
+        <span class="sg-cap">Stat blocks (Progress tab)</span>
+      </div>
+    </section>
+
+    <!-- 7. BADGES / PILLS / TAGS -->
+    <section class="sg-section">
+      <h2>7. Badges, pills &amp; tags</h2>
+      <p class="sg-note">Small status markers used across the app.</p>
+      <div class="sg-stack">
+        <div>
+          <div class="sg-row">
+            <span class="connection-badge good">Synced</span>
+            <span class="connection-badge warn">Pending</span>
+            <span class="connection-badge">Local only</span>
+          </div>
+          <span class="sg-cap">Status pills</span>
+        </div>
+        <div>
+          <div class="sg-row">
+            <span class="library-count">12 exercises</span>
+            <span class="workout-card-status good">Done</span>
+            <span class="workout-card-status">Planned</span>
+          </div>
+          <span class="sg-cap">Count &amp; state pills</span>
+        </div>
+        <div>
+          <div class="tag-row">
+            <span class="exercise-tag">Home</span>
+            <span class="exercise-tag">Dumbbells</span>
+            <span class="exercise-tag">Strength</span>
+            <span class="exercise-tag">Custom</span>
+          </div>
+          <span class="sg-cap">Exercise tags</span>
+        </div>
+      </div>
+    </section>
+
+    <p style="text-align:center;color:var(--dim);font-size:13px;margin:8px 0 0;">End of style guide - throwaway page, safe to delete.</p>
+
+  </div>
+</body>
+</html>
