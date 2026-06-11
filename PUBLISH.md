@@ -16,7 +16,11 @@ GitHub Pages is expected to deploy from branch `main` and folder `/root`.
 After Daniel approves a session's app changes, commit and push from this folder:
 
 1. Check `git status`.
-2. Commit the intended app files only.
+2. Commit the intended app files only. **Include `assets/icons/` when the
+   exercise library changed** — the glyphs and reference photos must be committed
+   for the Library screen and "How to do it" photos to load on the live site.
+   (This folder is a synced copy; see the README. It's ~6 MB of public-domain
+   photos, which is fine for GitHub Pages.)
 3. Push to `origin main`.
 4. Wait a minute or two, then open:
    `https://dml0008.github.io/training-book/`

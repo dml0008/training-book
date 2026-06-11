@@ -11,6 +11,11 @@ It is intentionally simple static web files so GitHub Pages can host it:
 - `manifest.webmanifest` - install information for phone/desktop
 - `sw.js` - small offline helper for app files
 - `icons/icon.svg` - temporary home-screen icon
+- `assets/icons/` - the exercise library's shared line glyphs and start/finish
+  reference photos used by the Library screen and the "How to do it" sheet. This
+  is a **published copy**; the source of truth is the repo-root `assets/icons/`
+  folder, synced in by its `node sync-to-app.mjs` script. Don't hand-edit files
+  here - edit the source and re-run the sync. See `../../assets/icons/README.md`.
 
 Step 3 added a temporary visible Dropbox save/load test on the Today screen. It writes the real app data file, `/workout-data.json`, inside Daniel's Dropbox app folder for the Dropbox app currently named "Daniel Workout Sync Proof" and keeps a local browser backup.
 

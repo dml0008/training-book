@@ -1,0 +1,907 @@
+{
+  "_meta": {
+    "description": "Mainstream exercise shortlist for the app. Linework icon per exercise (assets/icons/{slug}.svg); reference photos resolved from Free Exercise DB.",
+    "dbLicense": "Unlicense (public domain)",
+    "iconStatusLegend": "icon.glyph = shared line glyph; multiple exercises may share one. Swap per-exercise later if desired.",
+    "count": 53,
+    "photoSource": "Free Exercise DB (Unlicense / public domain), copied locally",
+    "iconSource": "Tabler Icons (MIT) + Lucide biceps-flexed (ISC). Clean line glyphs, mapped by movement/equipment; reused across similar exercises."
+  },
+  "exercises": [
+    {
+      "name": "Barbell Bench Press",
+      "slug": "barbell-bench-press",
+      "group": "chest",
+      "equipment": "barbell",
+      "primaryMuscle": "chest",
+      "icon": {
+        "glyph": "barbell",
+        "file": "assets/icons/glyphs/barbell.svg",
+        "source": "tabler"
+      },
+      "dbId": "Barbell_Bench_Press_-_Medium_Grip",
+      "photos": {
+        "start": "assets/icons/photos/barbell-bench-press/start.jpg",
+        "finish": "assets/icons/photos/barbell-bench-press/finish.jpg"
+      }
+    },
+    {
+      "name": "Incline Bench Press",
+      "slug": "incline-bench-press",
+      "group": "chest",
+      "equipment": "barbell",
+      "primaryMuscle": "chest",
+      "icon": {
+        "glyph": "barbell",
+        "file": "assets/icons/glyphs/barbell.svg",
+        "source": "tabler"
+      },
+      "dbId": "Barbell_Incline_Bench_Press_-_Medium_Grip",
+      "photos": {
+        "start": "assets/icons/photos/incline-bench-press/start.jpg",
+        "finish": "assets/icons/photos/incline-bench-press/finish.jpg"
+      }
+    },
+    {
+      "name": "Dumbbell Bench Press",
+      "slug": "dumbbell-bench-press",
+      "group": "chest",
+      "equipment": "dumbbell",
+      "primaryMuscle": "chest",
+      "icon": {
+        "glyph": "dumbbell",
+        "file": "assets/icons/glyphs/dumbbell.svg",
+        "source": "tabler"
+      },
+      "dbId": "Dumbbell_Bench_Press",
+      "photos": {
+        "start": "assets/icons/photos/dumbbell-bench-press/start.jpg",
+        "finish": "assets/icons/photos/dumbbell-bench-press/finish.jpg"
+      }
+    },
+    {
+      "name": "Dumbbell Fly",
+      "slug": "dumbbell-fly",
+      "group": "chest",
+      "equipment": "dumbbell",
+      "primaryMuscle": "chest",
+      "icon": {
+        "glyph": "dumbbell",
+        "file": "assets/icons/glyphs/dumbbell.svg",
+        "source": "tabler"
+      },
+      "dbId": "Dumbbell_Flyes",
+      "photos": {
+        "start": "assets/icons/photos/dumbbell-fly/start.jpg",
+        "finish": "assets/icons/photos/dumbbell-fly/finish.jpg"
+      }
+    },
+    {
+      "name": "Push-Up",
+      "slug": "push-up",
+      "group": "chest",
+      "equipment": "body only",
+      "primaryMuscle": "chest",
+      "icon": {
+        "glyph": "gymnastics",
+        "file": "assets/icons/glyphs/gymnastics.svg",
+        "source": "tabler"
+      },
+      "dbId": "Pushups",
+      "photos": {
+        "start": "assets/icons/photos/push-up/start.jpg",
+        "finish": "assets/icons/photos/push-up/finish.jpg"
+      }
+    },
+    {
+      "name": "Chest Dip",
+      "slug": "chest-dip",
+      "group": "chest",
+      "equipment": "body only",
+      "primaryMuscle": "chest",
+      "icon": {
+        "glyph": "gymnastics",
+        "file": "assets/icons/glyphs/gymnastics.svg",
+        "source": "tabler"
+      },
+      "dbId": "Dips_-_Chest_Version",
+      "photos": {
+        "start": "assets/icons/photos/chest-dip/start.jpg",
+        "finish": "assets/icons/photos/chest-dip/finish.jpg"
+      }
+    },
+    {
+      "name": "Cable Crossover",
+      "slug": "cable-crossover",
+      "group": "chest",
+      "equipment": "cable",
+      "primaryMuscle": "chest",
+      "icon": {
+        "glyph": "weight",
+        "file": "assets/icons/glyphs/weight.svg",
+        "source": "tabler"
+      },
+      "dbId": "Cable_Crossover",
+      "photos": {
+        "start": "assets/icons/photos/cable-crossover/start.jpg",
+        "finish": "assets/icons/photos/cable-crossover/finish.jpg"
+      }
+    },
+    {
+      "name": "Deadlift",
+      "slug": "deadlift",
+      "group": "back",
+      "equipment": "barbell",
+      "primaryMuscle": "lower back",
+      "icon": {
+        "glyph": "barbell",
+        "file": "assets/icons/glyphs/barbell.svg",
+        "source": "tabler"
+      },
+      "dbId": "Barbell_Deadlift",
+      "photos": {
+        "start": "assets/icons/photos/deadlift/start.jpg",
+        "finish": "assets/icons/photos/deadlift/finish.jpg"
+      }
+    },
+    {
+      "name": "Romanian Deadlift",
+      "slug": "romanian-deadlift",
+      "group": "back",
+      "equipment": "barbell",
+      "primaryMuscle": "hamstrings",
+      "icon": {
+        "glyph": "barbell",
+        "file": "assets/icons/glyphs/barbell.svg",
+        "source": "tabler"
+      },
+      "dbId": "Romanian_Deadlift",
+      "photos": {
+        "start": "assets/icons/photos/romanian-deadlift/start.jpg",
+        "finish": "assets/icons/photos/romanian-deadlift/finish.jpg"
+      }
+    },
+    {
+      "name": "Pull-Up",
+      "slug": "pull-up",
+      "group": "back",
+      "equipment": "body only",
+      "primaryMuscle": "lats",
+      "icon": {
+        "glyph": "gymnastics",
+        "file": "assets/icons/glyphs/gymnastics.svg",
+        "source": "tabler"
+      },
+      "dbId": "Pullups",
+      "photos": {
+        "start": "assets/icons/photos/pull-up/start.jpg",
+        "finish": "assets/icons/photos/pull-up/finish.jpg"
+      }
+    },
+    {
+      "name": "Chin-Up",
+      "slug": "chin-up",
+      "group": "back",
+      "equipment": "body only",
+      "primaryMuscle": "lats",
+      "icon": {
+        "glyph": "gymnastics",
+        "file": "assets/icons/glyphs/gymnastics.svg",
+        "source": "tabler"
+      },
+      "dbId": "Chin-Up",
+      "photos": {
+        "start": "assets/icons/photos/chin-up/start.jpg",
+        "finish": "assets/icons/photos/chin-up/finish.jpg"
+      }
+    },
+    {
+      "name": "Lat Pulldown",
+      "slug": "lat-pulldown",
+      "group": "back",
+      "equipment": "cable",
+      "primaryMuscle": "lats",
+      "icon": {
+        "glyph": "weight",
+        "file": "assets/icons/glyphs/weight.svg",
+        "source": "tabler"
+      },
+      "dbId": "Wide-Grip_Lat_Pulldown",
+      "photos": {
+        "start": "assets/icons/photos/lat-pulldown/start.jpg",
+        "finish": "assets/icons/photos/lat-pulldown/finish.jpg"
+      }
+    },
+    {
+      "name": "Bent-Over Barbell Row",
+      "slug": "bent-over-row",
+      "group": "back",
+      "equipment": "barbell",
+      "primaryMuscle": "middle back",
+      "icon": {
+        "glyph": "barbell",
+        "file": "assets/icons/glyphs/barbell.svg",
+        "source": "tabler"
+      },
+      "dbId": "Bent_Over_Barbell_Row",
+      "photos": {
+        "start": "assets/icons/photos/bent-over-row/start.jpg",
+        "finish": "assets/icons/photos/bent-over-row/finish.jpg"
+      }
+    },
+    {
+      "name": "Seated Cable Row",
+      "slug": "seated-cable-row",
+      "group": "back",
+      "equipment": "cable",
+      "primaryMuscle": "middle back",
+      "icon": {
+        "glyph": "weight",
+        "file": "assets/icons/glyphs/weight.svg",
+        "source": "tabler"
+      },
+      "dbId": "Seated_Cable_Rows",
+      "photos": {
+        "start": "assets/icons/photos/seated-cable-row/start.jpg",
+        "finish": "assets/icons/photos/seated-cable-row/finish.jpg"
+      }
+    },
+    {
+      "name": "One-Arm Dumbbell Row",
+      "slug": "one-arm-dumbbell-row",
+      "group": "back",
+      "equipment": "dumbbell",
+      "primaryMuscle": "middle back",
+      "icon": {
+        "glyph": "dumbbell",
+        "file": "assets/icons/glyphs/dumbbell.svg",
+        "source": "tabler"
+      },
+      "dbId": "One-Arm_Dumbbell_Row",
+      "photos": {
+        "start": "assets/icons/photos/one-arm-dumbbell-row/start.jpg",
+        "finish": "assets/icons/photos/one-arm-dumbbell-row/finish.jpg"
+      }
+    },
+    {
+      "name": "Face Pull",
+      "slug": "face-pull",
+      "group": "back",
+      "equipment": "cable",
+      "primaryMuscle": "shoulders",
+      "icon": {
+        "glyph": "weight",
+        "file": "assets/icons/glyphs/weight.svg",
+        "source": "tabler"
+      },
+      "dbId": "Face_Pull",
+      "photos": {
+        "start": "assets/icons/photos/face-pull/start.jpg",
+        "finish": "assets/icons/photos/face-pull/finish.jpg"
+      }
+    },
+    {
+      "name": "Overhead Barbell Press",
+      "slug": "overhead-press",
+      "group": "shoulders",
+      "equipment": "barbell",
+      "primaryMuscle": "shoulders",
+      "icon": {
+        "glyph": "barbell",
+        "file": "assets/icons/glyphs/barbell.svg",
+        "source": "tabler"
+      },
+      "dbId": "Standing_Military_Press",
+      "photos": {
+        "start": "assets/icons/photos/overhead-press/start.jpg",
+        "finish": "assets/icons/photos/overhead-press/finish.jpg"
+      }
+    },
+    {
+      "name": "Dumbbell Shoulder Press",
+      "slug": "dumbbell-shoulder-press",
+      "group": "shoulders",
+      "equipment": "dumbbell",
+      "primaryMuscle": "shoulders",
+      "icon": {
+        "glyph": "dumbbell",
+        "file": "assets/icons/glyphs/dumbbell.svg",
+        "source": "tabler"
+      },
+      "dbId": "Dumbbell_Shoulder_Press",
+      "photos": {
+        "start": "assets/icons/photos/dumbbell-shoulder-press/start.jpg",
+        "finish": "assets/icons/photos/dumbbell-shoulder-press/finish.jpg"
+      }
+    },
+    {
+      "name": "Lateral Raise",
+      "slug": "lateral-raise",
+      "group": "shoulders",
+      "equipment": "dumbbell",
+      "primaryMuscle": "shoulders",
+      "icon": {
+        "glyph": "dumbbell",
+        "file": "assets/icons/glyphs/dumbbell.svg",
+        "source": "tabler"
+      },
+      "dbId": "Side_Lateral_Raise",
+      "photos": {
+        "start": "assets/icons/photos/lateral-raise/start.jpg",
+        "finish": "assets/icons/photos/lateral-raise/finish.jpg"
+      }
+    },
+    {
+      "name": "Front Raise",
+      "slug": "front-raise",
+      "group": "shoulders",
+      "equipment": "dumbbell",
+      "primaryMuscle": "shoulders",
+      "icon": {
+        "glyph": "dumbbell",
+        "file": "assets/icons/glyphs/dumbbell.svg",
+        "source": "tabler"
+      },
+      "dbId": "Front_Dumbbell_Raise",
+      "photos": {
+        "start": "assets/icons/photos/front-raise/start.jpg",
+        "finish": "assets/icons/photos/front-raise/finish.jpg"
+      }
+    },
+    {
+      "name": "Rear Delt Fly",
+      "slug": "rear-delt-fly",
+      "group": "shoulders",
+      "equipment": "dumbbell",
+      "primaryMuscle": "shoulders",
+      "icon": {
+        "glyph": "dumbbell",
+        "file": "assets/icons/glyphs/dumbbell.svg",
+        "source": "tabler"
+      },
+      "dbId": "Cable_Rear_Delt_Fly",
+      "photos": {
+        "start": "assets/icons/photos/rear-delt-fly/start.jpg",
+        "finish": "assets/icons/photos/rear-delt-fly/finish.jpg"
+      }
+    },
+    {
+      "name": "Arnold Press",
+      "slug": "arnold-press",
+      "group": "shoulders",
+      "equipment": "dumbbell",
+      "primaryMuscle": "shoulders",
+      "icon": {
+        "glyph": "dumbbell",
+        "file": "assets/icons/glyphs/dumbbell.svg",
+        "source": "tabler"
+      },
+      "dbId": "Arnold_Dumbbell_Press",
+      "photos": {
+        "start": "assets/icons/photos/arnold-press/start.jpg",
+        "finish": "assets/icons/photos/arnold-press/finish.jpg"
+      }
+    },
+    {
+      "name": "Shrug",
+      "slug": "shrug",
+      "group": "shoulders",
+      "equipment": "barbell",
+      "primaryMuscle": "traps",
+      "icon": {
+        "glyph": "barbell",
+        "file": "assets/icons/glyphs/barbell.svg",
+        "source": "tabler"
+      },
+      "dbId": "Barbell_Shrug",
+      "photos": {
+        "start": "assets/icons/photos/shrug/start.jpg",
+        "finish": "assets/icons/photos/shrug/finish.jpg"
+      }
+    },
+    {
+      "name": "Barbell Back Squat",
+      "slug": "back-squat",
+      "group": "legs",
+      "equipment": "barbell",
+      "primaryMuscle": "quadriceps",
+      "icon": {
+        "glyph": "barbell",
+        "file": "assets/icons/glyphs/barbell.svg",
+        "source": "tabler"
+      },
+      "dbId": "Barbell_Full_Squat",
+      "photos": {
+        "start": "assets/icons/photos/back-squat/start.jpg",
+        "finish": "assets/icons/photos/back-squat/finish.jpg"
+      }
+    },
+    {
+      "name": "Front Squat",
+      "slug": "front-squat",
+      "group": "legs",
+      "equipment": "barbell",
+      "primaryMuscle": "quadriceps",
+      "icon": {
+        "glyph": "barbell",
+        "file": "assets/icons/glyphs/barbell.svg",
+        "source": "tabler"
+      },
+      "dbId": "Front_Barbell_Squat",
+      "photos": {
+        "start": "assets/icons/photos/front-squat/start.jpg",
+        "finish": "assets/icons/photos/front-squat/finish.jpg"
+      }
+    },
+    {
+      "name": "Goblet Squat",
+      "slug": "goblet-squat",
+      "group": "legs",
+      "equipment": "dumbbell",
+      "primaryMuscle": "quadriceps",
+      "icon": {
+        "glyph": "dumbbell",
+        "file": "assets/icons/glyphs/dumbbell.svg",
+        "source": "tabler"
+      },
+      "dbId": "Goblet_Squat",
+      "photos": {
+        "start": "assets/icons/photos/goblet-squat/start.jpg",
+        "finish": "assets/icons/photos/goblet-squat/finish.jpg"
+      }
+    },
+    {
+      "name": "Leg Press",
+      "slug": "leg-press",
+      "group": "legs",
+      "equipment": "machine",
+      "primaryMuscle": "quadriceps",
+      "icon": {
+        "glyph": "weight",
+        "file": "assets/icons/glyphs/weight.svg",
+        "source": "tabler"
+      },
+      "dbId": "Leg_Press",
+      "photos": {
+        "start": "assets/icons/photos/leg-press/start.jpg",
+        "finish": "assets/icons/photos/leg-press/finish.jpg"
+      }
+    },
+    {
+      "name": "Lunge",
+      "slug": "lunge",
+      "group": "legs",
+      "equipment": "dumbbell",
+      "primaryMuscle": "quadriceps",
+      "icon": {
+        "glyph": "walk",
+        "file": "assets/icons/glyphs/walk.svg",
+        "source": "tabler"
+      },
+      "dbId": "Dumbbell_Lunges",
+      "photos": {
+        "start": "assets/icons/photos/lunge/start.jpg",
+        "finish": "assets/icons/photos/lunge/finish.jpg"
+      }
+    },
+    {
+      "name": "Bulgarian Split Squat",
+      "slug": "bulgarian-split-squat",
+      "group": "legs",
+      "equipment": "dumbbell",
+      "primaryMuscle": "quadriceps",
+      "icon": {
+        "glyph": "walk",
+        "file": "assets/icons/glyphs/walk.svg",
+        "source": "tabler"
+      },
+      "dbId": "Split_Squat_with_Dumbbells",
+      "photos": {
+        "start": "assets/icons/photos/bulgarian-split-squat/start.jpg",
+        "finish": "assets/icons/photos/bulgarian-split-squat/finish.jpg"
+      }
+    },
+    {
+      "name": "Leg Extension",
+      "slug": "leg-extension",
+      "group": "legs",
+      "equipment": "machine",
+      "primaryMuscle": "quadriceps",
+      "icon": {
+        "glyph": "weight",
+        "file": "assets/icons/glyphs/weight.svg",
+        "source": "tabler"
+      },
+      "dbId": "Leg_Extensions",
+      "photos": {
+        "start": "assets/icons/photos/leg-extension/start.jpg",
+        "finish": "assets/icons/photos/leg-extension/finish.jpg"
+      }
+    },
+    {
+      "name": "Leg Curl",
+      "slug": "leg-curl",
+      "group": "legs",
+      "equipment": "machine",
+      "primaryMuscle": "hamstrings",
+      "icon": {
+        "glyph": "weight",
+        "file": "assets/icons/glyphs/weight.svg",
+        "source": "tabler"
+      },
+      "dbId": "Lying_Leg_Curls",
+      "photos": {
+        "start": "assets/icons/photos/leg-curl/start.jpg",
+        "finish": "assets/icons/photos/leg-curl/finish.jpg"
+      }
+    },
+    {
+      "name": "Calf Raise",
+      "slug": "calf-raise",
+      "group": "legs",
+      "equipment": "machine",
+      "primaryMuscle": "calves",
+      "icon": {
+        "glyph": "weight",
+        "file": "assets/icons/glyphs/weight.svg",
+        "source": "tabler"
+      },
+      "dbId": "Standing_Calf_Raises",
+      "photos": {
+        "start": "assets/icons/photos/calf-raise/start.jpg",
+        "finish": "assets/icons/photos/calf-raise/finish.jpg"
+      }
+    },
+    {
+      "name": "Hip Thrust",
+      "slug": "hip-thrust",
+      "group": "legs",
+      "equipment": "barbell",
+      "primaryMuscle": "glutes",
+      "icon": {
+        "glyph": "barbell",
+        "file": "assets/icons/glyphs/barbell.svg",
+        "source": "tabler"
+      },
+      "dbId": "Barbell_Hip_Thrust",
+      "photos": {
+        "start": "assets/icons/photos/hip-thrust/start.jpg",
+        "finish": "assets/icons/photos/hip-thrust/finish.jpg"
+      }
+    },
+    {
+      "name": "Barbell Curl",
+      "slug": "barbell-curl",
+      "group": "arms",
+      "equipment": "barbell",
+      "primaryMuscle": "biceps",
+      "icon": {
+        "glyph": "biceps-flexed",
+        "file": "assets/icons/glyphs/biceps-flexed.svg",
+        "source": "lucide"
+      },
+      "dbId": "Barbell_Curl",
+      "photos": {
+        "start": "assets/icons/photos/barbell-curl/start.jpg",
+        "finish": "assets/icons/photos/barbell-curl/finish.jpg"
+      }
+    },
+    {
+      "name": "Dumbbell Curl",
+      "slug": "dumbbell-curl",
+      "group": "arms",
+      "equipment": "dumbbell",
+      "primaryMuscle": "biceps",
+      "icon": {
+        "glyph": "biceps-flexed",
+        "file": "assets/icons/glyphs/biceps-flexed.svg",
+        "source": "lucide"
+      },
+      "dbId": "Dumbbell_Bicep_Curl",
+      "photos": {
+        "start": "assets/icons/photos/dumbbell-curl/start.jpg",
+        "finish": "assets/icons/photos/dumbbell-curl/finish.jpg"
+      }
+    },
+    {
+      "name": "Hammer Curl",
+      "slug": "hammer-curl",
+      "group": "arms",
+      "equipment": "dumbbell",
+      "primaryMuscle": "biceps",
+      "icon": {
+        "glyph": "biceps-flexed",
+        "file": "assets/icons/glyphs/biceps-flexed.svg",
+        "source": "lucide"
+      },
+      "dbId": "Hammer_Curls",
+      "photos": {
+        "start": "assets/icons/photos/hammer-curl/start.jpg",
+        "finish": "assets/icons/photos/hammer-curl/finish.jpg"
+      }
+    },
+    {
+      "name": "Preacher Curl",
+      "slug": "preacher-curl",
+      "group": "arms",
+      "equipment": "barbell",
+      "primaryMuscle": "biceps",
+      "icon": {
+        "glyph": "biceps-flexed",
+        "file": "assets/icons/glyphs/biceps-flexed.svg",
+        "source": "lucide"
+      },
+      "dbId": "Preacher_Curl",
+      "photos": {
+        "start": "assets/icons/photos/preacher-curl/start.jpg",
+        "finish": "assets/icons/photos/preacher-curl/finish.jpg"
+      }
+    },
+    {
+      "name": "Triceps Pushdown",
+      "slug": "triceps-pushdown",
+      "group": "arms",
+      "equipment": "cable",
+      "primaryMuscle": "triceps",
+      "icon": {
+        "glyph": "weight",
+        "file": "assets/icons/glyphs/weight.svg",
+        "source": "tabler"
+      },
+      "dbId": "Triceps_Pushdown",
+      "photos": {
+        "start": "assets/icons/photos/triceps-pushdown/start.jpg",
+        "finish": "assets/icons/photos/triceps-pushdown/finish.jpg"
+      }
+    },
+    {
+      "name": "Skullcrusher",
+      "slug": "skullcrusher",
+      "group": "arms",
+      "equipment": "barbell",
+      "primaryMuscle": "triceps",
+      "icon": {
+        "glyph": "barbell",
+        "file": "assets/icons/glyphs/barbell.svg",
+        "source": "tabler"
+      },
+      "dbId": "EZ-Bar_Skullcrusher",
+      "photos": {
+        "start": "assets/icons/photos/skullcrusher/start.jpg",
+        "finish": "assets/icons/photos/skullcrusher/finish.jpg"
+      }
+    },
+    {
+      "name": "Overhead Triceps Extension",
+      "slug": "overhead-triceps-extension",
+      "group": "arms",
+      "equipment": "dumbbell",
+      "primaryMuscle": "triceps",
+      "icon": {
+        "glyph": "dumbbell",
+        "file": "assets/icons/glyphs/dumbbell.svg",
+        "source": "tabler"
+      },
+      "dbId": "Cable_Rope_Overhead_Triceps_Extension",
+      "photos": {
+        "start": "assets/icons/photos/overhead-triceps-extension/start.jpg",
+        "finish": "assets/icons/photos/overhead-triceps-extension/finish.jpg"
+      }
+    },
+    {
+      "name": "Close-Grip Bench Press",
+      "slug": "close-grip-bench-press",
+      "group": "arms",
+      "equipment": "barbell",
+      "primaryMuscle": "triceps",
+      "icon": {
+        "glyph": "barbell",
+        "file": "assets/icons/glyphs/barbell.svg",
+        "source": "tabler"
+      },
+      "dbId": "Close-Grip_Barbell_Bench_Press",
+      "photos": {
+        "start": "assets/icons/photos/close-grip-bench-press/start.jpg",
+        "finish": "assets/icons/photos/close-grip-bench-press/finish.jpg"
+      }
+    },
+    {
+      "name": "Plank",
+      "slug": "plank",
+      "group": "core",
+      "equipment": "body only",
+      "primaryMuscle": "abdominals",
+      "icon": {
+        "glyph": "yoga",
+        "file": "assets/icons/glyphs/yoga.svg",
+        "source": "tabler"
+      },
+      "dbId": "Plank",
+      "photos": {
+        "start": "assets/icons/photos/plank/start.jpg",
+        "finish": "assets/icons/photos/plank/finish.jpg"
+      }
+    },
+    {
+      "name": "Crunch",
+      "slug": "crunch",
+      "group": "core",
+      "equipment": "body only",
+      "primaryMuscle": "abdominals",
+      "icon": {
+        "glyph": "stretching",
+        "file": "assets/icons/glyphs/stretching.svg",
+        "source": "tabler"
+      },
+      "dbId": "Crunches",
+      "photos": {
+        "start": "assets/icons/photos/crunch/start.jpg",
+        "finish": "assets/icons/photos/crunch/finish.jpg"
+      }
+    },
+    {
+      "name": "Sit-Up",
+      "slug": "sit-up",
+      "group": "core",
+      "equipment": "body only",
+      "primaryMuscle": "abdominals",
+      "icon": {
+        "glyph": "stretching",
+        "file": "assets/icons/glyphs/stretching.svg",
+        "source": "tabler"
+      },
+      "dbId": "Sit-Up",
+      "photos": {
+        "start": "assets/icons/photos/sit-up/start.jpg",
+        "finish": "assets/icons/photos/sit-up/finish.jpg"
+      }
+    },
+    {
+      "name": "Hanging Leg Raise",
+      "slug": "hanging-leg-raise",
+      "group": "core",
+      "equipment": "body only",
+      "primaryMuscle": "abdominals",
+      "icon": {
+        "glyph": "gymnastics",
+        "file": "assets/icons/glyphs/gymnastics.svg",
+        "source": "tabler"
+      },
+      "dbId": "Hanging_Leg_Raise",
+      "photos": {
+        "start": "assets/icons/photos/hanging-leg-raise/start.jpg",
+        "finish": "assets/icons/photos/hanging-leg-raise/finish.jpg"
+      }
+    },
+    {
+      "name": "Russian Twist",
+      "slug": "russian-twist",
+      "group": "core",
+      "equipment": "body only",
+      "primaryMuscle": "abdominals",
+      "icon": {
+        "glyph": "stretching-2",
+        "file": "assets/icons/glyphs/stretching-2.svg",
+        "source": "tabler"
+      },
+      "dbId": "Russian_Twist",
+      "photos": {
+        "start": "assets/icons/photos/russian-twist/start.jpg",
+        "finish": "assets/icons/photos/russian-twist/finish.jpg"
+      }
+    },
+    {
+      "name": "Cable Crunch",
+      "slug": "cable-crunch",
+      "group": "core",
+      "equipment": "cable",
+      "primaryMuscle": "abdominals",
+      "icon": {
+        "glyph": "weight",
+        "file": "assets/icons/glyphs/weight.svg",
+        "source": "tabler"
+      },
+      "dbId": "Cable_Crunch",
+      "photos": {
+        "start": "assets/icons/photos/cable-crunch/start.jpg",
+        "finish": "assets/icons/photos/cable-crunch/finish.jpg"
+      }
+    },
+    {
+      "name": "Mountain Climber",
+      "slug": "mountain-climber",
+      "group": "core",
+      "equipment": "body only",
+      "primaryMuscle": "abdominals",
+      "icon": {
+        "glyph": "run",
+        "file": "assets/icons/glyphs/run.svg",
+        "source": "tabler"
+      },
+      "dbId": "Mountain_Climbers",
+      "photos": {
+        "start": "assets/icons/photos/mountain-climber/start.jpg",
+        "finish": "assets/icons/photos/mountain-climber/finish.jpg"
+      }
+    },
+    {
+      "name": "Burpee",
+      "slug": "burpee",
+      "group": "cardio",
+      "equipment": "body only",
+      "primaryMuscle": "full body",
+      "icon": {
+        "glyph": "run",
+        "file": "assets/icons/glyphs/run.svg",
+        "source": "tabler"
+      },
+      "dbId": null,
+      "photos": null
+    },
+    {
+      "name": "Kettlebell Swing",
+      "slug": "kettlebell-swing",
+      "group": "cardio",
+      "equipment": "kettlebell",
+      "primaryMuscle": "glutes",
+      "icon": {
+        "glyph": "dumbbell",
+        "file": "assets/icons/glyphs/dumbbell.svg",
+        "source": "tabler"
+      },
+      "dbId": "One-Arm_Kettlebell_Swings",
+      "photos": {
+        "start": "assets/icons/photos/kettlebell-swing/start.jpg",
+        "finish": "assets/icons/photos/kettlebell-swing/finish.jpg"
+      }
+    },
+    {
+      "name": "Jumping Jack",
+      "slug": "jumping-jack",
+      "group": "cardio",
+      "equipment": "body only",
+      "primaryMuscle": "full body",
+      "icon": {
+        "glyph": "jump-rope",
+        "file": "assets/icons/glyphs/jump-rope.svg",
+        "source": "tabler"
+      },
+      "dbId": "Star_Jump",
+      "photos": {
+        "start": "assets/icons/photos/jumping-jack/start.jpg",
+        "finish": "assets/icons/photos/jumping-jack/finish.jpg"
+      }
+    },
+    {
+      "name": "Box Jump",
+      "slug": "box-jump",
+      "group": "cardio",
+      "equipment": "body only",
+      "primaryMuscle": "quadriceps",
+      "icon": {
+        "glyph": "jump-rope",
+        "file": "assets/icons/glyphs/jump-rope.svg",
+        "source": "tabler"
+      },
+      "dbId": "Front_Box_Jump",
+      "photos": {
+        "start": "assets/icons/photos/box-jump/start.jpg",
+        "finish": "assets/icons/photos/box-jump/finish.jpg"
+      }
+    },
+    {
+      "name": "Soccer",
+      "slug": "soccer",
+      "group": "cardio",
+      "equipment": "body only",
+      "primaryMuscle": "full body",
+      "icon": {
+        "glyph": "soccer",
+        "file": "assets/icons/glyphs/soccer.svg",
+        "source": "tabler"
+      },
+      "dbId": null,
+      "photos": null
+    }
+  ]
+}

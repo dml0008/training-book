@@ -17,7 +17,8 @@ const STORAGE = {
   deviceId: "trainingBookDeviceId",
   activeTab: "trainingBookActiveTab",
   reviewReminderDismissed: "trainingBookReviewReminderDismissed",
-  soccerSeeded: "trainingBookSoccerSeeded"
+  soccerSeeded: "trainingBookSoccerSeeded",
+  libraryV2Seeded: "trainingBookLibraryV2Seeded"
 };
 
 const screens = Array.from(document.querySelectorAll(".screen"));
@@ -123,102 +124,641 @@ let exercises = getStarterExercises();
 function getStarterExercises() {
   return [
   {
-    id: "push-up",
-    name: "Push-up",
+    id: "barbell-bench-press",
+    name: "Barbell Bench Press",
     type: "strength",
-    area: "Chest + triceps",
-    icon: "pushup",
-    tags: ["home", "gym", "bodyweight"]
+    area: "Chest",
+    group: "chest",
+    equipment: "barbell",
+    primaryMuscle: "chest",
+    icon: "barbell",
+    photos: { start: "assets/icons/photos/barbell-bench-press/start.jpg", finish: "assets/icons/photos/barbell-bench-press/finish.jpg" },
+    tags: ["gym"]
+  },
+  {
+    id: "incline-bench-press",
+    name: "Incline Bench Press",
+    type: "strength",
+    area: "Chest",
+    group: "chest",
+    equipment: "barbell",
+    primaryMuscle: "chest",
+    icon: "barbell",
+    photos: { start: "assets/icons/photos/incline-bench-press/start.jpg", finish: "assets/icons/photos/incline-bench-press/finish.jpg" },
+    tags: ["gym"]
   },
   {
     id: "dumbbell-bench-press",
     name: "Dumbbell Bench Press",
     type: "strength",
     area: "Chest",
-    icon: "bench",
-    tags: ["home", "gym", "dumbbells"]
+    group: "chest",
+    equipment: "dumbbell",
+    primaryMuscle: "chest",
+    icon: "dumbbell",
+    photos: { start: "assets/icons/photos/dumbbell-bench-press/start.jpg", finish: "assets/icons/photos/dumbbell-bench-press/finish.jpg" },
+    tags: ["home","gym","dumbbells"]
   },
   {
-    id: "squat",
-    name: "Squat",
+    id: "dumbbell-fly",
+    name: "Dumbbell Fly",
     type: "strength",
-    area: "Legs",
-    icon: "squat",
-    tags: ["home", "gym", "bodyweight"]
+    area: "Chest",
+    group: "chest",
+    equipment: "dumbbell",
+    primaryMuscle: "chest",
+    icon: "dumbbell",
+    photos: { start: "assets/icons/photos/dumbbell-fly/start.jpg", finish: "assets/icons/photos/dumbbell-fly/finish.jpg" },
+    tags: ["home","gym","dumbbells"]
   },
   {
-    id: "goblet-squat",
-    name: "Goblet Squat",
+    id: "push-up",
+    name: "Push-Up",
     type: "strength",
-    area: "Legs",
-    icon: "goblet",
-    tags: ["home", "gym", "dumbbells"]
+    area: "Chest",
+    group: "chest",
+    equipment: "body only",
+    primaryMuscle: "chest",
+    icon: "gymnastics",
+    photos: { start: "assets/icons/photos/push-up/start.jpg", finish: "assets/icons/photos/push-up/finish.jpg" },
+    tags: ["home","gym","bodyweight"]
+  },
+  {
+    id: "chest-dip",
+    name: "Chest Dip",
+    type: "strength",
+    area: "Chest",
+    group: "chest",
+    equipment: "body only",
+    primaryMuscle: "chest",
+    icon: "gymnastics",
+    photos: { start: "assets/icons/photos/chest-dip/start.jpg", finish: "assets/icons/photos/chest-dip/finish.jpg" },
+    tags: ["home","gym","bodyweight"]
+  },
+  {
+    id: "cable-crossover",
+    name: "Cable Crossover",
+    type: "strength",
+    area: "Chest",
+    group: "chest",
+    equipment: "cable",
+    primaryMuscle: "chest",
+    icon: "weight",
+    photos: { start: "assets/icons/photos/cable-crossover/start.jpg", finish: "assets/icons/photos/cable-crossover/finish.jpg" },
+    tags: ["gym","machine"]
   },
   {
     id: "deadlift",
     name: "Deadlift",
     type: "strength",
-    area: "Back + legs",
-    icon: "deadlift",
-    tags: ["gym", "barbell"]
+    area: "Back",
+    group: "back",
+    equipment: "barbell",
+    primaryMuscle: "lower back",
+    icon: "barbell",
+    photos: { start: "assets/icons/photos/deadlift/start.jpg", finish: "assets/icons/photos/deadlift/finish.jpg" },
+    tags: ["gym"]
+  },
+  {
+    id: "romanian-deadlift",
+    name: "Romanian Deadlift",
+    type: "strength",
+    area: "Back",
+    group: "back",
+    equipment: "barbell",
+    primaryMuscle: "hamstrings",
+    icon: "barbell",
+    photos: { start: "assets/icons/photos/romanian-deadlift/start.jpg", finish: "assets/icons/photos/romanian-deadlift/finish.jpg" },
+    tags: ["gym"]
+  },
+  {
+    id: "pull-up",
+    name: "Pull-Up",
+    type: "strength",
+    area: "Back",
+    group: "back",
+    equipment: "body only",
+    primaryMuscle: "lats",
+    icon: "gymnastics",
+    photos: { start: "assets/icons/photos/pull-up/start.jpg", finish: "assets/icons/photos/pull-up/finish.jpg" },
+    tags: ["home","gym","bodyweight"]
+  },
+  {
+    id: "chin-up",
+    name: "Chin-Up",
+    type: "strength",
+    area: "Back",
+    group: "back",
+    equipment: "body only",
+    primaryMuscle: "lats",
+    icon: "gymnastics",
+    photos: { start: "assets/icons/photos/chin-up/start.jpg", finish: "assets/icons/photos/chin-up/finish.jpg" },
+    tags: ["home","gym","bodyweight"]
   },
   {
     id: "lat-pulldown",
     name: "Lat Pulldown",
     type: "strength",
     area: "Back",
-    icon: "pulldown",
-    tags: ["gym", "machine"]
+    group: "back",
+    equipment: "cable",
+    primaryMuscle: "lats",
+    icon: "weight",
+    photos: { start: "assets/icons/photos/lat-pulldown/start.jpg", finish: "assets/icons/photos/lat-pulldown/finish.jpg" },
+    tags: ["gym","machine"]
   },
   {
-    id: "dumbbell-row",
-    name: "Dumbbell Row",
+    id: "bent-over-row",
+    name: "Bent-Over Barbell Row",
     type: "strength",
     area: "Back",
-    icon: "row",
-    tags: ["home", "gym", "dumbbells"]
+    group: "back",
+    equipment: "barbell",
+    primaryMuscle: "middle back",
+    icon: "barbell",
+    photos: { start: "assets/icons/photos/bent-over-row/start.jpg", finish: "assets/icons/photos/bent-over-row/finish.jpg" },
+    tags: ["gym"]
   },
   {
-    id: "shoulder-press",
-    name: "Shoulder Press",
+    id: "seated-cable-row",
+    name: "Seated Cable Row",
+    type: "strength",
+    area: "Back",
+    group: "back",
+    equipment: "cable",
+    primaryMuscle: "middle back",
+    icon: "weight",
+    photos: { start: "assets/icons/photos/seated-cable-row/start.jpg", finish: "assets/icons/photos/seated-cable-row/finish.jpg" },
+    tags: ["gym","machine"]
+  },
+  {
+    id: "one-arm-dumbbell-row",
+    name: "One-Arm Dumbbell Row",
+    type: "strength",
+    area: "Back",
+    group: "back",
+    equipment: "dumbbell",
+    primaryMuscle: "middle back",
+    icon: "dumbbell",
+    photos: { start: "assets/icons/photos/one-arm-dumbbell-row/start.jpg", finish: "assets/icons/photos/one-arm-dumbbell-row/finish.jpg" },
+    tags: ["home","gym","dumbbells"]
+  },
+  {
+    id: "face-pull",
+    name: "Face Pull",
+    type: "strength",
+    area: "Back",
+    group: "back",
+    equipment: "cable",
+    primaryMuscle: "shoulders",
+    icon: "weight",
+    photos: { start: "assets/icons/photos/face-pull/start.jpg", finish: "assets/icons/photos/face-pull/finish.jpg" },
+    tags: ["gym","machine"]
+  },
+  {
+    id: "overhead-press",
+    name: "Overhead Barbell Press",
     type: "strength",
     area: "Shoulders",
-    icon: "press",
-    tags: ["home", "gym", "dumbbells"]
+    group: "shoulders",
+    equipment: "barbell",
+    primaryMuscle: "shoulders",
+    icon: "barbell",
+    photos: { start: "assets/icons/photos/overhead-press/start.jpg", finish: "assets/icons/photos/overhead-press/finish.jpg" },
+    tags: ["gym"]
+  },
+  {
+    id: "dumbbell-shoulder-press",
+    name: "Dumbbell Shoulder Press",
+    type: "strength",
+    area: "Shoulders",
+    group: "shoulders",
+    equipment: "dumbbell",
+    primaryMuscle: "shoulders",
+    icon: "dumbbell",
+    photos: { start: "assets/icons/photos/dumbbell-shoulder-press/start.jpg", finish: "assets/icons/photos/dumbbell-shoulder-press/finish.jpg" },
+    tags: ["home","gym","dumbbells"]
+  },
+  {
+    id: "lateral-raise",
+    name: "Lateral Raise",
+    type: "strength",
+    area: "Shoulders",
+    group: "shoulders",
+    equipment: "dumbbell",
+    primaryMuscle: "shoulders",
+    icon: "dumbbell",
+    photos: { start: "assets/icons/photos/lateral-raise/start.jpg", finish: "assets/icons/photos/lateral-raise/finish.jpg" },
+    tags: ["home","gym","dumbbells"]
+  },
+  {
+    id: "front-raise",
+    name: "Front Raise",
+    type: "strength",
+    area: "Shoulders",
+    group: "shoulders",
+    equipment: "dumbbell",
+    primaryMuscle: "shoulders",
+    icon: "dumbbell",
+    photos: { start: "assets/icons/photos/front-raise/start.jpg", finish: "assets/icons/photos/front-raise/finish.jpg" },
+    tags: ["home","gym","dumbbells"]
+  },
+  {
+    id: "rear-delt-fly",
+    name: "Rear Delt Fly",
+    type: "strength",
+    area: "Shoulders",
+    group: "shoulders",
+    equipment: "dumbbell",
+    primaryMuscle: "shoulders",
+    icon: "dumbbell",
+    photos: { start: "assets/icons/photos/rear-delt-fly/start.jpg", finish: "assets/icons/photos/rear-delt-fly/finish.jpg" },
+    tags: ["home","gym","dumbbells"]
+  },
+  {
+    id: "arnold-press",
+    name: "Arnold Press",
+    type: "strength",
+    area: "Shoulders",
+    group: "shoulders",
+    equipment: "dumbbell",
+    primaryMuscle: "shoulders",
+    icon: "dumbbell",
+    photos: { start: "assets/icons/photos/arnold-press/start.jpg", finish: "assets/icons/photos/arnold-press/finish.jpg" },
+    tags: ["home","gym","dumbbells"]
+  },
+  {
+    id: "shrug",
+    name: "Shrug",
+    type: "strength",
+    area: "Shoulders",
+    group: "shoulders",
+    equipment: "barbell",
+    primaryMuscle: "traps",
+    icon: "barbell",
+    photos: { start: "assets/icons/photos/shrug/start.jpg", finish: "assets/icons/photos/shrug/finish.jpg" },
+    tags: ["gym"]
+  },
+  {
+    id: "back-squat",
+    name: "Barbell Back Squat",
+    type: "strength",
+    area: "Legs",
+    group: "legs",
+    equipment: "barbell",
+    primaryMuscle: "quadriceps",
+    icon: "barbell",
+    photos: { start: "assets/icons/photos/back-squat/start.jpg", finish: "assets/icons/photos/back-squat/finish.jpg" },
+    tags: ["gym"]
+  },
+  {
+    id: "front-squat",
+    name: "Front Squat",
+    type: "strength",
+    area: "Legs",
+    group: "legs",
+    equipment: "barbell",
+    primaryMuscle: "quadriceps",
+    icon: "barbell",
+    photos: { start: "assets/icons/photos/front-squat/start.jpg", finish: "assets/icons/photos/front-squat/finish.jpg" },
+    tags: ["gym"]
+  },
+  {
+    id: "goblet-squat",
+    name: "Goblet Squat",
+    type: "strength",
+    area: "Legs",
+    group: "legs",
+    equipment: "dumbbell",
+    primaryMuscle: "quadriceps",
+    icon: "dumbbell",
+    photos: { start: "assets/icons/photos/goblet-squat/start.jpg", finish: "assets/icons/photos/goblet-squat/finish.jpg" },
+    tags: ["home","gym","dumbbells"]
+  },
+  {
+    id: "leg-press",
+    name: "Leg Press",
+    type: "strength",
+    area: "Legs",
+    group: "legs",
+    equipment: "machine",
+    primaryMuscle: "quadriceps",
+    icon: "weight",
+    photos: { start: "assets/icons/photos/leg-press/start.jpg", finish: "assets/icons/photos/leg-press/finish.jpg" },
+    tags: ["gym","machine"]
+  },
+  {
+    id: "lunge",
+    name: "Lunge",
+    type: "strength",
+    area: "Legs",
+    group: "legs",
+    equipment: "dumbbell",
+    primaryMuscle: "quadriceps",
+    icon: "walk",
+    photos: { start: "assets/icons/photos/lunge/start.jpg", finish: "assets/icons/photos/lunge/finish.jpg" },
+    tags: ["home","gym","dumbbells"]
+  },
+  {
+    id: "bulgarian-split-squat",
+    name: "Bulgarian Split Squat",
+    type: "strength",
+    area: "Legs",
+    group: "legs",
+    equipment: "dumbbell",
+    primaryMuscle: "quadriceps",
+    icon: "walk",
+    photos: { start: "assets/icons/photos/bulgarian-split-squat/start.jpg", finish: "assets/icons/photos/bulgarian-split-squat/finish.jpg" },
+    tags: ["home","gym","dumbbells"]
+  },
+  {
+    id: "leg-extension",
+    name: "Leg Extension",
+    type: "strength",
+    area: "Legs",
+    group: "legs",
+    equipment: "machine",
+    primaryMuscle: "quadriceps",
+    icon: "weight",
+    photos: { start: "assets/icons/photos/leg-extension/start.jpg", finish: "assets/icons/photos/leg-extension/finish.jpg" },
+    tags: ["gym","machine"]
+  },
+  {
+    id: "leg-curl",
+    name: "Leg Curl",
+    type: "strength",
+    area: "Legs",
+    group: "legs",
+    equipment: "machine",
+    primaryMuscle: "hamstrings",
+    icon: "weight",
+    photos: { start: "assets/icons/photos/leg-curl/start.jpg", finish: "assets/icons/photos/leg-curl/finish.jpg" },
+    tags: ["gym","machine"]
+  },
+  {
+    id: "calf-raise",
+    name: "Calf Raise",
+    type: "strength",
+    area: "Legs",
+    group: "legs",
+    equipment: "machine",
+    primaryMuscle: "calves",
+    icon: "weight",
+    photos: { start: "assets/icons/photos/calf-raise/start.jpg", finish: "assets/icons/photos/calf-raise/finish.jpg" },
+    tags: ["gym","machine"]
+  },
+  {
+    id: "hip-thrust",
+    name: "Hip Thrust",
+    type: "strength",
+    area: "Legs",
+    group: "legs",
+    equipment: "barbell",
+    primaryMuscle: "glutes",
+    icon: "barbell",
+    photos: { start: "assets/icons/photos/hip-thrust/start.jpg", finish: "assets/icons/photos/hip-thrust/finish.jpg" },
+    tags: ["gym"]
+  },
+  {
+    id: "barbell-curl",
+    name: "Barbell Curl",
+    type: "strength",
+    area: "Arms",
+    group: "arms",
+    equipment: "barbell",
+    primaryMuscle: "biceps",
+    icon: "biceps-flexed",
+    photos: { start: "assets/icons/photos/barbell-curl/start.jpg", finish: "assets/icons/photos/barbell-curl/finish.jpg" },
+    tags: ["gym"]
+  },
+  {
+    id: "dumbbell-curl",
+    name: "Dumbbell Curl",
+    type: "strength",
+    area: "Arms",
+    group: "arms",
+    equipment: "dumbbell",
+    primaryMuscle: "biceps",
+    icon: "biceps-flexed",
+    photos: { start: "assets/icons/photos/dumbbell-curl/start.jpg", finish: "assets/icons/photos/dumbbell-curl/finish.jpg" },
+    tags: ["home","gym","dumbbells"]
+  },
+  {
+    id: "hammer-curl",
+    name: "Hammer Curl",
+    type: "strength",
+    area: "Arms",
+    group: "arms",
+    equipment: "dumbbell",
+    primaryMuscle: "biceps",
+    icon: "biceps-flexed",
+    photos: { start: "assets/icons/photos/hammer-curl/start.jpg", finish: "assets/icons/photos/hammer-curl/finish.jpg" },
+    tags: ["home","gym","dumbbells"]
+  },
+  {
+    id: "preacher-curl",
+    name: "Preacher Curl",
+    type: "strength",
+    area: "Arms",
+    group: "arms",
+    equipment: "barbell",
+    primaryMuscle: "biceps",
+    icon: "biceps-flexed",
+    photos: { start: "assets/icons/photos/preacher-curl/start.jpg", finish: "assets/icons/photos/preacher-curl/finish.jpg" },
+    tags: ["gym"]
+  },
+  {
+    id: "triceps-pushdown",
+    name: "Triceps Pushdown",
+    type: "strength",
+    area: "Arms",
+    group: "arms",
+    equipment: "cable",
+    primaryMuscle: "triceps",
+    icon: "weight",
+    photos: { start: "assets/icons/photos/triceps-pushdown/start.jpg", finish: "assets/icons/photos/triceps-pushdown/finish.jpg" },
+    tags: ["gym","machine"]
+  },
+  {
+    id: "skullcrusher",
+    name: "Skullcrusher",
+    type: "strength",
+    area: "Arms",
+    group: "arms",
+    equipment: "barbell",
+    primaryMuscle: "triceps",
+    icon: "barbell",
+    photos: { start: "assets/icons/photos/skullcrusher/start.jpg", finish: "assets/icons/photos/skullcrusher/finish.jpg" },
+    tags: ["gym"]
+  },
+  {
+    id: "overhead-triceps-extension",
+    name: "Overhead Triceps Extension",
+    type: "strength",
+    area: "Arms",
+    group: "arms",
+    equipment: "dumbbell",
+    primaryMuscle: "triceps",
+    icon: "dumbbell",
+    photos: { start: "assets/icons/photos/overhead-triceps-extension/start.jpg", finish: "assets/icons/photos/overhead-triceps-extension/finish.jpg" },
+    tags: ["home","gym","dumbbells"]
+  },
+  {
+    id: "close-grip-bench-press",
+    name: "Close-Grip Bench Press",
+    type: "strength",
+    area: "Arms",
+    group: "arms",
+    equipment: "barbell",
+    primaryMuscle: "triceps",
+    icon: "barbell",
+    photos: { start: "assets/icons/photos/close-grip-bench-press/start.jpg", finish: "assets/icons/photos/close-grip-bench-press/finish.jpg" },
+    tags: ["gym"]
   },
   {
     id: "plank",
     name: "Plank",
     type: "strength",
     area: "Core",
-    icon: "plank",
-    tags: ["home", "gym", "bodyweight"]
+    group: "core",
+    equipment: "body only",
+    primaryMuscle: "abdominals",
+    icon: "yoga",
+    photos: { start: "assets/icons/photos/plank/start.jpg", finish: "assets/icons/photos/plank/finish.jpg" },
+    tags: ["home","gym","bodyweight"]
   },
   {
-    id: "biceps-curl",
-    name: "Biceps Curl",
+    id: "crunch",
+    name: "Crunch",
     type: "strength",
-    area: "Arms",
-    icon: "curl",
-    tags: ["home", "gym", "dumbbells"]
+    area: "Core",
+    group: "core",
+    equipment: "body only",
+    primaryMuscle: "abdominals",
+    icon: "stretching",
+    photos: { start: "assets/icons/photos/crunch/start.jpg", finish: "assets/icons/photos/crunch/finish.jpg" },
+    tags: ["home","gym","bodyweight"]
   },
   {
-    id: "triceps-pressdown",
-    name: "Triceps Pressdown",
+    id: "sit-up",
+    name: "Sit-Up",
     type: "strength",
-    area: "Arms",
-    icon: "pressdown",
-    tags: ["gym", "machine"]
+    area: "Core",
+    group: "core",
+    equipment: "body only",
+    primaryMuscle: "abdominals",
+    icon: "stretching",
+    photos: { start: "assets/icons/photos/sit-up/start.jpg", finish: "assets/icons/photos/sit-up/finish.jpg" },
+    tags: ["home","gym","bodyweight"]
   },
   {
-    id: "treadmill-walk",
-    name: "Treadmill Walk",
-    type: "cardio",
+    id: "hanging-leg-raise",
+    name: "Hanging Leg Raise",
+    type: "strength",
+    area: "Core",
+    group: "core",
+    equipment: "body only",
+    primaryMuscle: "abdominals",
+    icon: "gymnastics",
+    photos: { start: "assets/icons/photos/hanging-leg-raise/start.jpg", finish: "assets/icons/photos/hanging-leg-raise/finish.jpg" },
+    tags: ["home","gym","bodyweight"]
+  },
+  {
+    id: "russian-twist",
+    name: "Russian Twist",
+    type: "strength",
+    area: "Core",
+    group: "core",
+    equipment: "body only",
+    primaryMuscle: "abdominals",
+    icon: "stretching-2",
+    photos: { start: "assets/icons/photos/russian-twist/start.jpg", finish: "assets/icons/photos/russian-twist/finish.jpg" },
+    tags: ["home","gym","bodyweight"]
+  },
+  {
+    id: "cable-crunch",
+    name: "Cable Crunch",
+    type: "strength",
+    area: "Core",
+    group: "core",
+    equipment: "cable",
+    primaryMuscle: "abdominals",
+    icon: "weight",
+    photos: { start: "assets/icons/photos/cable-crunch/start.jpg", finish: "assets/icons/photos/cable-crunch/finish.jpg" },
+    tags: ["gym","machine"]
+  },
+  {
+    id: "mountain-climber",
+    name: "Mountain Climber",
+    type: "strength",
+    area: "Core",
+    group: "core",
+    equipment: "body only",
+    primaryMuscle: "abdominals",
+    icon: "run",
+    photos: { start: "assets/icons/photos/mountain-climber/start.jpg", finish: "assets/icons/photos/mountain-climber/finish.jpg" },
+    tags: ["home","gym","bodyweight"]
+  },
+  {
+    id: "burpee",
+    name: "Burpee",
+    type: "strength",
     area: "Cardio",
-    icon: "treadmill",
-    tags: ["gym", "cardio"]
+    group: "cardio",
+    equipment: "body only",
+    primaryMuscle: "full body",
+    icon: "run",
+    photos: null,
+    tags: ["home","gym","bodyweight","cardio"]
   },
-  getSoccerStarterExercise()
+  {
+    id: "kettlebell-swing",
+    name: "Kettlebell Swing",
+    type: "strength",
+    area: "Cardio",
+    group: "cardio",
+    equipment: "kettlebell",
+    primaryMuscle: "glutes",
+    icon: "dumbbell",
+    photos: { start: "assets/icons/photos/kettlebell-swing/start.jpg", finish: "assets/icons/photos/kettlebell-swing/finish.jpg" },
+    tags: ["home","gym","cardio"]
+  },
+  {
+    id: "jumping-jack",
+    name: "Jumping Jack",
+    type: "strength",
+    area: "Cardio",
+    group: "cardio",
+    equipment: "body only",
+    primaryMuscle: "full body",
+    icon: "jump-rope",
+    photos: { start: "assets/icons/photos/jumping-jack/start.jpg", finish: "assets/icons/photos/jumping-jack/finish.jpg" },
+    tags: ["home","gym","bodyweight","cardio"]
+  },
+  {
+    id: "box-jump",
+    name: "Box Jump",
+    type: "strength",
+    area: "Cardio",
+    group: "cardio",
+    equipment: "body only",
+    primaryMuscle: "quadriceps",
+    icon: "jump-rope",
+    photos: { start: "assets/icons/photos/box-jump/start.jpg", finish: "assets/icons/photos/box-jump/finish.jpg" },
+    tags: ["home","gym","bodyweight","cardio"]
+  },
+  {
+    id: "soccer",
+    name: "Soccer",
+    type: "sport",
+    area: "Cardio",
+    group: "cardio",
+    equipment: "body only",
+    primaryMuscle: "full body",
+    icon: "soccer",
+    photos: null,
+    tags: ["sport"]
+  }
   ];
 }
 
@@ -234,6 +774,38 @@ function getSoccerStarterExercise() {
     icon: "soccer",
     tags: ["sport"]
   };
+}
+
+// One-time migration to the photo/glyph exercise library (the 53-exercise set
+// in assets/icons/exercises.json). Replaces whatever library the synced data
+// currently holds with the new starter set, so reference photos and the shared
+// glyphs light up for existing installs - not just brand-new ones. Guarded by a
+// localStorage flag so it runs exactly once per device and never re-imposes
+// itself after Daniel edits his library later. Routines that pointed at old ids
+// (e.g. "squat", "treadmill-walk") will show "Not in your library" until re-added
+// - an accepted trade for a clean library. Runs after the freshest synced data
+// is in hand (same timing as seedSoccerOnce) so a stale device can't clobber
+// newer cloud data.
+function reseedLibraryOnce() {
+  if (localStorage.getItem(STORAGE.libraryV2Seeded)) return;
+
+  const data = getLocalData();
+  data.library = getStarterExercises();
+  data.updatedAt = new Date().toISOString();
+  data.updatedBy = getDeviceId();
+  saveLocalData(data);
+  markPendingData(data);
+  exercises = data.library;
+  renderExercises();
+  renderExercisePicker();
+  renderTodayRoutine();
+  if (navigator.onLine) {
+    uploadWorkoutData(data).then(clearPendingData).catch(() => {
+      // Not signed in yet or offline: the change is queued and syncs later.
+    });
+  }
+
+  localStorage.setItem(STORAGE.libraryV2Seeded, "1");
 }
 
 // One-time, additive seeding so Daniel can try the new soccer flow without
@@ -588,7 +1160,7 @@ function makeTodayExercise(plannedEx, source = "planned") {
     name: "(removed exercise)",
     type: plannedEx.targetDuration ? "cardio" : "strength",
     area: "Not in your library",
-    icon: "pushup"
+    icon: "dumbbell"
   };
   // Soccer and other "sport" moves log like cardio (a duration) but with free
   // notes instead of Peloton power numbers.
@@ -983,22 +1555,53 @@ function renderEditTargetsSheet(ex) {
   `;
 }
 
+// Build the "How to do it" reference for an exercise. Detailed muscles/steps/
+// cues come from EXERCISE_REFERENCES when present; otherwise we fall back to the
+// library entry's primaryMuscle/equipment plus generic form cues. The start/
+// finish reference photos and any per-exercise video link are read from the
+// library entry (see exercises.json -> photos / optional video).
 function getExerciseReference(ex) {
-  return EXERCISE_REFERENCES[ex.exerciseId] || {
-    muscles: ex.area || "Main working area",
-    equipment: ex.type === "cardio" ? "Cardio equipment" : "As planned",
-    steps: [
+  const lib = getExerciseById(ex.exerciseId);
+  const detailed = EXERCISE_REFERENCES[ex.exerciseId];
+  const cap = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
+  return {
+    muscles: detailed?.muscles
+      || (lib?.primaryMuscle ? cap(lib.primaryMuscle) : (ex.area || "Main working area")),
+    equipment: detailed?.equipment
+      || (lib?.equipment ? cap(lib.equipment) : (ex.type === "cardio" ? "Cardio equipment" : "As planned")),
+    photos: lib?.photos || null,
+    video: lib?.video || null,
+    steps: detailed?.steps || [
       "Set up in a comfortable, controlled position.",
       "Move slowly enough that you can keep good form.",
       "Stop the set if you feel sharp pain or lose control."
     ],
-    cues: ["Smooth reps.", "Steady breathing.", "Good form first."]
+    cues: detailed?.cues || ["Smooth reps.", "Steady breathing.", "Good form first."]
   };
 }
 
 function renderReferenceSheet(ex) {
   if (!activeWorkout.referenceOpen) return "";
   const ref = getExerciseReference(ex);
+
+  // Generic tutorial link: a per-exercise `video` URL from the library if one
+  // is set, otherwise a YouTube search for the move (placeholder for now).
+  const videoHref = ref.video
+    || `https://www.youtube.com/results?search_query=${encodeURIComponent(`${ex.name} how to`)}`;
+
+  const photosBlock = ref.photos
+    ? `
+        <div class="lw-ref-photos">
+          <figure class="lw-ref-photo">
+            <img src="${escapeHtml(ref.photos.start)}" alt="${escapeHtml(ex.name)} start position" loading="lazy" />
+            <figcaption>Start position</figcaption>
+          </figure>
+          <figure class="lw-ref-photo">
+            <img src="${escapeHtml(ref.photos.finish)}" alt="${escapeHtml(ex.name)} finish position" loading="lazy" />
+            <figcaption>Finish position</figcaption>
+          </figure>
+        </div>`
+    : "";
 
   return `
     <div class="lw-sheet-scrim" role="presentation">
@@ -1010,6 +1613,7 @@ function renderReferenceSheet(ex) {
           </div>
           <button class="lw-sheet-close" type="button" data-action="close-reference" aria-label="Close how to do it">&times;</button>
         </div>
+        ${photosBlock}
         <div class="lw-ref-meta">
           <span>${escapeHtml(ref.equipment)}</span>
           <span>${escapeHtml(ex.type === "timed" ? "Timed hold" : ex.type)}</span>
@@ -1020,6 +1624,11 @@ function renderReferenceSheet(ex) {
         <div class="lw-ref-cues">
           ${ref.cues.map((cue) => `<span>${escapeHtml(cue)}</span>`).join("")}
         </div>
+        <a class="lw-ref-video" href="${escapeHtml(videoHref)}" target="_blank" rel="noopener noreferrer">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="5" width="19" height="14" rx="3"/><path d="M10 9.5l5 2.5-5 2.5z" fill="currentColor" stroke="none"/></svg>
+          Watch video tutorial
+        </a>
+        ${ref.photos ? `<p class="lw-ref-source">Reference photos from the public-domain Free Exercise DB</p>` : ""}
         <button class="primary-button lw-sheet-done" type="button" data-action="close-reference">Done</button>
       </section>
     </div>
@@ -2161,24 +2770,41 @@ function escapeHtml(value) {
     .replace(/'/g, "&#039;");
 }
 
-function getExerciseIcon(name) {
-  const icons = {
-    pushup: '<line x1="24" y1="74" x2="92" y2="74"></line><circle cx="34" cy="45" r="9"></circle><line x1="43" y1="48" x2="68" y2="58"></line><line x1="68" y1="58" x2="90" y2="52"></line><line x1="56" y1="54" x2="47" y2="75"></line><line x1="74" y1="56" x2="76" y2="75"></line>',
-    bench: '<line x1="20" y1="75" x2="94" y2="75"></line><line x1="30" y1="75" x2="26" y2="93"></line><line x1="82" y1="75" x2="88" y2="93"></line><circle cx="40" cy="49" r="8"></circle><line x1="48" y1="52" x2="72" y2="60"></line><line x1="31" y1="43" x2="84" y2="43"></line><line x1="31" y1="37" x2="31" y2="49"></line><line x1="84" y1="37" x2="84" y2="49"></line>',
-    squat: '<circle cx="58" cy="27" r="8"></circle><line x1="58" y1="35" x2="48" y2="58"></line><line x1="48" y1="58" x2="66" y2="70"></line><line x1="66" y1="70" x2="82" y2="88"></line><line x1="49" y1="58" x2="35" y2="78"></line><line x1="35" y1="78" x2="25" y2="92"></line><line x1="40" y1="45" x2="74" y2="45"></line>',
-    goblet: '<circle cx="58" cy="25" r="8"></circle><line x1="58" y1="33" x2="56" y2="54"></line><rect x="48" y="43" width="18" height="18" rx="4"></rect><line x1="49" y1="58" x2="37" y2="78"></line><line x1="37" y1="78" x2="27" y2="92"></line><line x1="62" y1="58" x2="76" y2="78"></line><line x1="76" y1="78" x2="88" y2="92"></line>',
-    deadlift: '<line x1="20" y1="84" x2="94" y2="84"></line><circle cx="22" cy="84" r="8"></circle><circle cx="92" cy="84" r="8"></circle><circle cx="58" cy="31" r="8"></circle><line x1="58" y1="39" x2="50" y2="61"></line><line x1="50" y1="61" x2="42" y2="82"></line><line x1="50" y1="61" x2="68" y2="82"></line><line x1="47" y1="56" x2="37" y2="82"></line><line x1="55" y1="57" x2="69" y2="82"></line>',
-    pulldown: '<line x1="28" y1="24" x2="86" y2="24"></line><line x1="58" y1="24" x2="58" y2="43"></line><circle cx="58" cy="52" r="8"></circle><line x1="58" y1="60" x2="58" y2="83"></line><line x1="31" y1="35" x2="49" y2="60"></line><line x1="85" y1="35" x2="67" y2="60"></line><line x1="48" y1="84" x2="38" y2="97"></line><line x1="66" y1="84" x2="76" y2="97"></line>',
-    row: '<circle cx="38" cy="37" r="8"></circle><line x1="46" y1="42" x2="67" y2="56"></line><line x1="67" y1="56" x2="86" y2="48"></line><line x1="52" y1="50" x2="40" y2="77"></line><line x1="58" y1="52" x2="72" y2="82"></line><rect x="84" y="42" width="14" height="13" rx="3"></rect><line x1="25" y1="84" x2="92" y2="84"></line>',
-    press: '<circle cx="58" cy="45" r="8"></circle><line x1="58" y1="53" x2="58" y2="78"></line><line x1="38" y1="31" x2="48" y2="52"></line><line x1="78" y1="31" x2="68" y2="52"></line><line x1="34" y1="29" x2="44" y2="24"></line><line x1="73" y1="24" x2="83" y2="29"></line><line x1="49" y1="78" x2="40" y2="95"></line><line x1="67" y1="78" x2="76" y2="95"></line>',
-    plank: '<line x1="22" y1="76" x2="94" y2="76"></line><circle cx="35" cy="47" r="8"></circle><line x1="43" y1="50" x2="68" y2="55"></line><line x1="68" y1="55" x2="91" y2="64"></line><line x1="50" y1="51" x2="42" y2="76"></line><line x1="85" y1="62" x2="80" y2="76"></line>',
-    curl: '<circle cx="58" cy="31" r="8"></circle><line x1="58" y1="39" x2="58" y2="66"></line><line x1="49" y1="45" x2="41" y2="66"></line><line x1="67" y1="45" x2="79" y2="60"></line><rect x="77" y="56" width="13" height="12" rx="3"></rect><line x1="51" y1="67" x2="43" y2="92"></line><line x1="65" y1="67" x2="75" y2="92"></line>',
-    pressdown: '<line x1="58" y1="20" x2="58" y2="40"></line><line x1="43" y1="40" x2="73" y2="40"></line><circle cx="58" cy="52" r="8"></circle><line x1="58" y1="60" x2="58" y2="82"></line><line x1="43" y1="57" x2="49" y2="79"></line><line x1="73" y1="57" x2="67" y2="79"></line><line x1="48" y1="80" x2="39" y2="90"></line><line x1="68" y1="80" x2="77" y2="90"></line>',
-    treadmill: '<rect x="22" y="70" width="70" height="16" rx="5"></rect><line x1="77" y1="70" x2="66" y2="44"></line><line x1="66" y1="44" x2="82" y2="44"></line><circle cx="49" cy="28" r="8"></circle><line x1="49" y1="36" x2="54" y2="57"></line><line x1="54" y1="57" x2="43" y2="70"></line><line x1="55" y1="57" x2="68" y2="70"></line>',
-    soccer: '<circle cx="58" cy="58" r="30"></circle><polygon points="58,44 70,53 65,67 51,67 46,53"></polygon><line x1="58" y1="44" x2="58" y2="30"></line><line x1="70" y1="53" x2="83" y2="46"></line><line x1="65" y1="67" x2="74" y2="80"></line><line x1="51" y1="67" x2="42" y2="80"></line><line x1="46" y1="53" x2="33" y2="46"></line>'
-  };
+// ===== Exercise glyphs =====
+// Shared line glyphs (Tabler, MIT + Lucide biceps-flexed, ISC), inlined so the
+// app works offline and the icons inherit the accent color via `stroke`. Each
+// library exercise points at one of these by name in its `icon` field (which
+// mirrors exercises.json -> icon.glyph). The matching source SVGs live in
+// assets/icons/glyphs/. The decorative bounding-box <path> from each source
+// file is intentionally dropped here so the card CSS does not draw a square.
+// To add a glyph: copy the inner <path> shapes (minus the M0 0h24v24H0z box)
+// from the new assets/icons/glyphs/<name>.svg and add a key below.
+const EXERCISE_GLYPHS = {
+  barbell: '<path d="M2 12h1" /><path d="M6 8h-2a1 1 0 0 0 -1 1v6a1 1 0 0 0 1 1h2" /><path d="M6 7v10a1 1 0 0 0 1 1h1a1 1 0 0 0 1 -1v-10a1 1 0 0 0 -1 -1h-1a1 1 0 0 0 -1 1" /><path d="M9 12h6" /><path d="M15 7v10a1 1 0 0 0 1 1h1a1 1 0 0 0 1 -1v-10a1 1 0 0 0 -1 -1h-1a1 1 0 0 0 -1 1" /><path d="M18 8h2a1 1 0 0 1 1 1v6a1 1 0 0 1 -1 1h-2" /><path d="M22 12h-1" />',
+  "biceps-flexed": '<path d="M12.409 13.017A5 5 0 0 1 22 15c0 3.866-4 7-9 7-4.077 0-8.153-.82-10.371-2.462-.426-.316-.631-.832-.62-1.362C2.118 12.723 2.627 2 10 2a3 3 0 0 1 3 3 2 2 0 0 1-2 2c-1.105 0-1.64-.444-2-1" /><path d="M15 14a5 5 0 0 0-7.584 2" /><path d="M9.964 6.825C8.019 7.977 9.5 13 8 15" />',
+  dumbbell: '<path d="M7.026 9.61l-.95 -4.18a2 2 0 0 1 1.95 -2.43h8a2 2 0 0 1 2 2.43l-1 4.2" /><path d="M9.026 17.001h6" /><path d="M18.906 20.06a7.92 7.92 0 0 0 1 -5.33a8 8 0 1 0 -14.77 5.33a2 2 0 0 0 1.71 .94h10.36a2 2 0 0 0 1.7 -.94" />',
+  gymnastics: '<path d="M7 7a1 1 0 1 0 2 0a1 1 0 0 0 -2 0" /><path d="M13 21l1 -9l7 -6" /><path d="M3 11h6l5 1" /><path d="M11.5 8.5l4.5 -3.5" />',
+  "jump-rope": '<path d="M6 14v-6a3 3 0 1 1 6 0v8a3 3 0 0 0 6 0v-6" /><path d="M16 5a2 2 0 0 1 2 -2a2 2 0 0 1 2 2v3a2 2 0 0 1 -2 2a2 2 0 0 1 -2 -2l0 -3" /><path d="M4 16a2 2 0 0 1 2 -2a2 2 0 0 1 2 2v3a2 2 0 0 1 -2 2a2 2 0 0 1 -2 -2l0 -3" />',
+  run: '<path d="M11.007 5a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" /><path d="M4 17l5 1l.75 -1.5" /><path d="M15 21v-4l-4 -3l1 -6" /><path d="M7 12v-3l5 -1l3 3l3 1" />',
+  soccer: '<path d="M3 17l5 1l.75 -1.5" /><path d="M14 21v-4l-4 -3l1 -6" /><path d="M6 12v-3l5 -1l3 3l3 1" /><path d="M18.007 19.5a1.5 1.5 0 1 0 3 0a1.5 1.5 0 1 0 -3 0" /><path d="M10.007 5a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />',
+  "stretching-2": '<path d="M6.5 21l3.5 -5" /><path d="M5 11l7 -2" /><path d="M16 21l-4 -7v-5l7 -4" /><path d="M9.007 6a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />',
+  stretching: '<path d="M15 5a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /><path d="M5 20l5 -.5l1 -2" /><path d="M18 20v-5h-5.5l2.5 -6.5l-5.5 1l1.5 2" />',
+  walk: '<path d="M12 4a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /><path d="M7 21l3 -4" /><path d="M16 21l-2 -4l-3 -3l1 -6" /><path d="M6 12l2 -3l4 -1l3 3l3 1" />',
+  weight: '<path d="M9 6a3 3 0 1 0 6 0a3 3 0 1 0 -6 0" /><path d="M6.835 9h10.33a1 1 0 0 1 .984 .821l1.637 9a1 1 0 0 1 -.984 1.179h-13.604a1 1 0 0 1 -.984 -1.179l1.637 -9a1 1 0 0 1 .984 -.821" />',
+  yoga: '<path d="M4 20h4l1.5 -3" /><path d="M17 20l-1 -5h-5l1 -7" /><path d="M4 10l4 -1l4 -1l4 1.5l4 1.5" /><path d="M10.007 5a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />'
+};
 
-  return `<svg viewBox="0 0 116 116" role="img" aria-label="${escapeHtml(name)} line illustration">${icons[name] || icons.pushup}</svg>`;
+// Older custom-exercise icon names (from before the glyph library) map onto the
+// closest glyph so any exercises Daniel already created keep a sensible icon.
+const LEGACY_ICON_ALIASES = {
+  pushup: "gymnastics", bench: "barbell", squat: "barbell", goblet: "dumbbell",
+  deadlift: "barbell", pulldown: "weight", row: "dumbbell", press: "dumbbell",
+  plank: "yoga", curl: "biceps-flexed", pressdown: "weight", treadmill: "run"
+};
+
+function getExerciseIcon(name) {
+  const key = EXERCISE_GLYPHS[name] ? name : (LEGACY_ICON_ALIASES[name] || "dumbbell");
+  return `<svg class="lw-glyph" viewBox="0 0 24 24" role="img" aria-label="${escapeHtml(name)} icon">${EXERCISE_GLYPHS[key]}</svg>`;
 }
 
 // ===== Lucide UI icons =====
@@ -2319,7 +2945,7 @@ function getExerciseTypeMeta(type) {
     return {
       type: "cardio",
       area: "Cardio",
-      icon: "treadmill",
+      icon: "run",
       tags: ["custom", "cardio"]
     };
   }
@@ -2327,7 +2953,7 @@ function getExerciseTypeMeta(type) {
     return {
       type: "timed",
       area: "Core / holds",
-      icon: "plank",
+      icon: "yoga",
       tags: ["custom", "bodyweight", "timed"]
     };
   }
@@ -2342,7 +2968,7 @@ function getExerciseTypeMeta(type) {
   return {
     type: "strength",
     area: "Strength",
-    icon: "pushup",
+    icon: "dumbbell",
     tags: ["custom"]
   };
 }
@@ -4771,6 +5397,7 @@ async function initCloud() {
     // fully on this device using the local backup. Sync resumes next launch.
     console.error("Cloud sync could not load right now:", error);
     // No cloud to reconcile against, so it is safe to seed locally now.
+    reseedLibraryOnce();
     seedSoccerOnce();
     updateCloudUi();
     return;
@@ -4821,14 +5448,17 @@ async function initCloud() {
       _cloudUnsub = fsMod.onSnapshot(_fbDoc, (snap) => {
         if (snap.metadata.hasPendingWrites) return; // ignore our own just-made save
         reconcile(snap.exists() ? snap.data() : null);
-        // Seed soccer on top of the freshest synced data (runs once). Doing it
-        // here, not at startup, avoids a stale device overwriting newer data.
+        // Replace the library with the photo/glyph set, then seed soccer - both
+        // on top of the freshest synced data (each runs once). Doing it here, not
+        // at startup, avoids a stale device overwriting newer cloud data.
+        reseedLibraryOnce();
         seedSoccerOnce();
       }, (error) => console.error("Cloud listener error:", error));
     } else {
       cloudUser = null;
       _fbDoc = null;
       // Signed out: no cloud to reconcile against, so seed locally now.
+      reseedLibraryOnce();
       seedSoccerOnce();
     }
     updateCloudUi();

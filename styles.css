@@ -3026,6 +3026,72 @@ body.in-workout .today-panel {
   margin-bottom: 12px;
 }
 
+/* Start / finish reference photos (Free Exercise DB), shown at the top of the
+   "How to do it" sheet. */
+.lw-ref-photos {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.lw-ref-photo {
+  flex: 1;
+  margin: 0;
+  min-width: 0;
+}
+
+.lw-ref-photo img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line);
+  background: var(--panel-2);
+}
+
+.lw-ref-photo figcaption {
+  margin-top: 5px;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+/* Generic "Watch video tutorial" button (placeholder link for now). */
+.lw-ref-video {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  margin-bottom: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.lw-ref-video svg {
+  width: 20px;
+  height: 20px;
+}
+
+.lw-ref-video:active {
+  transform: scale(0.99);
+}
+
+.lw-ref-source {
+  margin: 0 0 12px;
+  text-align: center;
+  font-size: 11px;
+  color: var(--muted);
+  opacity: 0.85;
+}
+
 /* finish / summary */
 .lw-finish {
   display: flex;
@@ -3783,4 +3849,26 @@ body.in-workout .today-panel {
   transform: translateY(1px) scale(0.985);
   box-shadow: none;
   filter: brightness(0.95);
+}
+
+/* ===== Shared exercise glyphs =====
+   The library exercise icons are now 24-viewBox line glyphs (Tabler/Lucide).
+   They are drawn by getExerciseIcon() as <svg class="lw-glyph">. The various
+   icon containers (.exercise-art, .lw-hero-icon, .mini-exercise-art) force a
+   thick 3.4 stroke that suits the old 116-viewBox stick figures but is far too
+   heavy at 24 units, so override stroke-width here. The higher specificity of
+   `svg.lw-glyph path` (and placement at end of file) wins over those rules.
+   Setting stroke/fill on the glyph itself also makes it render correctly in any
+   container that does not style its paths. */
+svg.lw-glyph {
+  stroke: var(--accent);
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+svg.lw-glyph path {
+  stroke: var(--accent);
+  stroke-width: 2;
+  fill: none;
 }
