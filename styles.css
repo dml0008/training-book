@@ -4114,6 +4114,15 @@ svg.lw-glyph path {
   line-height: 1.4;
 }
 
+.plan-head-actions {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 .plan-pill {
   flex: 0 0 auto;
   padding: 5px 11px;
@@ -4384,6 +4393,50 @@ svg.lw-glyph path {
 
 .danger-text svg * {
   stroke: var(--danger);
+}
+
+.danger-button {
+  border-color: rgba(255, 107, 107, 0.58);
+  background: var(--danger);
+  color: #160707;
+}
+
+.confirm-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: rgba(3, 5, 5, 0.72);
+  backdrop-filter: blur(8px);
+}
+
+.confirm-modal {
+  width: min(420px, 100%);
+  padding: 20px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-md);
+  background: var(--panel);
+  box-shadow: var(--shadow-soft);
+}
+
+.confirm-modal h2 {
+  margin: 4px 0 8px;
+  font-size: 22px;
+}
+
+.confirm-modal p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 18px;
 }
 
 /* ----- AI coach drawer ----- */

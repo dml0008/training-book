@@ -3,7 +3,7 @@ const DROPBOX_TOKEN_URL = "https://api.dropboxapi.com/oauth2/token";
 const DROPBOX_UPLOAD_URL = "https://content.dropboxapi.com/2/files/upload";
 const DROPBOX_DOWNLOAD_URL = "https://content.dropboxapi.com/2/files/download";
 const DATA_FILE_PATH = "/04_Technical/06_Side_Projects/Workout and Nutrition App/data/workout-data.json";
-const APP_VERSION = "2026.06.24-library-142-exercises";
+const APP_VERSION = "2026.06.15-plan-clear-routines";
 
 const STORAGE = {
   appKey: "trainingBookDropboxAppKey",
@@ -75,6 +75,66 @@ const appKeyInput = document.querySelector("#app-key");
 const syncStatus = document.querySelector("#sync-status");
 const cloudSignInButton = document.querySelector("#cloud-signin");
 const cloudSignOutButton = document.querySelector("#cloud-signout");
+
+let confirmModalResolve = null;
+
+function getConfirmModalRoot() {
+  let root = document.querySelector("#confirm-modal-root");
+  if (!root) {
+    root = document.createElement("div");
+    root.id = "confirm-modal-root";
+    document.body.appendChild(root);
+  }
+  return root;
+}
+
+function closeConfirmModal(result = false) {
+  const root = document.querySelector("#confirm-modal-root");
+  if (root) root.innerHTML = "";
+  if (confirmModalResolve) {
+    confirmModalResolve(result);
+    confirmModalResolve = null;
+  }
+}
+
+function showConfirmModal({ title, message, confirmLabel = "Delete", danger = true }) {
+  if (confirmModalResolve) closeConfirmModal(false);
+  const root = getConfirmModalRoot();
+  root.innerHTML = `
+    <div class="confirm-scrim" role="presentation" data-action="confirm-cancel">
+      <section class="confirm-modal" role="dialog" aria-modal="true" aria-labelledby="confirm-title">
+        <p class="card-kicker">${danger ? "Confirm deletion" : "Confirm change"}</p>
+        <h2 id="confirm-title">${escapeHtml(title)}</h2>
+        <p>${escapeHtml(message)}</p>
+        <div class="confirm-actions">
+          <button class="quiet-button small-button" type="button" data-action="confirm-cancel">Cancel</button>
+          <button class="primary-button small-button${danger ? " danger-button" : ""}" type="button" data-action="confirm-ok">${escapeHtml(confirmLabel)}</button>
+        </div>
+      </section>
+    </div>
+  `;
+  return new Promise((resolve) => {
+    confirmModalResolve = resolve;
+    root.querySelector("[data-action='confirm-ok']")?.focus();
+  });
+}
+
+document.addEventListener("click", (event) => {
+  const confirmRoot = event.target.closest("#confirm-modal-root");
+  if (!confirmRoot) return;
+  const actionTarget = event.target.closest("[data-action]");
+  const action = actionTarget?.dataset.action;
+  if (!action && event.target.closest(".confirm-modal")) return;
+  if (action === "confirm-ok") closeConfirmModal(true);
+  if (action === "confirm-cancel" && !event.target.closest(".confirm-modal, [data-action='confirm-ok']")) closeConfirmModal(false);
+  if (action === "confirm-cancel" && actionTarget?.tagName === "BUTTON") closeConfirmModal(false);
+});
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && document.querySelector("#confirm-modal-root .confirm-modal")) {
+    closeConfirmModal(false);
+  }
+});
 
 // ===== Firebase cloud sync state (replaces the old Dropbox sync) =====
 // These hold the signed-in user and the live database connection. They are
@@ -5540,7 +5600,10 @@ function renderPlanSchedule(weeklyPlan, routines) {
           <p class="card-kicker">Weekly schedule</p>
           <p class="plan-muted">Pick a routine for each day, or leave it as a rest day. Saves instantly.</p>
         </div>
-        <span class="plan-pill">${planned} training ${planned === 1 ? "day" : "days"}</span>
+        <div class="plan-head-actions">
+          <span class="plan-pill">${planned} training ${planned === 1 ? "day" : "days"}</span>
+          <button class="quiet-button small-button btn-ico danger-text" type="button" data-action="clear-weekly-plan"${planned ? "" : " disabled"}>${getUiIcon("trash-2")}Clear schedule</button>
+        </div>
       </div>
       <div class="schedule-grid">
         ${PLAN_WEEK_ORDER.map((day) => `
@@ -5565,7 +5628,10 @@ function renderPlanRoutines(routines) {
           <p class="card-kicker">Routines</p>
           <p class="plan-muted">Build and tweak your workouts. Edit any routine to add, reorder, or adjust exercises.</p>
         </div>
-        <button class="primary-button small-button btn-ico" type="button" data-action="add-routine">${getUiIcon("plus")}Add routine</button>
+        <div class="plan-head-actions">
+          <button class="quiet-button small-button btn-ico danger-text" type="button" data-action="clear-routines"${routines.length ? "" : " disabled"}>${getUiIcon("trash-2")}Clear routines</button>
+          <button class="primary-button small-button btn-ico" type="button" data-action="add-routine">${getUiIcon("plus")}Add routine</button>
+        </div>
       </div>
       <div class="plan-routines">
         ${routines.length
@@ -5807,6 +5873,37 @@ function assignWeeklyDay(day, routineId) {
   });
 }
 
+async function clearWeeklyPlan() {
+  const ok = await showConfirmModal({
+    title: "Clear the weekly schedule?",
+    message: "Every day will become a rest day. Your routines and past workouts will stay saved.",
+    confirmLabel: "Clear schedule"
+  });
+  if (!ok) return;
+  mutatePlanData((data) => {
+    DOW_NAMES.forEach((day) => { data.weeklyPlan[day] = null; });
+  });
+}
+
+async function clearRoutines() {
+  const ok = await showConfirmModal({
+    title: "Clear all routines?",
+    message: "This removes every routine and turns the weekly schedule into rest days. Past workouts and your exercise library are not affected.",
+    confirmLabel: "Clear routines"
+  });
+  if (!ok) return;
+  mutatePlanData((data) => {
+    data.routines = [];
+    DOW_NAMES.forEach((day) => { data.weeklyPlan[day] = null; });
+  }, { rerender: false });
+  editingRoutineId = null;
+  routineEditSnapshot = null;
+  routineEditIsNew = false;
+  renderPlan();
+  renderTodayRoutine();
+  renderReviewReminder();
+}
+
 function addRoutine() {
   const id = makeRoutineId("new-routine");
   mutatePlanData((data) => {
@@ -5929,6 +6026,8 @@ function handlePlanClick(event) {
 
   switch (action) {
     case "save-plan-notes": saveActivePlanFromScreen(); break;
+    case "clear-weekly-plan": clearWeeklyPlan(); break;
+    case "clear-routines": clearRoutines(); break;
     case "add-routine": addRoutine(); break;
     case "edit-routine": startRoutineEdit(id); break;
     case "done-routine": finishRoutineEdit(); break;
