@@ -3,7 +3,7 @@ const DROPBOX_TOKEN_URL = "https://api.dropboxapi.com/oauth2/token";
 const DROPBOX_UPLOAD_URL = "https://content.dropboxapi.com/2/files/upload";
 const DROPBOX_DOWNLOAD_URL = "https://content.dropboxapi.com/2/files/download";
 const DATA_FILE_PATH = "/04_Technical/06_Side_Projects/Workout and Nutrition App/data/workout-data.json";
-const APP_VERSION = "2026.06.15-plan-clear-routines";
+const APP_VERSION = "2026.06.15-plan-clear-routines-fix";
 
 const STORAGE = {
   appKey: "trainingBookDropboxAppKey",
@@ -3914,8 +3914,9 @@ function getLocalData() {
     data.activePlan = { ...getStarterActivePlan(), ...data.activePlan };
   }
 
-  // Migrate old data to include routines and weekly plan if missing
-  if (!data.routines || !Array.isArray(data.routines) || data.routines.length === 0) {
+  // Migrate old data to include routines and weekly plan if missing. An empty
+  // routines array is valid: it means Daniel intentionally cleared routines.
+  if (!Array.isArray(data.routines)) {
     data.routines = getStarterRoutines();
   }
   if (!data.weeklyPlan || typeof data.weeklyPlan !== 'object') {
@@ -5951,9 +5952,14 @@ function cancelRoutineEdit(id) {
   renderTodayRoutine();
 }
 
-function deleteRoutine(id) {
+async function deleteRoutine(id) {
   const routine = findRoutineInData(getLocalData(), id);
-  if (!confirm(`Delete the routine "${routine?.name || "this routine"}"? Any day using it becomes a rest day. Past workouts are not affected.`)) return;
+  const ok = await showConfirmModal({
+    title: `Delete ${routine?.name || "this routine"}?`,
+    message: "Any day using this routine becomes a rest day. Past workouts are not affected.",
+    confirmLabel: "Delete routine"
+  });
+  if (!ok) return;
   mutatePlanData((data) => {
     data.routines = data.routines.filter((item) => item.id !== id);
     DOW_NAMES.forEach((day) => { if (data.weeklyPlan[day] === id) data.weeklyPlan[day] = null; });
@@ -5981,11 +5987,16 @@ function addRoutineExercise(routineId, exerciseId) {
   });
 }
 
-function removeRoutineExercise(routineId, index) {
+async function removeRoutineExercise(routineId, index) {
   const routine = findRoutineInData(getLocalData(), routineId);
   const ex = routine?.exercises?.[index];
   const name = ex ? (getExerciseById(ex.exerciseId)?.name || ex.exerciseId) : "this exercise";
-  if (!confirm(`Remove ${name} from this routine?`)) return;
+  const ok = await showConfirmModal({
+    title: `Remove ${name}?`,
+    message: "This removes the exercise from this routine only. Your exercise library and past workouts are not affected.",
+    confirmLabel: "Remove exercise"
+  });
+  if (!ok) return;
   mutatePlanData((data) => {
     const target = findRoutineInData(data, routineId);
     if (target && Array.isArray(target.exercises)) target.exercises.splice(index, 1);
