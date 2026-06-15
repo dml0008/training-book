@@ -175,15 +175,11 @@
             <input type="search" id="library-search" placeholder="Search exercises by name" autocomplete="off" aria-label="Search exercises" />
           </div>
 
-          <div class="filter-strip" aria-label="Exercise filters">
-            <button class="filter-chip is-active" type="button" data-filter="all">All</button>
-            <button class="filter-chip filter-chip-fav" type="button" data-filter="favorites"><span class="chip-ico" data-icon="star" aria-hidden="true"></span>Favorites</button>
-            <button class="filter-chip" type="button" data-filter="home">Home</button>
-            <button class="filter-chip" type="button" data-filter="gym">Gym</button>
-            <button class="filter-chip" type="button" data-filter="bodyweight">No equipment</button>
-            <button class="filter-chip" type="button" data-filter="dumbbells">Dumbbells</button>
-            <button class="filter-chip" type="button" data-filter="machine">Cable/machine</button>
-            <button class="filter-chip" type="button" data-filter="cardio">Cardio</button>
+          <div class="filter-row">
+            <div class="filter-strip" id="filter-strip" aria-label="Exercise filters"></div>
+            <button type="button" class="cat-edit-btn btn-ico" id="open-edit-categories" aria-haspopup="dialog">
+              <span data-icon="tag" aria-hidden="true"></span><span class="cat-edit-btn-label">Edit categories</span>
+            </button>
           </div>
 
           <div class="library-add-row">
@@ -193,6 +189,8 @@
           <div class="exercise-list" id="exercise-list" aria-live="polite"></div>
           <div id="library-sheet-root"></div>
           <div id="library-add-modal-root"></div>
+          <div id="library-categories-modal-root"></div>
+          <div id="library-edit-modal-root"></div>
         </div>
       </section>
 

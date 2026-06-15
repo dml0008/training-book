@@ -61,7 +61,7 @@ const progressContent = document.querySelector("#progress-content");
 const planContent = document.querySelector("#plan-content");
 const exerciseList = document.querySelector("#exercise-list");
 const libraryCount = document.querySelector("#library-count");
-const filterChips = Array.from(document.querySelectorAll(".filter-chip"));
+const filterStrip = document.querySelector("#filter-strip");
 const logDate = document.querySelector("#log-date");
 const workoutNameInput = document.querySelector("#workout-name");
 const exercisePicker = document.querySelector("#exercise-picker");
@@ -121,6 +121,23 @@ const todayDisplay = new Intl.DateTimeFormat("en-US", {
 // (or after a data reset). `exercises` is the live list the whole app reads;
 // refreshLibrary() reloads it from saved data after a change or a cloud sync.
 let exercises = getStarterExercises();
+
+// Filter categories are now editable user data (data.categories) rather than
+// hardcoded chips. Each is { key, label }: `key` is what gets stored in an
+// exercise's `tags` array; `label` is what we show. `categories` is the live
+// list; refreshLibrary() reloads it alongside the exercises.
+let categories = getStarterCategories();
+
+function getStarterCategories() {
+  return [
+    { key: "home", label: "Home" },
+    { key: "gym", label: "Gym" },
+    { key: "bodyweight", label: "No equipment" },
+    { key: "dumbbells", label: "Dumbbells" },
+    { key: "machine", label: "Cable/machine" },
+    { key: "cardio", label: "Cardio" }
+  ];
+}
 
 function getStarterExercises() {
   return [
@@ -1973,6 +1990,7 @@ function seedSoccerOnce() {
 function refreshLibrary() {
   const data = getLocalData();
   exercises = Array.isArray(data.library) ? data.library : getStarterExercises();
+  categories = Array.isArray(data.categories) ? data.categories : getStarterCategories();
 }
 
 if (dateLabel) {
@@ -2700,8 +2718,9 @@ function getEffectivePhotos(lib) {
 
 // Shared markup for the "How to do it" sheet. Used both inside a live workout
 // and from the Library tab; `closeAction` is the data-action the scrim / close /
-// Done controls fire, and `allowEdit` adds the photo editor (Library only).
-function buildReferenceSheetMarkup(ex, closeAction, allowEdit = false) {
+// Done controls fire. (Photo editing now lives in the Library edit card, not
+// here, so this sheet is read-only.)
+function buildReferenceSheetMarkup(ex, closeAction) {
   const ref = getExerciseReference(ex);
 
   // Generic tutorial link: a per-exercise `video` URL from the library if one
@@ -2716,19 +2735,6 @@ function buildReferenceSheetMarkup(ex, closeAction, allowEdit = false) {
     ? `<div class="lw-ref-photos">
           ${photoFigure(ref.photos.start, "Start position", `${ex.name} start position`)}
           ${photoFigure(ref.photos.finish, "Finish position", `${ex.name} finish position`)}
-        </div>`
-    : "";
-
-  const hasCustom = Boolean(getExerciseById(ex.exerciseId)?.customPhotos);
-  const editBlock = allowEdit
-    ? `<div class="lw-ref-edit">
-          <p class="lw-ref-edit-title">Your photos</p>
-          <p class="lw-ref-edit-note">Add or replace the start and finish photos for this exercise.</p>
-          <div class="lw-ref-edit-slots">
-            ${renderPhotoUploadSlot(ex.exerciseId, "start", "Start")}
-            ${renderPhotoUploadSlot(ex.exerciseId, "finish", "Finish")}
-          </div>
-          ${hasCustom ? `<button class="quiet-button small-button" type="button" data-action="clear-custom-photos" data-id="${escapeHtml(ex.exerciseId)}">Remove my photos</button>` : ""}
         </div>`
     : "";
 
@@ -2758,7 +2764,6 @@ function buildReferenceSheetMarkup(ex, closeAction, allowEdit = false) {
           Watch video tutorial
         </a>
         ${ref.photos ? `<p class="lw-ref-source">Reference photos from the public-domain Free Exercise DB</p>` : ""}
-        ${editBlock}
         <button class="primary-button lw-sheet-done" type="button" data-action="${closeAction}">Done</button>
       </section>
     </div>
@@ -3738,6 +3743,7 @@ function makeEmptyData() {
     routines: getStarterRoutines(),
     weeklyPlan: getStarterWeeklyPlan(),
     library: getStarterExercises(),
+    categories: getStarterCategories(),
     completedWorkouts: [],
     missedWorkouts: [],
     testEntries: [],
@@ -3860,6 +3866,11 @@ function getLocalData() {
   if (!Array.isArray(data.library)) {
     data.library = getStarterExercises();
   }
+  // Filter categories became editable data after the library did. Older saved
+  // data has no `categories`, so seed it once with the original six.
+  if (!Array.isArray(data.categories)) {
+    data.categories = getStarterCategories();
+  }
   if (!Array.isArray(data.completedWorkouts)) {
     data.completedWorkouts = [];
   }
@@ -3975,7 +3986,9 @@ const UI_ICONS = {
   calendar: '<path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/>',
   sparkles: '<path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .962 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.962 0z"/>',
   star: '<path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"/>',
-  image: '<rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>'
+  image: '<rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>',
+  camera: '<path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/>',
+  tag: '<path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z"/><circle cx="7.5" cy="7.5" r=".5" fill="currentColor"/>'
 };
 
 function getUiIcon(name) {
@@ -4000,6 +4013,30 @@ let currentLibraryFilter = "all";
 let librarySearch = "";
 let editingExerciseId = null;
 let libraryReferenceId = null;
+// Photos staged while an exercise edit card is open (committed on Save, dropped
+// on Cancel). Keys: "start"/"finish"; value is a new data URL, or null to mean
+// "remove the custom photo for this slot". An absent key means "leave as-is".
+let editingDraftPhotos = null;
+
+// Build the filter chips from the editable categories. "All" and "Favorites"
+// are always present; the rest come from `categories`. If the active filter is
+// a category that no longer exists, fall back to "All".
+function renderFilterStrip() {
+  if (!filterStrip) return;
+  const validFilters = new Set(["all", "favorites", ...categories.map((c) => c.key)]);
+  if (!validFilters.has(currentLibraryFilter)) currentLibraryFilter = "all";
+
+  const chip = (filter, label, extraClass = "", iconHtml = "") => {
+    const active = currentLibraryFilter === filter ? " is-active" : "";
+    return `<button class="filter-chip${extraClass}${active}" type="button" data-filter="${escapeHtml(filter)}">${iconHtml}${escapeHtml(label)}</button>`;
+  };
+
+  filterStrip.innerHTML = [
+    chip("all", "All"),
+    chip("favorites", "Favorites", " filter-chip-fav", getUiIcon("star")),
+    ...categories.map((cat) => chip(cat.key, cat.label))
+  ].join("");
+}
 
 function renderExercises(filter = currentLibraryFilter) {
   if (!exerciseList) return;
@@ -4030,11 +4067,7 @@ function renderExercises(filter = currentLibraryFilter) {
     return;
   }
 
-  exerciseList.innerHTML = visibleExercises.map((exercise) =>
-    exercise.id === editingExerciseId
-      ? renderExerciseEditCard(exercise)
-      : renderExerciseCard(exercise)
-  ).join("");
+  exerciseList.innerHTML = visibleExercises.map(renderExerciseCard).join("");
 
   renderLibrarySheet();
 }
@@ -4066,7 +4099,10 @@ function renderExerciseArt(exercise) {
 }
 
 function renderExerciseCard(exercise) {
-  const tags = exercise.tags || [];
+  // Only show category tags as chips; internal flags (custom/sport/timed) and
+  // any stale tags are hidden so the row mirrors the editable categories.
+  const keys = categoryKeySet();
+  const tags = (exercise.tags || []).filter((tag) => keys.has(tag));
   return `
     <article class="exercise-card">
       ${renderExerciseArt(exercise)}
@@ -4096,8 +4132,7 @@ function renderLibrarySheet() {
   }
   root.innerHTML = buildReferenceSheetMarkup(
     { exerciseId: exercise.id, name: exercise.name, type: exercise.type, area: exercise.area },
-    "close-library-how-to",
-    true
+    "close-library-how-to"
   );
 }
 
@@ -4142,25 +4177,7 @@ function downscaleImage(file, maxSize = 700, quality = 0.72) {
   });
 }
 
-function setCustomPhoto(id, slot, dataUrl) {
-  persistLibrary(exercises.map((ex) => {
-    if (ex.id !== id) return ex;
-    return { ...ex, customPhotos: { ...(ex.customPhotos || {}), [slot]: dataUrl } };
-  }));
-}
-
-function clearCustomPhotos(id) {
-  const exercise = getExerciseById(id);
-  if (!confirm(`Remove your own photos for "${exercise?.name || "this exercise"}"? Any bundled reference photos stay.`)) return;
-  persistLibrary(exercises.map((ex) => {
-    if (ex.id !== id) return ex;
-    const copy = { ...ex };
-    delete copy.customPhotos;
-    return copy;
-  }));
-}
-
-// One slot (Start / Finish) inside the how-to sheet's photo editor.
+// One slot (Start / Finish) inside the edit card's photo editor.
 function renderPhotoUploadSlot(exId, slot, label) {
   const lib = getExerciseById(exId);
   const current = lib?.customPhotos?.[slot] || lib?.photos?.[slot] || null;
@@ -4234,31 +4251,264 @@ function submitAddExercise() {
   closeAddExerciseModal();
 }
 
-function renderExerciseEditCard(exercise) {
-  const exerciseType = normalizeExerciseType(exercise.type);
-  const start = getExerciseStartImage(exercise);
-  const art = start
-    ? `<span class="exercise-photo" style="background-image:url('${escapeHtml(start)}')"></span>`
-    : `<span class="exercise-glyph">${getExerciseIcon(exercise.icon)}</span>`;
-  return `
-    <article class="exercise-card is-editing">
-      <div class="exercise-art is-static">
-        ${art}
-      </div>
-      <div class="exercise-info">
-        <input type="text" class="exercise-edit-name" value="${escapeHtml(exercise.name)}" maxlength="40" aria-label="Exercise name" />
-        <div class="type-toggle" role="group" aria-label="Exercise type">
-          ${renderTypeOption("strength", exerciseType)}
-          ${renderTypeOption("cardio", exerciseType)}
-          ${renderTypeOption("timed", exerciseType)}
+// ===== Edit-categories modal =====
+// While open, `categoriesDraft` holds a working copy of the categories so the
+// list can be relabelled / added to / trimmed without touching live data until
+// Save. Each row is { key, label }; a new row has key === null (its key is
+// generated from the label on Save).
+
+let categoriesModalOpen = false;
+let categoriesDraft = null;
+
+function openCategoriesModal() {
+  categoriesDraft = categories.map((cat) => ({ key: cat.key, label: cat.label }));
+  categoriesModalOpen = true;
+  renderCategoriesModal();
+}
+
+function closeCategoriesModal() {
+  categoriesModalOpen = false;
+  categoriesDraft = null;
+  renderCategoriesModal();
+}
+
+// Pull the current label text from the inputs back into the draft, so a
+// re-render (add / remove row) doesn't lose anything the user just typed.
+function syncCategoriesDraftFromDom() {
+  const root = document.querySelector("#library-categories-modal-root");
+  if (!root || !categoriesDraft) return;
+  root.querySelectorAll(".cat-row-input").forEach((input) => {
+    const i = Number(input.dataset.index);
+    if (categoriesDraft[i]) categoriesDraft[i].label = input.value;
+  });
+}
+
+function renderCategoriesModal() {
+  const root = document.querySelector("#library-categories-modal-root");
+  if (!root) return;
+  if (!categoriesModalOpen) {
+    root.innerHTML = "";
+    return;
+  }
+  const rows = categoriesDraft.map((cat, i) => `
+    <div class="cat-row">
+      <input type="text" class="cat-row-input" data-index="${i}" maxlength="24" value="${escapeHtml(cat.label)}" aria-label="Category name" placeholder="Category name" />
+      <button type="button" class="cat-row-remove btn-ico" data-action="remove-category" data-index="${i}" aria-label="Remove ${escapeHtml(cat.label || "category")}">${getUiIcon("trash-2")}</button>
+    </div>
+  `).join("");
+  root.innerHTML = `
+    <div class="lw-sheet-scrim" role="presentation" data-categories-scrim>
+      <section class="lw-sheet cat-sheet" role="dialog" aria-modal="true" aria-label="Edit categories">
+        <div class="lw-sheet-head">
+          <div>
+            <h3>Edit categories</h3>
+            <p>Rename, add or remove the filters you organise exercises by. Renaming keeps every exercise tagged; removing a category clears it from all exercises.</p>
+          </div>
+          <button class="lw-sheet-close" type="button" data-action="close-categories" aria-label="Close edit categories">&times;</button>
         </div>
-        <div class="exercise-actions">
-          <button type="button" class="exercise-action primary" data-action="save-exercise" data-id="${escapeHtml(exercise.id)}" aria-label="Save changes">${getUiIcon("check")}<span class="btn-label">Save</span></button>
-          <button type="button" class="exercise-action" data-action="cancel-exercise" aria-label="Cancel editing">${getUiIcon("x")}<span class="btn-label">Cancel</span></button>
+        <div class="cat-list">
+          ${rows || `<p class="cat-empty">No categories yet. Add one below.</p>`}
         </div>
-      </div>
-    </article>
+        <button class="quiet-button small-button btn-ico cat-add" type="button" data-action="add-category">${getUiIcon("plus")}<span class="btn-label">Add category</span></button>
+        <button class="primary-button lw-sheet-done" type="button" data-action="save-categories">Save categories</button>
+      </section>
+    </div>
   `;
+}
+
+function addCategoryRow() {
+  syncCategoriesDraftFromDom();
+  categoriesDraft.push({ key: null, label: "" });
+  renderCategoriesModal();
+  // Focus the freshly added row's input.
+  const inputs = document.querySelectorAll("#library-categories-modal-root .cat-row-input");
+  inputs[inputs.length - 1]?.focus();
+}
+
+function removeCategoryRow(index) {
+  syncCategoriesDraftFromDom();
+  categoriesDraft.splice(index, 1);
+  renderCategoriesModal();
+}
+
+function saveCategories() {
+  syncCategoriesDraftFromDom();
+
+  // Build the next categories list, skipping blank rows and assigning keys to
+  // new ones. Relabelled rows keep their key so exercise tags stay attached.
+  // Seed the taken-keys set with every surviving original key so a new key
+  // can't collide with one further down the list.
+  const takenKeys = new Set(categoriesDraft.filter((r) => r.key).map((r) => r.key));
+  const next = [];
+  for (const row of categoriesDraft) {
+    const label = String(row.label).trim();
+    if (!label) continue;
+    if (row.key) {
+      next.push({ key: row.key, label });
+    } else {
+      const base = label.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 24) || "tag";
+      let key = base;
+      let n = 2;
+      while (takenKeys.has(key)) key = `${base}-${n++}`;
+      takenKeys.add(key);
+      next.push({ key, label });
+    }
+  }
+
+  // Any original category key not carried into `next` was removed: strip it
+  // from every exercise's tags so cards and filters stay consistent.
+  const survivingKeys = new Set(next.map((c) => c.key));
+  const removedKeys = categories.map((c) => c.key).filter((k) => !survivingKeys.has(k));
+  let library = exercises;
+  if (removedKeys.length) {
+    library = exercises.map((ex) => {
+      const tags = ex.tags || [];
+      if (!tags.some((t) => removedKeys.includes(t))) return ex;
+      return { ...ex, tags: tags.filter((t) => !removedKeys.includes(t)) };
+    });
+  }
+
+  persistCategories(next, library);
+  closeCategoriesModal();
+}
+
+// ===== Edit-exercise modal =====
+// Editing an exercise opens a full-width modal (cleaner than the old cramped
+// inline card). `editingExerciseId` doubles as the open flag; `editingDraftPhotos`
+// stages photo swaps until Save.
+
+// Category tags as tap-to-toggle chips. Selection lives in the `.is-on` class
+// (toggled by the modal click handler) and is read back on Save.
+function renderCategoryChips(exercise) {
+  if (categories.length === 0) {
+    return `<p class="cat-multiselect-empty">No categories yet — add some with “Edit categories”.</p>`;
+  }
+  const active = new Set(exercise.tags || []);
+  return categories.map((cat) =>
+    `<button type="button" class="cat-chip${active.has(cat.key) ? " is-on" : ""}" data-cat-key="${escapeHtml(cat.key)}" aria-pressed="${active.has(cat.key) ? "true" : "false"}">${escapeHtml(cat.label)}</button>`
+  ).join("");
+}
+
+function openEditExerciseModal(id) {
+  editingExerciseId = id;
+  editingDraftPhotos = {};
+  renderEditExerciseModal();
+}
+
+function closeEditExerciseModal() {
+  editingExerciseId = null;
+  editingDraftPhotos = null;
+  renderEditExerciseModal();
+}
+
+function renderEditExerciseModal() {
+  const root = document.querySelector("#library-edit-modal-root");
+  if (!root) return;
+  const exercise = editingExerciseId ? getExerciseById(editingExerciseId) : null;
+  if (!exercise) {
+    root.innerHTML = "";
+    return;
+  }
+  const exerciseType = normalizeExerciseType(exercise.type);
+  const hasCustom = Boolean(exercise.customPhotos);
+  root.innerHTML = `
+    <div class="lw-sheet-scrim" role="presentation" data-edit-scrim>
+      <section class="lw-sheet edit-sheet" role="dialog" aria-modal="true" aria-label="Edit ${escapeHtml(exercise.name)}">
+        <div class="lw-sheet-head">
+          <div>
+            <h3>Edit exercise</h3>
+            <p>Update its name, type, categories and photos.</p>
+          </div>
+          <button class="lw-sheet-close" type="button" data-action="close-edit" aria-label="Close edit exercise">&times;</button>
+        </div>
+        <label class="add-field">
+          <span>Name</span>
+          <input type="text" class="exercise-edit-name" maxlength="40" autocomplete="off" value="${escapeHtml(exercise.name)}" aria-label="Exercise name" />
+        </label>
+        <div class="add-field">
+          <span>Type</span>
+          <div class="type-toggle" role="group" aria-label="Exercise type">
+            ${renderTypeOption("strength", exerciseType)}
+            ${renderTypeOption("cardio", exerciseType)}
+            ${renderTypeOption("timed", exerciseType)}
+          </div>
+        </div>
+        <div class="add-field">
+          <span>Categories</span>
+          <div class="cat-chip-row">${renderCategoryChips(exercise)}</div>
+        </div>
+        <div class="add-field edit-photos">
+          <span>Photos</span>
+          <div class="edit-photos-slots">
+            ${renderPhotoUploadSlot(exercise.id, "start", "Start")}
+            ${renderPhotoUploadSlot(exercise.id, "finish", "Finish")}
+          </div>
+          ${hasCustom ? `<button class="quiet-button small-button" type="button" data-action="clear-custom-photos-edit" data-id="${escapeHtml(exercise.id)}">Remove my photos</button>` : ""}
+        </div>
+        <div class="edit-sheet-actions">
+          <button class="primary-button lw-sheet-done" type="button" data-action="save-exercise" data-id="${escapeHtml(exercise.id)}">Save changes</button>
+          <button class="quiet-button" type="button" data-action="cancel-edit">Cancel</button>
+        </div>
+      </section>
+    </div>
+  `;
+}
+
+// ----- Edit-modal photo staging (no full re-render, so the unsaved name / type
+// / category selections survive while photos are swapped) -----
+
+// Make sure the "Remove my photos" button exists once a custom photo is staged.
+function ensureRemovePhotosButton(modal) {
+  const wrap = modal?.querySelector(".edit-photos");
+  if (!wrap || wrap.querySelector('[data-action="clear-custom-photos-edit"]')) return;
+  const btn = document.createElement("button");
+  btn.className = "quiet-button small-button";
+  btn.type = "button";
+  btn.dataset.action = "clear-custom-photos-edit";
+  btn.dataset.id = editingExerciseId || "";
+  btn.textContent = "Remove my photos";
+  wrap.appendChild(btn);
+}
+
+function applyStagedPhotoToModal(input, dataUrl) {
+  const modal = input.closest(".edit-sheet");
+  const slotEl = input.closest(".lw-photo-slot");
+  const preview = slotEl?.querySelector(".lw-photo-slot-preview");
+  if (preview) {
+    preview.classList.add("has-img");
+    preview.style.backgroundImage = `url('${dataUrl}')`;
+    preview.innerHTML = "";
+  }
+  const label = slotEl?.querySelector(".lw-photo-slot-label");
+  if (label && !/·\s*yours/.test(label.textContent)) label.textContent = `${label.textContent} · yours`;
+  ensureRemovePhotosButton(modal);
+}
+
+// Stage removal of all custom photos and reflect the bundled fallback (or empty
+// state) in the open modal's slots.
+function stageRemoveCustomPhotos(modal, id) {
+  const exercise = getExerciseById(id);
+  editingDraftPhotos = { start: null, finish: null };
+  modal?.querySelectorAll(".lw-photo-slot").forEach((slotEl) => {
+    const input = slotEl.querySelector('input[type="file"][data-photo-slot]');
+    const slot = input?.dataset.photoSlot;
+    const fallback = exercise?.photos?.[slot] || null;
+    const preview = slotEl.querySelector(".lw-photo-slot-preview");
+    if (preview) {
+      if (fallback) {
+        preview.classList.add("has-img");
+        preview.style.backgroundImage = `url('${fallback}')`;
+        preview.innerHTML = "";
+      } else {
+        preview.classList.remove("has-img");
+        preview.style.backgroundImage = "";
+        preview.innerHTML = getUiIcon("image");
+      }
+    }
+    const label = slotEl.querySelector(".lw-photo-slot-label");
+    if (label) label.textContent = label.textContent.replace(/\s*·\s*yours/, "");
+  });
+  modal?.querySelector('[data-action="clear-custom-photos-edit"]')?.remove();
 }
 
 // ===== Library add / edit / remove =====
@@ -4341,6 +4591,37 @@ function persistLibrary(library) {
   }
 }
 
+// ===== Filter categories (editable) =====
+
+function getCategoryByKey(key) {
+  return categories.find((cat) => cat.key === key) || null;
+}
+
+function categoryKeySet() {
+  return new Set(categories.map((cat) => cat.key));
+}
+
+// Save the categories list everywhere (local + queue + cloud), mirroring
+// persistLibrary. `library` lets a caller that is also rewriting exercise tags
+// (e.g. after removing a category) persist both in one shot.
+function persistCategories(nextCategories, library = exercises) {
+  const data = getLocalData();
+  data.categories = nextCategories;
+  data.library = library;
+  data.updatedAt = new Date().toISOString();
+  data.updatedBy = getDeviceId();
+  saveLocalData(data);
+  markPendingData(data);
+  categories = nextCategories;
+  exercises = library;
+  renderFilterStrip();
+  renderExercises();
+  renderExercisePicker();
+  if (navigator.onLine) {
+    uploadWorkoutData(data).then(clearPendingData).catch(() => {});
+  }
+}
+
 function addLibraryExercise(name, type) {
   const cleanName = String(name).trim();
   if (!cleanName) return;
@@ -4353,21 +4634,45 @@ function addLibraryExercise(name, type) {
   persistLibrary([...exercises, newExercise]);
 }
 
-function saveLibraryExerciseEdit(id, name, type) {
+// Merge a staged photo edit into an exercise's customPhotos. Returns the new
+// customPhotos object, or undefined when no custom photos remain.
+function applyStagedPhotos(exercise, draft) {
+  const next = { ...(exercise.customPhotos || {}) };
+  if (draft) {
+    for (const slot of ["start", "finish"]) {
+      if (!(slot in draft)) continue;
+      if (draft[slot]) next[slot] = draft[slot];
+      else delete next[slot];
+    }
+  }
+  return Object.keys(next).length ? next : undefined;
+}
+
+function saveLibraryExerciseEdit(id, name, type, selectedCategoryKeys = []) {
   const cleanName = String(name).trim();
   if (!cleanName) return;
   const nextType = normalizeExerciseType(type);
+  const catKeys = categoryKeySet();
   const library = exercises.map((exercise) => {
     if (exercise.id !== id) return exercise;
-    const customExercise = (exercise.tags || []).includes("custom");
-    const typeMeta = customExercise ? getExerciseTypeMeta(nextType) : { type: nextType };
-    return {
-      ...exercise,
-      name: cleanName,
-      ...typeMeta
-    };
+    // Keep any non-category tags (custom / sport / timed) and replace the
+    // category tags with whatever was ticked in the dropdown.
+    const functionalTags = (exercise.tags || []).filter((t) => !catKeys.has(t));
+    const nextTags = [...functionalTags, ...selectedCategoryKeys];
+    const isCustom = functionalTags.includes("custom");
+    // Type drives a custom exercise's area/icon, but no longer its tags.
+    const visuals = isCustom
+      ? (() => { const m = getExerciseTypeMeta(nextType); return { area: m.area, icon: m.icon }; })()
+      : {};
+    const next = { ...exercise, name: cleanName, type: nextType, tags: nextTags, ...visuals };
+    const customPhotos = applyStagedPhotos(exercise, editingDraftPhotos);
+    if (customPhotos) next.customPhotos = customPhotos;
+    else delete next.customPhotos;
+    return next;
   });
   editingExerciseId = null;
+  editingDraftPhotos = null;
+  renderEditExerciseModal();
   persistLibrary(library);
 }
 
@@ -4375,20 +4680,13 @@ function removeLibraryExercise(id) {
   const exercise = getExerciseById(id);
   const name = exercise ? exercise.name : "this exercise";
   if (!confirm(`Remove "${name}" from your library? Past workouts that used it are not affected.`)) return;
-  if (editingExerciseId === id) editingExerciseId = null;
+  if (editingExerciseId === id) { editingExerciseId = null; renderEditExerciseModal(); }
   persistLibrary(exercises.filter((item) => item.id !== id));
 }
 
-// One click handler for the whole library list (Edit / Remove / Save / Cancel
-// and the Strength/Cardio toggle inside an edit card).
+// Click handler for the library list: how-to, favourite, edit (opens the modal)
+// and remove. The actual editing happens in the edit modal, not inline.
 function handleLibraryListClick(event) {
-  const typeOption = event.target.closest(".type-option");
-  if (typeOption) {
-    const group = typeOption.parentElement;
-    group.querySelectorAll(".type-option").forEach((btn) => btn.classList.toggle("is-active", btn === typeOption));
-    return;
-  }
-
   const button = event.target.closest("[data-action]");
   if (!button) return;
   const action = button.dataset.action;
@@ -4399,18 +4697,44 @@ function handleLibraryListClick(event) {
   } else if (action === "toggle-fav") {
     toggleFavoriteExercise(id);
   } else if (action === "edit-exercise") {
-    editingExerciseId = id;
-    renderExercises();
-  } else if (action === "cancel-exercise") {
-    editingExerciseId = null;
-    renderExercises();
+    openEditExerciseModal(id);
   } else if (action === "remove-exercise") {
     removeLibraryExercise(id);
+  }
+}
+
+// Click handler for the edit-exercise modal: type / category toggles, photo
+// controls, save / cancel / close / scrim.
+function handleEditModalClick(event) {
+  if (event.target.hasAttribute("data-edit-scrim")) { closeEditExerciseModal(); return; }
+
+  const typeOption = event.target.closest(".type-option");
+  if (typeOption) {
+    typeOption.parentElement.querySelectorAll(".type-option").forEach((btn) => btn.classList.toggle("is-active", btn === typeOption));
+    return;
+  }
+  const chip = event.target.closest(".cat-chip");
+  if (chip) {
+    const on = chip.classList.toggle("is-on");
+    chip.setAttribute("aria-pressed", on ? "true" : "false");
+    return;
+  }
+
+  const button = event.target.closest("[data-action]");
+  if (!button) return;
+  const action = button.dataset.action;
+  const id = button.dataset.id;
+  const modal = button.closest(".edit-sheet");
+
+  if (action === "close-edit" || action === "cancel-edit") {
+    closeEditExerciseModal();
+  } else if (action === "clear-custom-photos-edit") {
+    stageRemoveCustomPhotos(modal, id);
   } else if (action === "save-exercise") {
-    const card = button.closest(".exercise-card");
-    const name = card.querySelector(".exercise-edit-name")?.value || "";
-    const activeType = card.querySelector(".type-option.is-active")?.dataset.type || "strength";
-    saveLibraryExerciseEdit(id, name, activeType);
+    const name = modal.querySelector(".exercise-edit-name")?.value || "";
+    const activeType = modal.querySelector(".type-option.is-active")?.dataset.type || "strength";
+    const selected = Array.from(modal.querySelectorAll(".cat-chip.is-on")).map((c) => c.dataset.catKey);
+    saveLibraryExerciseEdit(id, name, activeType, selected);
   }
 }
 
@@ -4764,8 +5088,9 @@ async function saveWorkout() {
 }
 
 function formatTag(tag) {
-  if (tag === "bodyweight") return "no equipment";
-  if (tag === "machine") return "cable/machine";
+  // A tag that matches an editable category shows that category's label.
+  const category = getCategoryByKey(tag);
+  if (category) return category.label;
   if (tag === "timed") return "timed hold";
   return tag;
 }
@@ -4964,6 +5289,9 @@ async function loadWorkoutData() {
   // 12 starters. (An empty array is left alone - that means Daniel cleared it.)
   if (!Array.isArray(data.library)) {
     data.library = getStarterExercises();
+  }
+  if (!Array.isArray(data.categories)) {
+    data.categories = getStarterCategories();
   }
   if (!Array.isArray(data.completedWorkouts)) {
     data.completedWorkouts = [];
@@ -6937,16 +7265,43 @@ tabs.forEach((tab) => {
   });
 });
 
-filterChips.forEach((chip) => {
-  chip.addEventListener("click", () => {
-    const filter = chip.dataset.filter || "all";
-    filterChips.forEach((item) => item.classList.toggle("is-active", item === chip));
-    renderExercises(filter);
-  });
+// Filter chips are rebuilt whenever categories change, so use delegation.
+filterStrip?.addEventListener("click", (event) => {
+  const chip = event.target.closest(".filter-chip");
+  if (!chip) return;
+  const filter = chip.dataset.filter || "all";
+  filterStrip.querySelectorAll(".filter-chip").forEach((item) => item.classList.toggle("is-active", item === chip));
+  renderExercises(filter);
 });
 
-// Library: edit / remove / inline-edit actions on the exercise list.
+// Library: the "Edit categories" button opens the category manager modal.
+document.querySelector("#open-edit-categories")?.addEventListener("click", openCategoriesModal);
+
+// Library: how-to / favourite / edit / remove actions on the exercise list.
 exerciseList?.addEventListener("click", handleLibraryListClick);
+
+// Library: the edit-exercise modal — controls + staged photo uploads.
+const libraryEditModalRoot = document.querySelector("#library-edit-modal-root");
+libraryEditModalRoot?.addEventListener("click", handleEditModalClick);
+libraryEditModalRoot?.addEventListener("change", (event) => {
+  const fileInput = event.target.closest('input[type="file"][data-photo-slot]');
+  if (!fileInput || !fileInput.files || !fileInput.files[0]) return;
+  const slot = fileInput.dataset.photoSlot;
+  downscaleImage(fileInput.files[0])
+    .then((dataUrl) => {
+      if (!editingDraftPhotos) editingDraftPhotos = {};
+      editingDraftPhotos[slot] = dataUrl;
+      applyStagedPhotoToModal(fileInput, dataUrl);
+    })
+    .catch((error) => alert(error.message || "That image could not be used."));
+});
+libraryEditModalRoot?.addEventListener("keydown", (event) => {
+  if (event.key === "Enter" && event.target.classList.contains("exercise-edit-name")) {
+    event.preventDefault();
+    const modal = event.target.closest(".edit-sheet");
+    modal?.querySelector('[data-action="save-exercise"]')?.click();
+  }
+});
 
 // Library: live search box filters the cards as you type.
 const librarySearchInput = document.querySelector("#library-search");
@@ -6955,30 +7310,19 @@ librarySearchInput?.addEventListener("input", () => {
   renderExercises();
 });
 
-// Library: the "How to do it" sheet — close (X / Done / scrim) and the photo
-// editor (remove-my-photos button + the two file inputs).
+// Library: the "How to do it" sheet is read-only now — just close on X / Done /
+// scrim. (Photo editing moved to the exercise edit card.)
 const librarySheetRoot = document.querySelector("#library-sheet-root");
 librarySheetRoot?.addEventListener("click", (event) => {
-  const clearButton = event.target.closest('[data-action="clear-custom-photos"]');
-  if (clearButton) {
-    clearCustomPhotos(clearButton.dataset.id);
-    return;
-  }
   const onCloseButton = event.target.closest('[data-action="close-library-how-to"]');
   const onScrim = event.target.classList.contains("lw-sheet-scrim");
   if (onCloseButton || onScrim) closeLibraryReference();
 });
-librarySheetRoot?.addEventListener("change", (event) => {
-  const input = event.target.closest('input[type="file"][data-photo-slot]');
-  if (!input || !input.files || !input.files[0]) return;
-  const { id, photoSlot } = input.dataset;
-  downscaleImage(input.files[0])
-    .then((dataUrl) => setCustomPhoto(id, photoSlot, dataUrl))
-    .catch((error) => alert(error.message || "That image could not be used."));
-});
 document.addEventListener("keydown", (event) => {
   if (event.key !== "Escape") return;
-  if (addModalOpen) closeAddExerciseModal();
+  if (editingExerciseId) closeEditExerciseModal();
+  else if (categoriesModalOpen) closeCategoriesModal();
+  else if (addModalOpen) closeAddExerciseModal();
   else if (libraryReferenceId) closeLibraryReference();
 });
 
@@ -7001,6 +7345,25 @@ libraryAddModalRoot?.addEventListener("keydown", (event) => {
   if (event.key === "Enter" && event.target.id === "add-ex-name") {
     event.preventDefault();
     submitAddExercise();
+  }
+});
+
+// Library: the "Edit categories" modal — add / remove / relabel + save / close.
+const libraryCategoriesModalRoot = document.querySelector("#library-categories-modal-root");
+libraryCategoriesModalRoot?.addEventListener("click", (event) => {
+  if (event.target.hasAttribute("data-categories-scrim")) { closeCategoriesModal(); return; }
+  const button = event.target.closest("[data-action]");
+  if (!button) return;
+  const action = button.dataset.action;
+  if (action === "add-category") addCategoryRow();
+  else if (action === "remove-category") removeCategoryRow(Number(button.dataset.index));
+  else if (action === "save-categories") saveCategories();
+  else if (action === "close-categories") closeCategoriesModal();
+});
+libraryCategoriesModalRoot?.addEventListener("keydown", (event) => {
+  if (event.key === "Enter" && event.target.classList.contains("cat-row-input")) {
+    event.preventDefault();
+    saveCategories();
   }
 });
 
@@ -7088,6 +7451,7 @@ window.addEventListener("online", () => {
 window.addEventListener("offline", updateConnectionState);
 
 refreshLibrary();
+renderFilterStrip();
 renderExercises();
 renderExercisePicker();
 renderActiveWorkout();
@@ -7151,6 +7515,7 @@ async function initCloud() {
       // Cloud has the newest data: take it and refresh the screens.
       saveLocalData(remote);
       refreshLibrary();
+      renderFilterStrip();
       renderExercises();
       renderExercisePicker();
       renderTodayRoutine();

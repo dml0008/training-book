@@ -1329,13 +1329,66 @@ p {
   flex: 1;
 }
 
-.filter-strip {
+/* The filter chips scroll horizontally; the "Edit categories" button sits
+   pinned to the right of them so it never scrolls out of reach. */
+.filter-row {
   display: flex;
+  align-items: center;
   gap: 8px;
   margin: 0 -2px 18px;
+}
+
+.filter-strip {
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
+  gap: 8px;
   padding: 2px 2px 8px;
   overflow-x: auto;
   scrollbar-color: var(--line) transparent;
+}
+
+.cat-edit-btn {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 38px;
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: rgba(9, 12, 11, 0.36);
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.cat-edit-btn svg {
+  width: 15px;
+  height: 15px;
+}
+
+.cat-edit-btn:hover {
+  border-color: var(--accent);
+  color: var(--text);
+}
+
+.cat-edit-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+@media (max-width: 560px) {
+  /* On narrow phones, drop the label and keep just the tag icon. */
+  .cat-edit-btn-label {
+    display: none;
+  }
+
+  .cat-edit-btn {
+    padding: 8px 10px;
+  }
 }
 
 .filter-chip {
@@ -1564,14 +1617,10 @@ p {
   outline-offset: 2px;
 }
 
-.exercise-card.is-editing {
-  border-color: var(--accent);
-}
-
+/* The exercise name input (used in the edit modal). */
 .exercise-edit-name {
   width: 100%;
   min-height: 42px;
-  margin-bottom: 10px;
   padding: 9px 12px;
   border: 1px solid var(--line);
   border-radius: var(--radius-sm);
@@ -1583,10 +1632,6 @@ p {
 .exercise-edit-name:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 1px;
-}
-
-.exercise-card.is-editing .type-toggle {
-  margin-bottom: 10px;
 }
 
 .library-empty {
@@ -4545,31 +4590,7 @@ svg.lw-glyph path {
   flex: 1 0 auto;
 }
 
-/* ----- Custom-photo editor inside the how-to sheet ----- */
-.lw-ref-edit {
-  margin-top: 2px;
-  padding-top: 14px;
-  border-top: 1px solid var(--line);
-}
-
-.lw-ref-edit-title {
-  margin: 0 0 2px;
-  font-size: 14px;
-  font-weight: 800;
-}
-
-.lw-ref-edit-note {
-  margin: 0 0 10px;
-  color: var(--muted);
-  font-size: 12px;
-}
-
-.lw-ref-edit-slots {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 10px;
-}
-
+/* ----- Photo-upload slots (used by the Library edit card) ----- */
 .lw-photo-slot {
   position: relative;
   flex: 1;
@@ -4619,6 +4640,151 @@ svg.lw-glyph path {
 
 .lw-photo-slot:hover .lw-photo-slot-preview {
   border-color: rgba(183, 255, 53, 0.5);
+}
+
+/* ----- Edit-exercise modal ----- */
+.edit-sheet .add-field {
+  margin-bottom: 16px;
+}
+
+.edit-sheet .add-field .type-toggle {
+  display: flex;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.edit-sheet .add-field .type-toggle .type-option {
+  flex: 1 0 auto;
+}
+
+/* Category tags as tap-to-toggle pills. */
+.cat-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.cat-chip {
+  min-height: 36px;
+  padding: 8px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-full);
+  background: rgba(9, 12, 11, 0.4);
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 750;
+}
+
+.cat-chip.is-on {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #101413;
+}
+
+.cat-chip:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.cat-multiselect-empty {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+/* The photo editor (the two slots) inside the edit modal. */
+.edit-photos-slots {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.edit-sheet .lw-photo-slot-preview {
+  aspect-ratio: 4 / 3;
+}
+
+.edit-sheet-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+/* Override .lw-sheet-done's full-width / top-margin inside the actions row. */
+.edit-sheet-actions .lw-sheet-done {
+  flex: 1 1 auto;
+  width: auto;
+  margin-top: 0;
+}
+
+.edit-sheet-actions .quiet-button {
+  flex: 0 0 auto;
+  min-height: 48px;
+}
+
+/* ----- Edit-categories modal ----- */
+.cat-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.cat-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cat-row-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 42px;
+  padding: 9px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: rgba(9, 12, 11, 0.55);
+  color: var(--text);
+  font-size: 16px;
+}
+
+.cat-row-input:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.cat-row-remove {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.cat-row-remove svg {
+  width: 17px;
+  height: 17px;
+}
+
+.cat-row-remove:hover {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.cat-add {
+  margin-bottom: 14px;
+}
+
+.cat-empty {
+  margin: 0 0 12px;
+  color: var(--muted);
+  font-size: 14px;
 }
 
 /* ----- Edit-mode button polish: hover + active on the move/remove controls,
