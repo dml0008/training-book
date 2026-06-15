@@ -3,7 +3,7 @@ const DROPBOX_TOKEN_URL = "https://api.dropboxapi.com/oauth2/token";
 const DROPBOX_UPLOAD_URL = "https://content.dropboxapi.com/2/files/upload";
 const DROPBOX_DOWNLOAD_URL = "https://content.dropboxapi.com/2/files/download";
 const DATA_FILE_PATH = "/04_Technical/06_Side_Projects/Workout and Nutrition App/data/workout-data.json";
-const APP_VERSION = "2026.06.23-exercise-library";
+const APP_VERSION = "2026.06.24-library-142-exercises";
 
 const STORAGE = {
   appKey: "trainingBookDropboxAppKey",
@@ -18,7 +18,8 @@ const STORAGE = {
   activeTab: "trainingBookActiveTab",
   reviewReminderDismissed: "trainingBookReviewReminderDismissed",
   soccerSeeded: "trainingBookSoccerSeeded",
-  libraryV2Seeded: "trainingBookLibraryV2Seeded"
+  libraryV2Seeded: "trainingBookLibraryV2Seeded",
+  libraryV3Merged: "trainingBookLibraryV3Merged"
 };
 
 const screens = Array.from(document.querySelectorAll(".screen"));
@@ -758,6 +759,1074 @@ function getStarterExercises() {
     icon: "soccer",
     photos: null,
     tags: ["sport"]
+  },
+  {
+    id: "dumbbell-pullover",
+    name: "Dumbbell Pullover",
+    type: "strength",
+    area: "Chest",
+    group: "chest",
+    equipment: "dumbbell",
+    primaryMuscle: "chest",
+    icon: "dumbbell",
+    photos: { start: "assets/icons/photos/dumbbell-pullover/start.jpg", finish: "assets/icons/photos/dumbbell-pullover/finish.jpg" },
+    tags: ["home","gym","dumbbells"]
+  },
+  {
+    id: "machine-chest-press",
+    name: "Machine Chest Press",
+    type: "strength",
+    area: "Chest",
+    group: "chest",
+    equipment: "machine",
+    primaryMuscle: "chest",
+    icon: "weight",
+    photos: { start: "assets/icons/photos/machine-chest-press/start.jpg", finish: "assets/icons/photos/machine-chest-press/finish.jpg" },
+    tags: ["gym","machine"]
+  },
+  {
+    id: "pec-deck-fly",
+    name: "Pec Deck Fly",
+    type: "strength",
+    area: "Chest",
+    group: "chest",
+    equipment: "machine",
+    primaryMuscle: "chest",
+    icon: "weight",
+    photos: { start: "assets/icons/photos/pec-deck-fly/start.jpg", finish: "assets/icons/photos/pec-deck-fly/finish.jpg" },
+    tags: ["gym","machine"]
+  },
+  {
+    id: "incline-dumbbell-press",
+    name: "Incline Dumbbell Press",
+    type: "strength",
+    area: "Chest",
+    group: "chest",
+    equipment: "dumbbell",
+    primaryMuscle: "chest",
+    icon: "dumbbell",
+    photos: { start: "assets/icons/photos/incline-dumbbell-press/start.jpg", finish: "assets/icons/photos/incline-dumbbell-press/finish.jpg" },
+    tags: ["home","gym","dumbbells"]
+  },
+  {
+    id: "decline-bench-press",
+    name: "Decline Bench Press",
+    type: "strength",
+    area: "Chest",
+    group: "chest",
+    equipment: "barbell",
+    primaryMuscle: "chest",
+    icon: "barbell",
+    photos: { start: "assets/icons/photos/decline-bench-press/start.jpg", finish: "assets/icons/photos/decline-bench-press/finish.jpg" },
+    tags: ["gym"]
+  },
+  {
+    id: "incline-dumbbell-fly",
+    name: "Incline Dumbbell Fly",
+    type: "strength",
+    area: "Chest",
+    group: "chest",
+    equipment: "dumbbell",
+    primaryMuscle: "chest",
+    icon: "dumbbell",
+    photos: { start: "assets/icons/photos/incline-dumbbell-fly/start.jpg", finish: "assets/icons/photos/incline-dumbbell-fly/finish.jpg" },
+    tags: ["home","gym","dumbbells"]
+  },
+  {
+    id: "diamond-push-up",
+    name: "Diamond Push-Up",
+    type: "strength",
+    area: "Arms",
+    group: "arms",
+    equipment: "body only",
+    primaryMuscle: "triceps",
+    icon: "gymnastics",
+    photos: { start: "assets/icons/photos/diamond-push-up/start.jpg", finish: "assets/icons/photos/diamond-push-up/finish.jpg" },
+    tags: ["home","gym","bodyweight"]
+  },
+  {
+    id: "inverted-row",
+    name: "Inverted Row",
+    type: "strength",
+    area: "Back",
+    group: "back",
+    equipment: "body only",
+    primaryMuscle: "middle back",
+    icon: "gymnastics",
+    photos: { start: "assets/icons/photos/inverted-row/start.jpg", finish: "assets/icons/photos/inverted-row/finish.jpg" },
+    tags: ["home","gym","bodyweight"]
+  },
+  {
+    id: "decline-dumbbell-press",
+    name: "Decline Dumbbell Press",
+    type: "strength",
+    area: "Chest",
+    group: "chest",
+    equipment: "dumbbell",
+    primaryMuscle: "chest",
+    icon: "dumbbell",
+    photos: { start: "assets/icons/photos/decline-dumbbell-press/start.jpg", finish: "assets/icons/photos/decline-dumbbell-press/finish.jpg" },
+    tags: ["home","gym","dumbbells"]
+  },
+  {
+    id: "t-bar-row",
+    name: "T-Bar Row",
+    type: "strength",
+    area: "Back",
+    group: "back",
+    equipment: "barbell",
+    primaryMuscle: "middle back",
+    icon: "barbell",
+    photos: { start: "assets/icons/photos/t-bar-row/start.jpg", finish: "assets/icons/photos/t-bar-row/finish.jpg" },
+    tags: ["gym"]
+  },
+  {
+    id: "good-morning",
+    name: "Good Morning",
+    type: "strength",
+    area: "Back",
+    group: "back",
+    equipment: "barbell",
+    primaryMuscle: "lower back",
+    icon: "barbell",
+    photos: { start: "assets/icons/photos/good-morning/start.jpg", finish: "assets/icons/photos/good-morning/finish.jpg" },
+    tags: ["gym"]
+  },
+  {
+    id: "rack-pull",
+    name: "Rack Pull",
+    type: "strength",
+    area: "Back",
+    group: "back",
+    equipment: "barbell",
+    primaryMuscle: "lower back",
+    icon: "barbell",
+    photos: { start: "assets/icons/photos/rack-pull/start.jpg", finish: "assets/icons/photos/rack-pull/finish.jpg" },
+    tags: ["gym"]
+  },
+  {
+    id: "straight-arm-pulldown",
+    name: "Straight-Arm Pulldown",
+    type: "strength",
+    area: "Back",
+    group: "back",
+    equipment: "cable",
+    primaryMuscle: "lats",
+    icon: "weight",
+    photos: { start: "assets/icons/photos/straight-arm-pulldown/start.jpg", finish: "assets/icons/photos/straight-arm-pulldown/finish.jpg" },
+    tags: ["gym","machine"]
+  },
+  {
+    id: "back-extension",
+    name: "Back Extension",
+    type: "strength",
+    area: "Back",
+    group: "back",
+    equipment: "body only",
+    primaryMuscle: "lower back",
+    icon: "gymnastics",
+    photos: { start: "assets/icons/photos/back-extension/start.jpg", finish: "assets/icons/photos/back-extension/finish.jpg" },
+    tags: ["home","gym","bodyweight"]
+  },
+  {
+    id: "dumbbell-shrug",
+    name: "Dumbbell Shrug",
+    type: "strength",
+    area: "Back",
+    group: "back",
+    equipment: "dumbbell",
+    primaryMuscle: "traps",
+    icon: "dumbbell",
+    photos: { start: "assets/icons/photos/dumbbell-shrug/start.jpg", finish: "assets/icons/photos/dumbbell-shrug/finish.jpg" },
+    tags: ["home","gym","dumbbells"]
+  },
+  {
+    id: "cable-pulldown-underhand",
+    name: "Cable Pulldown (Underhand)",
+    type: "strength",
+    area: "Back",
+    group: "back",
+    equipment: "cable",
+    primaryMuscle: "lats",
+    icon: "weight",
+    photos: { start: "assets/icons/photos/cable-pulldown-underhand/start.jpg", finish: "assets/icons/photos/cable-pulldown-underhand/finish.jpg" },
+    tags: ["gym","machine"]
+  },
+  {
+    id: "wide-grip-pull-up",
+    name: "Wide-Grip Pull-Up",
+    type: "strength",
+    area: "Back",
+    group: "back",
+    equipment: "body only",
+    primaryMuscle: "lats",
+    icon: "gymnastics",
+    photos: { start: "assets/icons/photos/wide-grip-pull-up/start.jpg", finish: "assets/icons/photos/wide-grip-pull-up/finish.jpg" },
+    tags: ["home","gym","bodyweight"]
+  },
+  {
+    id: "upright-row",
+    name: "Upright Row",
+    type: "strength",
+    area: "Shoulders",
+    group: "shoulders",
+    equipment: "barbell",
+    primaryMuscle: "shoulders",
+    icon: "barbell",
+    photos: { start: "assets/icons/photos/upright-row/start.jpg", finish: "assets/icons/photos/upright-row/finish.jpg" },
+    tags: ["gym"]
+  },
+  {
+    id: "cable-lateral-raise",
+    name: "Cable Lateral Raise",
+    type: "strength",
+    area: "Shoulders",
+    group: "shoulders",
+    equipment: "cable",
+    primaryMuscle: "shoulders",
+    icon: "weight",
+    photos: { start: "assets/icons/photos/cable-lateral-raise/start.jpg", finish: "assets/icons/photos/cable-lateral-raise/finish.jpg" },
+    tags: ["gym","machine"]
+  },
+  {
+    id: "reverse-dumbbell-fly",
+    name: "Reverse Dumbbell Fly",
+    type: "strength",
+    area: "Shoulders",
+    group: "shoulders",
+    equipment: "dumbbell",
+    primaryMuscle: "shoulders",
+    icon: "dumbbell",
+    photos: { start: "assets/icons/photos/reverse-dumbbell-fly/start.jpg", finish: "assets/icons/photos/reverse-dumbbell-fly/finish.jpg" },
+    tags: ["home","gym","dumbbells"]
+  },
+  {
+    id: "seated-dumbbell-press",
+    name: "Seated Dumbbell Press",
+    type: "strength",
+    area: "Shoulders",
+    group: "shoulders",
+    equipment: "dumbbell",
+    primaryMuscle: "shoulders",
+    icon: "dumbbell",
+    photos: { start: "assets/icons/photos/seated-dumbbell-press/start.jpg", finish: "assets/icons/photos/seated-dumbbell-press/finish.jpg" },
+    tags: ["home","gym","dumbbells"]
+  },
+  {
+    id: "reverse-pec-deck",
+    name: "Reverse Pec Deck",
+    type: "strength",
+    area: "Shoulders",
+    group: "shoulders",
+    equipment: "machine",
+    primaryMuscle: "shoulders",
+    icon: "weight",
+    photos: { start: "assets/icons/photos/reverse-pec-deck/start.jpg", finish: "assets/icons/photos/reverse-pec-deck/finish.jpg" },
+    tags: ["gym","machine"]
+  },
+  {
+    id: "external-rotation",
+    name: "External Rotation",
+    type: "strength",
+    area: "Shoulders",
+    group: "shoulders",
+    equipment: "dumbbell",
+    primaryMuscle: "shoulders",
+    icon: "dumbbell",
+    photos: { start: "assets/icons/photos/external-rotation/start.jpg", finish: "assets/icons/photos/external-rotation/finish.jpg" },
+    tags: ["home","gym","dumbbells"]
+  },
+  {
+    id: "push-press",
+    name: "Push Press",
+    type: "strength",
+    area: "Shoulders",
+    group: "shoulders",
+    equipment: "barbell",
+    primaryMuscle: "shoulders",
+    icon: "barbell",
+    photos: { start: "assets/icons/photos/push-press/start.jpg", finish: "assets/icons/photos/push-press/finish.jpg" },
+    tags: ["gym"]
+  },
+  {
+    id: "hack-squat",
+    name: "Hack Squat",
+    type: "strength",
+    area: "Legs",
+    group: "legs",
+    equipment: "machine",
+    primaryMuscle: "quadriceps",
+    icon: "weight",
+    photos: { start: "assets/icons/photos/hack-squat/start.jpg", finish: "assets/icons/photos/hack-squat/finish.jpg" },
+    tags: ["gym","machine"]
+  },
+  {
+    id: "barbell-lunge",
+    name: "Barbell Lunge",
+    type: "strength",
+    area: "Legs",
+    group: "legs",
+    equipment: "barbell",
+    primaryMuscle: "quadriceps",
+    icon: "barbell",
+    photos: { start: "assets/icons/photos/barbell-lunge/start.jpg", finish: "assets/icons/photos/barbell-lunge/finish.jpg" },
+    tags: ["gym"]
+  },
+  {
+    id: "walking-lunge",
+    name: "Walking Lunge",
+    type: "strength",
+    area: "Legs",
+    group: "legs",
+    equipment: "barbell",
+    primaryMuscle: "quadriceps",
+    icon: "barbell",
+    photos: { start: "assets/icons/photos/walking-lunge/start.jpg", finish: "assets/icons/photos/walking-lunge/finish.jpg" },
+    tags: ["gym"]
+  },
+  {
+    id: "dumbbell-step-up",
+    name: "Dumbbell Step-Up",
+    type: "strength",
+    area: "Legs",
+    group: "legs",
+    equipment: "dumbbell",
+    primaryMuscle: "quadriceps",
+    icon: "dumbbell",
+    photos: { start: "assets/icons/photos/dumbbell-step-up/start.jpg", finish: "assets/icons/photos/dumbbell-step-up/finish.jpg" },
+    tags: ["home","gym","dumbbells"]
+  },
+  {
+    id: "sumo-deadlift",
+    name: "Sumo Deadlift",
+    type: "strength",
+    area: "Legs",
+    group: "legs",
+    equipment: "barbell",
+    primaryMuscle: "hamstrings",
+    icon: "barbell",
+    photos: { start: "assets/icons/photos/sumo-deadlift/start.jpg", finish: "assets/icons/photos/sumo-deadlift/finish.jpg" },
+    tags: ["gym"]
+  },
+  {
+    id: "glute-bridge",
+    name: "Glute Bridge",
+    type: "strength",
+    area: "Legs",
+    group: "legs",
+    equipment: "barbell",
+    primaryMuscle: "glutes",
+    icon: "barbell",
+    photos: { start: "assets/icons/photos/glute-bridge/start.jpg", finish: "assets/icons/photos/glute-bridge/finish.jpg" },
+    tags: ["gym"]
+  },
+  {
+    id: "cable-pull-through",
+    name: "Cable Pull Through",
+    type: "strength",
+    area: "Legs",
+    group: "legs",
+    equipment: "cable",
+    primaryMuscle: "glutes",
+    icon: "weight",
+    photos: { start: "assets/icons/photos/cable-pull-through/start.jpg", finish: "assets/icons/photos/cable-pull-through/finish.jpg" },
+    tags: ["gym","machine"]
+  },
+  {
+    id: "reverse-lunge",
+    name: "Reverse Lunge",
+    type: "strength",
+    area: "Legs",
+    group: "legs",
+    equipment: "dumbbell",
+    primaryMuscle: "quadriceps",
+    icon: "dumbbell",
+    photos: { start: "assets/icons/photos/reverse-lunge/start.jpg", finish: "assets/icons/photos/reverse-lunge/finish.jpg" },
+    tags: ["home","gym","dumbbells"]
+  },
+  {
+    id: "pli-dumbbell-squat",
+    name: "Plié Dumbbell Squat",
+    type: "strength",
+    area: "Legs",
+    group: "legs",
+    equipment: "dumbbell",
+    primaryMuscle: "quadriceps",
+    icon: "dumbbell",
+    photos: { start: "assets/icons/photos/pli-dumbbell-squat/start.jpg", finish: "assets/icons/photos/pli-dumbbell-squat/finish.jpg" },
+    tags: ["home","gym","dumbbells"]
+  },
+  {
+    id: "glute-kickback",
+    name: "Glute Kickback",
+    type: "strength",
+    area: "Legs",
+    group: "legs",
+    equipment: "body only",
+    primaryMuscle: "glutes",
+    icon: "walk",
+    photos: { start: "assets/icons/photos/glute-kickback/start.jpg", finish: "assets/icons/photos/glute-kickback/finish.jpg" },
+    tags: ["home","gym","bodyweight"]
+  },
+  {
+    id: "seated-leg-curl",
+    name: "Seated Leg Curl",
+    type: "strength",
+    area: "Legs",
+    group: "legs",
+    equipment: "machine",
+    primaryMuscle: "hamstrings",
+    icon: "weight",
+    photos: { start: "assets/icons/photos/seated-leg-curl/start.jpg", finish: "assets/icons/photos/seated-leg-curl/finish.jpg" },
+    tags: ["gym","machine"]
+  },
+  {
+    id: "box-squat",
+    name: "Box Squat",
+    type: "strength",
+    area: "Legs",
+    group: "legs",
+    equipment: "barbell",
+    primaryMuscle: "quadriceps",
+    icon: "barbell",
+    photos: { start: "assets/icons/photos/box-squat/start.jpg", finish: "assets/icons/photos/box-squat/finish.jpg" },
+    tags: ["gym"]
+  },
+  {
+    id: "hip-adduction-machine",
+    name: "Hip Adduction (Machine)",
+    type: "strength",
+    area: "Legs",
+    group: "legs",
+    equipment: "machine",
+    primaryMuscle: "adductors",
+    icon: "weight",
+    photos: { start: "assets/icons/photos/hip-adduction-machine/start.jpg", finish: "assets/icons/photos/hip-adduction-machine/finish.jpg" },
+    tags: ["gym","machine"]
+  },
+  {
+    id: "step-up-with-knee-raise",
+    name: "Step-Up with Knee Raise",
+    type: "strength",
+    area: "Legs",
+    group: "legs",
+    equipment: "body only",
+    primaryMuscle: "glutes",
+    icon: "walk",
+    photos: { start: "assets/icons/photos/step-up-with-knee-raise/start.jpg", finish: "assets/icons/photos/step-up-with-knee-raise/finish.jpg" },
+    tags: ["home","gym","bodyweight"]
+  },
+  {
+    id: "ez-bar-curl",
+    name: "EZ-Bar Curl",
+    type: "strength",
+    area: "Arms",
+    group: "arms",
+    equipment: "barbell",
+    primaryMuscle: "biceps",
+    icon: "biceps-flexed",
+    photos: { start: "assets/icons/photos/ez-bar-curl/start.jpg", finish: "assets/icons/photos/ez-bar-curl/finish.jpg" },
+    tags: ["gym"]
+  },
+  {
+    id: "bodyweight-squat",
+    name: "Bodyweight Squat",
+    type: "strength",
+    area: "Legs",
+    group: "legs",
+    equipment: "body only",
+    primaryMuscle: "quadriceps",
+    icon: "walk",
+    photos: { start: "assets/icons/photos/bodyweight-squat/start.jpg", finish: "assets/icons/photos/bodyweight-squat/finish.jpg" },
+    tags: ["home","gym","bodyweight"]
+  },
+  {
+    id: "stiff-legged-deadlift",
+    name: "Stiff-Legged Deadlift",
+    type: "strength",
+    area: "Legs",
+    group: "legs",
+    equipment: "dumbbell",
+    primaryMuscle: "hamstrings",
+    icon: "dumbbell",
+    photos: { start: "assets/icons/photos/stiff-legged-deadlift/start.jpg", finish: "assets/icons/photos/stiff-legged-deadlift/finish.jpg" },
+    tags: ["home","gym","dumbbells"]
+  },
+  {
+    id: "hip-abduction-machine",
+    name: "Hip Abduction (Machine)",
+    type: "strength",
+    area: "Legs",
+    group: "legs",
+    equipment: "machine",
+    primaryMuscle: "abductors",
+    icon: "weight",
+    photos: { start: "assets/icons/photos/hip-abduction-machine/start.jpg", finish: "assets/icons/photos/hip-abduction-machine/finish.jpg" },
+    tags: ["gym","machine"]
+  },
+  {
+    id: "concentration-curl",
+    name: "Concentration Curl",
+    type: "strength",
+    area: "Arms",
+    group: "arms",
+    equipment: "dumbbell",
+    primaryMuscle: "biceps",
+    icon: "biceps-flexed",
+    photos: { start: "assets/icons/photos/concentration-curl/start.jpg", finish: "assets/icons/photos/concentration-curl/finish.jpg" },
+    tags: ["home","gym","dumbbells"]
+  },
+  {
+    id: "cable-hammer-curl",
+    name: "Cable Hammer Curl",
+    type: "strength",
+    area: "Arms",
+    group: "arms",
+    equipment: "cable",
+    primaryMuscle: "biceps",
+    icon: "biceps-flexed",
+    photos: { start: "assets/icons/photos/cable-hammer-curl/start.jpg", finish: "assets/icons/photos/cable-hammer-curl/finish.jpg" },
+    tags: ["gym","machine"]
+  },
+  {
+    id: "incline-dumbbell-curl",
+    name: "Incline Dumbbell Curl",
+    type: "strength",
+    area: "Arms",
+    group: "arms",
+    equipment: "dumbbell",
+    primaryMuscle: "biceps",
+    icon: "biceps-flexed",
+    photos: { start: "assets/icons/photos/incline-dumbbell-curl/start.jpg", finish: "assets/icons/photos/incline-dumbbell-curl/finish.jpg" },
+    tags: ["home","gym","dumbbells"]
+  },
+  {
+    id: "cable-curl",
+    name: "Cable Curl",
+    type: "strength",
+    area: "Arms",
+    group: "arms",
+    equipment: "cable",
+    primaryMuscle: "biceps",
+    icon: "biceps-flexed",
+    photos: { start: "assets/icons/photos/cable-curl/start.jpg", finish: "assets/icons/photos/cable-curl/finish.jpg" },
+    tags: ["gym","machine"]
+  },
+  {
+    id: "reverse-curl",
+    name: "Reverse Curl",
+    type: "strength",
+    area: "Arms",
+    group: "arms",
+    equipment: "barbell",
+    primaryMuscle: "biceps",
+    icon: "biceps-flexed",
+    photos: { start: "assets/icons/photos/reverse-curl/start.jpg", finish: "assets/icons/photos/reverse-curl/finish.jpg" },
+    tags: ["gym"]
+  },
+  {
+    id: "wrist-curl",
+    name: "Wrist Curl",
+    type: "strength",
+    area: "Arms",
+    group: "arms",
+    equipment: "cable",
+    primaryMuscle: "forearms",
+    icon: "weight",
+    photos: { start: "assets/icons/photos/wrist-curl/start.jpg", finish: "assets/icons/photos/wrist-curl/finish.jpg" },
+    tags: ["gym","machine"]
+  },
+  {
+    id: "bench-dip",
+    name: "Bench Dip",
+    type: "strength",
+    area: "Arms",
+    group: "arms",
+    equipment: "body only",
+    primaryMuscle: "triceps",
+    icon: "gymnastics",
+    photos: { start: "assets/icons/photos/bench-dip/start.jpg", finish: "assets/icons/photos/bench-dip/finish.jpg" },
+    tags: ["home","gym","bodyweight"]
+  },
+  {
+    id: "floor-press",
+    name: "Floor Press",
+    type: "strength",
+    area: "Arms",
+    group: "arms",
+    equipment: "barbell",
+    primaryMuscle: "triceps",
+    icon: "barbell",
+    photos: { start: "assets/icons/photos/floor-press/start.jpg", finish: "assets/icons/photos/floor-press/finish.jpg" },
+    tags: ["gym"]
+  },
+  {
+    id: "reverse-crunch",
+    name: "Reverse Crunch",
+    type: "strength",
+    area: "Core",
+    group: "core",
+    equipment: "body only",
+    primaryMuscle: "abdominals",
+    icon: "yoga",
+    photos: { start: "assets/icons/photos/reverse-crunch/start.jpg", finish: "assets/icons/photos/reverse-crunch/finish.jpg" },
+    tags: ["home","gym","bodyweight"]
+  },
+  {
+    id: "seated-triceps-press",
+    name: "Seated Triceps Press",
+    type: "strength",
+    area: "Arms",
+    group: "arms",
+    equipment: "dumbbell",
+    primaryMuscle: "triceps",
+    icon: "dumbbell",
+    photos: { start: "assets/icons/photos/seated-triceps-press/start.jpg", finish: "assets/icons/photos/seated-triceps-press/finish.jpg" },
+    tags: ["home","gym","dumbbells"]
+  },
+  {
+    id: "dips-triceps",
+    name: "Dips (Triceps)",
+    type: "strength",
+    area: "Arms",
+    group: "arms",
+    equipment: "body only",
+    primaryMuscle: "triceps",
+    icon: "gymnastics",
+    photos: { start: "assets/icons/photos/dips-triceps/start.jpg", finish: "assets/icons/photos/dips-triceps/finish.jpg" },
+    tags: ["home","gym","bodyweight"]
+  },
+  {
+    id: "triceps-kickback",
+    name: "Triceps Kickback",
+    type: "strength",
+    area: "Arms",
+    group: "arms",
+    equipment: "dumbbell",
+    primaryMuscle: "triceps",
+    icon: "dumbbell",
+    photos: { start: "assets/icons/photos/triceps-kickback/start.jpg", finish: "assets/icons/photos/triceps-kickback/finish.jpg" },
+    tags: ["home","gym","dumbbells"]
+  },
+  {
+    id: "side-plank",
+    name: "Side Plank",
+    type: "strength",
+    area: "Core",
+    group: "core",
+    equipment: "body only",
+    primaryMuscle: "abdominals",
+    icon: "yoga",
+    photos: { start: "assets/icons/photos/side-plank/start.jpg", finish: "assets/icons/photos/side-plank/finish.jpg" },
+    tags: ["home","gym","bodyweight"]
+  },
+  {
+    id: "cross-body-crunch",
+    name: "Cross-Body Crunch",
+    type: "strength",
+    area: "Core",
+    group: "core",
+    equipment: "body only",
+    primaryMuscle: "abdominals",
+    icon: "yoga",
+    photos: { start: "assets/icons/photos/cross-body-crunch/start.jpg", finish: "assets/icons/photos/cross-body-crunch/finish.jpg" },
+    tags: ["home","gym","bodyweight"]
+  },
+  {
+    id: "lying-leg-raise",
+    name: "Lying Leg Raise",
+    type: "strength",
+    area: "Core",
+    group: "core",
+    equipment: "body only",
+    primaryMuscle: "glutes",
+    icon: "yoga",
+    photos: { start: "assets/icons/photos/lying-leg-raise/start.jpg", finish: "assets/icons/photos/lying-leg-raise/finish.jpg" },
+    tags: ["home","gym","bodyweight"]
+  },
+  {
+    id: "v-up",
+    name: "V-Up",
+    type: "strength",
+    area: "Core",
+    group: "core",
+    equipment: "body only",
+    primaryMuscle: "abdominals",
+    icon: "yoga",
+    photos: { start: "assets/icons/photos/v-up/start.jpg", finish: "assets/icons/photos/v-up/finish.jpg" },
+    tags: ["home","gym","bodyweight"]
+  },
+  {
+    id: "flutter-kicks",
+    name: "Flutter Kicks",
+    type: "strength",
+    area: "Core",
+    group: "core",
+    equipment: "body only",
+    primaryMuscle: "glutes",
+    icon: "yoga",
+    photos: { start: "assets/icons/photos/flutter-kicks/start.jpg", finish: "assets/icons/photos/flutter-kicks/finish.jpg" },
+    tags: ["home","gym","bodyweight"]
+  },
+  {
+    id: "bicycle-crunch",
+    name: "Bicycle Crunch",
+    type: "strength",
+    area: "Core",
+    group: "core",
+    equipment: "body only",
+    primaryMuscle: "abdominals",
+    icon: "yoga",
+    photos: { start: "assets/icons/photos/bicycle-crunch/start.jpg", finish: "assets/icons/photos/bicycle-crunch/finish.jpg" },
+    tags: ["home","gym","bodyweight"]
+  },
+  {
+    id: "ab-rollout",
+    name: "Ab Rollout",
+    type: "strength",
+    area: "Core",
+    group: "core",
+    equipment: "body only",
+    primaryMuscle: "abdominals",
+    icon: "yoga",
+    photos: { start: "assets/icons/photos/ab-rollout/start.jpg", finish: "assets/icons/photos/ab-rollout/finish.jpg" },
+    tags: ["home","gym","bodyweight"]
+  },
+  {
+    id: "decline-crunch",
+    name: "Decline Crunch",
+    type: "strength",
+    area: "Core",
+    group: "core",
+    equipment: "body only",
+    primaryMuscle: "abdominals",
+    icon: "yoga",
+    photos: { start: "assets/icons/photos/decline-crunch/start.jpg", finish: "assets/icons/photos/decline-crunch/finish.jpg" },
+    tags: ["home","gym","bodyweight"]
+  },
+  {
+    id: "dead-bug",
+    name: "Dead Bug",
+    type: "strength",
+    area: "Core",
+    group: "core",
+    equipment: "body only",
+    primaryMuscle: "abdominals",
+    icon: "yoga",
+    photos: { start: "assets/icons/photos/dead-bug/start.jpg", finish: "assets/icons/photos/dead-bug/finish.jpg" },
+    tags: ["home","gym","bodyweight"]
+  },
+  {
+    id: "hip-raise",
+    name: "Hip Raise",
+    type: "strength",
+    area: "Core",
+    group: "core",
+    equipment: "body only",
+    primaryMuscle: "abdominals",
+    icon: "yoga",
+    photos: { start: "assets/icons/photos/hip-raise/start.jpg", finish: "assets/icons/photos/hip-raise/finish.jpg" },
+    tags: ["home","gym","bodyweight"]
+  },
+  {
+    id: "oblique-crunch",
+    name: "Oblique Crunch",
+    type: "strength",
+    area: "Core",
+    group: "core",
+    equipment: "body only",
+    primaryMuscle: "abdominals",
+    icon: "yoga",
+    photos: { start: "assets/icons/photos/oblique-crunch/start.jpg", finish: "assets/icons/photos/oblique-crunch/finish.jpg" },
+    tags: ["home","gym","bodyweight"]
+  },
+  {
+    id: "cable-woodchopper",
+    name: "Cable Woodchopper",
+    type: "strength",
+    area: "Core",
+    group: "core",
+    equipment: "cable",
+    primaryMuscle: "abdominals",
+    icon: "weight",
+    photos: { start: "assets/icons/photos/cable-woodchopper/start.jpg", finish: "assets/icons/photos/cable-woodchopper/finish.jpg" },
+    tags: ["gym","machine"]
+  },
+  {
+    id: "jump-rope",
+    name: "Jump Rope",
+    type: "strength",
+    area: "Cardio",
+    group: "cardio",
+    equipment: "body only",
+    primaryMuscle: "quadriceps",
+    icon: "run",
+    photos: { start: "assets/icons/photos/jump-rope/start.jpg", finish: "assets/icons/photos/jump-rope/finish.jpg" },
+    tags: ["home","gym","bodyweight","cardio"]
+  },
+  {
+    id: "broad-jump",
+    name: "Broad Jump",
+    type: "strength",
+    area: "Cardio",
+    group: "cardio",
+    equipment: "body only",
+    primaryMuscle: "quadriceps",
+    icon: "run",
+    photos: { start: "assets/icons/photos/broad-jump/start.jpg", finish: "assets/icons/photos/broad-jump/finish.jpg" },
+    tags: ["home","gym","bodyweight","cardio"]
+  },
+  {
+    id: "stationary-bike",
+    name: "Stationary Bike",
+    type: "strength",
+    area: "Cardio",
+    group: "cardio",
+    equipment: "machine",
+    primaryMuscle: "quadriceps",
+    icon: "weight",
+    photos: { start: "assets/icons/photos/stationary-bike/start.jpg", finish: "assets/icons/photos/stationary-bike/finish.jpg" },
+    tags: ["gym","machine","cardio"]
+  },
+  {
+    id: "squat-jump",
+    name: "Squat Jump",
+    type: "strength",
+    area: "Cardio",
+    group: "cardio",
+    equipment: "body only",
+    primaryMuscle: "quadriceps",
+    icon: "run",
+    photos: { start: "assets/icons/photos/squat-jump/start.jpg", finish: "assets/icons/photos/squat-jump/finish.jpg" },
+    tags: ["home","gym","bodyweight","cardio"]
+  },
+  {
+    id: "rowing-machine",
+    name: "Rowing Machine",
+    type: "strength",
+    area: "Cardio",
+    group: "cardio",
+    equipment: "machine",
+    primaryMuscle: "quadriceps",
+    icon: "weight",
+    photos: { start: "assets/icons/photos/rowing-machine/start.jpg", finish: "assets/icons/photos/rowing-machine/finish.jpg" },
+    tags: ["gym","machine","cardio"]
+  },
+  {
+    id: "treadmill-run",
+    name: "Treadmill Run",
+    type: "strength",
+    area: "Cardio",
+    group: "cardio",
+    equipment: "machine",
+    primaryMuscle: "quadriceps",
+    icon: "weight",
+    photos: { start: "assets/icons/photos/treadmill-run/start.jpg", finish: "assets/icons/photos/treadmill-run/finish.jpg" },
+    tags: ["gym","machine","cardio"]
+  },
+  {
+    id: "skater-jump",
+    name: "Skater Jump",
+    type: "strength",
+    area: "Cardio",
+    group: "cardio",
+    equipment: "body only",
+    primaryMuscle: "adductors",
+    icon: "run",
+    photos: { start: "assets/icons/photos/skater-jump/start.jpg", finish: "assets/icons/photos/skater-jump/finish.jpg" },
+    tags: ["home","gym","bodyweight","cardio"]
+  },
+  {
+    id: "chest-supported-row",
+    name: "Chest-Supported Row",
+    type: "strength",
+    area: "Back",
+    group: "back",
+    equipment: "dumbbell",
+    primaryMuscle: "middle back",
+    icon: "dumbbell",
+    photos: { start: "assets/icons/photos/chest-supported-row/start.jpg", finish: "assets/icons/photos/chest-supported-row/finish.jpg" },
+    tags: ["home","gym","dumbbells"]
+  },
+  {
+    id: "renegade-row",
+    name: "Renegade Row",
+    type: "strength",
+    area: "Back",
+    group: "back",
+    equipment: "kettlebell",
+    primaryMuscle: "middle back",
+    icon: "dumbbell",
+    photos: { start: "assets/icons/photos/renegade-row/start.jpg", finish: "assets/icons/photos/renegade-row/finish.jpg" },
+    tags: ["home","gym"]
+  },
+  {
+    id: "zottman-curl",
+    name: "Zottman Curl",
+    type: "strength",
+    area: "Arms",
+    group: "arms",
+    equipment: "dumbbell",
+    primaryMuscle: "biceps",
+    icon: "biceps-flexed",
+    photos: { start: "assets/icons/photos/zottman-curl/start.jpg", finish: "assets/icons/photos/zottman-curl/finish.jpg" },
+    tags: ["home","gym","dumbbells"]
+  },
+  {
+    id: "tuck-jump",
+    name: "Tuck Jump",
+    type: "strength",
+    area: "Cardio",
+    group: "cardio",
+    equipment: "body only",
+    primaryMuscle: "hamstrings",
+    icon: "run",
+    photos: { start: "assets/icons/photos/tuck-jump/start.jpg", finish: "assets/icons/photos/tuck-jump/finish.jpg" },
+    tags: ["home","gym","bodyweight","cardio"]
+  },
+  {
+    id: "plyo-push-up",
+    name: "Plyo Push-Up",
+    type: "strength",
+    area: "Cardio",
+    group: "cardio",
+    equipment: "body only",
+    primaryMuscle: "chest",
+    icon: "run",
+    photos: { start: "assets/icons/photos/plyo-push-up/start.jpg", finish: "assets/icons/photos/plyo-push-up/finish.jpg" },
+    tags: ["home","gym","bodyweight","cardio"]
+  },
+  {
+    id: "sissy-squat",
+    name: "Sissy Squat",
+    type: "strength",
+    area: "Legs",
+    group: "legs",
+    equipment: "barbell",
+    primaryMuscle: "quadriceps",
+    icon: "barbell",
+    photos: { start: "assets/icons/photos/sissy-squat/start.jpg", finish: "assets/icons/photos/sissy-squat/finish.jpg" },
+    tags: ["gym"]
+  },
+  {
+    id: "seated-calf-raise",
+    name: "Seated Calf Raise",
+    type: "strength",
+    area: "Legs",
+    group: "legs",
+    equipment: "machine",
+    primaryMuscle: "calves",
+    icon: "weight",
+    photos: { start: "assets/icons/photos/seated-calf-raise/start.jpg", finish: "assets/icons/photos/seated-calf-raise/finish.jpg" },
+    tags: ["gym","machine"]
+  },
+  {
+    id: "standing-cable-curl",
+    name: "Standing Cable Curl",
+    type: "strength",
+    area: "Arms",
+    group: "arms",
+    equipment: "cable",
+    primaryMuscle: "biceps",
+    icon: "biceps-flexed",
+    photos: { start: "assets/icons/photos/standing-cable-curl/start.jpg", finish: "assets/icons/photos/standing-cable-curl/finish.jpg" },
+    tags: ["gym","machine"]
+  },
+  {
+    id: "spider-curl",
+    name: "Spider Curl",
+    type: "strength",
+    area: "Arms",
+    group: "arms",
+    equipment: "barbell",
+    primaryMuscle: "biceps",
+    icon: "biceps-flexed",
+    photos: { start: "assets/icons/photos/spider-curl/start.jpg", finish: "assets/icons/photos/spider-curl/finish.jpg" },
+    tags: ["gym"]
+  },
+  {
+    id: "donkey-calf-raise",
+    name: "Donkey Calf Raise",
+    type: "strength",
+    area: "Legs",
+    group: "legs",
+    equipment: "body only",
+    primaryMuscle: "calves",
+    icon: "walk",
+    photos: { start: "assets/icons/photos/donkey-calf-raise/start.jpg", finish: "assets/icons/photos/donkey-calf-raise/finish.jpg" },
+    tags: ["home","gym","bodyweight"]
+  },
+  {
+    id: "barbell-front-raise",
+    name: "Barbell Front Raise",
+    type: "strength",
+    area: "Shoulders",
+    group: "shoulders",
+    equipment: "barbell",
+    primaryMuscle: "shoulders",
+    icon: "barbell",
+    photos: { start: "assets/icons/photos/barbell-front-raise/start.jpg", finish: "assets/icons/photos/barbell-front-raise/finish.jpg" },
+    tags: ["gym"]
+  },
+  {
+    id: "superman",
+    name: "Superman",
+    type: "strength",
+    area: "Core",
+    group: "core",
+    equipment: "body only",
+    primaryMuscle: "lower back",
+    icon: "yoga",
+    photos: { start: "assets/icons/photos/superman/start.jpg", finish: "assets/icons/photos/superman/finish.jpg" },
+    tags: ["home","gym","bodyweight"]
+  },
+  {
+    id: "wide-grip-push-up",
+    name: "Wide-Grip Push-Up",
+    type: "strength",
+    area: "Chest",
+    group: "chest",
+    equipment: "body only",
+    primaryMuscle: "chest",
+    icon: "gymnastics",
+    photos: { start: "assets/icons/photos/wide-grip-push-up/start.jpg", finish: "assets/icons/photos/wide-grip-push-up/finish.jpg" },
+    tags: ["home","gym","bodyweight"]
+  },
+  {
+    id: "decline-push-up",
+    name: "Decline Push-Up",
+    type: "strength",
+    area: "Chest",
+    group: "chest",
+    equipment: "body only",
+    primaryMuscle: "chest",
+    icon: "gymnastics",
+    photos: { start: "assets/icons/photos/decline-push-up/start.jpg", finish: "assets/icons/photos/decline-push-up/finish.jpg" },
+    tags: ["home","gym","bodyweight"]
+  },
+  {
+    id: "seated-leg-tuck",
+    name: "Seated Leg Tuck",
+    type: "strength",
+    area: "Core",
+    group: "core",
+    equipment: "body only",
+    primaryMuscle: "abdominals",
+    icon: "yoga",
+    photos: { start: "assets/icons/photos/seated-leg-tuck/start.jpg", finish: "assets/icons/photos/seated-leg-tuck/finish.jpg" },
+    tags: ["home","gym","bodyweight"]
+  },
+  {
+    id: "incline-cable-fly",
+    name: "Incline Cable Fly",
+    type: "strength",
+    area: "Chest",
+    group: "chest",
+    equipment: "cable",
+    primaryMuscle: "chest",
+    icon: "weight",
+    photos: { start: "assets/icons/photos/incline-cable-fly/start.jpg", finish: "assets/icons/photos/incline-cable-fly/finish.jpg" },
+    tags: ["gym","machine"]
   }
   ];
 }
@@ -806,6 +1875,37 @@ function reseedLibraryOnce() {
   }
 
   localStorage.setItem(STORAGE.libraryV2Seeded, "1");
+}
+
+// One-time, ADDITIVE library expansion (the curated ~140 set). Unlike the V2
+// reseed, this never replaces the library: it only appends starter exercises
+// whose id is missing, so any exercises Daniel added, removed-then-kept, favourited,
+// or gave custom photos are left exactly as they are.
+function mergeLibraryV3Once() {
+  if (localStorage.getItem(STORAGE.libraryV3Merged)) return;
+
+  const data = getLocalData();
+  const library = Array.isArray(data.library) ? data.library : [];
+  const haveIds = new Set(library.map((ex) => ex.id));
+  const additions = getStarterExercises().filter((ex) => !haveIds.has(ex.id));
+
+  if (additions.length) {
+    data.library = [...library, ...additions];
+    data.updatedAt = new Date().toISOString();
+    data.updatedBy = getDeviceId();
+    saveLocalData(data);
+    markPendingData(data);
+    exercises = data.library;
+    renderExercises();
+    renderExercisePicker();
+    if (navigator.onLine) {
+      uploadWorkoutData(data).then(clearPendingData).catch(() => {
+        // Not signed in yet or offline: queued, syncs later.
+      });
+    }
+  }
+
+  localStorage.setItem(STORAGE.libraryV3Merged, "1");
 }
 
 // One-time, additive seeding so Daniel can try the new soccer flow without
@@ -1050,6 +2150,14 @@ function isTimedHoldExercise(exerciseInfo, plannedEx) {
 let planImportPreview = null;
 let planImportSummary = "";
 let planImportMessage = "";
+
+// Plan editing state: which routine (if any) is expanded into its edit form,
+// whether the optional "paste an updated plan" AI drawer is open, and a snapshot
+// of the routine taken when edit mode opened so Cancel can revert all changes.
+let editingRoutineId = null;
+let aiPanelOpen = false;
+let routineEditSnapshot = null;
+let routineEditIsNew = false;
 
 function getTodayDateString() {
   const today = new Date();
@@ -1569,7 +2677,7 @@ function getExerciseReference(ex) {
       || (lib?.primaryMuscle ? cap(lib.primaryMuscle) : (ex.area || "Main working area")),
     equipment: detailed?.equipment
       || (lib?.equipment ? cap(lib.equipment) : (ex.type === "cardio" ? "Cardio equipment" : "As planned")),
-    photos: lib?.photos || null,
+    photos: getEffectivePhotos(lib),
     video: lib?.video || null,
     steps: detailed?.steps || [
       "Set up in a comfortable, controlled position.",
@@ -1580,8 +2688,20 @@ function getExerciseReference(ex) {
   };
 }
 
-function renderReferenceSheet(ex) {
-  if (!activeWorkout.referenceOpen) return "";
+// Merge a library entry's bundled photos with the user's uploaded ones (custom
+// wins per slot). Returns null when there's nothing to show.
+function getEffectivePhotos(lib) {
+  if (!lib) return null;
+  const start = lib.customPhotos?.start || lib.photos?.start || null;
+  const finish = lib.customPhotos?.finish || lib.photos?.finish || null;
+  if (!start && !finish) return null;
+  return { start, finish };
+}
+
+// Shared markup for the "How to do it" sheet. Used both inside a live workout
+// and from the Library tab; `closeAction` is the data-action the scrim / close /
+// Done controls fire, and `allowEdit` adds the photo editor (Library only).
+function buildReferenceSheetMarkup(ex, closeAction, allowEdit = false) {
   const ref = getExerciseReference(ex);
 
   // Generic tutorial link: a per-exercise `video` URL from the library if one
@@ -1589,17 +2709,26 @@ function renderReferenceSheet(ex) {
   const videoHref = ref.video
     || `https://www.youtube.com/results?search_query=${encodeURIComponent(`${ex.name} how to`)}`;
 
+  const photoFigure = (src, caption, alt) => src
+    ? `<figure class="lw-ref-photo"><img src="${escapeHtml(src)}" alt="${escapeHtml(alt)}" loading="lazy" /><figcaption>${caption}</figcaption></figure>`
+    : "";
   const photosBlock = ref.photos
-    ? `
-        <div class="lw-ref-photos">
-          <figure class="lw-ref-photo">
-            <img src="${escapeHtml(ref.photos.start)}" alt="${escapeHtml(ex.name)} start position" loading="lazy" />
-            <figcaption>Start position</figcaption>
-          </figure>
-          <figure class="lw-ref-photo">
-            <img src="${escapeHtml(ref.photos.finish)}" alt="${escapeHtml(ex.name)} finish position" loading="lazy" />
-            <figcaption>Finish position</figcaption>
-          </figure>
+    ? `<div class="lw-ref-photos">
+          ${photoFigure(ref.photos.start, "Start position", `${ex.name} start position`)}
+          ${photoFigure(ref.photos.finish, "Finish position", `${ex.name} finish position`)}
+        </div>`
+    : "";
+
+  const hasCustom = Boolean(getExerciseById(ex.exerciseId)?.customPhotos);
+  const editBlock = allowEdit
+    ? `<div class="lw-ref-edit">
+          <p class="lw-ref-edit-title">Your photos</p>
+          <p class="lw-ref-edit-note">Add or replace the start and finish photos for this exercise.</p>
+          <div class="lw-ref-edit-slots">
+            ${renderPhotoUploadSlot(ex.exerciseId, "start", "Start")}
+            ${renderPhotoUploadSlot(ex.exerciseId, "finish", "Finish")}
+          </div>
+          ${hasCustom ? `<button class="quiet-button small-button" type="button" data-action="clear-custom-photos" data-id="${escapeHtml(ex.exerciseId)}">Remove my photos</button>` : ""}
         </div>`
     : "";
 
@@ -1611,7 +2740,7 @@ function renderReferenceSheet(ex) {
             <h3>${escapeHtml(ex.name)}</h3>
             <p>${escapeHtml(ref.muscles)}</p>
           </div>
-          <button class="lw-sheet-close" type="button" data-action="close-reference" aria-label="Close how to do it">&times;</button>
+          <button class="lw-sheet-close" type="button" data-action="${closeAction}" aria-label="Close how to do it">&times;</button>
         </div>
         ${photosBlock}
         <div class="lw-ref-meta">
@@ -1629,10 +2758,16 @@ function renderReferenceSheet(ex) {
           Watch video tutorial
         </a>
         ${ref.photos ? `<p class="lw-ref-source">Reference photos from the public-domain Free Exercise DB</p>` : ""}
-        <button class="primary-button lw-sheet-done" type="button" data-action="close-reference">Done</button>
+        ${editBlock}
+        <button class="primary-button lw-sheet-done" type="button" data-action="${closeAction}">Done</button>
       </section>
     </div>
   `;
+}
+
+function renderReferenceSheet(ex) {
+  if (!activeWorkout.referenceOpen) return "";
+  return buildReferenceSheetMarkup(ex, "close-reference");
 }
 
 function resizeTodaySets(ex, count) {
@@ -2831,7 +3966,16 @@ const UI_ICONS = {
   plus: '<path d="M5 12h14"/><path d="M12 5v14"/>',
   check: '<path d="M20 6 9 17l-5-5"/>',
   x: '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
-  "help-circle": '<circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/>'
+  "help-circle": '<circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/>',
+  search: '<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',
+  "grip-vertical": '<circle cx="9" cy="12" r="1"/><circle cx="9" cy="5" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="19" r="1"/>',
+  "chevron-up": '<path d="m18 15-6-6-6 6"/>',
+  "chevron-down": '<path d="m6 9 6 6 6-6"/>',
+  "plus-circle": '<circle cx="12" cy="12" r="10"/><path d="M8 12h8"/><path d="M12 8v8"/>',
+  calendar: '<path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/>',
+  sparkles: '<path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .962 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.962 0z"/>',
+  star: '<path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"/>',
+  image: '<rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>'
 };
 
 function getUiIcon(name) {
@@ -2849,18 +3993,27 @@ function renderUiIcons(root = document) {
   });
 }
 
-// Library tab state: the filter currently selected, and the id of the
-// exercise being edited inline (null when nothing is being edited).
+// Library tab state: the filter currently selected, the live search text, the
+// id of the exercise being edited inline (null when nothing is being edited),
+// and the id of the exercise whose "How to do it" sheet is open (null = none).
 let currentLibraryFilter = "all";
+let librarySearch = "";
 let editingExerciseId = null;
+let libraryReferenceId = null;
 
 function renderExercises(filter = currentLibraryFilter) {
   if (!exerciseList) return;
   currentLibraryFilter = filter;
 
-  const visibleExercises = filter === "all"
-    ? exercises
-    : exercises.filter((exercise) => (exercise.tags || []).includes(filter));
+  const search = librarySearch.trim().toLowerCase();
+  const visibleExercises = exercises.filter((exercise) => {
+    let matchesFilter;
+    if (filter === "all") matchesFilter = true;
+    else if (filter === "favorites") matchesFilter = Boolean(exercise.favorite);
+    else matchesFilter = (exercise.tags || []).includes(filter);
+    const matchesSearch = !search || exercise.name.toLowerCase().includes(search);
+    return matchesFilter && matchesSearch;
+  });
 
   if (libraryCount) {
     const label = visibleExercises.length === 1 ? "exercise" : "exercises";
@@ -2868,7 +4021,12 @@ function renderExercises(filter = currentLibraryFilter) {
   }
 
   if (visibleExercises.length === 0) {
-    exerciseList.innerHTML = `<p class="library-empty">No exercises here yet. Add one above to get started.</p>`;
+    let message;
+    if (search) message = `No exercises match "${escapeHtml(librarySearch.trim())}". Try a different search or add your own.`;
+    else if (filter === "favorites") message = `No favorites yet. Tap the star on any exercise to save it here.`;
+    else message = `No exercises here yet. Add one to get started.`;
+    exerciseList.innerHTML = `<p class="library-empty">${message}</p>`;
+    renderLibrarySheet();
     return;
   }
 
@@ -2877,17 +4035,43 @@ function renderExercises(filter = currentLibraryFilter) {
       ? renderExerciseEditCard(exercise)
       : renderExerciseCard(exercise)
   ).join("");
+
+  renderLibrarySheet();
+}
+
+// The image used for an exercise's card thumbnail / how-to: the user's own
+// uploaded photo wins, then the bundled Free Exercise DB photo, else nothing.
+function getExerciseStartImage(exercise) {
+  return exercise.customPhotos?.start || exercise.photos?.start || null;
+}
+
+// The card art: a real start-position photo when the exercise has one,
+// otherwise the shared line glyph. The photo opens the "How to do it" sheet;
+// the star in the corner toggles the exercise as a favorite.
+function renderExerciseArt(exercise) {
+  const start = getExerciseStartImage(exercise);
+  const visual = start
+    ? `<span class="exercise-photo" style="background-image:url('${escapeHtml(start)}')"></span>`
+    : `<span class="exercise-glyph">${getExerciseIcon(exercise.icon)}</span>`;
+  const isFav = Boolean(exercise.favorite);
+  return `
+    <div class="exercise-art${start ? " has-photo" : ""}">
+      ${visual}
+      <button type="button" class="exercise-art-howto-btn" data-action="library-how-to" data-id="${escapeHtml(exercise.id)}" aria-label="How to do ${escapeHtml(exercise.name)}">
+        <span class="exercise-art-howto">${getUiIcon("help-circle")}How to</span>
+      </button>
+      <button type="button" class="star-toggle${isFav ? " is-fav" : ""}" data-action="toggle-fav" data-id="${escapeHtml(exercise.id)}" aria-pressed="${isFav ? "true" : "false"}" aria-label="${isFav ? "Remove" : "Add"} ${escapeHtml(exercise.name)} ${isFav ? "from" : "to"} favorites">${getUiIcon("star")}</button>
+    </div>
+  `;
 }
 
 function renderExerciseCard(exercise) {
   const tags = exercise.tags || [];
   return `
     <article class="exercise-card">
-      <div class="exercise-art">
-        ${getExerciseIcon(exercise.icon)}
-      </div>
+      ${renderExerciseArt(exercise)}
       <div class="exercise-info">
-        <h3>${escapeHtml(exercise.name)}</h3>
+        <button type="button" class="exercise-name-btn" data-action="library-how-to" data-id="${escapeHtml(exercise.id)}">${escapeHtml(exercise.name)}</button>
         <p class="exercise-meta">${escapeHtml(exercise.area || "")}</p>
         <div class="tag-row">
           ${tags.map((tag) => `<span class="exercise-tag">${escapeHtml(formatTag(tag))}</span>`).join("")}
@@ -2901,12 +4085,165 @@ function renderExerciseCard(exercise) {
   `;
 }
 
+// Render (or clear) the Library's "How to do it" sheet into its root container.
+function renderLibrarySheet() {
+  const root = document.querySelector("#library-sheet-root");
+  if (!root) return;
+  const exercise = libraryReferenceId ? getExerciseById(libraryReferenceId) : null;
+  if (!exercise) {
+    root.innerHTML = "";
+    return;
+  }
+  root.innerHTML = buildReferenceSheetMarkup(
+    { exerciseId: exercise.id, name: exercise.name, type: exercise.type, area: exercise.area },
+    "close-library-how-to",
+    true
+  );
+}
+
+function openLibraryReference(id) {
+  libraryReferenceId = id;
+  renderLibrarySheet();
+}
+
+function closeLibraryReference() {
+  libraryReferenceId = null;
+  renderLibrarySheet();
+}
+
+// ===== Favorites + custom photos =====
+
+function toggleFavoriteExercise(id) {
+  persistLibrary(exercises.map((ex) => ex.id === id ? { ...ex, favorite: !ex.favorite } : ex));
+}
+
+// Shrink a picked image to a small JPEG data URL before we store it, so custom
+// photos stay tiny enough to live in the synced data (localStorage / cloud).
+function downscaleImage(file, maxSize = 700, quality = 0.72) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const scale = Math.min(1, maxSize / Math.max(img.width, img.height));
+        const width = Math.max(1, Math.round(img.width * scale));
+        const height = Math.max(1, Math.round(img.height * scale));
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        canvas.getContext("2d").drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL("image/jpeg", quality));
+      };
+      img.onerror = () => reject(new Error("Could not read that image."));
+      img.src = reader.result;
+    };
+    reader.onerror = () => reject(new Error("Could not read that file."));
+    reader.readAsDataURL(file);
+  });
+}
+
+function setCustomPhoto(id, slot, dataUrl) {
+  persistLibrary(exercises.map((ex) => {
+    if (ex.id !== id) return ex;
+    return { ...ex, customPhotos: { ...(ex.customPhotos || {}), [slot]: dataUrl } };
+  }));
+}
+
+function clearCustomPhotos(id) {
+  const exercise = getExerciseById(id);
+  if (!confirm(`Remove your own photos for "${exercise?.name || "this exercise"}"? Any bundled reference photos stay.`)) return;
+  persistLibrary(exercises.map((ex) => {
+    if (ex.id !== id) return ex;
+    const copy = { ...ex };
+    delete copy.customPhotos;
+    return copy;
+  }));
+}
+
+// One slot (Start / Finish) inside the how-to sheet's photo editor.
+function renderPhotoUploadSlot(exId, slot, label) {
+  const lib = getExerciseById(exId);
+  const current = lib?.customPhotos?.[slot] || lib?.photos?.[slot] || null;
+  const isCustom = Boolean(lib?.customPhotos?.[slot]);
+  return `
+    <label class="lw-photo-slot">
+      <span class="lw-photo-slot-preview${current ? " has-img" : ""}"${current ? ` style="background-image:url('${escapeHtml(current)}')"` : ""}>${current ? "" : getUiIcon("image")}</span>
+      <span class="lw-photo-slot-label">${label}${isCustom ? " · yours" : ""}</span>
+      <input type="file" accept="image/*" data-photo-slot="${slot}" data-id="${escapeHtml(exId)}" />
+    </label>
+  `;
+}
+
+// ===== Add-exercise modal =====
+
+let addModalOpen = false;
+let addModalType = "strength";
+
+function openAddExerciseModal() {
+  addModalOpen = true;
+  addModalType = "strength";
+  renderAddExerciseModal();
+}
+
+function closeAddExerciseModal() {
+  addModalOpen = false;
+  renderAddExerciseModal();
+}
+
+function renderAddExerciseModal() {
+  const root = document.querySelector("#library-add-modal-root");
+  if (!root) return;
+  if (!addModalOpen) {
+    root.innerHTML = "";
+    return;
+  }
+  root.innerHTML = `
+    <div class="lw-sheet-scrim" role="presentation" data-add-scrim>
+      <section class="lw-sheet add-sheet" role="dialog" aria-modal="true" aria-label="Add an exercise">
+        <div class="lw-sheet-head">
+          <div>
+            <h3>Add an exercise</h3>
+            <p>Create your own. You can add photos afterwards from its “How to do it” sheet.</p>
+          </div>
+          <button class="lw-sheet-close" type="button" data-action="close-add" aria-label="Close">&times;</button>
+        </div>
+        <label class="add-field">
+          <span>Name</span>
+          <input type="text" id="add-ex-name" maxlength="40" autocomplete="off" placeholder="e.g. Battle Ropes" />
+        </label>
+        <div class="add-field">
+          <span>Type</span>
+          <div class="type-toggle" role="group" aria-label="Exercise type" data-add-type>
+            ${["strength", "cardio", "timed", "sport"].map((t) => `<button type="button" class="type-option${addModalType === t ? " is-active" : ""}" data-type="${t}">${formatExerciseType(t)}</button>`).join("")}
+          </div>
+        </div>
+        <button class="primary-button lw-sheet-done" type="button" data-action="submit-add">Add to library</button>
+      </section>
+    </div>
+  `;
+  root.querySelector("#add-ex-name")?.focus();
+}
+
+function submitAddExercise() {
+  const name = document.querySelector("#add-ex-name")?.value || "";
+  if (!name.trim()) {
+    document.querySelector("#add-ex-name")?.focus();
+    return;
+  }
+  addLibraryExercise(name, addModalType);
+  closeAddExerciseModal();
+}
+
 function renderExerciseEditCard(exercise) {
   const exerciseType = normalizeExerciseType(exercise.type);
+  const start = getExerciseStartImage(exercise);
+  const art = start
+    ? `<span class="exercise-photo" style="background-image:url('${escapeHtml(start)}')"></span>`
+    : `<span class="exercise-glyph">${getExerciseIcon(exercise.icon)}</span>`;
   return `
     <article class="exercise-card is-editing">
-      <div class="exercise-art">
-        ${getExerciseIcon(exercise.icon)}
+      <div class="exercise-art is-static">
+        ${art}
       </div>
       <div class="exercise-info">
         <input type="text" class="exercise-edit-name" value="${escapeHtml(exercise.name)}" maxlength="40" aria-label="Exercise name" />
@@ -3057,7 +4394,11 @@ function handleLibraryListClick(event) {
   const action = button.dataset.action;
   const id = button.dataset.id;
 
-  if (action === "edit-exercise") {
+  if (action === "library-how-to") {
+    openLibraryReference(id);
+  } else if (action === "toggle-fav") {
+    toggleFavoriteExercise(id);
+  } else if (action === "edit-exercise") {
     editingExerciseId = id;
     renderExercises();
   } else if (action === "cancel-exercise") {
@@ -3831,101 +5172,244 @@ function renderPlan() {
     : `<p class="plan-muted">Preview the pasted plan before saving. Nothing changes until you press Save imported plan.</p>`;
 
   planContent.innerHTML = `
-    <div class="plan-grid">
-      <section class="plan-card">
-        <div class="plan-card-head">
-          <p class="card-kicker">Loaded plan</p>
-          <div class="plan-save-row">
-            <span class="plan-save-status" id="plan-save-status" aria-live="polite"></span>
-            <button class="primary-button small-button" type="button" data-plan-save>Save plan notes</button>
-          </div>
-        </div>
-        <div class="plan-form">
-          <label>
-            <span>Plan name</span>
-            <input id="plan-name-input" value="${escapeHtml(activePlan.name)}" autocomplete="off" placeholder="Current Training Plan">
-          </label>
-          <label>
-            <span>Main goal</span>
-            <input id="plan-goal-input" value="${escapeHtml(activePlan.mainGoal)}" autocomplete="off" placeholder="Example: build strength while staying consistent">
-          </label>
-          <label>
-            <span>Review rhythm</span>
-            <input id="plan-review-input" value="${escapeHtml(activePlan.reviewCadence)}" autocomplete="off" placeholder="Weekly AI review">
-          </label>
-          <label>
-            <span>Next review date</span>
-            <input id="plan-next-review-input" type="date" value="${escapeHtml(activePlan.nextReviewDate)}">
-          </label>
-          <label>
-            <span>Plan notes</span>
-            <textarea id="plan-notes-input" placeholder="Constraints, preferences, injuries, focus notes, or anything the AI coach should remember.">${escapeHtml(activePlan.notes)}</textarea>
-          </label>
-        </div>
-      </section>
+    ${renderPlanSchedule(weeklyPlan, routines)}
+    ${renderPlanRoutines(routines)}
+    ${renderPlanOverview(activePlan)}
+    ${renderPlanAiPanel(importMessageHtml, importPreviewHtml, importText)}
+  `;
+}
 
-      <section class="plan-card">
-        <p class="card-kicker">AI review loop</p>
-        <h3>Coach packet</h3>
-        <p class="plan-muted">Export the current app context, review it in an AI chat, then paste the updated plan below.</p>
-        <div class="plan-actions">
-          <button class="quiet-button" id="copy-review-packet" type="button">Copy coach packet</button>
-          <button class="primary-button" id="save-review-packet" type="button">Save coach packet</button>
-        </div>
-      </section>
-    </div>
+// ===== Plan: section renderers =====
 
-    <section class="plan-card plan-import-card">
-      <div class="plan-card-head">
+function formatLocation(loc) {
+  if (loc === "home") return "Home";
+  if (loc === "gym") return "Gym";
+  return "Home or gym";
+}
+
+// One planned routine exercise as a name + a short target string. Handles the
+// three target shapes: duration (cardio), timed holds (sets x seconds), and
+// normal strength sets (sets x reps, optional weight).
+function describeRoutineExercise(ex) {
+  const lib = getExerciseById(ex.exerciseId);
+  const name = lib?.name || ex.exerciseId;
+  if (ex.targetDuration) return { name, detail: `${ex.targetDuration} min` };
+  if ((lib?.type) === "timed") return { name, detail: `${ex.targetSets || 1} × ${ex.targetReps || 0} sec` };
+  const weight = Number(ex.targetWeight) > 0 ? ` @ ${ex.targetWeight} lb` : "";
+  return { name, detail: `${ex.targetSets || 1} × ${ex.targetReps || 0}${weight}` };
+}
+
+// Monday-first day order for the schedule (the underlying weeklyPlan keys are
+// the same day names; only the display order changes).
+const PLAN_WEEK_ORDER = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
+
+function renderPlanSchedule(weeklyPlan, routines) {
+  const planned = PLAN_WEEK_ORDER.filter((day) => weeklyPlan[day]).length;
+  return `
+    <section class="plan-section">
+      <div class="plan-section-head">
         <div>
-          <p class="card-kicker">Import updated plan</p>
-          <p class="plan-muted">Paste the AI coach's plan here, preview what Training Book understands, then save it. Add a starting weight with "@", e.g. <code>Bench Press: 3x8 @ 135</code>.</p>
+          <p class="card-kicker">Weekly schedule</p>
+          <p class="plan-muted">Pick a routine for each day, or leave it as a rest day. Saves instantly.</p>
         </div>
-        <button class="quiet-button small-button" id="plan-import-example" type="button">Use example</button>
+        <span class="plan-pill">${planned} training ${planned === 1 ? "day" : "days"}</span>
       </div>
-      <textarea id="plan-import-text" class="plan-import-text" spellcheck="false" placeholder="Paste the AI coach's updated plan here.">${escapeHtml(importText)}</textarea>
-      <div class="plan-import-actions">
-        <button class="primary-button" id="plan-import-preview" type="button">Preview changes</button>
-        <button class="quiet-button" id="plan-import-save" type="button" ${planImportPreview ? "" : "disabled"}>Save imported plan</button>
-      </div>
-      ${importMessageHtml}
-      ${importPreviewHtml}
-    </section>
-
-    <section class="plan-card">
-      <div class="plan-card-head">
-        <p class="card-kicker">Weekly schedule</p>
-        <span class="plan-muted">${Object.values(weeklyPlan).filter(Boolean).length} planned days</span>
-      </div>
-      <div class="plan-week">
-        ${DOW_NAMES.map((day) => `
-          <div class="plan-day">
-            <span>${formatDayName(day)}</span>
-            <strong>${escapeHtml(getRoutineNameById(weeklyPlan[day], routines))}</strong>
-          </div>
+      <div class="schedule-grid">
+        ${PLAN_WEEK_ORDER.map((day) => `
+          <label class="schedule-day${weeklyPlan[day] ? " is-training" : ""}">
+            <span class="schedule-day-name">${formatDayName(day)}</span>
+            <select class="schedule-select" data-action="assign-day" data-day="${day}" aria-label="${formatDayName(day)} routine">
+              <option value=""${!weeklyPlan[day] ? " selected" : ""}>Rest day</option>
+              ${routines.map((routine) => `<option value="${escapeHtml(routine.id)}"${weeklyPlan[day] === routine.id ? " selected" : ""}>${escapeHtml(routine.name)}</option>`).join("")}
+            </select>
+          </label>
         `).join("")}
       </div>
     </section>
+  `;
+}
 
-    <section class="plan-card">
-      <p class="card-kicker">Routines</p>
+function renderPlanRoutines(routines) {
+  return `
+    <section class="plan-section">
+      <div class="plan-section-head">
+        <div>
+          <p class="card-kicker">Routines</p>
+          <p class="plan-muted">Build and tweak your workouts. Edit any routine to add, reorder, or adjust exercises.</p>
+        </div>
+        <button class="primary-button small-button btn-ico" type="button" data-action="add-routine">${getUiIcon("plus")}Add routine</button>
+      </div>
       <div class="plan-routines">
-        ${routines.length ? routines.map((routine) => `
-          <article class="plan-routine">
-            <div>
-              <h3>${escapeHtml(routine.name)}</h3>
-              <p class="plan-muted">${escapeHtml(routine.location || "mixed")}${routine.notes ? ` - ${escapeHtml(routine.notes)}` : ""}</p>
-            </div>
-            <ul>
-              ${(routine.exercises || []).map((exercise) => `<li>${formatRoutineExerciseDisplay(exercise)}</li>`).join("")}
-            </ul>
-          </article>
-        `).join("") : `<p class="empty-state">No routines loaded yet. Import a plan or build routines with your AI coach.</p>`}
+        ${routines.length
+          ? routines.map((routine) => routine.id === editingRoutineId
+              ? renderRoutineEditCard(routine)
+              : renderRoutineViewCard(routine)).join("")
+          : `<p class="empty-state">No routines yet. Tap “Add routine” to build one, or import a plan from your AI coach below.</p>`}
       </div>
     </section>
   `;
+}
 
-  wirePlanScreen();
+function renderRoutineViewCard(routine) {
+  const exs = Array.isArray(routine.exercises) ? routine.exercises : [];
+  return `
+    <article class="routine-card">
+      <div class="routine-card-head">
+        <div>
+          <h3>${escapeHtml(routine.name)}</h3>
+          <p class="routine-loc">${escapeHtml(formatLocation(routine.location))}${routine.notes ? ` · ${escapeHtml(routine.notes)}` : ""}</p>
+        </div>
+        <button class="quiet-button small-button btn-ico" type="button" data-action="edit-routine" data-id="${escapeHtml(routine.id)}">${getUiIcon("pencil")}Edit</button>
+      </div>
+      ${exs.length
+        ? `<ul class="routine-ex-list">
+            ${exs.map((ex) => {
+              const d = describeRoutineExercise(ex);
+              return `<li><span class="routine-ex-name">${escapeHtml(d.name)}</span><span class="routine-ex-detail">${escapeHtml(d.detail)}</span></li>`;
+            }).join("")}
+          </ul>`
+        : `<p class="plan-muted routine-empty">No exercises yet — tap Edit to add some.</p>`}
+    </article>
+  `;
+}
+
+function renderRoutineEditCard(routine) {
+  const exs = Array.isArray(routine.exercises) ? routine.exercises : [];
+  return `
+    <article class="routine-card is-editing" data-routine="${escapeHtml(routine.id)}">
+      <div class="routine-edit-top">
+        <input class="routine-name-input" type="text" maxlength="40" value="${escapeHtml(routine.name)}" data-action="routine-field" data-id="${escapeHtml(routine.id)}" data-field="name" aria-label="Routine name" />
+        <select class="routine-loc-select" data-action="routine-field" data-id="${escapeHtml(routine.id)}" data-field="location" aria-label="Where this routine is done">
+          ${["mixed", "home", "gym"].map((loc) => `<option value="${loc}"${(routine.location || "mixed") === loc ? " selected" : ""}>${formatLocation(loc)}</option>`).join("")}
+        </select>
+      </div>
+
+      <div class="routine-ex-edit-list">
+        ${exs.length
+          ? exs.map((ex, index) => renderRoutineExerciseEditRow(routine.id, ex, index, exs.length)).join("")
+          : `<p class="plan-muted routine-empty">No exercises yet. Add one below.</p>`}
+      </div>
+
+      <div class="routine-add-ex">
+        <select class="routine-add-select" data-action="add-ex" data-id="${escapeHtml(routine.id)}" aria-label="Add an exercise to this routine">
+          <option value="">+ Add an exercise…</option>
+          ${exercises.map((e) => `<option value="${escapeHtml(e.id)}">${escapeHtml(e.name)}</option>`).join("")}
+        </select>
+      </div>
+
+      <div class="routine-edit-actions">
+        <button class="primary-button small-button" type="button" data-action="done-routine" data-id="${escapeHtml(routine.id)}">Done</button>
+        <button class="quiet-button small-button" type="button" data-action="cancel-routine" data-id="${escapeHtml(routine.id)}">Cancel</button>
+        <button class="quiet-button small-button btn-ico danger-text" type="button" data-action="delete-routine" data-id="${escapeHtml(routine.id)}">${getUiIcon("trash-2")}Delete</button>
+      </div>
+    </article>
+  `;
+}
+
+function renderRoutineExerciseEditRow(routineId, ex, index, count) {
+  const lib = getExerciseById(ex.exerciseId);
+  const name = lib?.name || ex.exerciseId;
+  const type = lib?.type || (ex.targetDuration ? "cardio" : "strength");
+  const numInput = (field, value, label, min = 0) =>
+    `<label class="routine-num"><span>${label}</span><input type="number" inputmode="numeric" min="${min}" value="${value}" data-action="routine-ex-field" data-id="${escapeHtml(routineId)}" data-index="${index}" data-field="${field}" aria-label="${escapeHtml(name)} ${label}" /></label>`;
+
+  let fields;
+  if (ex.targetDuration || type === "cardio" || type === "sport") {
+    fields = numInput("targetDuration", ex.targetDuration || 20, "min", 1);
+  } else if (type === "timed") {
+    fields = numInput("targetSets", ex.targetSets || 3, "sets", 1) + numInput("targetReps", ex.targetReps || 30, "sec", 1);
+  } else {
+    fields = numInput("targetSets", ex.targetSets || 3, "sets", 1)
+      + numInput("targetReps", ex.targetReps || 8, "reps", 0)
+      + numInput("targetWeight", Number(ex.targetWeight) || 0, "lb", 0);
+  }
+
+  return `
+    <div class="routine-ex-row">
+      <div class="routine-ex-move">
+        <button class="rx-move btn-ico" type="button" data-action="move-ex" data-id="${escapeHtml(routineId)}" data-index="${index}" data-dir="-1"${index === 0 ? " disabled" : ""} aria-label="Move ${escapeHtml(name)} up">${getUiIcon("chevron-up")}</button>
+        <button class="rx-move btn-ico" type="button" data-action="move-ex" data-id="${escapeHtml(routineId)}" data-index="${index}" data-dir="1"${index === count - 1 ? " disabled" : ""} aria-label="Move ${escapeHtml(name)} down">${getUiIcon("chevron-down")}</button>
+      </div>
+      <div class="routine-ex-main">
+        <span class="routine-ex-name">${escapeHtml(name)}</span>
+        <div class="routine-ex-fields">${fields}</div>
+      </div>
+      <button class="rx-remove btn-ico" type="button" data-action="remove-ex" data-id="${escapeHtml(routineId)}" data-index="${index}" aria-label="Remove ${escapeHtml(name)}">${getUiIcon("x")}</button>
+    </div>
+  `;
+}
+
+function renderPlanOverview(activePlan) {
+  return `
+    <section class="plan-section">
+      <div class="plan-section-head">
+        <div>
+          <p class="card-kicker">Plan details</p>
+          <p class="plan-muted">The big picture — handy for you and for your AI coach.</p>
+        </div>
+        <div class="plan-save-row">
+          <span class="plan-save-status" id="plan-save-status" aria-live="polite"></span>
+          <button class="primary-button small-button" type="button" data-action="save-plan-notes">Save details</button>
+        </div>
+      </div>
+      <div class="plan-form">
+        <label>
+          <span>Plan name</span>
+          <input id="plan-name-input" value="${escapeHtml(activePlan.name)}" autocomplete="off" placeholder="Current Training Plan">
+        </label>
+        <label>
+          <span>Main goal</span>
+          <input id="plan-goal-input" value="${escapeHtml(activePlan.mainGoal)}" autocomplete="off" placeholder="Example: build strength while staying consistent">
+        </label>
+        <label>
+          <span>Review rhythm</span>
+          <input id="plan-review-input" value="${escapeHtml(activePlan.reviewCadence)}" autocomplete="off" placeholder="Weekly AI review">
+        </label>
+        <label>
+          <span>Next review date</span>
+          <input id="plan-next-review-input" type="date" value="${escapeHtml(activePlan.nextReviewDate)}">
+        </label>
+        <label>
+          <span>Plan notes</span>
+          <textarea id="plan-notes-input" placeholder="Constraints, preferences, injuries, focus notes, or anything the AI coach should remember.">${escapeHtml(activePlan.notes)}</textarea>
+        </label>
+      </div>
+    </section>
+  `;
+}
+
+function renderPlanAiPanel(importMessageHtml, importPreviewHtml, importText) {
+  return `
+    <section class="plan-section plan-ai">
+      <div class="plan-section-head">
+        <div>
+          <p class="card-kicker">AI coach · optional</p>
+          <p class="plan-muted">Hand your plan to an AI coach, then paste its updated version back in.</p>
+        </div>
+        <button class="quiet-button small-button btn-ico" type="button" data-action="copy-packet">${getUiIcon("clipboard-list")}Copy packet</button>
+      </div>
+      <button class="ai-drawer-toggle btn-ico" type="button" data-action="toggle-ai" aria-expanded="${aiPanelOpen ? "true" : "false"}">
+        ${getUiIcon(aiPanelOpen ? "chevron-up" : "chevron-down")}
+        <span>Paste an updated plan from your coach</span>
+      </button>
+      ${aiPanelOpen ? `
+        <div class="ai-drawer">
+          <p class="plan-muted">Paste the coach's plan, preview what Training Book reads, then save. Add a starting weight with "@", e.g. <code>Bench Press: 3x8 @ 135</code>.</p>
+          <textarea id="plan-import-text" class="plan-import-text" spellcheck="false" placeholder="Paste the AI coach's updated plan here.">${escapeHtml(importText)}</textarea>
+          <div class="plan-import-actions">
+            <button class="quiet-button small-button" type="button" data-action="import-example">Use example</button>
+            <button class="primary-button" type="button" data-action="import-preview">Preview changes</button>
+            <button class="quiet-button" type="button" data-action="import-save" ${planImportPreview ? "" : "disabled"}>Save imported plan</button>
+          </div>
+          ${importMessageHtml}
+          ${importPreviewHtml}
+          <div class="plan-ai-foot">
+            <button class="quiet-button small-button" type="button" data-action="save-packet">Save packet as a file instead</button>
+          </div>
+        </div>
+      ` : ""}
+    </section>
+  `;
 }
 
 function saveActivePlanFromScreen() {
@@ -3954,20 +5438,215 @@ function saveActivePlanFromScreen() {
   }
 }
 
-function wirePlanScreen() {
-  planContent?.querySelector("[data-plan-save]")?.addEventListener("click", saveActivePlanFromScreen);
-  planContent?.querySelector("#copy-review-packet")?.addEventListener("click", copyReviewPacket);
-  planContent?.querySelector("#save-review-packet")?.addEventListener("click", saveReviewPacket);
-  planContent?.querySelector("#plan-import-example")?.addEventListener("click", fillPlanImportExample);
-  planContent?.querySelector("#plan-import-preview")?.addEventListener("click", previewPlanImportFromScreen);
-  planContent?.querySelector("#plan-import-save")?.addEventListener("click", savePlanImportFromScreen);
-  planContent?.querySelector("#plan-import-text")?.addEventListener("input", () => {
-    planImportPreview = null;
-    planImportSummary = "";
-    planImportMessage = "Text changed. Preview again before saving.";
-    const saveButton = planContent.querySelector("#plan-import-save");
-    if (saveButton) saveButton.disabled = true;
+// ===== Plan: manual editing engine =====
+// All edits flow through mutatePlanData: load the saved data, let `fn` change
+// it, persist through the same local + cloud path everything else uses, then
+// (by default) re-render the Plan and Today screens so both stay in sync.
+function mutatePlanData(fn, { rerender = true } = {}) {
+  const data = getLocalData();
+  data.routines = Array.isArray(data.routines) ? data.routines : [];
+  data.weeklyPlan = data.weeklyPlan || getStarterWeeklyPlan();
+  fn(data);
+  commitProgressData(data);
+  if (rerender) {
+    renderPlan();
+    renderTodayRoutine();
+    renderReviewReminder();
+  }
+}
+
+function findRoutineInData(data, id) {
+  return (data.routines || []).find((routine) => routine.id === id) || null;
+}
+
+function makeRoutineId(name) {
+  const base = String(name || "routine").toLowerCase().trim()
+    .replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 24) || "routine";
+  return `${base}-${randomString(4)}`;
+}
+
+// Sensible starting targets for a freshly-added routine exercise, based on type.
+function defaultRoutineExercise(exerciseId) {
+  const type = getExerciseById(exerciseId)?.type || "strength";
+  if (type === "cardio" || type === "sport") return { exerciseId, targetDuration: 20 };
+  if (type === "timed") return { exerciseId, targetSets: 3, targetReps: 30 };
+  return { exerciseId, targetSets: 3, targetReps: 8 };
+}
+
+function assignWeeklyDay(day, routineId) {
+  mutatePlanData((data) => {
+    data.weeklyPlan[day] = routineId || null;
   });
+}
+
+function addRoutine() {
+  const id = makeRoutineId("new-routine");
+  mutatePlanData((data) => {
+    data.routines.push({ id, name: "New Routine", location: "mixed", exercises: [], notes: "" });
+  }, { rerender: false });
+  routineEditSnapshot = null;
+  routineEditIsNew = true;
+  editingRoutineId = id;
+  renderPlan();
+  renderTodayRoutine();
+}
+
+// Open a routine's edit form, snapshotting it first so Cancel can revert.
+function startRoutineEdit(id) {
+  const routine = findRoutineInData(getLocalData(), id);
+  routineEditSnapshot = routine ? JSON.parse(JSON.stringify(routine)) : null;
+  routineEditIsNew = false;
+  editingRoutineId = id;
+  renderPlan();
+}
+
+function finishRoutineEdit() {
+  editingRoutineId = null;
+  routineEditSnapshot = null;
+  routineEditIsNew = false;
+  renderPlan();
+}
+
+// Cancel: drop a brand-new routine entirely, or restore an existing one to the
+// snapshot taken when editing began.
+function cancelRoutineEdit(id) {
+  if (routineEditIsNew) {
+    mutatePlanData((data) => {
+      data.routines = data.routines.filter((routine) => routine.id !== id);
+      DOW_NAMES.forEach((day) => { if (data.weeklyPlan[day] === id) data.weeklyPlan[day] = null; });
+    }, { rerender: false });
+  } else if (routineEditSnapshot) {
+    const snapshot = JSON.parse(JSON.stringify(routineEditSnapshot));
+    mutatePlanData((data) => {
+      const index = data.routines.findIndex((routine) => routine.id === id);
+      if (index >= 0) data.routines[index] = snapshot;
+    }, { rerender: false });
+  }
+  finishRoutineEdit();
+  renderTodayRoutine();
+}
+
+function deleteRoutine(id) {
+  const routine = findRoutineInData(getLocalData(), id);
+  if (!confirm(`Delete the routine "${routine?.name || "this routine"}"? Any day using it becomes a rest day. Past workouts are not affected.`)) return;
+  mutatePlanData((data) => {
+    data.routines = data.routines.filter((item) => item.id !== id);
+    DOW_NAMES.forEach((day) => { if (data.weeklyPlan[day] === id) data.weeklyPlan[day] = null; });
+  }, { rerender: false });
+  if (editingRoutineId === id) editingRoutineId = null;
+  renderPlan();
+  renderTodayRoutine();
+}
+
+// Text/select field edits save silently (no re-render) so typing keeps focus.
+function updateRoutineField(id, field, value) {
+  mutatePlanData((data) => {
+    const routine = findRoutineInData(data, id);
+    if (routine) routine[field] = value;
+  }, { rerender: false });
+}
+
+function addRoutineExercise(routineId, exerciseId) {
+  if (!exerciseId) return;
+  mutatePlanData((data) => {
+    const routine = findRoutineInData(data, routineId);
+    if (!routine) return;
+    routine.exercises = Array.isArray(routine.exercises) ? routine.exercises : [];
+    routine.exercises.push(defaultRoutineExercise(exerciseId));
+  });
+}
+
+function removeRoutineExercise(routineId, index) {
+  const routine = findRoutineInData(getLocalData(), routineId);
+  const ex = routine?.exercises?.[index];
+  const name = ex ? (getExerciseById(ex.exerciseId)?.name || ex.exerciseId) : "this exercise";
+  if (!confirm(`Remove ${name} from this routine?`)) return;
+  mutatePlanData((data) => {
+    const target = findRoutineInData(data, routineId);
+    if (target && Array.isArray(target.exercises)) target.exercises.splice(index, 1);
+  });
+}
+
+function moveRoutineExercise(routineId, index, dir) {
+  mutatePlanData((data) => {
+    const routine = findRoutineInData(data, routineId);
+    if (!routine || !Array.isArray(routine.exercises)) return;
+    const target = index + dir;
+    if (target < 0 || target >= routine.exercises.length) return;
+    const [item] = routine.exercises.splice(index, 1);
+    routine.exercises.splice(target, 0, item);
+  });
+}
+
+function updateRoutineExerciseField(routineId, index, field, rawValue) {
+  mutatePlanData((data) => {
+    const routine = findRoutineInData(data, routineId);
+    const ex = routine?.exercises?.[index];
+    if (!ex) return;
+    let value = Number(rawValue);
+    if (!Number.isFinite(value) || value < 0) value = 0;
+    if (field === "targetSets") value = Math.max(1, Math.round(value));
+    else if (field === "targetReps") value = Math.max(0, Math.round(value));
+    else if (field === "targetDuration") value = Math.max(1, Math.round(value));
+    ex[field] = value;
+  }, { rerender: false });
+}
+
+// One delegated click handler for the whole Plan screen.
+function handlePlanClick(event) {
+  const button = event.target.closest("[data-action]");
+  if (!button) return;
+  const action = button.dataset.action;
+  const id = button.dataset.id;
+
+  switch (action) {
+    case "save-plan-notes": saveActivePlanFromScreen(); break;
+    case "add-routine": addRoutine(); break;
+    case "edit-routine": startRoutineEdit(id); break;
+    case "done-routine": finishRoutineEdit(); break;
+    case "cancel-routine": cancelRoutineEdit(id); break;
+    case "delete-routine": deleteRoutine(id); break;
+    case "remove-ex": removeRoutineExercise(id, Number(button.dataset.index)); break;
+    case "move-ex": moveRoutineExercise(id, Number(button.dataset.index), Number(button.dataset.dir)); break;
+    case "toggle-ai": aiPanelOpen = !aiPanelOpen; renderPlan(); break;
+    case "copy-packet": copyReviewPacket(); break;
+    case "save-packet": saveReviewPacket(); break;
+    case "import-example": fillPlanImportExample(); break;
+    case "import-preview": previewPlanImportFromScreen(); break;
+    case "import-save": savePlanImportFromScreen(); break;
+    default: break;
+  }
+}
+
+// Delegated change handler: weekly-day selects, routine name/location fields,
+// the per-routine "add exercise" picker, and the numeric target inputs.
+function handlePlanChange(event) {
+  const control = event.target.closest("[data-action]");
+  if (!control) return;
+  const action = control.dataset.action;
+
+  if (action === "assign-day") {
+    assignWeeklyDay(control.dataset.day, control.value);
+  } else if (action === "routine-field") {
+    updateRoutineField(control.dataset.id, control.dataset.field, control.value);
+  } else if (action === "add-ex") {
+    const exerciseId = control.value;
+    control.value = "";
+    addRoutineExercise(control.dataset.id, exerciseId);
+  } else if (action === "routine-ex-field") {
+    updateRoutineExerciseField(control.dataset.id, Number(control.dataset.index), control.dataset.field, control.value);
+  }
+}
+
+// Delegated input handler: clearing a previewed import the moment the pasted
+// text changes (so a stale preview can't be saved by accident).
+function handlePlanInput(event) {
+  if (event.target.id !== "plan-import-text") return;
+  planImportPreview = null;
+  planImportSummary = "";
+  planImportMessage = "Text changed. Preview again before saving.";
+  const saveButton = planContent?.querySelector('[data-action="import-save"]');
+  if (saveButton) saveButton.disabled = true;
 }
 
 function formatWorkoutForExport(workout) {
@@ -5269,21 +6948,60 @@ filterChips.forEach((chip) => {
 // Library: edit / remove / inline-edit actions on the exercise list.
 exerciseList?.addEventListener("click", handleLibraryListClick);
 
-// Library: the "Add your own exercise" form.
-const libraryAddForm = document.querySelector("#library-add-form");
-const newExerciseName = document.querySelector("#new-exercise-name");
-libraryAddForm?.addEventListener("click", (event) => {
-  const typeOption = event.target.closest(".type-option");
-  if (!typeOption) return;
-  libraryAddForm.querySelectorAll(".type-option").forEach((btn) => btn.classList.toggle("is-active", btn === typeOption));
+// Library: live search box filters the cards as you type.
+const librarySearchInput = document.querySelector("#library-search");
+librarySearchInput?.addEventListener("input", () => {
+  librarySearch = librarySearchInput.value || "";
+  renderExercises();
 });
-libraryAddForm?.addEventListener("submit", (event) => {
-  event.preventDefault();
-  const name = newExerciseName?.value || "";
-  if (!name.trim()) return;
-  const type = libraryAddForm.querySelector(".type-option.is-active")?.dataset.type || "strength";
-  addLibraryExercise(name, type);
-  if (newExerciseName) newExerciseName.value = "";
+
+// Library: the "How to do it" sheet — close (X / Done / scrim) and the photo
+// editor (remove-my-photos button + the two file inputs).
+const librarySheetRoot = document.querySelector("#library-sheet-root");
+librarySheetRoot?.addEventListener("click", (event) => {
+  const clearButton = event.target.closest('[data-action="clear-custom-photos"]');
+  if (clearButton) {
+    clearCustomPhotos(clearButton.dataset.id);
+    return;
+  }
+  const onCloseButton = event.target.closest('[data-action="close-library-how-to"]');
+  const onScrim = event.target.classList.contains("lw-sheet-scrim");
+  if (onCloseButton || onScrim) closeLibraryReference();
+});
+librarySheetRoot?.addEventListener("change", (event) => {
+  const input = event.target.closest('input[type="file"][data-photo-slot]');
+  if (!input || !input.files || !input.files[0]) return;
+  const { id, photoSlot } = input.dataset;
+  downscaleImage(input.files[0])
+    .then((dataUrl) => setCustomPhoto(id, photoSlot, dataUrl))
+    .catch((error) => alert(error.message || "That image could not be used."));
+});
+document.addEventListener("keydown", (event) => {
+  if (event.key !== "Escape") return;
+  if (addModalOpen) closeAddExerciseModal();
+  else if (libraryReferenceId) closeLibraryReference();
+});
+
+// Library: the "Add an exercise" button opens a small modal (name + type).
+document.querySelector("#open-add-exercise")?.addEventListener("click", openAddExerciseModal);
+
+const libraryAddModalRoot = document.querySelector("#library-add-modal-root");
+libraryAddModalRoot?.addEventListener("click", (event) => {
+  const typeOption = event.target.closest("[data-add-type] .type-option");
+  if (typeOption) {
+    addModalType = typeOption.dataset.type || "strength";
+    libraryAddModalRoot.querySelectorAll("[data-add-type] .type-option").forEach((btn) => btn.classList.toggle("is-active", btn === typeOption));
+    return;
+  }
+  const button = event.target.closest("[data-action]");
+  if (button?.dataset.action === "submit-add") submitAddExercise();
+  else if (button?.dataset.action === "close-add" || event.target.hasAttribute("data-add-scrim")) closeAddExerciseModal();
+});
+libraryAddModalRoot?.addEventListener("keydown", (event) => {
+  if (event.key === "Enter" && event.target.id === "add-ex-name") {
+    event.preventDefault();
+    submitAddExercise();
+  }
 });
 
 addExerciseButton?.addEventListener("click", addExerciseToWorkout);
@@ -5339,6 +7057,12 @@ dayTodayResetButton?.addEventListener("click", () => {
 const importPlanButton = document.querySelector("#import-plan");
 
 importPlanButton?.addEventListener("click", importUpdatedPlan);
+
+// Plan screen: one set of delegated listeners (attached once) handles every
+// control the section renderers draw, since renderPlan() replaces the markup.
+planContent?.addEventListener("click", handlePlanClick);
+planContent?.addEventListener("change", handlePlanChange);
+planContent?.addEventListener("input", handlePlanInput);
 
 syncPill?.addEventListener("click", () => {
   handleSyncPillClick().catch((error) => {
@@ -5398,6 +7122,7 @@ async function initCloud() {
     console.error("Cloud sync could not load right now:", error);
     // No cloud to reconcile against, so it is safe to seed locally now.
     reseedLibraryOnce();
+    mergeLibraryV3Once();
     seedSoccerOnce();
     updateCloudUi();
     return;
@@ -5452,6 +7177,7 @@ async function initCloud() {
         // on top of the freshest synced data (each runs once). Doing it here, not
         // at startup, avoids a stale device overwriting newer cloud data.
         reseedLibraryOnce();
+        mergeLibraryV3Once();
         seedSoccerOnce();
       }, (error) => console.error("Cloud listener error:", error));
     } else {
@@ -5459,6 +7185,7 @@ async function initCloud() {
       _fbDoc = null;
       // Signed out: no cloud to reconcile against, so seed locally now.
       reseedLibraryOnce();
+      mergeLibraryV3Once();
       seedSoccerOnce();
     }
     updateCloudUi();

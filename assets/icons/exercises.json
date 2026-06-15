@@ -3,7 +3,7 @@
     "description": "Mainstream exercise shortlist for the app. Linework icon per exercise (assets/icons/{slug}.svg); reference photos resolved from Free Exercise DB.",
     "dbLicense": "Unlicense (public domain)",
     "iconStatusLegend": "icon.glyph = shared line glyph; multiple exercises may share one. Swap per-exercise later if desired.",
-    "count": 53,
+    "count": 142,
     "photoSource": "Free Exercise DB (Unlicense / public domain), copied locally",
     "iconSource": "Tabler Icons (MIT) + Lucide biceps-flexed (ISC). Clean line glyphs, mapped by movement/equipment; reused across similar exercises."
   },
@@ -902,6 +902,1519 @@
       },
       "dbId": null,
       "photos": null
+    },
+    {
+      "name": "Dumbbell Pullover",
+      "slug": "dumbbell-pullover",
+      "group": "chest",
+      "equipment": "dumbbell",
+      "primaryMuscle": "chest",
+      "icon": {
+        "glyph": "dumbbell",
+        "file": "assets/icons/glyphs/dumbbell.svg",
+        "source": "tabler"
+      },
+      "dbId": "Bent-Arm_Dumbbell_Pullover",
+      "photos": {
+        "start": "assets/icons/photos/dumbbell-pullover/start.jpg",
+        "finish": "assets/icons/photos/dumbbell-pullover/finish.jpg"
+      }
+    },
+    {
+      "name": "Machine Chest Press",
+      "slug": "machine-chest-press",
+      "group": "chest",
+      "equipment": "machine",
+      "primaryMuscle": "chest",
+      "icon": {
+        "glyph": "weight",
+        "file": "assets/icons/glyphs/weight.svg",
+        "source": "tabler"
+      },
+      "dbId": "Machine_Bench_Press",
+      "photos": {
+        "start": "assets/icons/photos/machine-chest-press/start.jpg",
+        "finish": "assets/icons/photos/machine-chest-press/finish.jpg"
+      }
+    },
+    {
+      "name": "Pec Deck Fly",
+      "slug": "pec-deck-fly",
+      "group": "chest",
+      "equipment": "machine",
+      "primaryMuscle": "chest",
+      "icon": {
+        "glyph": "weight",
+        "file": "assets/icons/glyphs/weight.svg",
+        "source": "tabler"
+      },
+      "dbId": "Butterfly",
+      "photos": {
+        "start": "assets/icons/photos/pec-deck-fly/start.jpg",
+        "finish": "assets/icons/photos/pec-deck-fly/finish.jpg"
+      }
+    },
+    {
+      "name": "Incline Dumbbell Press",
+      "slug": "incline-dumbbell-press",
+      "group": "chest",
+      "equipment": "dumbbell",
+      "primaryMuscle": "chest",
+      "icon": {
+        "glyph": "dumbbell",
+        "file": "assets/icons/glyphs/dumbbell.svg",
+        "source": "tabler"
+      },
+      "dbId": "Incline_Dumbbell_Press",
+      "photos": {
+        "start": "assets/icons/photos/incline-dumbbell-press/start.jpg",
+        "finish": "assets/icons/photos/incline-dumbbell-press/finish.jpg"
+      }
+    },
+    {
+      "name": "Decline Bench Press",
+      "slug": "decline-bench-press",
+      "group": "chest",
+      "equipment": "barbell",
+      "primaryMuscle": "chest",
+      "icon": {
+        "glyph": "barbell",
+        "file": "assets/icons/glyphs/barbell.svg",
+        "source": "tabler"
+      },
+      "dbId": "Decline_Barbell_Bench_Press",
+      "photos": {
+        "start": "assets/icons/photos/decline-bench-press/start.jpg",
+        "finish": "assets/icons/photos/decline-bench-press/finish.jpg"
+      }
+    },
+    {
+      "name": "Incline Dumbbell Fly",
+      "slug": "incline-dumbbell-fly",
+      "group": "chest",
+      "equipment": "dumbbell",
+      "primaryMuscle": "chest",
+      "icon": {
+        "glyph": "dumbbell",
+        "file": "assets/icons/glyphs/dumbbell.svg",
+        "source": "tabler"
+      },
+      "dbId": "Incline_Dumbbell_Flyes",
+      "photos": {
+        "start": "assets/icons/photos/incline-dumbbell-fly/start.jpg",
+        "finish": "assets/icons/photos/incline-dumbbell-fly/finish.jpg"
+      }
+    },
+    {
+      "name": "Diamond Push-Up",
+      "slug": "diamond-push-up",
+      "group": "arms",
+      "equipment": "body only",
+      "primaryMuscle": "triceps",
+      "icon": {
+        "glyph": "gymnastics",
+        "file": "assets/icons/glyphs/gymnastics.svg",
+        "source": "tabler"
+      },
+      "dbId": "Push-Ups_-_Close_Triceps_Position",
+      "photos": {
+        "start": "assets/icons/photos/diamond-push-up/start.jpg",
+        "finish": "assets/icons/photos/diamond-push-up/finish.jpg"
+      }
+    },
+    {
+      "name": "Inverted Row",
+      "slug": "inverted-row",
+      "group": "back",
+      "equipment": "body only",
+      "primaryMuscle": "middle back",
+      "icon": {
+        "glyph": "gymnastics",
+        "file": "assets/icons/glyphs/gymnastics.svg",
+        "source": "tabler"
+      },
+      "dbId": "Inverted_Row",
+      "photos": {
+        "start": "assets/icons/photos/inverted-row/start.jpg",
+        "finish": "assets/icons/photos/inverted-row/finish.jpg"
+      }
+    },
+    {
+      "name": "Decline Dumbbell Press",
+      "slug": "decline-dumbbell-press",
+      "group": "chest",
+      "equipment": "dumbbell",
+      "primaryMuscle": "chest",
+      "icon": {
+        "glyph": "dumbbell",
+        "file": "assets/icons/glyphs/dumbbell.svg",
+        "source": "tabler"
+      },
+      "dbId": "Decline_Dumbbell_Bench_Press",
+      "photos": {
+        "start": "assets/icons/photos/decline-dumbbell-press/start.jpg",
+        "finish": "assets/icons/photos/decline-dumbbell-press/finish.jpg"
+      }
+    },
+    {
+      "name": "T-Bar Row",
+      "slug": "t-bar-row",
+      "group": "back",
+      "equipment": "barbell",
+      "primaryMuscle": "middle back",
+      "icon": {
+        "glyph": "barbell",
+        "file": "assets/icons/glyphs/barbell.svg",
+        "source": "tabler"
+      },
+      "dbId": "T-Bar_Row_with_Handle",
+      "photos": {
+        "start": "assets/icons/photos/t-bar-row/start.jpg",
+        "finish": "assets/icons/photos/t-bar-row/finish.jpg"
+      }
+    },
+    {
+      "name": "Good Morning",
+      "slug": "good-morning",
+      "group": "back",
+      "equipment": "barbell",
+      "primaryMuscle": "lower back",
+      "icon": {
+        "glyph": "barbell",
+        "file": "assets/icons/glyphs/barbell.svg",
+        "source": "tabler"
+      },
+      "dbId": "Stiff_Leg_Barbell_Good_Morning",
+      "photos": {
+        "start": "assets/icons/photos/good-morning/start.jpg",
+        "finish": "assets/icons/photos/good-morning/finish.jpg"
+      }
+    },
+    {
+      "name": "Rack Pull",
+      "slug": "rack-pull",
+      "group": "back",
+      "equipment": "barbell",
+      "primaryMuscle": "lower back",
+      "icon": {
+        "glyph": "barbell",
+        "file": "assets/icons/glyphs/barbell.svg",
+        "source": "tabler"
+      },
+      "dbId": "Rack_Pulls",
+      "photos": {
+        "start": "assets/icons/photos/rack-pull/start.jpg",
+        "finish": "assets/icons/photos/rack-pull/finish.jpg"
+      }
+    },
+    {
+      "name": "Straight-Arm Pulldown",
+      "slug": "straight-arm-pulldown",
+      "group": "back",
+      "equipment": "cable",
+      "primaryMuscle": "lats",
+      "icon": {
+        "glyph": "weight",
+        "file": "assets/icons/glyphs/weight.svg",
+        "source": "tabler"
+      },
+      "dbId": "Straight-Arm_Pulldown",
+      "photos": {
+        "start": "assets/icons/photos/straight-arm-pulldown/start.jpg",
+        "finish": "assets/icons/photos/straight-arm-pulldown/finish.jpg"
+      }
+    },
+    {
+      "name": "Back Extension",
+      "slug": "back-extension",
+      "group": "back",
+      "equipment": "body only",
+      "primaryMuscle": "lower back",
+      "icon": {
+        "glyph": "gymnastics",
+        "file": "assets/icons/glyphs/gymnastics.svg",
+        "source": "tabler"
+      },
+      "dbId": "Hyperextensions_Back_Extensions",
+      "photos": {
+        "start": "assets/icons/photos/back-extension/start.jpg",
+        "finish": "assets/icons/photos/back-extension/finish.jpg"
+      }
+    },
+    {
+      "name": "Dumbbell Shrug",
+      "slug": "dumbbell-shrug",
+      "group": "back",
+      "equipment": "dumbbell",
+      "primaryMuscle": "traps",
+      "icon": {
+        "glyph": "dumbbell",
+        "file": "assets/icons/glyphs/dumbbell.svg",
+        "source": "tabler"
+      },
+      "dbId": "Dumbbell_Shrug",
+      "photos": {
+        "start": "assets/icons/photos/dumbbell-shrug/start.jpg",
+        "finish": "assets/icons/photos/dumbbell-shrug/finish.jpg"
+      }
+    },
+    {
+      "name": "Cable Pulldown (Underhand)",
+      "slug": "cable-pulldown-underhand",
+      "group": "back",
+      "equipment": "cable",
+      "primaryMuscle": "lats",
+      "icon": {
+        "glyph": "weight",
+        "file": "assets/icons/glyphs/weight.svg",
+        "source": "tabler"
+      },
+      "dbId": "Underhand_Cable_Pulldowns",
+      "photos": {
+        "start": "assets/icons/photos/cable-pulldown-underhand/start.jpg",
+        "finish": "assets/icons/photos/cable-pulldown-underhand/finish.jpg"
+      }
+    },
+    {
+      "name": "Wide-Grip Pull-Up",
+      "slug": "wide-grip-pull-up",
+      "group": "back",
+      "equipment": "body only",
+      "primaryMuscle": "lats",
+      "icon": {
+        "glyph": "gymnastics",
+        "file": "assets/icons/glyphs/gymnastics.svg",
+        "source": "tabler"
+      },
+      "dbId": "Wide-Grip_Rear_Pull-Up",
+      "photos": {
+        "start": "assets/icons/photos/wide-grip-pull-up/start.jpg",
+        "finish": "assets/icons/photos/wide-grip-pull-up/finish.jpg"
+      }
+    },
+    {
+      "name": "Upright Row",
+      "slug": "upright-row",
+      "group": "shoulders",
+      "equipment": "barbell",
+      "primaryMuscle": "shoulders",
+      "icon": {
+        "glyph": "barbell",
+        "file": "assets/icons/glyphs/barbell.svg",
+        "source": "tabler"
+      },
+      "dbId": "Upright_Barbell_Row",
+      "photos": {
+        "start": "assets/icons/photos/upright-row/start.jpg",
+        "finish": "assets/icons/photos/upright-row/finish.jpg"
+      }
+    },
+    {
+      "name": "Cable Lateral Raise",
+      "slug": "cable-lateral-raise",
+      "group": "shoulders",
+      "equipment": "cable",
+      "primaryMuscle": "shoulders",
+      "icon": {
+        "glyph": "weight",
+        "file": "assets/icons/glyphs/weight.svg",
+        "source": "tabler"
+      },
+      "dbId": "Cable_Seated_Lateral_Raise",
+      "photos": {
+        "start": "assets/icons/photos/cable-lateral-raise/start.jpg",
+        "finish": "assets/icons/photos/cable-lateral-raise/finish.jpg"
+      }
+    },
+    {
+      "name": "Reverse Dumbbell Fly",
+      "slug": "reverse-dumbbell-fly",
+      "group": "shoulders",
+      "equipment": "dumbbell",
+      "primaryMuscle": "shoulders",
+      "icon": {
+        "glyph": "dumbbell",
+        "file": "assets/icons/glyphs/dumbbell.svg",
+        "source": "tabler"
+      },
+      "dbId": "Reverse_Flyes",
+      "photos": {
+        "start": "assets/icons/photos/reverse-dumbbell-fly/start.jpg",
+        "finish": "assets/icons/photos/reverse-dumbbell-fly/finish.jpg"
+      }
+    },
+    {
+      "name": "Seated Dumbbell Press",
+      "slug": "seated-dumbbell-press",
+      "group": "shoulders",
+      "equipment": "dumbbell",
+      "primaryMuscle": "shoulders",
+      "icon": {
+        "glyph": "dumbbell",
+        "file": "assets/icons/glyphs/dumbbell.svg",
+        "source": "tabler"
+      },
+      "dbId": "Seated_Dumbbell_Press",
+      "photos": {
+        "start": "assets/icons/photos/seated-dumbbell-press/start.jpg",
+        "finish": "assets/icons/photos/seated-dumbbell-press/finish.jpg"
+      }
+    },
+    {
+      "name": "Reverse Pec Deck",
+      "slug": "reverse-pec-deck",
+      "group": "shoulders",
+      "equipment": "machine",
+      "primaryMuscle": "shoulders",
+      "icon": {
+        "glyph": "weight",
+        "file": "assets/icons/glyphs/weight.svg",
+        "source": "tabler"
+      },
+      "dbId": "Reverse_Machine_Flyes",
+      "photos": {
+        "start": "assets/icons/photos/reverse-pec-deck/start.jpg",
+        "finish": "assets/icons/photos/reverse-pec-deck/finish.jpg"
+      }
+    },
+    {
+      "name": "External Rotation",
+      "slug": "external-rotation",
+      "group": "shoulders",
+      "equipment": "dumbbell",
+      "primaryMuscle": "shoulders",
+      "icon": {
+        "glyph": "dumbbell",
+        "file": "assets/icons/glyphs/dumbbell.svg",
+        "source": "tabler"
+      },
+      "dbId": "External_Rotation",
+      "photos": {
+        "start": "assets/icons/photos/external-rotation/start.jpg",
+        "finish": "assets/icons/photos/external-rotation/finish.jpg"
+      }
+    },
+    {
+      "name": "Push Press",
+      "slug": "push-press",
+      "group": "shoulders",
+      "equipment": "barbell",
+      "primaryMuscle": "shoulders",
+      "icon": {
+        "glyph": "barbell",
+        "file": "assets/icons/glyphs/barbell.svg",
+        "source": "tabler"
+      },
+      "dbId": "Push_Press_-_Behind_the_Neck",
+      "photos": {
+        "start": "assets/icons/photos/push-press/start.jpg",
+        "finish": "assets/icons/photos/push-press/finish.jpg"
+      }
+    },
+    {
+      "name": "Hack Squat",
+      "slug": "hack-squat",
+      "group": "legs",
+      "equipment": "machine",
+      "primaryMuscle": "quadriceps",
+      "icon": {
+        "glyph": "weight",
+        "file": "assets/icons/glyphs/weight.svg",
+        "source": "tabler"
+      },
+      "dbId": "Hack_Squat",
+      "photos": {
+        "start": "assets/icons/photos/hack-squat/start.jpg",
+        "finish": "assets/icons/photos/hack-squat/finish.jpg"
+      }
+    },
+    {
+      "name": "Barbell Lunge",
+      "slug": "barbell-lunge",
+      "group": "legs",
+      "equipment": "barbell",
+      "primaryMuscle": "quadriceps",
+      "icon": {
+        "glyph": "barbell",
+        "file": "assets/icons/glyphs/barbell.svg",
+        "source": "tabler"
+      },
+      "dbId": "Barbell_Lunge",
+      "photos": {
+        "start": "assets/icons/photos/barbell-lunge/start.jpg",
+        "finish": "assets/icons/photos/barbell-lunge/finish.jpg"
+      }
+    },
+    {
+      "name": "Walking Lunge",
+      "slug": "walking-lunge",
+      "group": "legs",
+      "equipment": "barbell",
+      "primaryMuscle": "quadriceps",
+      "icon": {
+        "glyph": "barbell",
+        "file": "assets/icons/glyphs/barbell.svg",
+        "source": "tabler"
+      },
+      "dbId": "Barbell_Walking_Lunge",
+      "photos": {
+        "start": "assets/icons/photos/walking-lunge/start.jpg",
+        "finish": "assets/icons/photos/walking-lunge/finish.jpg"
+      }
+    },
+    {
+      "name": "Dumbbell Step-Up",
+      "slug": "dumbbell-step-up",
+      "group": "legs",
+      "equipment": "dumbbell",
+      "primaryMuscle": "quadriceps",
+      "icon": {
+        "glyph": "dumbbell",
+        "file": "assets/icons/glyphs/dumbbell.svg",
+        "source": "tabler"
+      },
+      "dbId": "Dumbbell_Step_Ups",
+      "photos": {
+        "start": "assets/icons/photos/dumbbell-step-up/start.jpg",
+        "finish": "assets/icons/photos/dumbbell-step-up/finish.jpg"
+      }
+    },
+    {
+      "name": "Sumo Deadlift",
+      "slug": "sumo-deadlift",
+      "group": "legs",
+      "equipment": "barbell",
+      "primaryMuscle": "hamstrings",
+      "icon": {
+        "glyph": "barbell",
+        "file": "assets/icons/glyphs/barbell.svg",
+        "source": "tabler"
+      },
+      "dbId": "Sumo_Deadlift",
+      "photos": {
+        "start": "assets/icons/photos/sumo-deadlift/start.jpg",
+        "finish": "assets/icons/photos/sumo-deadlift/finish.jpg"
+      }
+    },
+    {
+      "name": "Glute Bridge",
+      "slug": "glute-bridge",
+      "group": "legs",
+      "equipment": "barbell",
+      "primaryMuscle": "glutes",
+      "icon": {
+        "glyph": "barbell",
+        "file": "assets/icons/glyphs/barbell.svg",
+        "source": "tabler"
+      },
+      "dbId": "Barbell_Glute_Bridge",
+      "photos": {
+        "start": "assets/icons/photos/glute-bridge/start.jpg",
+        "finish": "assets/icons/photos/glute-bridge/finish.jpg"
+      }
+    },
+    {
+      "name": "Cable Pull Through",
+      "slug": "cable-pull-through",
+      "group": "legs",
+      "equipment": "cable",
+      "primaryMuscle": "glutes",
+      "icon": {
+        "glyph": "weight",
+        "file": "assets/icons/glyphs/weight.svg",
+        "source": "tabler"
+      },
+      "dbId": "Pull_Through",
+      "photos": {
+        "start": "assets/icons/photos/cable-pull-through/start.jpg",
+        "finish": "assets/icons/photos/cable-pull-through/finish.jpg"
+      }
+    },
+    {
+      "name": "Reverse Lunge",
+      "slug": "reverse-lunge",
+      "group": "legs",
+      "equipment": "dumbbell",
+      "primaryMuscle": "quadriceps",
+      "icon": {
+        "glyph": "dumbbell",
+        "file": "assets/icons/glyphs/dumbbell.svg",
+        "source": "tabler"
+      },
+      "dbId": "Dumbbell_Rear_Lunge",
+      "photos": {
+        "start": "assets/icons/photos/reverse-lunge/start.jpg",
+        "finish": "assets/icons/photos/reverse-lunge/finish.jpg"
+      }
+    },
+    {
+      "name": "Plié Dumbbell Squat",
+      "slug": "pli-dumbbell-squat",
+      "group": "legs",
+      "equipment": "dumbbell",
+      "primaryMuscle": "quadriceps",
+      "icon": {
+        "glyph": "dumbbell",
+        "file": "assets/icons/glyphs/dumbbell.svg",
+        "source": "tabler"
+      },
+      "dbId": "Plie_Dumbbell_Squat",
+      "photos": {
+        "start": "assets/icons/photos/pli-dumbbell-squat/start.jpg",
+        "finish": "assets/icons/photos/pli-dumbbell-squat/finish.jpg"
+      }
+    },
+    {
+      "name": "Glute Kickback",
+      "slug": "glute-kickback",
+      "group": "legs",
+      "equipment": "body only",
+      "primaryMuscle": "glutes",
+      "icon": {
+        "glyph": "walk",
+        "file": "assets/icons/glyphs/walk.svg",
+        "source": "tabler"
+      },
+      "dbId": "Glute_Kickback",
+      "photos": {
+        "start": "assets/icons/photos/glute-kickback/start.jpg",
+        "finish": "assets/icons/photos/glute-kickback/finish.jpg"
+      }
+    },
+    {
+      "name": "Seated Leg Curl",
+      "slug": "seated-leg-curl",
+      "group": "legs",
+      "equipment": "machine",
+      "primaryMuscle": "hamstrings",
+      "icon": {
+        "glyph": "weight",
+        "file": "assets/icons/glyphs/weight.svg",
+        "source": "tabler"
+      },
+      "dbId": "Seated_Leg_Curl",
+      "photos": {
+        "start": "assets/icons/photos/seated-leg-curl/start.jpg",
+        "finish": "assets/icons/photos/seated-leg-curl/finish.jpg"
+      }
+    },
+    {
+      "name": "Box Squat",
+      "slug": "box-squat",
+      "group": "legs",
+      "equipment": "barbell",
+      "primaryMuscle": "quadriceps",
+      "icon": {
+        "glyph": "barbell",
+        "file": "assets/icons/glyphs/barbell.svg",
+        "source": "tabler"
+      },
+      "dbId": "Box_Squat",
+      "photos": {
+        "start": "assets/icons/photos/box-squat/start.jpg",
+        "finish": "assets/icons/photos/box-squat/finish.jpg"
+      }
+    },
+    {
+      "name": "Hip Adduction (Machine)",
+      "slug": "hip-adduction-machine",
+      "group": "legs",
+      "equipment": "machine",
+      "primaryMuscle": "adductors",
+      "icon": {
+        "glyph": "weight",
+        "file": "assets/icons/glyphs/weight.svg",
+        "source": "tabler"
+      },
+      "dbId": "Thigh_Adductor",
+      "photos": {
+        "start": "assets/icons/photos/hip-adduction-machine/start.jpg",
+        "finish": "assets/icons/photos/hip-adduction-machine/finish.jpg"
+      }
+    },
+    {
+      "name": "Step-Up with Knee Raise",
+      "slug": "step-up-with-knee-raise",
+      "group": "legs",
+      "equipment": "body only",
+      "primaryMuscle": "glutes",
+      "icon": {
+        "glyph": "walk",
+        "file": "assets/icons/glyphs/walk.svg",
+        "source": "tabler"
+      },
+      "dbId": "Step-up_with_Knee_Raise",
+      "photos": {
+        "start": "assets/icons/photos/step-up-with-knee-raise/start.jpg",
+        "finish": "assets/icons/photos/step-up-with-knee-raise/finish.jpg"
+      }
+    },
+    {
+      "name": "EZ-Bar Curl",
+      "slug": "ez-bar-curl",
+      "group": "arms",
+      "equipment": "barbell",
+      "primaryMuscle": "biceps",
+      "icon": {
+        "glyph": "biceps-flexed",
+        "file": "assets/icons/glyphs/biceps-flexed.svg",
+        "source": "lucide"
+      },
+      "dbId": "EZ-Bar_Curl",
+      "photos": {
+        "start": "assets/icons/photos/ez-bar-curl/start.jpg",
+        "finish": "assets/icons/photos/ez-bar-curl/finish.jpg"
+      }
+    },
+    {
+      "name": "Bodyweight Squat",
+      "slug": "bodyweight-squat",
+      "group": "legs",
+      "equipment": "body only",
+      "primaryMuscle": "quadriceps",
+      "icon": {
+        "glyph": "walk",
+        "file": "assets/icons/glyphs/walk.svg",
+        "source": "tabler"
+      },
+      "dbId": "Bodyweight_Squat",
+      "photos": {
+        "start": "assets/icons/photos/bodyweight-squat/start.jpg",
+        "finish": "assets/icons/photos/bodyweight-squat/finish.jpg"
+      }
+    },
+    {
+      "name": "Stiff-Legged Deadlift",
+      "slug": "stiff-legged-deadlift",
+      "group": "legs",
+      "equipment": "dumbbell",
+      "primaryMuscle": "hamstrings",
+      "icon": {
+        "glyph": "dumbbell",
+        "file": "assets/icons/glyphs/dumbbell.svg",
+        "source": "tabler"
+      },
+      "dbId": "Stiff-Legged_Dumbbell_Deadlift",
+      "photos": {
+        "start": "assets/icons/photos/stiff-legged-deadlift/start.jpg",
+        "finish": "assets/icons/photos/stiff-legged-deadlift/finish.jpg"
+      }
+    },
+    {
+      "name": "Hip Abduction (Machine)",
+      "slug": "hip-abduction-machine",
+      "group": "legs",
+      "equipment": "machine",
+      "primaryMuscle": "abductors",
+      "icon": {
+        "glyph": "weight",
+        "file": "assets/icons/glyphs/weight.svg",
+        "source": "tabler"
+      },
+      "dbId": "Thigh_Abductor",
+      "photos": {
+        "start": "assets/icons/photos/hip-abduction-machine/start.jpg",
+        "finish": "assets/icons/photos/hip-abduction-machine/finish.jpg"
+      }
+    },
+    {
+      "name": "Concentration Curl",
+      "slug": "concentration-curl",
+      "group": "arms",
+      "equipment": "dumbbell",
+      "primaryMuscle": "biceps",
+      "icon": {
+        "glyph": "biceps-flexed",
+        "file": "assets/icons/glyphs/biceps-flexed.svg",
+        "source": "lucide"
+      },
+      "dbId": "Concentration_Curls",
+      "photos": {
+        "start": "assets/icons/photos/concentration-curl/start.jpg",
+        "finish": "assets/icons/photos/concentration-curl/finish.jpg"
+      }
+    },
+    {
+      "name": "Cable Hammer Curl",
+      "slug": "cable-hammer-curl",
+      "group": "arms",
+      "equipment": "cable",
+      "primaryMuscle": "biceps",
+      "icon": {
+        "glyph": "biceps-flexed",
+        "file": "assets/icons/glyphs/biceps-flexed.svg",
+        "source": "lucide"
+      },
+      "dbId": "Cable_Hammer_Curls_-_Rope_Attachment",
+      "photos": {
+        "start": "assets/icons/photos/cable-hammer-curl/start.jpg",
+        "finish": "assets/icons/photos/cable-hammer-curl/finish.jpg"
+      }
+    },
+    {
+      "name": "Incline Dumbbell Curl",
+      "slug": "incline-dumbbell-curl",
+      "group": "arms",
+      "equipment": "dumbbell",
+      "primaryMuscle": "biceps",
+      "icon": {
+        "glyph": "biceps-flexed",
+        "file": "assets/icons/glyphs/biceps-flexed.svg",
+        "source": "lucide"
+      },
+      "dbId": "Incline_Dumbbell_Curl",
+      "photos": {
+        "start": "assets/icons/photos/incline-dumbbell-curl/start.jpg",
+        "finish": "assets/icons/photos/incline-dumbbell-curl/finish.jpg"
+      }
+    },
+    {
+      "name": "Cable Curl",
+      "slug": "cable-curl",
+      "group": "arms",
+      "equipment": "cable",
+      "primaryMuscle": "biceps",
+      "icon": {
+        "glyph": "biceps-flexed",
+        "file": "assets/icons/glyphs/biceps-flexed.svg",
+        "source": "lucide"
+      },
+      "dbId": "Cable_Preacher_Curl",
+      "photos": {
+        "start": "assets/icons/photos/cable-curl/start.jpg",
+        "finish": "assets/icons/photos/cable-curl/finish.jpg"
+      }
+    },
+    {
+      "name": "Reverse Curl",
+      "slug": "reverse-curl",
+      "group": "arms",
+      "equipment": "barbell",
+      "primaryMuscle": "biceps",
+      "icon": {
+        "glyph": "biceps-flexed",
+        "file": "assets/icons/glyphs/biceps-flexed.svg",
+        "source": "lucide"
+      },
+      "dbId": "Reverse_Barbell_Curl",
+      "photos": {
+        "start": "assets/icons/photos/reverse-curl/start.jpg",
+        "finish": "assets/icons/photos/reverse-curl/finish.jpg"
+      }
+    },
+    {
+      "name": "Wrist Curl",
+      "slug": "wrist-curl",
+      "group": "arms",
+      "equipment": "cable",
+      "primaryMuscle": "forearms",
+      "icon": {
+        "glyph": "weight",
+        "file": "assets/icons/glyphs/weight.svg",
+        "source": "tabler"
+      },
+      "dbId": "Cable_Wrist_Curl",
+      "photos": {
+        "start": "assets/icons/photos/wrist-curl/start.jpg",
+        "finish": "assets/icons/photos/wrist-curl/finish.jpg"
+      }
+    },
+    {
+      "name": "Bench Dip",
+      "slug": "bench-dip",
+      "group": "arms",
+      "equipment": "body only",
+      "primaryMuscle": "triceps",
+      "icon": {
+        "glyph": "gymnastics",
+        "file": "assets/icons/glyphs/gymnastics.svg",
+        "source": "tabler"
+      },
+      "dbId": "Bench_Dips",
+      "photos": {
+        "start": "assets/icons/photos/bench-dip/start.jpg",
+        "finish": "assets/icons/photos/bench-dip/finish.jpg"
+      }
+    },
+    {
+      "name": "Floor Press",
+      "slug": "floor-press",
+      "group": "arms",
+      "equipment": "barbell",
+      "primaryMuscle": "triceps",
+      "icon": {
+        "glyph": "barbell",
+        "file": "assets/icons/glyphs/barbell.svg",
+        "source": "tabler"
+      },
+      "dbId": "Floor_Press",
+      "photos": {
+        "start": "assets/icons/photos/floor-press/start.jpg",
+        "finish": "assets/icons/photos/floor-press/finish.jpg"
+      }
+    },
+    {
+      "name": "Reverse Crunch",
+      "slug": "reverse-crunch",
+      "group": "core",
+      "equipment": "body only",
+      "primaryMuscle": "abdominals",
+      "icon": {
+        "glyph": "yoga",
+        "file": "assets/icons/glyphs/yoga.svg",
+        "source": "tabler"
+      },
+      "dbId": "Decline_Reverse_Crunch",
+      "photos": {
+        "start": "assets/icons/photos/reverse-crunch/start.jpg",
+        "finish": "assets/icons/photos/reverse-crunch/finish.jpg"
+      }
+    },
+    {
+      "name": "Seated Triceps Press",
+      "slug": "seated-triceps-press",
+      "group": "arms",
+      "equipment": "dumbbell",
+      "primaryMuscle": "triceps",
+      "icon": {
+        "glyph": "dumbbell",
+        "file": "assets/icons/glyphs/dumbbell.svg",
+        "source": "tabler"
+      },
+      "dbId": "Seated_Triceps_Press",
+      "photos": {
+        "start": "assets/icons/photos/seated-triceps-press/start.jpg",
+        "finish": "assets/icons/photos/seated-triceps-press/finish.jpg"
+      }
+    },
+    {
+      "name": "Dips (Triceps)",
+      "slug": "dips-triceps",
+      "group": "arms",
+      "equipment": "body only",
+      "primaryMuscle": "triceps",
+      "icon": {
+        "glyph": "gymnastics",
+        "file": "assets/icons/glyphs/gymnastics.svg",
+        "source": "tabler"
+      },
+      "dbId": "Dips_-_Triceps_Version",
+      "photos": {
+        "start": "assets/icons/photos/dips-triceps/start.jpg",
+        "finish": "assets/icons/photos/dips-triceps/finish.jpg"
+      }
+    },
+    {
+      "name": "Triceps Kickback",
+      "slug": "triceps-kickback",
+      "group": "arms",
+      "equipment": "dumbbell",
+      "primaryMuscle": "triceps",
+      "icon": {
+        "glyph": "dumbbell",
+        "file": "assets/icons/glyphs/dumbbell.svg",
+        "source": "tabler"
+      },
+      "dbId": "Tricep_Dumbbell_Kickback",
+      "photos": {
+        "start": "assets/icons/photos/triceps-kickback/start.jpg",
+        "finish": "assets/icons/photos/triceps-kickback/finish.jpg"
+      }
+    },
+    {
+      "name": "Side Plank",
+      "slug": "side-plank",
+      "group": "core",
+      "equipment": "body only",
+      "primaryMuscle": "abdominals",
+      "icon": {
+        "glyph": "yoga",
+        "file": "assets/icons/glyphs/yoga.svg",
+        "source": "tabler"
+      },
+      "dbId": "Side_Bridge",
+      "photos": {
+        "start": "assets/icons/photos/side-plank/start.jpg",
+        "finish": "assets/icons/photos/side-plank/finish.jpg"
+      }
+    },
+    {
+      "name": "Cross-Body Crunch",
+      "slug": "cross-body-crunch",
+      "group": "core",
+      "equipment": "body only",
+      "primaryMuscle": "abdominals",
+      "icon": {
+        "glyph": "yoga",
+        "file": "assets/icons/glyphs/yoga.svg",
+        "source": "tabler"
+      },
+      "dbId": "Cross-Body_Crunch",
+      "photos": {
+        "start": "assets/icons/photos/cross-body-crunch/start.jpg",
+        "finish": "assets/icons/photos/cross-body-crunch/finish.jpg"
+      }
+    },
+    {
+      "name": "Lying Leg Raise",
+      "slug": "lying-leg-raise",
+      "group": "core",
+      "equipment": "body only",
+      "primaryMuscle": "glutes",
+      "icon": {
+        "glyph": "yoga",
+        "file": "assets/icons/glyphs/yoga.svg",
+        "source": "tabler"
+      },
+      "dbId": "Leg_Lift",
+      "photos": {
+        "start": "assets/icons/photos/lying-leg-raise/start.jpg",
+        "finish": "assets/icons/photos/lying-leg-raise/finish.jpg"
+      }
+    },
+    {
+      "name": "V-Up",
+      "slug": "v-up",
+      "group": "core",
+      "equipment": "body only",
+      "primaryMuscle": "abdominals",
+      "icon": {
+        "glyph": "yoga",
+        "file": "assets/icons/glyphs/yoga.svg",
+        "source": "tabler"
+      },
+      "dbId": "Jackknife_Sit-Up",
+      "photos": {
+        "start": "assets/icons/photos/v-up/start.jpg",
+        "finish": "assets/icons/photos/v-up/finish.jpg"
+      }
+    },
+    {
+      "name": "Flutter Kicks",
+      "slug": "flutter-kicks",
+      "group": "core",
+      "equipment": "body only",
+      "primaryMuscle": "glutes",
+      "icon": {
+        "glyph": "yoga",
+        "file": "assets/icons/glyphs/yoga.svg",
+        "source": "tabler"
+      },
+      "dbId": "Flutter_Kicks",
+      "photos": {
+        "start": "assets/icons/photos/flutter-kicks/start.jpg",
+        "finish": "assets/icons/photos/flutter-kicks/finish.jpg"
+      }
+    },
+    {
+      "name": "Bicycle Crunch",
+      "slug": "bicycle-crunch",
+      "group": "core",
+      "equipment": "body only",
+      "primaryMuscle": "abdominals",
+      "icon": {
+        "glyph": "yoga",
+        "file": "assets/icons/glyphs/yoga.svg",
+        "source": "tabler"
+      },
+      "dbId": "Air_Bike",
+      "photos": {
+        "start": "assets/icons/photos/bicycle-crunch/start.jpg",
+        "finish": "assets/icons/photos/bicycle-crunch/finish.jpg"
+      }
+    },
+    {
+      "name": "Ab Rollout",
+      "slug": "ab-rollout",
+      "group": "core",
+      "equipment": "body only",
+      "primaryMuscle": "abdominals",
+      "icon": {
+        "glyph": "yoga",
+        "file": "assets/icons/glyphs/yoga.svg",
+        "source": "tabler"
+      },
+      "dbId": "Ab_Roller",
+      "photos": {
+        "start": "assets/icons/photos/ab-rollout/start.jpg",
+        "finish": "assets/icons/photos/ab-rollout/finish.jpg"
+      }
+    },
+    {
+      "name": "Decline Crunch",
+      "slug": "decline-crunch",
+      "group": "core",
+      "equipment": "body only",
+      "primaryMuscle": "abdominals",
+      "icon": {
+        "glyph": "yoga",
+        "file": "assets/icons/glyphs/yoga.svg",
+        "source": "tabler"
+      },
+      "dbId": "Decline_Crunch",
+      "photos": {
+        "start": "assets/icons/photos/decline-crunch/start.jpg",
+        "finish": "assets/icons/photos/decline-crunch/finish.jpg"
+      }
+    },
+    {
+      "name": "Dead Bug",
+      "slug": "dead-bug",
+      "group": "core",
+      "equipment": "body only",
+      "primaryMuscle": "abdominals",
+      "icon": {
+        "glyph": "yoga",
+        "file": "assets/icons/glyphs/yoga.svg",
+        "source": "tabler"
+      },
+      "dbId": "Dead_Bug",
+      "photos": {
+        "start": "assets/icons/photos/dead-bug/start.jpg",
+        "finish": "assets/icons/photos/dead-bug/finish.jpg"
+      }
+    },
+    {
+      "name": "Hip Raise",
+      "slug": "hip-raise",
+      "group": "core",
+      "equipment": "body only",
+      "primaryMuscle": "abdominals",
+      "icon": {
+        "glyph": "yoga",
+        "file": "assets/icons/glyphs/yoga.svg",
+        "source": "tabler"
+      },
+      "dbId": "Bent-Knee_Hip_Raise",
+      "photos": {
+        "start": "assets/icons/photos/hip-raise/start.jpg",
+        "finish": "assets/icons/photos/hip-raise/finish.jpg"
+      }
+    },
+    {
+      "name": "Oblique Crunch",
+      "slug": "oblique-crunch",
+      "group": "core",
+      "equipment": "body only",
+      "primaryMuscle": "abdominals",
+      "icon": {
+        "glyph": "yoga",
+        "file": "assets/icons/glyphs/yoga.svg",
+        "source": "tabler"
+      },
+      "dbId": "Oblique_Crunches",
+      "photos": {
+        "start": "assets/icons/photos/oblique-crunch/start.jpg",
+        "finish": "assets/icons/photos/oblique-crunch/finish.jpg"
+      }
+    },
+    {
+      "name": "Cable Woodchopper",
+      "slug": "cable-woodchopper",
+      "group": "core",
+      "equipment": "cable",
+      "primaryMuscle": "abdominals",
+      "icon": {
+        "glyph": "weight",
+        "file": "assets/icons/glyphs/weight.svg",
+        "source": "tabler"
+      },
+      "dbId": "Standing_Cable_Wood_Chop",
+      "photos": {
+        "start": "assets/icons/photos/cable-woodchopper/start.jpg",
+        "finish": "assets/icons/photos/cable-woodchopper/finish.jpg"
+      }
+    },
+    {
+      "name": "Jump Rope",
+      "slug": "jump-rope",
+      "group": "cardio",
+      "equipment": "body only",
+      "primaryMuscle": "quadriceps",
+      "icon": {
+        "glyph": "run",
+        "file": "assets/icons/glyphs/run.svg",
+        "source": "tabler"
+      },
+      "dbId": "Rope_Jumping",
+      "photos": {
+        "start": "assets/icons/photos/jump-rope/start.jpg",
+        "finish": "assets/icons/photos/jump-rope/finish.jpg"
+      }
+    },
+    {
+      "name": "Broad Jump",
+      "slug": "broad-jump",
+      "group": "cardio",
+      "equipment": "body only",
+      "primaryMuscle": "quadriceps",
+      "icon": {
+        "glyph": "run",
+        "file": "assets/icons/glyphs/run.svg",
+        "source": "tabler"
+      },
+      "dbId": "Standing_Long_Jump",
+      "photos": {
+        "start": "assets/icons/photos/broad-jump/start.jpg",
+        "finish": "assets/icons/photos/broad-jump/finish.jpg"
+      }
+    },
+    {
+      "name": "Stationary Bike",
+      "slug": "stationary-bike",
+      "group": "cardio",
+      "equipment": "machine",
+      "primaryMuscle": "quadriceps",
+      "icon": {
+        "glyph": "weight",
+        "file": "assets/icons/glyphs/weight.svg",
+        "source": "tabler"
+      },
+      "dbId": "Bicycling_Stationary",
+      "photos": {
+        "start": "assets/icons/photos/stationary-bike/start.jpg",
+        "finish": "assets/icons/photos/stationary-bike/finish.jpg"
+      }
+    },
+    {
+      "name": "Squat Jump",
+      "slug": "squat-jump",
+      "group": "cardio",
+      "equipment": "body only",
+      "primaryMuscle": "quadriceps",
+      "icon": {
+        "glyph": "run",
+        "file": "assets/icons/glyphs/run.svg",
+        "source": "tabler"
+      },
+      "dbId": "Freehand_Jump_Squat",
+      "photos": {
+        "start": "assets/icons/photos/squat-jump/start.jpg",
+        "finish": "assets/icons/photos/squat-jump/finish.jpg"
+      }
+    },
+    {
+      "name": "Rowing Machine",
+      "slug": "rowing-machine",
+      "group": "cardio",
+      "equipment": "machine",
+      "primaryMuscle": "quadriceps",
+      "icon": {
+        "glyph": "weight",
+        "file": "assets/icons/glyphs/weight.svg",
+        "source": "tabler"
+      },
+      "dbId": "Rowing_Stationary",
+      "photos": {
+        "start": "assets/icons/photos/rowing-machine/start.jpg",
+        "finish": "assets/icons/photos/rowing-machine/finish.jpg"
+      }
+    },
+    {
+      "name": "Treadmill Run",
+      "slug": "treadmill-run",
+      "group": "cardio",
+      "equipment": "machine",
+      "primaryMuscle": "quadriceps",
+      "icon": {
+        "glyph": "weight",
+        "file": "assets/icons/glyphs/weight.svg",
+        "source": "tabler"
+      },
+      "dbId": "Running_Treadmill",
+      "photos": {
+        "start": "assets/icons/photos/treadmill-run/start.jpg",
+        "finish": "assets/icons/photos/treadmill-run/finish.jpg"
+      }
+    },
+    {
+      "name": "Skater Jump",
+      "slug": "skater-jump",
+      "group": "cardio",
+      "equipment": "body only",
+      "primaryMuscle": "adductors",
+      "icon": {
+        "glyph": "run",
+        "file": "assets/icons/glyphs/run.svg",
+        "source": "tabler"
+      },
+      "dbId": "Lateral_Bound",
+      "photos": {
+        "start": "assets/icons/photos/skater-jump/start.jpg",
+        "finish": "assets/icons/photos/skater-jump/finish.jpg"
+      }
+    },
+    {
+      "name": "Chest-Supported Row",
+      "slug": "chest-supported-row",
+      "group": "back",
+      "equipment": "dumbbell",
+      "primaryMuscle": "middle back",
+      "icon": {
+        "glyph": "dumbbell",
+        "file": "assets/icons/glyphs/dumbbell.svg",
+        "source": "tabler"
+      },
+      "dbId": "Bent_Over_Two-Dumbbell_Row",
+      "photos": {
+        "start": "assets/icons/photos/chest-supported-row/start.jpg",
+        "finish": "assets/icons/photos/chest-supported-row/finish.jpg"
+      }
+    },
+    {
+      "name": "Renegade Row",
+      "slug": "renegade-row",
+      "group": "back",
+      "equipment": "kettlebell",
+      "primaryMuscle": "middle back",
+      "icon": {
+        "glyph": "dumbbell",
+        "file": "assets/icons/glyphs/dumbbell.svg",
+        "source": "tabler"
+      },
+      "dbId": "Alternating_Renegade_Row",
+      "photos": {
+        "start": "assets/icons/photos/renegade-row/start.jpg",
+        "finish": "assets/icons/photos/renegade-row/finish.jpg"
+      }
+    },
+    {
+      "name": "Zottman Curl",
+      "slug": "zottman-curl",
+      "group": "arms",
+      "equipment": "dumbbell",
+      "primaryMuscle": "biceps",
+      "icon": {
+        "glyph": "biceps-flexed",
+        "file": "assets/icons/glyphs/biceps-flexed.svg",
+        "source": "lucide"
+      },
+      "dbId": "Zottman_Curl",
+      "photos": {
+        "start": "assets/icons/photos/zottman-curl/start.jpg",
+        "finish": "assets/icons/photos/zottman-curl/finish.jpg"
+      }
+    },
+    {
+      "name": "Tuck Jump",
+      "slug": "tuck-jump",
+      "group": "cardio",
+      "equipment": "body only",
+      "primaryMuscle": "hamstrings",
+      "icon": {
+        "glyph": "run",
+        "file": "assets/icons/glyphs/run.svg",
+        "source": "tabler"
+      },
+      "dbId": "Knee_Tuck_Jump",
+      "photos": {
+        "start": "assets/icons/photos/tuck-jump/start.jpg",
+        "finish": "assets/icons/photos/tuck-jump/finish.jpg"
+      }
+    },
+    {
+      "name": "Plyo Push-Up",
+      "slug": "plyo-push-up",
+      "group": "cardio",
+      "equipment": "body only",
+      "primaryMuscle": "chest",
+      "icon": {
+        "glyph": "run",
+        "file": "assets/icons/glyphs/run.svg",
+        "source": "tabler"
+      },
+      "dbId": "Plyo_Push-up",
+      "photos": {
+        "start": "assets/icons/photos/plyo-push-up/start.jpg",
+        "finish": "assets/icons/photos/plyo-push-up/finish.jpg"
+      }
+    },
+    {
+      "name": "Sissy Squat",
+      "slug": "sissy-squat",
+      "group": "legs",
+      "equipment": "barbell",
+      "primaryMuscle": "quadriceps",
+      "icon": {
+        "glyph": "barbell",
+        "file": "assets/icons/glyphs/barbell.svg",
+        "source": "tabler"
+      },
+      "dbId": "Weighted_Sissy_Squat",
+      "photos": {
+        "start": "assets/icons/photos/sissy-squat/start.jpg",
+        "finish": "assets/icons/photos/sissy-squat/finish.jpg"
+      }
+    },
+    {
+      "name": "Seated Calf Raise",
+      "slug": "seated-calf-raise",
+      "group": "legs",
+      "equipment": "machine",
+      "primaryMuscle": "calves",
+      "icon": {
+        "glyph": "weight",
+        "file": "assets/icons/glyphs/weight.svg",
+        "source": "tabler"
+      },
+      "dbId": "Calf_Press",
+      "photos": {
+        "start": "assets/icons/photos/seated-calf-raise/start.jpg",
+        "finish": "assets/icons/photos/seated-calf-raise/finish.jpg"
+      }
+    },
+    {
+      "name": "Standing Cable Curl",
+      "slug": "standing-cable-curl",
+      "group": "arms",
+      "equipment": "cable",
+      "primaryMuscle": "biceps",
+      "icon": {
+        "glyph": "biceps-flexed",
+        "file": "assets/icons/glyphs/biceps-flexed.svg",
+        "source": "lucide"
+      },
+      "dbId": "Standing_Biceps_Cable_Curl",
+      "photos": {
+        "start": "assets/icons/photos/standing-cable-curl/start.jpg",
+        "finish": "assets/icons/photos/standing-cable-curl/finish.jpg"
+      }
+    },
+    {
+      "name": "Spider Curl",
+      "slug": "spider-curl",
+      "group": "arms",
+      "equipment": "barbell",
+      "primaryMuscle": "biceps",
+      "icon": {
+        "glyph": "biceps-flexed",
+        "file": "assets/icons/glyphs/biceps-flexed.svg",
+        "source": "lucide"
+      },
+      "dbId": "Spider_Curl",
+      "photos": {
+        "start": "assets/icons/photos/spider-curl/start.jpg",
+        "finish": "assets/icons/photos/spider-curl/finish.jpg"
+      }
+    },
+    {
+      "name": "Donkey Calf Raise",
+      "slug": "donkey-calf-raise",
+      "group": "legs",
+      "equipment": "body only",
+      "primaryMuscle": "calves",
+      "icon": {
+        "glyph": "walk",
+        "file": "assets/icons/glyphs/walk.svg",
+        "source": "tabler"
+      },
+      "dbId": "Donkey_Calf_Raises",
+      "photos": {
+        "start": "assets/icons/photos/donkey-calf-raise/start.jpg",
+        "finish": "assets/icons/photos/donkey-calf-raise/finish.jpg"
+      }
+    },
+    {
+      "name": "Barbell Front Raise",
+      "slug": "barbell-front-raise",
+      "group": "shoulders",
+      "equipment": "barbell",
+      "primaryMuscle": "shoulders",
+      "icon": {
+        "glyph": "barbell",
+        "file": "assets/icons/glyphs/barbell.svg",
+        "source": "tabler"
+      },
+      "dbId": "Standing_Front_Barbell_Raise_Over_Head",
+      "photos": {
+        "start": "assets/icons/photos/barbell-front-raise/start.jpg",
+        "finish": "assets/icons/photos/barbell-front-raise/finish.jpg"
+      }
+    },
+    {
+      "name": "Superman",
+      "slug": "superman",
+      "group": "core",
+      "equipment": "body only",
+      "primaryMuscle": "lower back",
+      "icon": {
+        "glyph": "yoga",
+        "file": "assets/icons/glyphs/yoga.svg",
+        "source": "tabler"
+      },
+      "dbId": "Superman",
+      "photos": {
+        "start": "assets/icons/photos/superman/start.jpg",
+        "finish": "assets/icons/photos/superman/finish.jpg"
+      }
+    },
+    {
+      "name": "Wide-Grip Push-Up",
+      "slug": "wide-grip-push-up",
+      "group": "chest",
+      "equipment": "body only",
+      "primaryMuscle": "chest",
+      "icon": {
+        "glyph": "gymnastics",
+        "file": "assets/icons/glyphs/gymnastics.svg",
+        "source": "tabler"
+      },
+      "dbId": "Push-Up_Wide",
+      "photos": {
+        "start": "assets/icons/photos/wide-grip-push-up/start.jpg",
+        "finish": "assets/icons/photos/wide-grip-push-up/finish.jpg"
+      }
+    },
+    {
+      "name": "Decline Push-Up",
+      "slug": "decline-push-up",
+      "group": "chest",
+      "equipment": "body only",
+      "primaryMuscle": "chest",
+      "icon": {
+        "glyph": "gymnastics",
+        "file": "assets/icons/glyphs/gymnastics.svg",
+        "source": "tabler"
+      },
+      "dbId": "Push-Ups_With_Feet_Elevated",
+      "photos": {
+        "start": "assets/icons/photos/decline-push-up/start.jpg",
+        "finish": "assets/icons/photos/decline-push-up/finish.jpg"
+      }
+    },
+    {
+      "name": "Seated Leg Tuck",
+      "slug": "seated-leg-tuck",
+      "group": "core",
+      "equipment": "body only",
+      "primaryMuscle": "abdominals",
+      "icon": {
+        "glyph": "yoga",
+        "file": "assets/icons/glyphs/yoga.svg",
+        "source": "tabler"
+      },
+      "dbId": "Seated_Flat_Bench_Leg_Pull-In",
+      "photos": {
+        "start": "assets/icons/photos/seated-leg-tuck/start.jpg",
+        "finish": "assets/icons/photos/seated-leg-tuck/finish.jpg"
+      }
+    },
+    {
+      "name": "Incline Cable Fly",
+      "slug": "incline-cable-fly",
+      "group": "chest",
+      "equipment": "cable",
+      "primaryMuscle": "chest",
+      "icon": {
+        "glyph": "weight",
+        "file": "assets/icons/glyphs/weight.svg",
+        "source": "tabler"
+      },
+      "dbId": "Incline_Cable_Flye",
+      "photos": {
+        "start": "assets/icons/photos/incline-cable-fly/start.jpg",
+        "finish": "assets/icons/photos/incline-cable-fly/finish.jpg"
+      }
     }
   ]
 }

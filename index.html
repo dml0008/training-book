@@ -12,7 +12,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="icons/icon.svg">
-  <link rel="stylesheet" href="styles.css?v=2026.06.23-exercise-library">
+  <link rel="stylesheet" href="styles.css?v=2026.06.24-library-142-exercises">
 </head>
 <body>
   <div class="app-shell">
@@ -165,13 +165,19 @@
             <div>
               <p class="eyebrow">Exercises</p>
               <h2 id="library-title">Library</h2>
-              <p class="library-copy">Your exercise library. Add your own, edit or remove any of them, and filter by where you are training. Changes sync across your devices.</p>
+              <p class="library-copy">Tap any exercise to see how to do it. Add your own, edit or remove any of them, and filter by where you train. Changes sync across your devices.</p>
             </div>
             <span class="library-count" id="library-count">0 exercises</span>
           </div>
 
+          <div class="library-search">
+            <span class="library-search-icon" data-icon="search" aria-hidden="true"></span>
+            <input type="search" id="library-search" placeholder="Search exercises by name" autocomplete="off" aria-label="Search exercises" />
+          </div>
+
           <div class="filter-strip" aria-label="Exercise filters">
             <button class="filter-chip is-active" type="button" data-filter="all">All</button>
+            <button class="filter-chip filter-chip-fav" type="button" data-filter="favorites"><span class="chip-ico" data-icon="star" aria-hidden="true"></span>Favorites</button>
             <button class="filter-chip" type="button" data-filter="home">Home</button>
             <button class="filter-chip" type="button" data-filter="gym">Gym</button>
             <button class="filter-chip" type="button" data-filter="bodyweight">No equipment</button>
@@ -180,18 +186,13 @@
             <button class="filter-chip" type="button" data-filter="cardio">Cardio</button>
           </div>
 
-          <form class="library-add" id="library-add-form">
-            <input type="text" id="new-exercise-name" class="library-add-name" placeholder="Add your own exercise" autocomplete="off" maxlength="40" />
-            <div class="type-toggle" role="group" aria-label="Exercise type">
-              <button type="button" class="type-option is-active" data-type="strength">Strength</button>
-              <button type="button" class="type-option" data-type="cardio">Cardio</button>
-              <button type="button" class="type-option" data-type="timed">Timed hold</button>
-              <button type="button" class="type-option" data-type="sport">Sport</button>
-            </div>
-            <button type="submit" class="library-add-btn">Add</button>
-          </form>
+          <div class="library-add-row">
+            <button type="button" class="quiet-button btn-ico library-add-trigger" id="open-add-exercise"><span data-icon="plus-circle" aria-hidden="true"></span>Add an exercise</button>
+          </div>
 
           <div class="exercise-list" id="exercise-list" aria-live="polite"></div>
+          <div id="library-sheet-root"></div>
+          <div id="library-add-modal-root"></div>
         </div>
       </section>
 
@@ -270,6 +271,6 @@
     </nav>
   </div>
 
-  <script src="app.js?v=2026.06.23-exercise-library"></script>
+  <script src="app.js?v=2026.06.24-library-142-exercises"></script>
 </body>
 </html>

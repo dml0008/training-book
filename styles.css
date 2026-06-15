@@ -295,11 +295,17 @@ p {
 
 .screen-stack {
   display: grid;
+  /* Without an explicit column the single implicit track defaults to `auto`
+     (max-content), so the stack grows to the widest screen's natural width —
+     the Library's photo cards — and drags the whole shell into horizontal
+     scroll. Pin the track to the container width and let children wrap. */
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .screen {
   display: none;
   grid-area: 1 / 1;
+  min-width: 0;
 }
 
 .screen.is-active {
@@ -3869,6 +3875,786 @@ svg.lw-glyph {
 
 svg.lw-glyph path {
   stroke: var(--accent);
-  stroke-width: 2;
+  stroke-width: 1;
   fill: none;
+}
+
+/* =====================================================================
+   Library refresh: search box, real photo cards, tap-for-how-to
+   ===================================================================== */
+
+.library-search {
+  position: relative;
+  margin: 2px 0 16px;
+}
+
+.library-search-icon {
+  position: absolute;
+  left: 13px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  color: var(--muted);
+  pointer-events: none;
+}
+
+.library-search-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.library-search input {
+  padding-left: 42px;
+}
+
+/* The card art is now a tappable button that opens the "How to do it" sheet.
+   It holds either a real start-position photo or the shared line glyph. */
+.exercise-art {
+  position: relative;
+  overflow: hidden;
+  padding: 0;
+  cursor: pointer;
+  transition: border-color 0.15s ease, transform 0.05s ease;
+}
+
+.exercise-art.has-photo {
+  border-color: rgba(155, 168, 161, 0.28);
+}
+
+.exercise-art:hover {
+  border-color: var(--accent);
+}
+
+.exercise-art:active {
+  transform: scale(0.985);
+}
+
+.exercise-art.is-static {
+  cursor: default;
+}
+
+.exercise-art.is-static:hover {
+  border-color: rgba(183, 255, 53, 0.18);
+}
+
+.exercise-photo {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 120px;
+  background-size: cover;
+  background-position: center top;
+}
+
+.exercise-glyph {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  min-height: 120px;
+}
+
+/* Scope glyph sizing so it doesn't also blow up the small how-to badge icon. */
+.exercise-glyph svg {
+  width: 74%;
+  height: 74%;
+}
+
+/* The small "How to" badge sitting on the art. */
+.exercise-art-howto {
+  position: absolute;
+  left: 6px;
+  bottom: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px 3px 6px;
+  border-radius: var(--radius-full);
+  background: rgba(9, 12, 11, 0.82);
+  color: var(--text);
+  font-size: 10px;
+  font-weight: 850;
+  letter-spacing: 0.02em;
+  pointer-events: none;
+}
+
+.exercise-art-howto svg {
+  width: 12px;
+  height: 12px;
+}
+
+.exercise-art-howto svg * {
+  stroke: var(--accent);
+  stroke-width: 2.2;
+  fill: none;
+}
+
+.exercise-art.is-static .exercise-art-howto {
+  display: none;
+}
+
+/* The exercise name is now a button (tapping it also opens how-to). */
+.exercise-name-btn {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  min-height: 0;
+  margin: 2px 0 0;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1.15;
+  text-align: left;
+  cursor: pointer;
+}
+
+.exercise-name-btn:hover {
+  color: var(--accent);
+}
+
+.exercise-name-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: var(--radius-xs);
+}
+
+@media (max-width: 640px) {
+  .exercise-name-btn {
+    font-size: 18px;
+  }
+
+  .exercise-photo,
+  .exercise-glyph {
+    min-height: 104px;
+  }
+}
+
+/* =====================================================================
+   Plan refresh: editable weekly schedule + routines, tucked-away AI coach
+   ===================================================================== */
+
+#plan-content {
+  gap: var(--space-4);
+}
+
+/* Each top-level block of the Plan page is a card. */
+.plan-section {
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: rgba(9, 12, 11, 0.5);
+}
+
+.plan-section-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.plan-section-head .card-kicker {
+  margin-bottom: 3px;
+}
+
+.plan-section-head .plan-muted {
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.plan-pill {
+  flex: 0 0 auto;
+  padding: 5px 11px;
+  border: 1px solid rgba(183, 255, 53, 0.3);
+  border-radius: var(--radius-full);
+  background: rgba(183, 255, 53, 0.08);
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 850;
+  white-space: nowrap;
+}
+
+/* ----- Weekly schedule ----- */
+.schedule-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.schedule-day {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 10px;
+  border: 1px solid rgba(155, 168, 161, 0.18);
+  border-radius: var(--radius-md);
+  background: rgba(23, 29, 27, 0.5);
+}
+
+.schedule-day.is-training {
+  border-color: rgba(183, 255, 53, 0.32);
+  background: rgba(183, 255, 53, 0.06);
+}
+
+.schedule-day-name {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 850;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.schedule-day.is-training .schedule-day-name {
+  color: var(--accent);
+}
+
+.schedule-select {
+  min-height: 40px;
+  padding: 8px 30px 8px 10px;
+  font-size: 13px;
+  font-weight: 750;
+}
+
+/* ----- Routines ----- */
+.plan-routines {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.routine-card {
+  padding: 14px 16px;
+  border: 1px solid rgba(155, 168, 161, 0.18);
+  border-radius: var(--radius-md);
+  background: rgba(23, 29, 27, 0.45);
+}
+
+.routine-card.is-editing {
+  border-color: rgba(183, 255, 53, 0.45);
+  background: rgba(183, 255, 53, 0.04);
+}
+
+.routine-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.routine-card-head h3 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.routine-loc {
+  margin: 3px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.routine-ex-list {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+}
+
+.routine-ex-list li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 0;
+  border-top: 1px solid rgba(155, 168, 161, 0.12);
+}
+
+.routine-ex-list li:first-child {
+  border-top: none;
+}
+
+.routine-ex-name {
+  font-weight: 700;
+}
+
+.routine-ex-detail {
+  flex: 0 0 auto;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.routine-empty {
+  margin: 10px 0 0;
+}
+
+/* ----- Routine edit mode ----- */
+.routine-edit-top {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 150px;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.routine-name-input {
+  min-height: 44px;
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.routine-loc-select {
+  min-height: 44px;
+}
+
+.routine-ex-edit-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.routine-ex-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: rgba(9, 12, 11, 0.4);
+}
+
+.routine-ex-move {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.rx-move {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 22px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-xs);
+  background: var(--panel-2);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.rx-move svg {
+  width: 14px;
+  height: 14px;
+}
+
+.rx-move:disabled {
+  opacity: 0.32;
+  cursor: default;
+}
+
+.routine-ex-main {
+  min-width: 0;
+}
+
+.routine-ex-main .routine-ex-name {
+  display: block;
+  margin-bottom: 6px;
+}
+
+.routine-ex-fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.routine-num {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  width: 62px;
+  margin: 0;
+}
+
+.routine-num span {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 850;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.routine-num input {
+  min-height: 38px;
+  padding: 6px 8px;
+  text-align: center;
+  font-weight: 750;
+  font-variant-numeric: tabular-nums;
+}
+
+.rx-remove {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--panel-2);
+  color: var(--danger);
+  cursor: pointer;
+}
+
+.rx-remove svg {
+  width: 16px;
+  height: 16px;
+}
+
+.routine-add-ex {
+  margin-top: 10px;
+}
+
+.routine-add-select {
+  min-height: 44px;
+}
+
+.routine-edit-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.routine-edit-actions .primary-button {
+  flex: 1;
+}
+
+.danger-text {
+  color: var(--danger);
+}
+
+.danger-text svg * {
+  stroke: var(--danger);
+}
+
+/* ----- AI coach drawer ----- */
+.ai-drawer-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  width: 100%;
+  min-height: 46px;
+  padding: 11px 14px;
+  border: 1px dashed var(--line);
+  border-radius: var(--radius-sm);
+  background: rgba(9, 12, 11, 0.35);
+  color: var(--text);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 800;
+  text-align: left;
+  cursor: pointer;
+}
+
+.ai-drawer-toggle:hover {
+  border-color: var(--accent);
+}
+
+.ai-drawer-toggle svg {
+  flex: 0 0 auto;
+  width: 16px;
+  height: 16px;
+}
+
+.ai-drawer {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.ai-drawer .plan-import-text {
+  min-height: 200px;
+}
+
+.plan-ai-foot {
+  margin-top: 2px;
+}
+
+@media (max-width: 640px) {
+  .schedule-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .schedule-day {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .schedule-select {
+    flex: 0 0 auto;
+    width: 60%;
+    max-width: 220px;
+  }
+
+  .routine-edit-top {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* =====================================================================
+   Round 2: favorites, B&W card photos, star toggle, add modal,
+   custom-photo editor, edit-mode button polish
+   ===================================================================== */
+
+/* Favorites filter chip (and icon sizing for any chip with an icon). */
+.filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.filter-chip svg {
+  width: 14px;
+  height: 14px;
+}
+
+.filter-chip-fav svg path {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+}
+
+.filter-chip-fav.is-active svg path {
+  fill: #101413;
+}
+
+/* Library card photos are black & white; on desktop they go colour on hover.
+   (The how-to sheet photos, .lw-ref-photo img, stay in colour.) */
+.exercise-photo {
+  filter: grayscale(1) contrast(1.02);
+  transition: filter 0.25s ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .exercise-art:hover .exercise-photo {
+    filter: none;
+  }
+}
+
+/* The art is now a container with two overlay buttons: a full-bleed how-to
+   button and the favourite star. */
+.exercise-art-howto-btn {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+.star-toggle {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-full);
+  background: rgba(9, 12, 11, 0.6);
+  color: #f3f7f2;
+  cursor: pointer;
+  -webkit-backdrop-filter: blur(2px);
+  backdrop-filter: blur(2px);
+  transition: transform 0.14s ease, background-color 0.14s ease, color 0.14s ease;
+}
+
+.star-toggle svg {
+  width: 17px;
+  height: 17px;
+}
+
+.star-toggle svg path {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+}
+
+.star-toggle.is-fav {
+  color: var(--accent);
+}
+
+.star-toggle.is-fav svg path {
+  fill: var(--accent);
+  stroke: var(--accent);
+}
+
+.star-toggle:hover {
+  background: rgba(9, 12, 11, 0.82);
+  color: var(--accent);
+}
+
+.star-toggle:active {
+  transform: scale(0.88);
+}
+
+/* ----- Add-exercise button + modal ----- */
+.library-add-row {
+  margin: 14px 0 16px;
+}
+
+.library-add-trigger {
+  width: 100%;
+  justify-content: center;
+  min-height: 48px;
+  border-style: dashed;
+}
+
+.add-sheet .add-field {
+  margin-bottom: 14px;
+}
+
+.add-field > span {
+  display: block;
+  margin-bottom: 7px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 750;
+}
+
+.add-field .type-toggle {
+  display: flex;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.add-field .type-toggle .type-option {
+  flex: 1 0 auto;
+}
+
+/* ----- Custom-photo editor inside the how-to sheet ----- */
+.lw-ref-edit {
+  margin-top: 2px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
+.lw-ref-edit-title {
+  margin: 0 0 2px;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.lw-ref-edit-note {
+  margin: 0 0 10px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.lw-ref-edit-slots {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.lw-photo-slot {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  cursor: pointer;
+}
+
+.lw-photo-slot-preview {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border: 1px dashed var(--line);
+  border-radius: var(--radius-sm);
+  background-color: var(--panel-2);
+  background-size: cover;
+  background-position: center;
+  color: var(--muted);
+}
+
+.lw-photo-slot-preview.has-img {
+  border-style: solid;
+}
+
+.lw-photo-slot-preview svg {
+  width: 26px;
+  height: 26px;
+}
+
+.lw-photo-slot-label {
+  text-align: center;
+  font-size: 11px;
+  font-weight: 750;
+  color: var(--muted);
+}
+
+.lw-photo-slot input[type="file"] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.lw-photo-slot:hover .lw-photo-slot-preview {
+  border-color: rgba(183, 255, 53, 0.5);
+}
+
+/* ----- Edit-mode button polish: hover + active on the move/remove controls,
+   and the new Cancel button layout ----- */
+.rx-move,
+.rx-remove {
+  transition: transform 0.14s ease, background-color 0.14s ease,
+              border-color 0.14s ease, color 0.14s ease;
+}
+
+.rx-move:not(:disabled):hover {
+  border-color: rgba(183, 255, 53, 0.55);
+  background: rgba(183, 255, 53, 0.08);
+  color: var(--text);
+}
+
+.rx-remove:hover {
+  border-color: rgba(255, 107, 107, 0.6);
+  background: rgba(255, 107, 107, 0.1);
+}
+
+.rx-move:not(:disabled):active,
+.rx-remove:active {
+  transform: translateY(1px) scale(0.96);
+}
+
+.routine-edit-actions {
+  flex-wrap: wrap;
+}
+
+.routine-edit-actions .primary-button,
+.routine-edit-actions [data-action="cancel-routine"] {
+  flex: 1 1 120px;
+}
+
+.routine-edit-actions [data-action="delete-routine"] {
+  flex: 0 0 auto;
+  margin-left: auto;
 }
