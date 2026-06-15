@@ -3,7 +3,7 @@ const DROPBOX_TOKEN_URL = "https://api.dropboxapi.com/oauth2/token";
 const DROPBOX_UPLOAD_URL = "https://content.dropboxapi.com/2/files/upload";
 const DROPBOX_DOWNLOAD_URL = "https://content.dropboxapi.com/2/files/download";
 const DATA_FILE_PATH = "/04_Technical/06_Side_Projects/Workout and Nutrition App/data/workout-data.json";
-const APP_VERSION = "2026.06.15-plan-clear-routines-fix";
+const APP_VERSION = "2026.06.15-workout-session-upgrade";
 
 const STORAGE = {
   appKey: "trainingBookDropboxAppKey",
@@ -14,12 +14,15 @@ const STORAGE = {
   refreshToken: "trainingBookDropboxRefreshToken",
   localData: "trainingBookWorkoutData",
   pendingData: "trainingBookPendingWorkoutData",
+  activeWorkoutDraft: "trainingBookActiveWorkoutDraft",
+  workoutFlowMode: "trainingBookWorkoutFlowMode",
   deviceId: "trainingBookDeviceId",
   activeTab: "trainingBookActiveTab",
   reviewReminderDismissed: "trainingBookReviewReminderDismissed",
   soccerSeeded: "trainingBookSoccerSeeded",
   libraryV2Seeded: "trainingBookLibraryV2Seeded",
-  libraryV3Merged: "trainingBookLibraryV3Merged"
+  libraryV3Merged: "trainingBookLibraryV3Merged",
+  pelotonSeeded: "trainingBookPelotonSeeded"
 };
 
 const screens = Array.from(document.querySelectorAll(".screen"));
@@ -116,6 +119,15 @@ function showConfirmModal({ title, message, confirmLabel = "Delete", danger = tr
   return new Promise((resolve) => {
     confirmModalResolve = resolve;
     root.querySelector("[data-action='confirm-ok']")?.focus();
+  });
+}
+
+function showStatusModal({ title, message, tone = "good", confirmLabel = "Done" }) {
+  return showConfirmModal({
+    title,
+    message,
+    confirmLabel,
+    danger: tone === "danger" || tone === "bad"
   });
 }
 
@@ -2046,6 +2058,56 @@ function seedSoccerOnce() {
   localStorage.setItem(STORAGE.soccerSeeded, "1");
 }
 
+function seedPelotonOnce() {
+  if (localStorage.getItem(STORAGE.pelotonSeeded) === "1") return;
+  const data = getLocalData();
+  const library = Array.isArray(data.library) ? data.library.slice() : getStarterExercises();
+  let changed = false;
+  const addIfMissing = (exercise) => {
+    if (library.some((item) => item.id === exercise.id || item.name.toLowerCase() === exercise.name.toLowerCase())) return;
+    library.push(exercise);
+    changed = true;
+  };
+
+  addIfMissing({
+    id: "peloton-tread",
+    name: "Peloton Tread",
+    type: "cardio",
+    metricProfile: "peloton",
+    area: "Cardio",
+    icon: "run",
+    group: "cardio",
+    photos: { start: "assets/icons/photos/treadmill-run/start.jpg", finish: "assets/icons/photos/treadmill-run/finish.jpg" },
+    tags: ["home", "cardio", "machine"]
+  });
+  addIfMissing({
+    id: "peloton-bike",
+    name: "Peloton Bike",
+    type: "cardio",
+    metricProfile: "peloton",
+    area: "Cardio",
+    icon: "run",
+    group: "cardio",
+    photos: { start: "assets/icons/photos/stationary-bike/start.jpg", finish: "assets/icons/photos/stationary-bike/finish.jpg" },
+    tags: ["home", "cardio", "machine"]
+  });
+
+  localStorage.setItem(STORAGE.pelotonSeeded, "1");
+  if (!changed) return;
+  data.library = library;
+  data.updatedAt = new Date().toISOString();
+  data.updatedBy = getDeviceId();
+  saveLocalData(data);
+  markPendingData(data);
+  refreshLibrary();
+  renderExercises();
+  renderExercisePicker();
+  renderTodayRoutine();
+  if (navigator.onLine) {
+    uploadWorkoutData(data).then(clearPendingData).catch(() => {});
+  }
+}
+
 // Reload the live exercise list from saved data (after an edit or a cloud sync).
 function refreshLibrary() {
   const data = getLocalData();
@@ -2065,6 +2127,14 @@ const activeWorkout = {
   startedAt: new Date().toISOString(),
   exercises: [],
   started: false,
+  routineId: null,
+  routineName: "",
+  flowMode: localStorage.getItem(STORAGE.workoutFlowMode) || "straight",
+  roundNumber: 0,
+  addExerciseOpen: false,
+  addExerciseQuery: "",
+  flowChoiceOpen: false,
+  restoredFromDraft: false,
   // Slice 2 (focused workout): which exercise screen we're on, and whether
   // we're showing an exercise ("exercise") or the finish/summary ("finish").
   currentIndex: 0,
@@ -2324,7 +2394,7 @@ function getTodayWorkoutProgress() {
   }
 
   const total = activeWorkout.exercises.length;
-  const done = activeWorkout.exercises.filter((ex) => ex.checked).length;
+  const done = activeWorkout.exercises.filter((ex) => isExerciseLogged(ex) || ex.skipped).length;
   const percent = total ? Math.round((done / total) * 100) : 0;
 
   return { total, done, percent };
@@ -2332,6 +2402,37 @@ function getTodayWorkoutProgress() {
 
 function getExerciseById(exerciseId) {
   return exercises.find((exercise) => exercise.id === exerciseId) || null;
+}
+
+function getMetricProfile(exerciseInfo, plannedEx = {}) {
+  if (plannedEx.metricProfile) return plannedEx.metricProfile;
+  if (!exerciseInfo) return "strength-weighted";
+  if (exerciseInfo.metricProfile) return exerciseInfo.metricProfile;
+  if (exerciseInfo.type === "timed") return "timed-hold";
+  if (exerciseInfo.type === "sport") return "sport-duration";
+  if (exerciseInfo.type === "cardio") {
+    return exerciseInfo.id === "peloton-tread" || exerciseInfo.id === "peloton-bike"
+      ? "peloton"
+      : "cardio-duration";
+  }
+  const tags = Array.isArray(exerciseInfo.tags) ? exerciseInfo.tags : [];
+  const text = `${exerciseInfo.area || ""} ${exerciseInfo.primaryMuscle || ""}`.toLowerCase();
+  if (tags.includes("bodyweight") || text.includes("core") || text.includes("abs")) return "strength-bodyweight";
+  return "strength-weighted";
+}
+
+function usesWeightMetric(ex) {
+  return ex?.metricProfile !== "strength-bodyweight";
+}
+
+function getExerciseSubtypeOptions(exerciseId) {
+  if (exerciseId === "peloton-tread") return ["Incline Walk", "Run", "Walk", "Hike"];
+  if (exerciseId === "peloton-bike") return ["Just Ride", "Ride Class", "Power Zone"];
+  return [];
+}
+
+function defaultExerciseSubtype(exerciseId) {
+  return getExerciseSubtypeOptions(exerciseId)[0] || "";
 }
 
 function clampNumber(value, min, max) {
@@ -2358,6 +2459,8 @@ function makeTodayExercise(plannedEx, source = "planned") {
   const targetReps = Number(plannedEx.targetReps) || 0;
   const targetWeight = Number(plannedEx.targetWeight) || 0;
   const targetDuration = Number(plannedEx.targetDuration) || 0;
+  const metricProfile = getMetricProfile(exerciseInfo, plannedEx);
+  const targetSubtype = plannedEx.targetSubtype || defaultExerciseSubtype(exerciseInfo.id);
 
   // For a held move, the planned target reads like "3 x 45 sec": targetSets
   // holds, each held for some seconds. The seconds come through as the reps
@@ -2372,7 +2475,10 @@ function makeTodayExercise(plannedEx, source = "planned") {
   const sets = Array.from({ length: (isTimed || isSport) ? 0 : setCount }).map(() => ({
     weight: targetWeight,
     reps: targetReps,
-    done: false
+    done: false,
+    notes: "",
+    touchedWeight: false,
+    touchedReps: false
   }));
 
   const type = isSport ? "sport" : (isTimed ? "timed" : (isCardio ? "cardio" : "strength"));
@@ -2389,6 +2495,8 @@ function makeTodayExercise(plannedEx, source = "planned") {
     targetReps,
     targetDuration,
     targetWeight,
+    targetSubtype,
+    metricProfile,
     sets,
     holds,
     holdSeconds,
@@ -2399,6 +2507,8 @@ function makeTodayExercise(plannedEx, source = "planned") {
     cardioOutput: "",
     cardioAvgPower: "",
     cardioDistance: "",
+    notes: "",
+    skipped: false,
     // Sport moves (e.g. soccer): a "done" flag and a free-text note, alongside
     // the shared actualDuration minutes above.
     sportDone: false,
@@ -2528,7 +2638,7 @@ function formatPreviewMeta(exercise) {
   }
   if (exercise.type === "cardio" || exercise.type === "sport") {
     const mins = exercise.targetDuration || exercise.actualDuration || 0;
-    return `${mins} min`;
+    return `${exercise.targetSubtype ? `${exercise.targetSubtype} · ` : ""}${mins} min`;
   }
   if (exercise.targetReps) {
     return `${exercise.targetSets} × ${exercise.targetReps}`;
@@ -2545,7 +2655,7 @@ function renderTodayPreview(routine) {
     todayPreviewSub.textContent = `${count} exercise${count === 1 ? "" : "s"} planned`;
   }
 
-  todayRoutineList.innerHTML = items.map((ex, index) => `
+  todayRoutineList.innerHTML = `${items.map((ex, index) => `
     <article class="today-preview-card">
       <span class="pv-num">${index + 1}</span>
       <div class="pv-info">
@@ -2554,32 +2664,171 @@ function renderTodayPreview(routine) {
       </div>
       ${ex.type === "sport" ? `<span class="pv-tag">SPORT</span>` : ((ex.type === "cardio" || ex.type === "timed") ? `<span class="pv-tag">TIMED</span>` : "")}
     </article>
-  `).join("");
+  `).join("")}${renderWorkoutFlowChoiceSheet()}`;
 }
 
-function startTodayWorkout() {
+function persistActiveWorkoutDraft() {
+  if (!activeWorkout.started) return;
+  const draft = {
+    savedAt: new Date().toISOString(),
+    viewedDay,
+    startedAt: activeWorkout.startedAt,
+    routineId: activeWorkout.routineId,
+    routineName: activeWorkout.routineName,
+    exercises: activeWorkout.exercises,
+    currentIndex: activeWorkout.currentIndex,
+    currentSet: activeWorkout.currentSet,
+    phase: activeWorkout.phase,
+    flowMode: activeWorkout.flowMode,
+    roundNumber: activeWorkout.roundNumber
+  };
+  localStorage.setItem(STORAGE.activeWorkoutDraft, JSON.stringify(draft));
+}
+
+function clearActiveWorkoutDraft() {
+  localStorage.removeItem(STORAGE.activeWorkoutDraft);
+}
+
+function readActiveWorkoutDraft() {
+  try {
+    const draft = JSON.parse(localStorage.getItem(STORAGE.activeWorkoutDraft) || "null");
+    if (!draft || !Array.isArray(draft.exercises) || draft.exercises.length === 0) return null;
+    return draft;
+  } catch {
+    return null;
+  }
+}
+
+async function offerResumeWorkoutDraft() {
+  if (activeWorkout.started) return;
+  const draft = readActiveWorkoutDraft();
+  if (!draft) return;
+  const ok = await showConfirmModal({
+    title: "Resume workout?",
+    message: `Training Book found an unfinished ${draft.routineName || "workout"} from ${formatWorkoutDate((draft.savedAt || "").slice(0, 10))}.`,
+    confirmLabel: "Resume",
+    danger: false
+  });
+  if (!ok) {
+    clearActiveWorkoutDraft();
+    return;
+  }
+  viewedDay = draft.viewedDay || viewedDay;
+  activeWorkout.started = true;
+  activeWorkout.startedAt = draft.startedAt || new Date().toISOString();
+  activeWorkout.routineId = draft.routineId || null;
+  activeWorkout.routineName = draft.routineName || "";
+  activeWorkout.exercises = draft.exercises;
+  activeWorkout.currentIndex = Number(draft.currentIndex) || 0;
+  activeWorkout.currentSet = Number(draft.currentSet) || 0;
+  activeWorkout.phase = draft.phase === "finish" ? "finish" : "exercise";
+  activeWorkout.flowMode = draft.flowMode === "round" ? "round" : "straight";
+  activeWorkout.roundNumber = Number(draft.roundNumber) || 0;
+  activeWorkout.restoredFromDraft = true;
+  renderTodayRoutine();
+}
+
+function resetLiveWorkoutState() {
+  stopTimer();
+  activeWorkout.started = false;
+  activeWorkout.exercises = [];
+  activeWorkout.routineId = null;
+  activeWorkout.routineName = "";
+  activeWorkout.currentIndex = 0;
+  activeWorkout.currentSet = 0;
+  activeWorkout.roundNumber = 0;
+  activeWorkout.phase = "exercise";
+  activeWorkout.editTargetsOpen = false;
+  activeWorkout.referenceOpen = false;
+  activeWorkout.addExerciseOpen = false;
+  activeWorkout.addExerciseQuery = "";
+  activeWorkout.flowChoiceOpen = false;
+}
+
+function openWorkoutFlowChoice() {
+  const routine = getTodayPlannedRoutine();
+  if (!routine) return;
+  activeWorkout.flowChoiceOpen = true;
+  renderTodayRoutine();
+}
+
+function closeWorkoutFlowChoice() {
+  activeWorkout.flowChoiceOpen = false;
+  renderTodayRoutine();
+}
+
+function renderWorkoutFlowChoiceSheet() {
+  if (!activeWorkout.flowChoiceOpen) return "";
+  const selected = activeWorkout.flowMode || localStorage.getItem(STORAGE.workoutFlowMode) || "straight";
+  return `
+    <div class="lw-sheet-scrim" role="presentation">
+      <section class="lw-sheet workout-flow-sheet" role="dialog" aria-modal="true" aria-label="Choose workout flow">
+        <div class="lw-sheet-head">
+          <div>
+            <h3>Start workout</h3>
+            <p>Pick how you want to move through today.</p>
+          </div>
+          <button class="lw-sheet-close" type="button" data-action="close-flow-choice" aria-label="Close">&times;</button>
+        </div>
+        <div class="flow-choice-grid">
+          <button class="flow-choice${selected === "straight" ? " is-active" : ""}" type="button" data-action="start-flow" data-flow="straight">
+            <strong>Straight sets</strong>
+            <span>Finish all sets for one exercise, then move on.</span>
+          </button>
+          <button class="flow-choice${selected === "round" ? " is-active" : ""}" type="button" data-action="start-flow" data-flow="round">
+            <strong>Round-by-round</strong>
+            <span>Set 1 of each exercise, then Set 2, and so on.</span>
+          </button>
+        </div>
+      </section>
+    </div>
+  `;
+}
+
+function startTodayWorkout(flowMode = activeWorkout.flowMode || "straight") {
   const routine = getTodayPlannedRoutine();
   if (!routine) return;
   activeWorkout.started = true;
   activeWorkout.startedAt = new Date().toISOString();
+  activeWorkout.routineId = routine.id;
+  activeWorkout.routineName = routine.name;
+  activeWorkout.flowMode = flowMode === "round" ? "round" : "straight";
+  localStorage.setItem(STORAGE.workoutFlowMode, activeWorkout.flowMode);
   activeWorkout.currentIndex = 0;
   activeWorkout.currentSet = 0;
+  activeWorkout.roundNumber = 0;
   activeWorkout.phase = "exercise";
   activeWorkout.editTargetsOpen = false;
   activeWorkout.referenceOpen = false;
+  activeWorkout.addExerciseOpen = false;
+  activeWorkout.flowChoiceOpen = false;
   activeWorkout.exercises = routine.exercises.map((plannedEx) => makeTodayExercise(plannedEx));
+  persistActiveWorkoutDraft();
   renderTodayRoutine();
 }
 
-function exitTodayWorkout() {
-  stopTimer();
-  activeWorkout.started = false;
-  activeWorkout.exercises = [];
+function startEmptyWorkout() {
+  activeWorkout.started = true;
+  activeWorkout.startedAt = new Date().toISOString();
+  activeWorkout.routineId = null;
+  activeWorkout.routineName = "Workout";
+  activeWorkout.flowMode = localStorage.getItem(STORAGE.workoutFlowMode) || "straight";
   activeWorkout.currentIndex = 0;
   activeWorkout.currentSet = 0;
+  activeWorkout.roundNumber = 0;
   activeWorkout.phase = "exercise";
   activeWorkout.editTargetsOpen = false;
   activeWorkout.referenceOpen = false;
+  activeWorkout.exercises = [];
+  activeWorkout.addExerciseOpen = true;
+  persistActiveWorkoutDraft();
+  setTodayMode("active");
+  renderTodayWorkout();
+}
+
+function exitTodayWorkout() {
+  resetLiveWorkoutState();
+  clearActiveWorkoutDraft();
   renderTodayRoutine();
 }
 
@@ -2590,13 +2839,21 @@ function renderTodayRoutine() {
 
   const routine = getTodayPlannedRoutine();
 
+  if (activeWorkout.started) {
+    if (todayRoutineName) todayRoutineName.textContent = activeWorkout.routineName || routine?.name || "Workout";
+    setTodayMode("active");
+    renderTodayWorkout();
+    return;
+  }
+
   if (!routine) {
     activeWorkout.exercises = [];
     activeWorkout.started = false;
     todayRoutineList.innerHTML = `
       <div class="empty-routine">
         <p class="eyebrow">No workout today</p>
-        <p>You have a rest day scheduled. Tap the Log tab if you want to log an extra workout.</p>
+        <p>You have a rest day scheduled. Start from Workout when you want to add an exercise anyway.</p>
+        <button class="primary-button today-start-button" type="button" data-action="start-empty-workout">Start empty workout</button>
       </div>
     `;
     if (todayRoutineName) {
@@ -2611,15 +2868,9 @@ function renderTodayRoutine() {
     todayRoutineName.textContent = routine.name;
   }
 
-  if (!activeWorkout.started) {
-    renderTodayPreview(routine);
-    setTodayMode("preview");
-    updateTodayProgress();
-    return;
-  }
-
-  setTodayMode("active");
-  renderTodayWorkout();
+  renderTodayPreview(routine);
+  setTodayMode("preview");
+  updateTodayProgress();
 }
 
 function handleTodayExerciseCheck(event) {
@@ -2648,6 +2899,7 @@ function isExerciseLogged(ex) {
 
 // Plain one-line summary of what actually happened, for the finish recap.
 function formatExerciseRecap(ex) {
+  if (ex.skipped && !isExerciseLogged(ex)) return "Skipped";
   if (ex.type === "cardio") {
     return ex.cardioDone ? `${Number(ex.actualDuration) || 0} min${formatCardioStats(collectCardioStats(ex))}` : "Not logged";
   }
@@ -2671,7 +2923,7 @@ function formatExerciseRecap(ex) {
 // Plain target line for the focused screen, e.g. "3 × 8 · 135 lb" or "10 min".
 function formatFocusTarget(ex) {
   if (ex.type === "timed") return `${(ex.holds || []).length} × ${ex.holdSeconds || 0} sec`;
-  if (ex.type === "cardio" || ex.type === "sport") return `${ex.targetDuration || ex.actualDuration || 0} min`;
+  if (ex.type === "cardio" || ex.type === "sport") return `${ex.targetSubtype ? `${ex.targetSubtype} · ` : ""}${ex.targetDuration || ex.actualDuration || 0} min`;
   if (ex.targetReps) {
     const weight = Number(ex.targetWeight) > 0 ? ` · ${ex.targetWeight} lb` : "";
     return `${ex.targetSets || (ex.sets || []).length} × ${ex.targetReps}${weight}`;
@@ -2835,6 +3087,79 @@ function renderReferenceSheet(ex) {
   return buildReferenceSheetMarkup(ex, "close-reference");
 }
 
+function renderLiveExerciseArt(ex) {
+  const lib = getExerciseById(ex.exerciseId);
+  const photo = lib ? getExerciseStartImage(lib) : null;
+  if (photo) {
+    return `<img class="lw-hero-photo" src="${escapeHtml(photo)}" alt="" loading="lazy">`;
+  }
+  return `<span class="lw-hero-glyph">${getExerciseIcon(ex.icon)}</span>`;
+}
+
+function openLiveAddExercise() {
+  activeWorkout.addExerciseOpen = true;
+  activeWorkout.addExerciseQuery = "";
+  activeWorkout.editTargetsOpen = false;
+  activeWorkout.referenceOpen = false;
+  renderTodayWorkout();
+  setTimeout(() => document.querySelector("#live-add-search")?.focus(), 0);
+}
+
+function closeLiveAddExercise() {
+  activeWorkout.addExerciseOpen = false;
+  activeWorkout.addExerciseQuery = "";
+  renderTodayWorkout();
+}
+
+function addExerciseToLiveWorkout(exerciseId) {
+  const exercise = getExerciseById(exerciseId);
+  if (!exercise) return;
+  activeWorkout.exercises.push(makeTodayExercise(defaultRoutineExercise(exerciseId), "added"));
+  activeWorkout.currentIndex = activeWorkout.exercises.length - 1;
+  activeWorkout.currentSet = activeWorkout.flowMode === "round" ? activeWorkout.roundNumber : 0;
+  activeWorkout.addExerciseOpen = false;
+  activeWorkout.addExerciseQuery = "";
+  persistActiveWorkoutDraft();
+  renderTodayWorkout();
+}
+
+function renderLiveAddExerciseSheet() {
+  if (!activeWorkout.addExerciseOpen) return "";
+  const query = (activeWorkout.addExerciseQuery || "").trim().toLowerCase();
+  const matches = exercises
+    .filter((exercise) => {
+      if (!query) return true;
+      return `${exercise.name} ${exercise.area || ""} ${(exercise.tags || []).join(" ")}`.toLowerCase().includes(query);
+    })
+    .slice(0, 18);
+
+  return `
+    <div class="lw-sheet-scrim" role="presentation">
+      <section class="lw-sheet live-add-sheet" role="dialog" aria-modal="true" aria-label="Add exercise to workout">
+        <div class="lw-sheet-head">
+          <div>
+            <h3>Add exercise</h3>
+            <p>Add it to this workout only.</p>
+          </div>
+          <button class="lw-sheet-close" type="button" data-action="close-live-add" aria-label="Close add exercise">&times;</button>
+        </div>
+        <div class="library-search live-add-search">
+          <span class="library-search-icon" data-icon="search" aria-hidden="true"></span>
+          <input type="search" id="live-add-search" value="${escapeHtml(activeWorkout.addExerciseQuery)}" data-action="live-add-search" placeholder="Search exercises" autocomplete="off" aria-label="Search exercises" />
+        </div>
+        <div class="live-add-results">
+          ${matches.map((exercise) => `
+            <button class="live-add-result" type="button" data-action="add-live-exercise" data-id="${escapeHtml(exercise.id)}">
+              ${renderExerciseArt(exercise)}
+              <span><strong>${escapeHtml(exercise.name)}</strong><small>${escapeHtml(formatExerciseType(exercise.type || "strength"))} · ${escapeHtml(exercise.area || "Exercise")}</small></span>
+            </button>
+          `).join("") || `<p class="empty-state">No matching exercises.</p>`}
+        </div>
+      </section>
+    </div>
+  `;
+}
+
 function resizeTodaySets(ex, count) {
   const sets = Array.isArray(ex.sets) ? ex.sets : [];
   const safeCount = clampNumber(count, 1, 12);
@@ -2843,7 +3168,10 @@ function resizeTodaySets(ex, count) {
     sets.push({
       weight: last ? last.weight : (ex.targetWeight || 0),
       reps: ex.targetReps || (last ? last.reps : 0),
-      done: false
+      done: false,
+      notes: "",
+      touchedWeight: false,
+      touchedReps: false
     });
   }
   while (sets.length > safeCount) sets.pop();
@@ -2923,22 +3251,74 @@ function renderSetSteps(current, total) {
   return `<div class="lw-steps" role="group" aria-label="${escapeHtml(label)}">${segs}</div>`;
 }
 
+function isExerciseAvailableInRound(ex, round) {
+  if (!ex || ex.skipped) return false;
+  if (ex.type === "strength") return Boolean(ex.sets?.[round]);
+  return round === 0 && !isExerciseLogged(ex);
+}
+
+function findNextRoundPosition(fromIndex = activeWorkout.currentIndex, fromRound = activeWorkout.roundNumber) {
+  const list = activeWorkout.exercises || [];
+  for (let i = fromIndex + 1; i < list.length; i++) {
+    if (isExerciseAvailableInRound(list[i], fromRound)) return { index: i, round: fromRound };
+  }
+  for (let round = fromRound + 1; round < 20; round++) {
+    for (let i = 0; i < list.length; i++) {
+      if (isExerciseAvailableInRound(list[i], round)) return { index: i, round };
+    }
+  }
+  return null;
+}
+
+function findPreviousRoundPosition(fromIndex = activeWorkout.currentIndex, fromRound = activeWorkout.roundNumber) {
+  const list = activeWorkout.exercises || [];
+  for (let i = fromIndex - 1; i >= 0; i--) {
+    if (isExerciseAvailableInRound(list[i], fromRound)) return { index: i, round: fromRound };
+  }
+  for (let round = fromRound - 1; round >= 0; round--) {
+    for (let i = list.length - 1; i >= 0; i--) {
+      if (isExerciseAvailableInRound(list[i], round)) return { index: i, round };
+    }
+  }
+  return null;
+}
+
+function moveToRoundPosition(position) {
+  if (!position) {
+    activeWorkout.phase = "finish";
+    return;
+  }
+  activeWorkout.currentIndex = position.index;
+  activeWorkout.roundNumber = position.round;
+  activeWorkout.currentSet = position.round;
+}
+
+function getNextExerciseLabel() {
+  if (activeWorkout.flowMode === "round") {
+    const next = findNextRoundPosition();
+    return next ? `Next: ${escapeHtml(activeWorkout.exercises[next.index].name)} &rarr;` : "Finish workout &rarr;";
+  }
+  const i = activeWorkout.currentIndex;
+  return i >= activeWorkout.exercises.length - 1
+    ? "Finish workout &rarr;"
+    : `Next: ${escapeHtml(activeWorkout.exercises[i + 1].name)} &rarr;`;
+}
+
 function renderFocusedExercise() {
   const exercises = activeWorkout.exercises;
   const i = activeWorkout.currentIndex;
   const ex = exercises[i];
   const total = exercises.length;
   const routineName = todayRoutineName?.textContent || "Workout";
-  const isLast = i >= total - 1;
 
   // Strength exercises page one set at a time; keep the set index in range
   // (0..sets.length, where sets.length is the wrap "add another set?" page).
   if (ex.type === "strength") {
-    activeWorkout.currentSet = clampNumber(activeWorkout.currentSet, 0, (ex.sets || []).length);
+    activeWorkout.currentSet = activeWorkout.flowMode === "round"
+      ? clampNumber(activeWorkout.roundNumber, 0, Math.max(0, (ex.sets || []).length - 1))
+      : clampNumber(activeWorkout.currentSet, 0, (ex.sets || []).length);
   }
-  const nextLabel = isLast
-    ? "Finish workout &rarr;"
-    : `Next: ${escapeHtml(exercises[i + 1].name)} &rarr;`;
+  const nextLabel = getNextExerciseLabel();
 
   let body;
   if (ex.type === "timed") {
@@ -2969,7 +3349,16 @@ function renderFocusedExercise() {
       </div>
     `;
   } else if (ex.type === "cardio") {
+    const subtypes = getExerciseSubtypeOptions(ex.exerciseId);
     body = `
+      ${subtypes.length ? `
+        <label class="lw-subtype">
+          <span>Session type</span>
+          <select data-action="cardio-subtype" aria-label="Session type for ${escapeHtml(ex.name)}">
+            ${subtypes.map((item) => `<option value="${escapeHtml(item)}"${item === ex.targetSubtype ? " selected" : ""}>${escapeHtml(item)}</option>`).join("")}
+          </select>
+        </label>
+      ` : ""}
       <div class="lw-cardio">
         <label class="lw-field lw-field-lg">
           <input type="number" inputmode="numeric" min="0" step="1" value="${escapeHtml(ex.actualDuration)}" data-action="cardio-minutes" aria-label="Minutes for ${escapeHtml(ex.name)}">
@@ -2995,6 +3384,10 @@ function renderFocusedExercise() {
         </div>
         <p class="lw-cardio-stat-hint">Total output, average power, and distance from your Peloton summary. Leave any blank.</p>
       </details>
+      <label class="lw-live-note">
+        <span>Notes (optional)</span>
+        <textarea rows="2" data-action="exercise-notes" placeholder="Anything to remember about this session">${escapeHtml(ex.notes || "")}</textarea>
+      </label>
       <p class="lw-note">Enter your minutes and mark it done.</p>
     `;
   } else if (ex.type === "sport") {
@@ -3033,9 +3426,7 @@ function renderFocusedExercise() {
       `;
     } else {
       const set = sets[s];
-      body = `
-        <div class="lw-setpage" data-set-index="${s}">
-          ${renderSetSteps(s, n)}
+      const weightControl = usesWeightMetric(ex) ? `
           <div class="lw-bigstep">
             <span class="lw-bigstep-label">Weight</span>
             <div class="lw-bigstep-row">
@@ -3044,6 +3435,11 @@ function renderFocusedExercise() {
               <button class="lw-wbtn lw-wbtn-lg" type="button" data-action="set-weight-step" data-set-index="${s}" data-delta="5" aria-label="Raise weight 5 pounds">+</button>
             </div>
           </div>
+      ` : "";
+      body = `
+        <div class="lw-setpage" data-set-index="${s}">
+          ${renderSetSteps(s, n)}
+          ${weightControl}
           <div class="lw-bigstep">
             <span class="lw-bigstep-label">Reps</span>
             <div class="lw-bigstep-row">
@@ -3052,6 +3448,10 @@ function renderFocusedExercise() {
               <button class="lw-wbtn lw-wbtn-lg" type="button" data-action="set-reps-step" data-set-index="${s}" data-delta="1" aria-label="Raise reps">+</button>
             </div>
           </div>
+          <label class="lw-live-note">
+            <span>Set note (optional)</span>
+            <textarea rows="2" data-action="set-notes" data-set-index="${s}" placeholder="Form, pain, setup, felt easy/hard...">${escapeHtml(set.notes || "")}</textarea>
+          </label>
           <div class="lw-setpage-actions">
             <button class="lw-skip" type="button" data-action="skip-set">Skip set</button>
             <button class="primary-button lw-complete btn-ico" type="button" data-action="complete-set">${getUiIcon("check")}Complete set</button>
@@ -3065,16 +3465,20 @@ function renderFocusedExercise() {
     <div class="live-workout">
       <div class="lw-topbar">
         <button class="quiet-button small-button btn-ico lw-back" type="button" data-action="lw-back" aria-label="${i > 0 ? "Previous exercise" : "Back to plan"}">${getUiIcon("arrow-left")}</button>
-        <span class="lw-count">${i + 1} of ${total}</span>
+        <span class="lw-count">${activeWorkout.flowMode === "round" ? `Round ${activeWorkout.roundNumber + 1} · ` : ""}${i + 1} of ${total}</span>
         <button class="lw-exit" type="button" data-action="lw-exit">Exit</button>
       </div>
       <div class="lw-dots">${renderProgressDots(i, total, false)}</div>
       <div class="lw-hero">
-        <div class="lw-hero-icon" aria-hidden="true">${getExerciseIcon(ex.icon)}</div>
+        <div class="lw-hero-icon" aria-hidden="true">${renderLiveExerciseArt(ex)}</div>
         <div class="lw-hero-text">
           <h3 class="lw-name">${escapeHtml(ex.name)}</h3>
-          <p class="lw-area">${escapeHtml(ex.area || "")}</p>
+          <p class="lw-area">${escapeHtml(ex.area || "")}${ex.source === "added" ? " · added today" : ""}${ex.skipped ? " · skipped" : ""}</p>
         </div>
+      </div>
+      <div class="lw-toolbar">
+        <button class="quiet-button small-button btn-ico" type="button" data-action="open-live-add">${getUiIcon("plus-circle")}Add exercise</button>
+        <button class="quiet-button small-button btn-ico danger-text" type="button" data-action="skip-exercise">${getUiIcon("x")}Skip exercise</button>
       </div>
       <button class="lw-reference-button btn-ico" type="button" data-action="open-reference">${getUiIcon("help-circle")}How to do it</button>
       <div class="lw-target">
@@ -3088,8 +3492,10 @@ function renderFocusedExercise() {
       </div>`}
       ${renderEditTargetsSheet(ex)}
       ${renderReferenceSheet(ex)}
+      ${renderLiveAddExerciseSheet()}
     </div>
   `;
+  renderUiIcons();
 }
 
 function renderFinishScreen() {
@@ -3116,7 +3522,7 @@ function renderFinishScreen() {
           `).join("")}
         </div>
         <button class="primary-button lw-save" type="button" data-action="finish-save">Save workout</button>
-        <button class="quiet-button lw-finish-back" type="button" data-action="finish-back">Back to plan</button>
+        <button class="quiet-button lw-finish-back" type="button" data-action="finish-back">Back to workout</button>
       </div>
     </div>
   `;
@@ -3126,7 +3532,22 @@ function renderTodayWorkout() {
   if (!todayRoutineList) return;
 
   if (!activeWorkout.exercises.length) {
-    exitTodayWorkout();
+    todayRoutineList.innerHTML = `
+      <div class="live-workout">
+        <div class="lw-topbar">
+          <button class="quiet-button small-button btn-ico lw-back" type="button" data-action="lw-exit">${getUiIcon("arrow-left")}Exit</button>
+          <span class="lw-count">Workout</span>
+          <button class="lw-exit" type="button" data-action="lw-exit">Exit</button>
+        </div>
+        <div class="empty-routine">
+          <p class="eyebrow">Empty workout</p>
+          <p>Add an exercise to start logging.</p>
+          <button class="primary-button today-start-button btn-ico" type="button" data-action="open-live-add">${getUiIcon("plus-circle")}Add exercise</button>
+        </div>
+        ${renderLiveAddExerciseSheet()}
+      </div>
+    `;
+    renderUiIcons();
     return;
   }
 
@@ -3159,17 +3580,46 @@ function handleTodayWorkoutChange(event) {
     if (set && (field === "weight" || field === "reps")) {
       set[field] = clampNumber(input.value, 0, 9999);
     }
+    persistActiveWorkoutDraft();
     return;
   }
 
   if (action === "cardio-minutes") {
     exercise.actualDuration = clampNumber(input.value, 0, 1000);
+    persistActiveWorkoutDraft();
+    return;
+  }
+
+  if (action === "cardio-subtype") {
+    exercise.targetSubtype = input.value;
+    persistActiveWorkoutDraft();
+    return;
+  }
+
+  if (action === "exercise-notes") {
+    exercise.notes = input.value;
+    persistActiveWorkoutDraft();
+    return;
+  }
+
+  if (action === "set-notes") {
+    const set = exercise.sets?.[Number(input.dataset.setIndex)];
+    if (set) set.notes = input.value;
+    persistActiveWorkoutDraft();
+    return;
+  }
+
+  if (action === "live-add-search") {
+    activeWorkout.addExerciseQuery = input.value;
+    renderTodayWorkout();
     return;
   }
 
   if (action === "sport-notes") {
     // Keep notes as typed (free text); never required.
     exercise.sportNotes = input.value;
+    exercise.notes = input.value;
+    persistActiveWorkoutDraft();
     return;
   }
 
@@ -3178,6 +3628,7 @@ function handleTodayWorkoutChange(event) {
     if (field === "cardioOutput" || field === "cardioAvgPower" || field === "cardioDistance") {
       // Keep as a string so an empty box stays empty rather than becoming 0.
       exercise[field] = input.value;
+      persistActiveWorkoutDraft();
     }
   }
 }
@@ -3271,38 +3722,92 @@ function timerLoop(ts) {
   t.raf = requestAnimationFrame(timerLoop);
 }
 
-function handleTodayWorkoutClick(event) {
+function advanceLiveWorkout() {
+  if (activeWorkout.flowMode === "round") {
+    moveToRoundPosition(findNextRoundPosition());
+  } else if (activeWorkout.currentIndex < activeWorkout.exercises.length - 1) {
+    activeWorkout.currentIndex += 1;
+    activeWorkout.currentSet = 0;
+  } else {
+    activeWorkout.phase = "finish";
+  }
+}
+
+function moveBackLiveWorkout() {
+  if (activeWorkout.flowMode === "round") {
+    const prev = findPreviousRoundPosition();
+    if (prev) {
+      moveToRoundPosition(prev);
+      return true;
+    }
+    return false;
+  }
+  const exercise = getActiveExercise();
+  if (exercise && exercise.type === "strength" && activeWorkout.currentSet > 0) {
+    activeWorkout.currentSet -= 1;
+    return true;
+  }
+  if (activeWorkout.currentIndex > 0) {
+    activeWorkout.currentIndex -= 1;
+    const prev = activeWorkout.exercises[activeWorkout.currentIndex];
+    activeWorkout.currentSet = (prev && prev.type === "strength")
+      ? Math.max(0, (prev.sets || []).length - 1)
+      : 0;
+    return true;
+  }
+  return false;
+}
+
+async function handleTodayWorkoutClick(event) {
   const button = event.target.closest("button");
   if (!button) return;
   const action = button.dataset.action;
   const exercise = getActiveExercise();
 
+  if (action === "close-flow-choice") {
+    closeWorkoutFlowChoice();
+    return;
+  }
+
+  if (action === "start-flow") {
+    startTodayWorkout(button.dataset.flow || "straight");
+    return;
+  }
+
+  if (action === "start-empty-workout") {
+    startEmptyWorkout();
+    return;
+  }
+
   if (action === "lw-back") {
     stopTimer();
     activeWorkout.editTargetsOpen = false;
     activeWorkout.referenceOpen = false;
-    // Within a strength exercise, step back one set page first.
-    if (exercise && exercise.type === "strength" && activeWorkout.currentSet > 0) {
-      activeWorkout.currentSet -= 1;
-      renderTodayWorkout();
+    const moved = moveBackLiveWorkout();
+    if (!moved) {
+      const ok = await showConfirmModal({
+        title: "Leave this workout?",
+        message: "Your progress is saved as a draft, but leaving exits the focused workout screen.",
+        confirmLabel: "Leave workout",
+        danger: false
+      });
+      if (!ok) return;
+      exitTodayWorkout();
       return;
     }
-    if (activeWorkout.currentIndex > 0) {
-      activeWorkout.currentIndex -= 1;
-      // Land on the previous exercise's last set, if it's a strength move.
-      const prev = activeWorkout.exercises[activeWorkout.currentIndex];
-      activeWorkout.currentSet = (prev && prev.type === "strength")
-        ? Math.max(0, (prev.sets || []).length - 1)
-        : 0;
-      renderTodayWorkout();
-    } else {
-      exitTodayWorkout();
-    }
+    persistActiveWorkoutDraft();
+    renderTodayWorkout();
     return;
   }
 
   if (action === "lw-exit") {
-    if (!window.confirm("Exit this workout? Anything you haven't saved will be cleared.")) return;
+    const ok = await showConfirmModal({
+      title: "Exit workout?",
+      message: "Your current progress is saved as a draft. You can resume it later unless you discard it.",
+      confirmLabel: "Exit",
+      danger: false
+    });
+    if (!ok) return;
     exitTodayWorkout();
     return;
   }
@@ -3311,12 +3816,17 @@ function handleTodayWorkoutClick(event) {
     stopTimer();
     activeWorkout.editTargetsOpen = false;
     activeWorkout.referenceOpen = false;
-    if (activeWorkout.currentIndex < activeWorkout.exercises.length - 1) {
-      activeWorkout.currentIndex += 1;
-      activeWorkout.currentSet = 0;
-    } else {
-      activeWorkout.phase = "finish";
+    if (exercise && !exercise.skipped && !isExerciseLogged(exercise)) {
+      const ok = await showConfirmModal({
+        title: "Move on without logging this?",
+        message: "You can continue, but this exercise will not count unless you log work or skip it intentionally.",
+        confirmLabel: "Move on",
+        danger: false
+      });
+      if (!ok) return;
     }
+    advanceLiveWorkout();
+    persistActiveWorkoutDraft();
     renderTodayWorkout();
     return;
   }
@@ -3334,6 +3844,7 @@ function handleTodayWorkoutClick(event) {
       t.raf = requestAnimationFrame(timerLoop);
     }
     renderTodayWorkout();
+    persistActiveWorkoutDraft();
     return;
   }
 
@@ -3344,6 +3855,7 @@ function handleTodayWorkoutClick(event) {
     t.finished = false;
     t.lastTs = 0;
     renderTodayWorkout();
+    persistActiveWorkoutDraft();
     return;
   }
 
@@ -3352,6 +3864,7 @@ function handleTodayWorkoutClick(event) {
     exercise.holdSeconds = Number(button.dataset.seconds) || 45;
     initTimerForExercise(exercise);
     renderTodayWorkout();
+    persistActiveWorkoutDraft();
     return;
   }
 
@@ -3361,6 +3874,7 @@ function handleTodayWorkoutClick(event) {
     const hold = exercise.holds?.[hi];
     if (hold) hold.done = !hold.done;
     renderTodayWorkout();
+    persistActiveWorkoutDraft();
     return;
   }
 
@@ -3399,6 +3913,7 @@ function handleTodayWorkoutClick(event) {
     const max = Number(button.dataset.max) || 9999;
     adjustTodayTarget(exercise, field, delta, min, max);
     renderTodayWorkout();
+    persistActiveWorkoutDraft();
     return;
   }
 
@@ -3408,7 +3923,14 @@ function handleTodayWorkoutClick(event) {
     if (set) {
       const delta = Number(button.dataset.delta) || 0;
       set.weight = clampNumber((Number(set.weight) || 0) + delta, 0, 9999);
+      set.touchedWeight = true;
+      if (si === 0) {
+        (exercise.sets || []).forEach((futureSet, idx) => {
+          if (idx > 0 && !futureSet.done && !futureSet.touchedWeight) futureSet.weight = set.weight;
+        });
+      }
       renderTodayWorkout();
+      persistActiveWorkoutDraft();
     }
     return;
   }
@@ -3419,7 +3941,14 @@ function handleTodayWorkoutClick(event) {
     if (set) {
       const delta = Number(button.dataset.delta) || 0;
       set.reps = clampNumber((Number(set.reps) || 0) + delta, 0, 9999);
+      set.touchedReps = true;
+      if (si === 0) {
+        (exercise.sets || []).forEach((futureSet, idx) => {
+          if (idx > 0 && !futureSet.done && !futureSet.touchedReps) futureSet.reps = set.reps;
+        });
+      }
       renderTodayWorkout();
+      persistActiveWorkoutDraft();
     }
     return;
   }
@@ -3430,7 +3959,12 @@ function handleTodayWorkoutClick(event) {
     const s = activeWorkout.currentSet;
     const set = exercise.sets?.[s];
     if (set) set.done = action === "complete-set";
-    activeWorkout.currentSet = s + 1;
+    if (activeWorkout.flowMode === "round") {
+      advanceLiveWorkout();
+    } else {
+      activeWorkout.currentSet = s + 1;
+    }
+    persistActiveWorkoutDraft();
     renderTodayWorkout();
     return;
   }
@@ -3446,10 +3980,14 @@ function handleTodayWorkoutClick(event) {
     exercise.sets.push({
       weight: last ? last.weight : 0,
       reps: last ? last.reps : (exercise.targetReps || 0),
-      done: false
+      done: false,
+      notes: "",
+      touchedWeight: false,
+      touchedReps: false
     });
     activeWorkout.currentSet = exercise.sets.length - 1;
     renderTodayWorkout();
+    persistActiveWorkoutDraft();
     return;
   }
 
@@ -3458,6 +3996,7 @@ function handleTodayWorkoutClick(event) {
     const set = exercise.sets?.[si];
     if (set) set.done = !set.done;
     renderTodayWorkout();
+    persistActiveWorkoutDraft();
     return;
   }
 
@@ -3466,53 +4005,89 @@ function handleTodayWorkoutClick(event) {
     exercise.sets.push({
       weight: last ? last.weight : 0,
       reps: last ? last.reps : (exercise.targetReps || 0),
-      done: false
+      done: false,
+      notes: "",
+      touchedWeight: false,
+      touchedReps: false
     });
     renderTodayWorkout();
+    persistActiveWorkoutDraft();
     return;
   }
 
   if (action === "remove-set" && exercise) {
     if ((exercise.sets || []).length > 1) exercise.sets.pop();
     renderTodayWorkout();
+    persistActiveWorkoutDraft();
     return;
   }
 
   if (action === "toggle-cardio" && exercise) {
     exercise.cardioDone = !exercise.cardioDone;
     renderTodayWorkout();
+    persistActiveWorkoutDraft();
     return;
   }
 
   if (action === "toggle-sport" && exercise) {
     exercise.sportDone = !exercise.sportDone;
     renderTodayWorkout();
+    persistActiveWorkoutDraft();
+    return;
+  }
+
+  if (action === "open-live-add") {
+    openLiveAddExercise();
+    return;
+  }
+
+  if (action === "close-live-add") {
+    closeLiveAddExercise();
+    return;
+  }
+
+  if (action === "add-live-exercise") {
+    addExerciseToLiveWorkout(button.dataset.id);
+    return;
+  }
+
+  if (action === "skip-exercise" && exercise) {
+    const ok = await showConfirmModal({
+      title: `Skip ${exercise.name}?`,
+      message: "This skips the whole exercise for this workout. You can still review it in the finish screen.",
+      confirmLabel: "Skip exercise",
+      danger: false
+    });
+    if (!ok) return;
+    exercise.skipped = true;
+    advanceLiveWorkout();
+    persistActiveWorkoutDraft();
+    renderTodayWorkout();
     return;
   }
 
   if (action === "finish-back") {
-    exitTodayWorkout();
+    activeWorkout.phase = "exercise";
+    persistActiveWorkoutDraft();
+    renderTodayWorkout();
     return;
   }
 
   if (action === "finish-save") {
     saveTodayWorkout().catch((error) => {
       console.error("Error saving today's workout:", error);
-      alert(`Error: ${error.message}`);
+      showStatusModal({ title: "Save failed", message: error.message, tone: "bad" });
     });
   }
 }
 
 async function saveTodayWorkout() {
   const routine = getTodayPlannedRoutine();
-  if (!routine) {
-    alert("No workout planned for today.");
-    return;
-  }
+  const workoutName = routine?.name || activeWorkout.routineName || "Workout";
 
-  const loggedExercises = activeWorkout.exercises.filter(isExerciseLogged);
+  const loggedExercises = activeWorkout.exercises.filter((ex) => isExerciseLogged(ex) || ex.skipped);
   if (loggedExercises.length === 0) {
-    alert("Check off at least one set before saving.");
+    await showStatusModal({ title: "Nothing to save yet", message: "Log at least one set or skip an exercise before saving.", tone: "warn" });
     return;
   }
 
@@ -3524,6 +4099,24 @@ async function saveTodayWorkout() {
 
   const loggedEntries = loggedExercises
     .map((ex) => {
+      if (ex.skipped && !isExerciseLogged(ex)) {
+        return {
+          id: ex.id,
+          type: ex.type,
+          exerciseId: ex.exerciseId,
+          exerciseName: ex.name,
+          planned: {
+            sets: ex.targetSets || 0,
+            reps: ex.targetReps || 0,
+            weight: ex.targetWeight || 0,
+            durationMinutes: ex.targetDuration || 0,
+            subtype: ex.targetSubtype || ""
+          },
+          skipped: true,
+          flowMode: activeWorkout.flowMode
+        };
+      }
+
       if (ex.type === "cardio") {
         const stats = collectCardioStats(ex);
         const entry = {
@@ -3532,12 +4125,17 @@ async function saveTodayWorkout() {
           exerciseId: ex.exerciseId,
           exerciseName: ex.name,
           planned: {
-            durationMinutes: ex.targetDuration || 0
+            durationMinutes: ex.targetDuration || 0,
+            subtype: ex.targetSubtype || ""
           },
+          subtype: ex.targetSubtype || "",
           durationMinutes: Number(ex.actualDuration) || 0,
           done: true,
-          difficulty: Number(ex.difficulty) || 5
+          difficulty: Number(ex.difficulty) || 5,
+          notes: (ex.notes || "").trim(),
+          flowMode: activeWorkout.flowMode
         };
+        if (!entry.notes) delete entry.notes;
         if (stats) entry.stats = stats;
         return entry;
       }
@@ -3555,7 +4153,8 @@ async function saveTodayWorkout() {
           },
           durationMinutes: Number(ex.actualDuration) || 0,
           done: true,
-          difficulty: Number(ex.difficulty) || 5
+          difficulty: Number(ex.difficulty) || 5,
+          flowMode: activeWorkout.flowMode
         };
         if (note) entry.notes = note;
         return entry;
@@ -3578,8 +4177,12 @@ async function saveTodayWorkout() {
             sets: doneHolds,
             seconds: Number(ex.holdSeconds) || 0
           },
-          difficulty: Number(ex.difficulty) || 5
+          difficulty: Number(ex.difficulty) || 5,
+          notes: (ex.notes || "").trim(),
+          flowMode: activeWorkout.flowMode
         };
+        if (!entry.notes) delete entry.notes;
+        return entry;
       }
 
       // Save the sets that were actually checked off, each with its own
@@ -3595,49 +4198,54 @@ async function saveTodayWorkout() {
         exerciseName: ex.name,
         planned: {
           sets: ex.targetSets || 0,
-          reps: ex.targetReps || 0
+          reps: ex.targetReps || 0,
+          weight: ex.targetWeight || 0
         },
         actualSummary: {
           sets: doneSets.length,
           reps: Number(repsAtTop) || 0,
-          weight: Number(topWeight) || 0
+          weight: usesWeightMetric(ex) ? (Number(topWeight) || 0) : 0
         },
         sets: doneSets.map((set, i) => ({
           id: `set-${i + 1}`,
           setNumber: i + 1,
           reps: Number(set.reps) || 0,
-          weight: Number(set.weight) || 0,
-          done: true
+          weight: usesWeightMetric(ex) ? (Number(set.weight) || 0) : 0,
+          done: true,
+          notes: (set.notes || "").trim()
         })),
-        difficulty: Number(ex.difficulty) || 5
+        notes: (ex.notes || "").trim(),
+        metricProfile: ex.metricProfile,
+        difficulty: Number(ex.difficulty) || 5,
+        flowMode: activeWorkout.flowMode
       };
     });
 
   const savedWorkout = {
     id: `workout-${Date.now()}-${randomString(6)}`,
-    name: routine.name,
+    name: workoutName,
     date: getTodayDateString(),
     startedAt: activeWorkout.startedAt,
     savedAt,
     createdBy: getDeviceId(),
-    fromRoutine: routine.id,
-    routineName: routine.name,
+    fromRoutine: routine?.id || null,
+    routineName: workoutName,
+    flowMode: activeWorkout.flowMode,
     entries: loggedEntries
   };
 
   data.workouts.push(savedWorkout);
-  markTodayAsCompleted();
+  data.completedWorkouts = Array.isArray(data.completedWorkouts) ? data.completedWorkouts : [];
+  if (!data.completedWorkouts.includes(getTodayDateString())) {
+    data.completedWorkouts.push(getTodayDateString());
+  }
   saveLocalData(data);
   markPendingData(data);
 
   if (!navigator.onLine) {
-    alert("Workout saved on this device. It will sync when internet is back.");
-    activeWorkout.exercises = [];
-    activeWorkout.started = false;
-    activeWorkout.currentIndex = 0;
-    activeWorkout.phase = "exercise";
-    activeWorkout.editTargetsOpen = false;
-    activeWorkout.referenceOpen = false;
+    await showStatusModal({ title: "Workout saved", message: "Saved on this device. It will sync when internet is back.", tone: "warn" });
+    resetLiveWorkoutState();
+    clearActiveWorkoutDraft();
     resetViewedDayToToday();
     renderTodayRoutine();
     renderHistory();
@@ -3647,18 +4255,14 @@ async function saveTodayWorkout() {
   try {
     await uploadWorkoutData(data);
     clearPendingData();
-    alert("Workout saved and synced!");
-    activeWorkout.exercises = [];
-    activeWorkout.started = false;
-    activeWorkout.currentIndex = 0;
-    activeWorkout.phase = "exercise";
-    activeWorkout.editTargetsOpen = false;
-    activeWorkout.referenceOpen = false;
+    await showStatusModal({ title: "Workout saved", message: "Saved and synced across your devices.", tone: "good" });
+    resetLiveWorkoutState();
+    clearActiveWorkoutDraft();
     resetViewedDayToToday();
     renderTodayRoutine();
     renderHistory();
   } catch (error) {
-    alert(`${error.message} Workout is saved on this device for now.`);
+    await showStatusModal({ title: "Saved locally", message: `${error.message} Workout is saved on this device for now.`, tone: "warn" });
     renderHistory();
   }
 }
@@ -3669,7 +4273,8 @@ if (savedAppKey && appKeyInput) {
 }
 
 function showScreen(name, remember = false) {
-  const validName = screens.some((screen) => screen.dataset.screen === name) ? name : "today";
+  const requestedName = name === "log" ? "today" : name;
+  const validName = screens.some((screen) => screen.dataset.screen === requestedName) ? requestedName : "today";
   if (remember) localStorage.setItem(STORAGE.activeTab, validName);
 
   screens.forEach((screen) => {
@@ -5500,9 +6105,11 @@ function findExerciseIdByName(name) {
 }
 
 function formatEntryDetails(entry) {
+  if (entry.skipped) return "Skipped";
   if (entry.type === "cardio") {
     const planned = entry.planned?.durationMinutes ? `planned ${entry.planned.durationMinutes} min, ` : "";
-    return `${planned}actual ${entry.durationMinutes || 0} min${formatCardioStats(entry.stats)}`;
+    const subtype = entry.subtype || entry.planned?.subtype;
+    return `${subtype ? `${subtype}: ` : ""}${planned}actual ${entry.durationMinutes || 0} min${formatCardioStats(entry.stats)}${entry.notes ? ` · ${entry.notes}` : ""}`;
   }
 
   if (entry.type === "sport") {
@@ -5518,7 +6125,7 @@ function formatEntryDetails(entry) {
   }
 
   const summary = entry.actualSummary
-    ? `${entry.actualSummary.sets}x${entry.actualSummary.reps} @ ${entry.actualSummary.weight} lb`
+    ? `${entry.actualSummary.sets}x${entry.actualSummary.reps}${Number(entry.actualSummary.weight) > 0 ? ` @ ${entry.actualSummary.weight} lb` : ""}`
     : entry.sets?.map((set) => `${set.reps}@${set.weight}lb`).join(", ");
   const planned = entry.planned?.sets ? `planned ${entry.planned.sets}x${entry.planned.reps || 0}, ` : "";
   return `${planned}actual ${summary || "no sets"}`;
@@ -5527,7 +6134,10 @@ function formatEntryDetails(entry) {
 function formatRoutineExercise(exercise) {
   const exerciseInfo = getExerciseById(exercise.exerciseId);
   const name = exerciseInfo?.name || exercise.exerciseId;
-  if (exercise.targetDuration) return `- ${name}: ${exercise.targetDuration} min`;
+  if (exercise.targetDuration) {
+    const subtype = exercise.targetSubtype ? `${exercise.targetSubtype}, ` : "";
+    return `- ${name}: ${subtype}${exercise.targetDuration} min`;
+  }
   const weight = Number(exercise.targetWeight) > 0 ? ` @ ${exercise.targetWeight} lb` : "";
   return `- ${name}: ${exercise.targetSets || 1}x${exercise.targetReps || 0}${weight}`;
 }
@@ -5863,7 +6473,10 @@ function makeRoutineId(name) {
 // Sensible starting targets for a freshly-added routine exercise, based on type.
 function defaultRoutineExercise(exerciseId) {
   const type = getExerciseById(exerciseId)?.type || "strength";
-  if (type === "cardio" || type === "sport") return { exerciseId, targetDuration: 20 };
+  if (type === "cardio" || type === "sport") {
+    const targetSubtype = defaultExerciseSubtype(exerciseId);
+    return { exerciseId, targetDuration: 20, ...(targetSubtype ? { targetSubtype } : {}) };
+  }
   if (type === "timed") return { exerciseId, targetSets: 3, targetReps: 30 };
   return { exerciseId, targetSets: 3, targetReps: 8 };
 }
@@ -6089,10 +6702,15 @@ function handlePlanInput(event) {
 
 function formatWorkoutForExport(workout) {
   const lines = [];
-  lines.push(`Date: ${workout.date} - ${workout.name || workout.routineName || "Workout"}`);
+  const flow = workout.flowMode ? ` (${workout.flowMode === "round" ? "round-by-round" : "straight sets"})` : "";
+  lines.push(`Date: ${workout.date} - ${workout.name || workout.routineName || "Workout"}${flow}`);
 
   workout.entries?.forEach((entry) => {
-    lines.push(`  ${entry.exerciseName}: ${formatEntryDetails(entry)} | Difficulty: ${entry.difficulty || "not logged"}/10`);
+    const setNotes = Array.isArray(entry.sets)
+      ? entry.sets.map((set) => set.notes).filter(Boolean).join("; ")
+      : "";
+    const notes = [entry.notes, setNotes].filter(Boolean).join(" | Notes: ");
+    lines.push(`  ${entry.exerciseName}: ${formatEntryDetails(entry)} | Difficulty: ${entry.difficulty || "not logged"}/10${notes ? ` | Notes: ${notes}` : ""}`);
   });
 
   return lines.join("\n");
@@ -6510,6 +7128,9 @@ function renderHistory() {
   }
 
   historyContent.innerHTML = `
+    <div class="history-tools">
+      <button class="quiet-button small-button btn-ico danger-text" type="button" data-action="clear-history">${getUiIcon("trash-2")}Clear history</button>
+    </div>
     <div class="history-list">
       ${workouts.map((workout) => {
         const entries = Array.isArray(workout.entries) ? workout.entries : [];
@@ -6528,22 +7149,14 @@ function renderHistory() {
                 ${entries.map(renderHistoryEntry).join("")}
               </ul>
             </button>
+            <button class="history-delete btn-ico" type="button" data-action="delete-history-workout" data-id="${escapeHtml(workout.id)}" aria-label="Delete ${escapeHtml(workout.name || workout.routineName || "workout")}">${getUiIcon("trash-2")}</button>
           </article>
         `;
       }).join("")}
     </div>
   `;
 
-  // Add click listeners to history cards
-  document.querySelectorAll(".history-card-button").forEach((button) => {
-    button.addEventListener("click", () => {
-      const card = button.closest(".history-card");
-      const workoutId = card?.dataset.workoutId;
-      if (workoutId) {
-        openHistoryDetail(workoutId);
-      }
-    });
-  });
+  renderUiIcons();
 }
 
 function openHistoryDetail(workoutId) {
@@ -6565,6 +7178,56 @@ function closeHistoryDetail() {
     detailPanel.hidden = true;
     historyContent.style.display = "block";
   }
+}
+
+async function deleteHistoryWorkout(workoutId) {
+  const data = getLocalData();
+  const workout = data.workouts?.find((item) => item.id === workoutId);
+  if (!workout) return;
+  const ok = await showConfirmModal({
+    title: `Delete ${workout.name || workout.routineName || "workout"}?`,
+    message: "This removes the saved workout from History. Your routines and library stay unchanged.",
+    confirmLabel: "Delete workout"
+  });
+  if (!ok) return;
+  data.workouts = (data.workouts || []).filter((item) => item.id !== workoutId);
+  commitProgressData(data);
+  closeHistoryDetail();
+  renderHistory();
+}
+
+async function clearWorkoutHistory() {
+  const data = getLocalData();
+  const count = Array.isArray(data.workouts) ? data.workouts.length : 0;
+  if (!count) return;
+  const ok = await showConfirmModal({
+    title: "Clear all history?",
+    message: `This deletes ${count} saved workout${count === 1 ? "" : "s"} from History. Routines, plans, and library exercises are not affected.`,
+    confirmLabel: "Clear history"
+  });
+  if (!ok) return;
+  data.workouts = [];
+  data.completedWorkouts = [];
+  commitProgressData(data);
+  closeHistoryDetail();
+  renderHistory();
+}
+
+function handleHistoryClick(event) {
+  const actionButton = event.target.closest("[data-action]");
+  if (actionButton?.dataset.action === "clear-history") {
+    clearWorkoutHistory();
+    return;
+  }
+  if (actionButton?.dataset.action === "delete-history-workout") {
+    deleteHistoryWorkout(actionButton.dataset.id);
+    return;
+  }
+  const button = event.target.closest(".history-card-button");
+  if (!button) return;
+  const card = button.closest(".history-card");
+  const workoutId = card?.dataset.workoutId;
+  if (workoutId) openHistoryDetail(workoutId);
 }
 
 function renderHistoryDetail(workout) {
@@ -6611,13 +7274,60 @@ function renderHistoryDetail(workout) {
   document.getElementById("detail-save-button")?.addEventListener("click", () => {
     saveWorkoutChanges(workout.id);
   });
+
+  document.querySelectorAll("[data-action='remove-history-entry']").forEach((button) => {
+    button.addEventListener("click", () => {
+      removeHistoryEntry(workout.id, Number(button.dataset.entryIndex));
+    });
+  });
+
+  renderUiIcons();
+}
+
+async function removeHistoryEntry(workoutId, entryIndex) {
+  const data = getLocalData();
+  const workout = data.workouts?.find((item) => item.id === workoutId);
+  const entry = workout?.entries?.[entryIndex];
+  if (!workout || !entry) return;
+  const ok = await showConfirmModal({
+    title: `Remove ${entry.exerciseName || "exercise"}?`,
+    message: "This removes only this exercise from the saved workout entry.",
+    confirmLabel: "Remove exercise"
+  });
+  if (!ok) return;
+  workout.entries.splice(entryIndex, 1);
+  commitProgressData(data);
+  if (workout.entries.length === 0) {
+    closeHistoryDetail();
+    renderHistory();
+  } else {
+    renderHistoryDetail(workout);
+  }
 }
 
 function renderDetailExercise(entry, index) {
-  if (entry.type === "cardio") {
+  if (entry.skipped) {
     return `
       <div class="detail-exercise" data-entry-index="${index}">
-        <h5>${escapeHtml(entry.exerciseName || "Exercise")}</h5>
+        <div class="detail-exercise-head"><h5>${escapeHtml(entry.exerciseName || "Exercise")}</h5><button class="quiet-button small-button btn-ico danger-text" type="button" data-action="remove-history-entry" data-entry-index="${index}">${getUiIcon("trash-2")}Remove</button></div>
+        <p class="empty-state">Skipped in this workout.</p>
+      </div>
+    `;
+  }
+
+  if (entry.type === "cardio") {
+    const subtypeOptions = getExerciseSubtypeOptions(entry.exerciseId);
+    return `
+      <div class="detail-exercise" data-entry-index="${index}">
+        <div class="detail-exercise-head"><h5>${escapeHtml(entry.exerciseName || "Exercise")}</h5><button class="quiet-button small-button btn-ico danger-text" type="button" data-action="remove-history-entry" data-entry-index="${index}">${getUiIcon("trash-2")}Remove</button></div>
+        ${subtypeOptions.length ? `
+          <label class="detail-sport-notes">
+            <span>Session type</span>
+            <select data-field="subtype">
+              ${subtypeOptions.map((item) => `<option value="${escapeHtml(item)}"${item === (entry.subtype || entry.planned?.subtype) ? " selected" : ""}>${escapeHtml(item)}</option>`).join("")}
+            </select>
+          </label>
+        ` : ""}
         <div class="compare-row">
           <div class="compare-col">
             <p class="compare-label">Planned</p>
@@ -6645,6 +7355,10 @@ function renderDetailExercise(entry, index) {
             <span>mi</span>
           </label>
         </div>
+        <label class="detail-sport-notes">
+          <span>Notes</span>
+          <textarea rows="2" data-field="notes" placeholder="Optional notes">${escapeHtml(entry.notes || "")}</textarea>
+        </label>
         <div class="exercise-difficulty">
           <label>
             <span>Difficulty</span>
@@ -6659,7 +7373,7 @@ function renderDetailExercise(entry, index) {
   if (entry.type === "sport") {
     return `
       <div class="detail-exercise" data-entry-index="${index}">
-        <h5>${escapeHtml(entry.exerciseName || "Exercise")}</h5>
+        <div class="detail-exercise-head"><h5>${escapeHtml(entry.exerciseName || "Exercise")}</h5><button class="quiet-button small-button btn-ico danger-text" type="button" data-action="remove-history-entry" data-entry-index="${index}">${getUiIcon("trash-2")}Remove</button></div>
         <div class="compare-row">
           <div class="compare-col">
             <p class="compare-label">Planned</p>
@@ -6691,7 +7405,7 @@ function renderDetailExercise(entry, index) {
   if (entry.type === "timed") {
     return `
       <div class="detail-exercise" data-entry-index="${index}">
-        <h5>${escapeHtml(entry.exerciseName || "Exercise")}</h5>
+        <div class="detail-exercise-head"><h5>${escapeHtml(entry.exerciseName || "Exercise")}</h5><button class="quiet-button small-button btn-ico danger-text" type="button" data-action="remove-history-entry" data-entry-index="${index}">${getUiIcon("trash-2")}Remove</button></div>
         <div class="compare-row">
           <div class="compare-col">
             <p class="compare-label">Planned</p>
@@ -6711,6 +7425,10 @@ function renderDetailExercise(entry, index) {
             </div>
           </div>
         </div>
+        <label class="detail-sport-notes">
+          <span>Notes</span>
+          <textarea rows="2" data-field="notes" placeholder="Optional notes">${escapeHtml(entry.notes || "")}</textarea>
+        </label>
         <div class="exercise-difficulty">
           <label>
             <span>Difficulty</span>
@@ -6724,8 +7442,8 @@ function renderDetailExercise(entry, index) {
 
   // Strength exercise
   return `
-    <div class="detail-exercise" data-entry-index="${index}">
-      <h5>${escapeHtml(entry.exerciseName || "Exercise")}</h5>
+      <div class="detail-exercise" data-entry-index="${index}">
+      <div class="detail-exercise-head"><h5>${escapeHtml(entry.exerciseName || "Exercise")}</h5><button class="quiet-button small-button btn-ico danger-text" type="button" data-action="remove-history-entry" data-entry-index="${index}">${getUiIcon("trash-2")}Remove</button></div>
       <div class="compare-row">
         <div class="compare-col">
           <p class="compare-label">Planned</p>
@@ -6750,6 +7468,10 @@ function renderDetailExercise(entry, index) {
           </div>
         </div>
       </div>
+      <label class="detail-sport-notes">
+        <span>Notes</span>
+        <textarea rows="2" data-field="notes" placeholder="Optional notes">${escapeHtml(entry.notes || "")}</textarea>
+      </label>
       <div class="exercise-difficulty">
         <label>
           <span>Difficulty</span>
@@ -6783,8 +7505,19 @@ function saveWorkoutChanges(workoutId) {
     if (entry.type === "cardio") {
       const durationInput = exerciseEl.querySelector('input[data-field="durationMinutes"]');
       const difficultyInput = exerciseEl.querySelector('input[data-field="difficulty"]');
+      const subtypeInput = exerciseEl.querySelector('select[data-field="subtype"]');
+      const notesInput = exerciseEl.querySelector('textarea[data-field="notes"]');
       if (durationInput) entry.durationMinutes = Number(durationInput.value) || 0;
       if (difficultyInput) entry.difficulty = Number(difficultyInput.value) || 5;
+      if (subtypeInput) {
+        entry.subtype = subtypeInput.value;
+        entry.planned = { ...(entry.planned || {}), subtype: subtypeInput.value };
+      }
+      if (notesInput) {
+        const note = notesInput.value.trim();
+        if (note) entry.notes = note;
+        else delete entry.notes;
+      }
       // Optional Peloton numbers: keep only the ones above zero.
       const stats = {};
       const output = Number(exerciseEl.querySelector('input[data-field="cardioOutput"]')?.value);
@@ -6810,11 +7543,17 @@ function saveWorkoutChanges(workoutId) {
       const holdsInput = exerciseEl.querySelector('input[data-field="timedSets"]');
       const secondsInput = exerciseEl.querySelector('input[data-field="timedSeconds"]');
       const difficultyInput = exerciseEl.querySelector('input[data-field="difficulty"]');
+      const notesInput = exerciseEl.querySelector('textarea[data-field="notes"]');
       if (holdsInput || secondsInput) {
         entry.actualSummary = {
           sets: Number(holdsInput?.value) || 0,
           seconds: Number(secondsInput?.value) || 0
         };
+      }
+      if (notesInput) {
+        const note = notesInput.value.trim();
+        if (note) entry.notes = note;
+        else delete entry.notes;
       }
       if (difficultyInput) entry.difficulty = Number(difficultyInput.value) || 5;
     } else {
@@ -6822,6 +7561,7 @@ function saveWorkoutChanges(workoutId) {
       const repsInput = exerciseEl.querySelector('input[data-field="actualReps"]');
       const weightInput = exerciseEl.querySelector('input[data-field="actualWeight"]');
       const difficultyInput = exerciseEl.querySelector('input[data-field="difficulty"]');
+      const notesInput = exerciseEl.querySelector('textarea[data-field="notes"]');
 
       if (setsInput || repsInput || weightInput) {
         entry.actualSummary = {
@@ -6830,14 +7570,16 @@ function saveWorkoutChanges(workoutId) {
           weight: Number(weightInput?.value) || 0
         };
       }
+      if (notesInput) {
+        const note = notesInput.value.trim();
+        if (note) entry.notes = note;
+        else delete entry.notes;
+      }
       if (difficultyInput) entry.difficulty = Number(difficultyInput.value) || 5;
     }
   });
 
-  data.updatedAt = new Date().toISOString();
-  data.updatedBy = getDeviceId();
-  saveLocalData(data);
-  markPendingData(data);
+  commitProgressData(data);
 
   closeHistoryDetail();
   renderHistory();
@@ -6861,11 +7603,11 @@ function generateReviewPacket() {
   packet.push("");
 
   packet.push("HOW TRAINING BOOK WORKS:");
-  packet.push("- Today reads from the weekly plan and loaded routines.");
-  packet.push("- Strength targets use sets x reps. Logged strength work includes actual sets, reps, weight, and difficulty.");
-  packet.push("- Cardio/time targets use minutes. Logged cardio work includes actual minutes and difficulty.");
+  packet.push("- Workout reads from the weekly plan and loaded routines, but Daniel can add ad-hoc exercises during a session.");
+  packet.push("- Strength targets use sets x reps, optionally with a starting weight like 3x8 @ 95 lb. Logged strength work includes actual sets, reps, weight when relevant, notes, and difficulty.");
+  packet.push("- Cardio/Peloton targets use subtype plus minutes, such as Peloton Tread: Incline Walk, 30 min. Logged cardio can include output, average power, distance, notes, and difficulty.");
   packet.push("- Held moves (e.g. plank) are timed: targets read sets x seconds, and logged work records how many holds were completed and the seconds each.");
-  packet.push("- Skipped exercises are omitted from saved workouts, so coach the work that was actually logged.");
+  packet.push("- Skipped exercises may be marked as skipped in History; coach the work Daniel actually logged and adjust around repeated skips.");
   packet.push("- Return the updated plan using the structured format at the end of this packet.");
   packet.push("");
 
@@ -6955,7 +7697,10 @@ function generateReviewPacket() {
   packet.push("");
   packet.push("ROUTINE: Routine Name");
   packet.push("- Exercise Name: 3x8");
-  packet.push("- Cardio Name: 30 min");
+  packet.push("- Bench Press: 3x8 @ 95 lb");
+  packet.push("- Plank: 3x45 sec");
+  packet.push("- Peloton Tread: Incline Walk, 30 min");
+  packet.push("- Peloton Bike: Just Ride, 20 min");
   packet.push("");
   packet.push("Use exercise names from the library when possible. Keep each routine exercise on one dash line. Do not include extra commentary outside this format.");
 
@@ -7068,7 +7813,8 @@ ROUTINE: Full Body B
 - Plank: 2x30
 
 ROUTINE: Optional Walk
-- Treadmill Walk: 30 min`;
+- Peloton Tread: Incline Walk, 30 min
+- Peloton Bike: Just Ride, 20 min`;
 }
 
 function fillPlanImportExample() {
@@ -7087,15 +7833,19 @@ function parseRoutineExerciseLine(line) {
   if (separatorIndex < 1) return null;
 
   const exerciseName = cleaned.slice(0, separatorIndex).trim();
-  const target = cleaned.slice(separatorIndex + 1).trim().toLowerCase();
+  const rawTarget = cleaned.slice(separatorIndex + 1).trim();
+  const target = rawTarget.toLowerCase();
   const exerciseId = findExerciseIdByName(exerciseName);
 
   const durationMatch = target.match(/(\d+)\s*(min|minute|minutes)/);
   if (durationMatch) {
-    return {
+    const parsed = {
       exerciseId,
       targetDuration: Number(durationMatch[1])
     };
+    const subtypeText = rawTarget.slice(0, rawTarget.toLowerCase().indexOf(durationMatch[0])).replace(/[,|-]+$/g, "").trim();
+    if (subtypeText && !/^\d/.test(subtypeText)) parsed.targetSubtype = subtypeText;
+    return parsed;
   }
 
   const strengthMatch = target.match(/(\d+)\s*(x|sets?\s*(of)?|by)\s*(\d+)/);
@@ -7370,7 +8120,17 @@ function importUpdatedPlan() {
 renderUiIcons();
 
 tabs.forEach((tab) => {
-  tab.addEventListener("click", () => {
+  tab.addEventListener("click", async () => {
+    if (activeWorkout.started && tab.dataset.target !== "today") {
+      const ok = await showConfirmModal({
+        title: "Leave workout screen?",
+        message: "Your progress is saved as a draft. Leaving the focused view can break your rhythm, so Training Book asks first.",
+        confirmLabel: "Leave screen",
+        danger: false
+      });
+      if (!ok) return;
+      persistActiveWorkoutDraft();
+    }
     showScreen(tab.dataset.target, true);
   });
 });
@@ -7486,6 +8246,7 @@ exercisePicker?.addEventListener("change", () => {
 activeWorkoutList?.addEventListener("input", handleWorkoutInput);
 activeWorkoutList?.addEventListener("change", handleWorkoutInput);
 activeWorkoutList?.addEventListener("click", handleWorkoutClick);
+historyContent?.addEventListener("click", handleHistoryClick);
 
 saveWorkoutButton?.addEventListener("click", () => {
   saveWorkout().catch((error) => {
@@ -7495,6 +8256,7 @@ saveWorkoutButton?.addEventListener("click", () => {
 
 todayRoutineList?.addEventListener("click", handleTodayWorkoutClick);
 todayRoutineList?.addEventListener("change", handleTodayWorkoutChange);
+todayRoutineList?.addEventListener("input", handleTodayWorkoutChange);
 
 reviewReminderGo?.addEventListener("click", () => showScreen("plan", true));
 reviewReminderDismiss?.addEventListener("click", () => {
@@ -7502,7 +8264,7 @@ reviewReminderDismiss?.addEventListener("click", () => {
   renderReviewReminder();
 });
 
-startTodayButton?.addEventListener("click", startTodayWorkout);
+startTodayButton?.addEventListener("click", openWorkoutFlowChoice);
 todayBackButton?.addEventListener("click", exitTodayWorkout);
 
 // Change-day control: preview/start any day's planned workout. Only active in
@@ -7560,6 +8322,13 @@ window.addEventListener("online", () => {
 
 window.addEventListener("offline", updateConnectionState);
 
+window.addEventListener("beforeunload", (event) => {
+  if (!activeWorkout.started) return;
+  persistActiveWorkoutDraft();
+  event.preventDefault();
+  event.returnValue = "";
+});
+
 refreshLibrary();
 renderFilterStrip();
 renderExercises();
@@ -7568,6 +8337,7 @@ renderActiveWorkout();
 renderTodayRoutine();
 renderPlan();
 showScreen(localStorage.getItem(STORAGE.activeTab) || "today");
+offerResumeWorkoutDraft();
 
 // ===== Firebase cloud sync setup =====
 // Daniel's Training Book Firebase project. The apiKey here is a public
@@ -7598,6 +8368,7 @@ async function initCloud() {
     reseedLibraryOnce();
     mergeLibraryV3Once();
     seedSoccerOnce();
+    seedPelotonOnce();
     updateCloudUi();
     return;
   }
@@ -7654,6 +8425,7 @@ async function initCloud() {
         reseedLibraryOnce();
         mergeLibraryV3Once();
         seedSoccerOnce();
+        seedPelotonOnce();
       }, (error) => console.error("Cloud listener error:", error));
     } else {
       cloudUser = null;
@@ -7662,6 +8434,7 @@ async function initCloud() {
       reseedLibraryOnce();
       mergeLibraryV3Once();
       seedSoccerOnce();
+      seedPelotonOnce();
     }
     updateCloudUi();
   });

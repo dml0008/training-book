@@ -1648,7 +1648,7 @@ p {
   bottom: max(12px, env(safe-area-inset-bottom));
   left: max(12px, env(safe-area-inset-left));
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 6px;
   max-width: 720px;
   margin: 0 auto;
@@ -2251,6 +2251,23 @@ body.in-workout .today-panel {
   height: 40px;
 }
 
+.lw-hero-icon:has(.lw-hero-photo) {
+  overflow: hidden;
+  background: #0b0e0d;
+}
+
+.lw-hero-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: grayscale(1) contrast(1.08);
+}
+
+.lw-hero-glyph {
+  display: grid;
+  place-items: center;
+}
+
 /* Without this the illustration's lines have no stroke and its circles fill
    solid - which showed as a blank box with a black dot. Match the Library
    line-illustration treatment so the exercise icon actually draws. */
@@ -2342,6 +2359,105 @@ body.in-workout .today-panel {
 
 .lw-reference-button:active {
   transform: translateY(1px);
+}
+
+.lw-toolbar {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-3);
+}
+
+.lw-live-note,
+.lw-sport-notes,
+.lw-subtype {
+  display: grid;
+  gap: 7px;
+  margin-top: var(--space-3);
+}
+
+.lw-live-note span,
+.lw-sport-notes span,
+.lw-subtype span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.lw-live-note textarea,
+.lw-sport-notes textarea,
+.lw-subtype select {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: rgba(9, 12, 11, 0.58);
+  color: var(--text);
+  font: inherit;
+  padding: 10px 12px;
+}
+
+.flow-choice-grid,
+.live-add-results {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.flow-choice,
+.live-add-result {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--panel-2);
+  color: var(--text);
+  cursor: pointer;
+  text-align: left;
+}
+
+.flow-choice {
+  display: grid;
+  gap: 4px;
+  padding: 14px;
+}
+
+.flow-choice.is-active {
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 1px rgba(183, 255, 53, 0.25);
+}
+
+.flow-choice strong,
+.live-add-result strong {
+  display: block;
+  font-size: 15px;
+}
+
+.flow-choice span,
+.live-add-result small {
+  display: block;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.live-add-search {
+  margin-bottom: var(--space-3);
+}
+
+.live-add-results {
+  max-height: 54vh;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.live-add-result {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+  padding: 10px;
+}
+
+.live-add-result .exercise-art {
+  min-height: 62px;
 }
 
 .lw-sets {
@@ -3210,6 +3326,46 @@ body.in-workout .today-panel {
 .lw-finish-back {
   width: 100%;
   margin-top: 10px;
+}
+
+.history-tools {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 12px;
+}
+
+.history-card {
+  position: relative;
+}
+
+.history-delete {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 38px;
+  height: 38px;
+  border: 1px solid rgba(255, 93, 93, 0.35);
+  border-radius: var(--radius-sm);
+  background: rgba(9, 12, 11, 0.72);
+  color: var(--danger);
+  cursor: pointer;
+}
+
+.history-delete svg {
+  width: 16px;
+  height: 16px;
+}
+
+.detail-exercise-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.detail-exercise-head h5 {
+  margin: 0;
 }
 
 @media (min-width: 860px) {
