@@ -19,16 +19,15 @@
   --text: #f3f7f2;
   --muted: #9ba8a1;
   --dim: #68746e;
-  /* One unified electric lime (was drifting between a muddy olive fill and a
-     brighter lime in glows). Now every accent surface, border and glow reads
-     from the same family. */
-  --accent: #b7ff35;
+  /* Muted lime brand color. Every accent surface, border and glow reads from
+     the same family so the green stays consistent. */
+  --accent: #b6d332;
   --accent-2: #a3b551;
-  --accent-strong: #caff6a;
+  --accent-strong: #c6dd5f;
   --accent-ink: #0a1002;
-  --accent-soft: rgba(183, 255, 53, 0.12);
-  --accent-line: rgba(183, 255, 53, 0.42);
-  --glow: 0 10px 34px rgba(183, 255, 53, 0.22);
+  --accent-soft: rgba(182, 211, 50, 0.12);
+  --accent-line: rgba(182, 211, 50, 0.42);
+  --glow: 0 10px 34px rgba(182, 211, 50, 0.22);
   --danger: #ff6b6b;
   --shadow: 0 24px 60px -28px rgba(0, 0, 0, 0.7), 0 8px 24px -16px rgba(0, 0, 0, 0.5);
 
@@ -301,6 +300,102 @@ p {
 .sync-panel button:disabled {
   cursor: not-allowed;
   opacity: 0.45;
+}
+
+/* Header right cluster: sync pill + settings gear sit side by side */
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.settings-gear {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: rgba(16, 20, 19, 0.82);
+  color: var(--muted);
+  cursor: pointer;
+  transition: border-color .14s ease, color .14s ease, background-color .14s ease;
+}
+
+.settings-gear svg {
+  width: 18px;
+  height: 18px;
+}
+
+.settings-gear:hover {
+  border-color: var(--accent-line);
+  color: var(--text);
+}
+
+.settings-gear:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Settings sheet rows (style guide link for now) */
+.settings-list {
+  display: grid;
+  gap: 8px;
+}
+
+.settings-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--panel-2);
+  color: var(--text);
+  text-decoration: none;
+  transition: border-color .14s ease, background-color .14s ease;
+}
+
+.settings-row:hover {
+  border-color: var(--accent-line);
+  background: var(--accent-soft);
+}
+
+.settings-row-icon {
+  display: inline-flex;
+  color: var(--accent);
+}
+
+.settings-row-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.settings-row-text {
+  display: grid;
+  flex: 1 1 auto;
+}
+
+.settings-row-title {
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.settings-row-sub {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.settings-row-chev {
+  display: inline-flex;
+  color: var(--dim);
+}
+
+.settings-row-chev svg {
+  width: 18px;
+  height: 18px;
 }
 
 .screen-stack {

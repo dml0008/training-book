@@ -12,7 +12,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="icons/icon.svg">
-  <link rel="stylesheet" href="styles.css?v=2026.06.16-effort-and-week-fixes">
+  <link rel="stylesheet" href="styles.css?v=2026.06.17-muted-accent-settings">
 </head>
 <body>
   <div class="app-shell">
@@ -21,42 +21,39 @@
         <p class="eyebrow">Personal logbook</p>
         <h1>Training Book</h1>
       </div>
-      <div class="sync-menu">
-        <button class="sync-pill" id="sync-pill" type="button" aria-label="Open sync panel" aria-expanded="false" aria-controls="sync-panel">
-          <span class="sync-dot"></span>
-          <span id="sync-pill-label">Local only</span>
-        </button>
-        <div class="sync-panel" id="sync-panel" hidden>
-          <div class="sync-panel-head">
-            <div>
-              <p class="eyebrow">Sync</p>
-              <h2>Account</h2>
+      <div class="header-actions">
+        <div class="sync-menu">
+          <button class="sync-pill" id="sync-pill" type="button" aria-label="Open sync panel" aria-expanded="false" aria-controls="sync-panel">
+            <span class="sync-dot"></span>
+            <span id="sync-pill-label">Local only</span>
+          </button>
+          <div class="sync-panel" id="sync-panel" hidden>
+            <div class="sync-panel-head">
+              <div>
+                <p class="eyebrow">Sync</p>
+                <h2>Account</h2>
+              </div>
+              <span class="app-version" id="app-version">Build</span>
             </div>
-            <span class="app-version" id="app-version">Build</span>
-          </div>
-          <p class="sync-status" id="sync-status">Loading your sync status...</p>
-          <div class="sync-panel-actions">
-            <button class="primary-button" id="cloud-signin" type="button">Sign in with Google</button>
-            <button class="quiet-button" id="cloud-signout" type="button" hidden>Sign out</button>
-          </div>
-          <div class="sync-panel-foot">
-            <button class="quiet-button" id="refresh-app" type="button">Refresh app update</button>
+            <p class="sync-status" id="sync-status">Loading your sync status...</p>
+            <div class="sync-panel-actions">
+              <button class="primary-button" id="cloud-signin" type="button">Sign in with Google</button>
+              <button class="quiet-button" id="cloud-signout" type="button" hidden>Sign out</button>
+            </div>
+            <div class="sync-panel-foot">
+              <button class="quiet-button" id="refresh-app" type="button">Refresh app update</button>
+            </div>
           </div>
         </div>
+        <button class="settings-gear" id="settings-button" type="button" aria-label="Settings" aria-haspopup="dialog" aria-expanded="false">
+          <span data-icon="settings" aria-hidden="true"></span>
+        </button>
       </div>
     </header>
 
-    <!-- TEMPORARY: link to the throwaway style-guide page. Delete this block
-         (and styleguide.html) once the design tokens are signed off. -->
-    <div class="review-reminder" id="styleguide-banner">
-      <div class="review-reminder-text">
-        <p class="review-reminder-title">Style guide (temporary)</p>
-        <p class="review-reminder-sub">A throwaway page to agree the new look. Safe to ignore.</p>
-      </div>
-      <div class="review-reminder-actions">
-        <a class="primary-button small-button" href="styleguide.html" style="text-decoration:none;display:inline-flex;align-items:center;">View style guide</a>
-      </div>
-    </div>
+    <!-- Settings modal (gear button in the header). The style guide now lives
+         in here instead of on the main page. -->
+    <div id="settings-modal-root"></div>
 
     <div class="review-reminder" id="review-reminder" hidden>
       <div class="review-reminder-text">
@@ -265,6 +262,6 @@
     </nav>
   </div>
 
-  <script src="app.js?v=2026.06.16-effort-and-week-fixes"></script>
+  <script src="app.js?v=2026.06.17-muted-accent-settings"></script>
 </body>
 </html>

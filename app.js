@@ -4686,7 +4686,8 @@ const UI_ICONS = {
   star: '<path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"/>',
   image: '<rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>',
   camera: '<path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/>',
-  tag: '<path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z"/><circle cx="7.5" cy="7.5" r=".5" fill="currentColor"/>'
+  tag: '<path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z"/><circle cx="7.5" cy="7.5" r=".5" fill="currentColor"/>',
+  settings: '<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>'
 };
 
 function getUiIcon(name) {
@@ -4702,6 +4703,53 @@ function renderUiIcons(root = document) {
     const svg = getUiIcon(el.dataset.icon);
     if (svg) el.innerHTML = svg;
   });
+}
+
+// Settings sheet - opened from the gear button in the header. Currently just
+// holds the (now hidden) style guide link; built to grow as more settings land.
+let settingsModalOpen = false;
+
+function renderSettingsModal() {
+  const root = document.querySelector("#settings-modal-root");
+  if (!root) return;
+  if (!settingsModalOpen) {
+    root.innerHTML = "";
+    return;
+  }
+  root.innerHTML = `
+    <div class="lw-sheet-scrim" role="presentation" data-settings-scrim>
+      <section class="lw-sheet settings-sheet" role="dialog" aria-modal="true" aria-label="Settings">
+        <div class="lw-sheet-head">
+          <div>
+            <h3>Settings</h3>
+            <p>Tools and preferences for your training book.</p>
+          </div>
+          <button class="lw-sheet-close" type="button" data-action="close-settings" aria-label="Close settings">&times;</button>
+        </div>
+        <div class="settings-list">
+          <a class="settings-row" href="styleguide.html">
+            <span class="settings-row-icon" data-icon="sparkles" aria-hidden="true"></span>
+            <span class="settings-row-text">
+              <span class="settings-row-title">Style guide</span>
+              <span class="settings-row-sub">Design tokens &amp; component reference</span>
+            </span>
+            <span class="settings-row-chev" data-icon="chevron-right" aria-hidden="true"></span>
+          </a>
+        </div>
+      </section>
+    </div>
+  `;
+  renderUiIcons(root);
+}
+
+function openSettingsModal() {
+  settingsModalOpen = true;
+  renderSettingsModal();
+}
+
+function closeSettingsModal() {
+  settingsModalOpen = false;
+  renderSettingsModal();
 }
 
 // Library tab state: the filter currently selected, the live search text, the
@@ -8702,6 +8750,19 @@ libraryCategoriesModalRoot?.addEventListener("keydown", (event) => {
     event.preventDefault();
     saveCategories();
   }
+});
+
+const settingsButton = document.querySelector("#settings-button");
+settingsButton?.addEventListener("click", openSettingsModal);
+
+const settingsModalRoot = document.querySelector("#settings-modal-root");
+settingsModalRoot?.addEventListener("click", (event) => {
+  if (event.target.hasAttribute("data-settings-scrim")) { closeSettingsModal(); return; }
+  const button = event.target.closest("[data-action]");
+  if (button?.dataset.action === "close-settings") closeSettingsModal();
+});
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && settingsModalOpen) closeSettingsModal();
 });
 
 addExerciseButton?.addEventListener("click", addExerciseToWorkout);
