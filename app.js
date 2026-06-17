@@ -2461,20 +2461,27 @@ function formatPlateNum(p) {
   return Number.isInteger(p) ? String(p) : String(p); // 2.5 stays "2.5"
 }
 
-// Returns a small HTML hint string for barbell lifts, "" otherwise.
+// The live barbell screen is dialed in as PLATES PER SIDE, but set.weight stays
+// the TOTAL (bar + both sides) so Progress/PRs keep reading real total weight.
+// This converts a stored total back to the per-side number shown in the stepper.
+function perSideFromTotal(total) {
+  const perSide = ((Number(total) || 0) - BAR_WEIGHT_LB) / 2;
+  return perSide > 0 ? Math.round(perSide * 100) / 100 : 0;
+}
+
+// Returns a small HTML hint that explains the additive math for barbell lifts
+// ("X per side + 45 bar = Y total"), "" otherwise.
 function renderPlateHint(ex, weight) {
   if (!isBarbellLift(ex)) return "";
-  const w = Number(weight) || 0;
-  const { status, perSide, leftover } = computePlateLoad(w);
+  const total = Number(weight) || 0;
+  const { status, perSide, leftover } = computePlateLoad(total);
   let text;
-  if (status === "below-bar") {
-    text = `That's under the empty bar (${BAR_WEIGHT_LB} lb)`;
-  } else if (status === "bar-only") {
-    text = `Just the empty bar &middot; ${BAR_WEIGHT_LB} lb`;
+  if (status === "below-bar" || status === "bar-only") {
+    text = `Just the empty bar &middot; <strong>${BAR_WEIGHT_LB} lb</strong> total`;
   } else {
-    const label = perSide.map(formatPlateNum).join(" + ");
+    const build = perSide.map(formatPlateNum).join(" + ");
     const extra = status === "approx" ? ` (+${formatPlateNum(leftover)} short)` : "";
-    text = `Load <strong>${escapeHtml(label)}</strong>${extra} per side &middot; ${BAR_WEIGHT_LB} lb bar`;
+    text = `<strong>${formatPlateNum(total)} lb</strong> total &middot; load ${escapeHtml(build)}/side + ${BAR_WEIGHT_LB} bar${extra}`;
   }
   return `<p class="lw-plate-hint" aria-live="polite">${text}</p>`;
 }
@@ -3492,13 +3499,19 @@ function renderFocusedExercise() {
       `;
     } else {
       const set = sets[s];
+      // Barbell lifts are entered as plates-per-side (set.weight stays the total).
+      const barbell = isBarbellLift(ex);
+      const weightLabel = barbell ? "Per side" : "Weight";
+      const weightShown = barbell ? perSideFromTotal(set.weight) : (Number(set.weight) || 0);
+      const lowerAria = barbell ? "Lower plates 5 pounds per side" : "Lower weight 5 pounds";
+      const raiseAria = barbell ? "Raise plates 5 pounds per side" : "Raise weight 5 pounds";
       const weightControl = usesWeightMetric(ex) ? `
           <div class="lw-bigstep">
-            <span class="lw-bigstep-label">Weight</span>
+            <span class="lw-bigstep-label">${weightLabel}</span>
             <div class="lw-bigstep-row">
-              <button class="lw-wbtn lw-wbtn-lg" type="button" data-action="set-weight-step" data-set-index="${s}" data-delta="-5" aria-label="Lower weight 5 pounds">&minus;</button>
-              <span class="lw-bigstep-val"><strong>${escapeHtml(set.weight)}</strong> lb</span>
-              <button class="lw-wbtn lw-wbtn-lg" type="button" data-action="set-weight-step" data-set-index="${s}" data-delta="5" aria-label="Raise weight 5 pounds">+</button>
+              <button class="lw-wbtn lw-wbtn-lg" type="button" data-action="set-weight-step" data-set-index="${s}" data-delta="-5" aria-label="${lowerAria}">&minus;</button>
+              <span class="lw-bigstep-val"><strong>${escapeHtml(weightShown)}</strong> lb</span>
+              <button class="lw-wbtn lw-wbtn-lg" type="button" data-action="set-weight-step" data-set-index="${s}" data-delta="5" aria-label="${raiseAria}">+</button>
             </div>
             ${renderPlateHint(ex, set.weight)}
           </div>
@@ -4017,7 +4030,13 @@ async function handleTodayWorkoutClick(event) {
     const set = exercise.sets?.[si];
     if (set) {
       const delta = Number(button.dataset.delta) || 0;
-      set.weight = clampNumber((Number(set.weight) || 0) + delta, 0, 9999);
+      if (isBarbellLift(exercise)) {
+        // delta is per-side; keep set.weight as the TOTAL = bar + both sides.
+        const newPerSide = Math.max(0, perSideFromTotal(set.weight) + delta);
+        set.weight = clampNumber(BAR_WEIGHT_LB + 2 * newPerSide, BAR_WEIGHT_LB, 9999);
+      } else {
+        set.weight = clampNumber((Number(set.weight) || 0) + delta, 0, 9999);
+      }
       set.touchedWeight = true;
       if (si === 0) {
         (exercise.sets || []).forEach((futureSet, idx) => {
