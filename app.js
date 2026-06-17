@@ -3,7 +3,7 @@ const DROPBOX_TOKEN_URL = "https://api.dropboxapi.com/oauth2/token";
 const DROPBOX_UPLOAD_URL = "https://content.dropboxapi.com/2/files/upload";
 const DROPBOX_DOWNLOAD_URL = "https://content.dropboxapi.com/2/files/download";
 const DATA_FILE_PATH = "/04_Technical/06_Side_Projects/Workout and Nutrition App/data/workout-data.json";
-const APP_VERSION = "2026.06.16-effort-and-week-fixes";
+const APP_VERSION = "2026.06.17-coach-prompt-rest-holds-effort";
 
 const STORAGE = {
   appKey: "trainingBookDropboxAppKey",
@@ -2145,6 +2145,9 @@ const activeWorkout = {
   phase: "exercise",
   editTargetsOpen: false,
   referenceOpen: false,
+  // Which set/hold has its optional effort chips expanded, as "exId:index".
+  // null = none open. Single key because only one unit is on screen at a time.
+  effortOpenKey: null,
   // Slice 2b (built-in timer for held moves like a plank). Lives outside the
   // exercise list because it's about the live countdown, not saved data.
   timer: {
@@ -2153,7 +2156,8 @@ const activeWorkout = {
     running: false,    // true while counting down
     raf: null,         // requestAnimationFrame handle
     lastTs: 0,         // last animation timestamp, for accurate elapsed time
-    finished: false    // true for a moment after hitting zero (drives the flash)
+    finished: false,   // true for a moment after hitting zero (drives the flash)
+    holdIndex: 0       // which hold the countdown is currently pointed at
   }
 };
 
@@ -2162,128 +2166,961 @@ const activeWorkout = {
 // straight away; a future tweak can let custom exercises be tagged this way.
 const TIMED_HOLD_IDS = ["plank", "side-plank", "wall-sit", "hollow-hold", "dead-hang", "l-sit"];
 
-const EXERCISE_REFERENCES = {
-  "push-up": {
-    muscles: "Chest, shoulders, triceps, core",
-    equipment: "Bodyweight",
-    steps: [
-      "Set your hands just wider than your shoulders and make a straight line from head to heels.",
-      "Lower under control until your chest is close to the floor.",
-      "Press the floor away and keep your hips from sagging."
-    ],
-    cues: ["Brace your ribs down.", "Keep elbows angled back, not straight out.", "Stop if shoulder pain shows up."]
-  },
-  "dumbbell-bench-press": {
-    muscles: "Chest, shoulders, triceps",
-    equipment: "Bench and dumbbells",
-    steps: [
-      "Lie back with feet planted and dumbbells over your chest.",
-      "Lower the weights until your upper arms are just below the bench line.",
-      "Press up smoothly without letting the dumbbells crash together."
-    ],
-    cues: ["Shoulder blades stay tucked.", "Wrists stay stacked over elbows.", "Use a weight you can control."]
-  },
-  squat: {
-    muscles: "Quads, glutes, hamstrings, core",
-    equipment: "Bodyweight or loaded variation",
-    steps: [
-      "Stand with feet about shoulder width and brace your torso.",
-      "Sit down and back while your knees track in line with your toes.",
-      "Drive through the floor to stand tall."
-    ],
-    cues: ["Keep your whole foot planted.", "Chest stays proud.", "Use a comfortable depth."]
-  },
-  "goblet-squat": {
-    muscles: "Quads, glutes, core",
-    equipment: "Dumbbell or kettlebell",
-    steps: [
-      "Hold the weight close to your chest with elbows pointed down.",
-      "Squat between your hips while keeping the weight close.",
-      "Stand by pushing through your midfoot and heels."
-    ],
-    cues: ["Do not let the weight pull you forward.", "Knees follow toes.", "Pause briefly if balance feels shaky."]
-  },
-  deadlift: {
-    muscles: "Hamstrings, glutes, back, core",
-    equipment: "Barbell or dumbbells",
-    steps: [
-      "Stand close to the weight and hinge your hips back.",
-      "Grip the weight, brace, and keep your back neutral.",
-      "Stand by driving your hips forward, then lower with control."
-    ],
-    cues: ["The weight stays close.", "Hips and chest rise together.", "Skip heavy pulls if your back feels off."]
-  },
-  "lat-pulldown": {
-    muscles: "Lats, upper back, biceps",
-    equipment: "Cable pulldown machine",
-    steps: [
-      "Sit tall and grip the bar wider than your shoulders.",
-      "Pull elbows down toward your ribs until the bar reaches upper chest level.",
-      "Return slowly until your arms are long again."
-    ],
-    cues: ["Lead with elbows, not hands.", "Do not lean way back.", "Keep shoulders away from ears."]
-  },
-  "dumbbell-row": {
-    muscles: "Lats, upper back, biceps",
-    equipment: "Dumbbell",
-    steps: [
-      "Support yourself with one hand or hinge with a steady torso.",
-      "Pull the dumbbell toward your hip.",
-      "Lower until your arm is long without twisting your body."
-    ],
-    cues: ["Keep your torso quiet.", "Think elbow to back pocket.", "Avoid shrugging at the top."]
-  },
-  "shoulder-press": {
-    muscles: "Shoulders, triceps, upper chest",
-    equipment: "Dumbbells or barbell",
-    steps: [
-      "Start with the weight at shoulder height and ribs braced.",
-      "Press overhead until arms are long without arching hard.",
-      "Lower back to shoulder height with control."
-    ],
-    cues: ["Squeeze glutes lightly.", "Keep wrists stacked.", "Use a pain-free path."]
-  },
-  plank: {
-    muscles: "Core, shoulders, glutes",
-    equipment: "Bodyweight",
-    steps: [
-      "Set elbows under shoulders and step feet back.",
-      "Make a straight line from head to heels.",
-      "Brace your belly and breathe while holding the position."
-    ],
-    cues: ["Squeeze glutes.", "Do not let hips sag.", "End the hold when position breaks."]
-  },
-  "biceps-curl": {
-    muscles: "Biceps, forearms",
-    equipment: "Dumbbells",
-    steps: [
-      "Stand tall with arms by your sides and palms forward.",
-      "Curl the weights up without swinging your torso.",
-      "Lower slowly until your elbows are straight again."
-    ],
-    cues: ["Elbows stay close to your sides.", "Control the lowering.", "Do not chase weight with momentum."]
-  },
-  "triceps-pressdown": {
-    muscles: "Triceps",
-    equipment: "Cable machine",
-    steps: [
-      "Stand tall at the cable with elbows pinned near your sides.",
-      "Press the handle down until your arms are straight.",
-      "Return slowly without letting elbows drift forward."
-    ],
-    cues: ["Only your forearms move.", "Keep shoulders relaxed.", "Finish with a firm squeeze."]
-  },
-  "treadmill-walk": {
-    muscles: "Heart, legs, calves",
-    equipment: "Treadmill",
-    steps: [
-      "Start at an easy pace and settle into a steady rhythm.",
-      "Use incline or speed only if your breathing stays controlled.",
-      "Cool down for a minute or two before stepping off."
-    ],
-    cues: ["Tall posture.", "Relax your grip.", "Stop if dizzy or sharp pain appears."]
-  }
+// >>> EXERCISE_INSTRUCTIONS (generated by sync-to-app.mjs from assets/icons/
+// exercises.json; verbatim Free Exercise DB instructions, public domain, with a
+// few authored locally). Do not hand-edit; edit exercises.json and re-run sync.
+const EXERCISE_INSTRUCTIONS = {
+  "barbell-bench-press": [
+    "Lie back on a flat bench. Using a medium width grip (a grip that creates a 90-degree angle in the middle of the movement between the forearms and the upper arms), lift the bar from the rack and hold it straight over you with your arms locked. This will be your starting position.",
+    "From the starting position, breathe in and begin coming down slowly until the bar touches your middle chest.",
+    "After a brief pause, push the bar back to the starting position as you breathe out. Focus on pushing the bar using your chest muscles. Lock your arms and squeeze your chest in the contracted position at the top of the motion, hold for a second and then start coming down slowly again. Tip: Ideally, lowering the weight should take about twice as long as raising it.",
+    "Repeat the movement for the prescribed amount of repetitions.",
+    "When you are done, place the bar back in the rack."
+  ],
+  "incline-bench-press": [
+    "Lie back on an incline bench. Using a medium-width grip (a grip that creates a 90-degree angle in the middle of the movement between the forearms and the upper arms), lift the bar from the rack and hold it straight over you with your arms locked. This will be your starting position.",
+    "As you breathe in, come down slowly until you feel the bar on you upper chest.",
+    "After a second pause, bring the bar back to the starting position as you breathe out and push the bar using your chest muscles. Lock your arms in the contracted position, squeeze your chest, hold for a second and then start coming down slowly again. Tip: it should take at least twice as long to go down than to come up.",
+    "Repeat the movement for the prescribed amount of repetitions.",
+    "When you are done, place the bar back in the rack."
+  ],
+  "dumbbell-bench-press": [
+    "Lie down on a flat bench with a dumbbell in each hand resting on top of your thighs. The palms of your hands will be facing each other.",
+    "Then, using your thighs to help raise the dumbbells up, lift the dumbbells one at a time so that you can hold them in front of you at shoulder width.",
+    "Once at shoulder width, rotate your wrists forward so that the palms of your hands are facing away from you. The dumbbells should be just to the sides of your chest, with your upper arm and forearm creating a 90 degree angle. Be sure to maintain full control of the dumbbells at all times. This will be your starting position.",
+    "Then, as you breathe out, use your chest to push the dumbbells up. Lock your arms at the top of the lift and squeeze your chest, hold for a second and then begin coming down slowly. Tip: Ideally, lowering the weight should take about twice as long as raising it.",
+    "Repeat the movement for the prescribed amount of repetitions of your training program."
+  ],
+  "dumbbell-fly": [
+    "Lie down on a flat bench with a dumbbell on each hand resting on top of your thighs. The palms of your hand will be facing each other.",
+    "Then using your thighs to help raise the dumbbells, lift the dumbbells one at a time so you can hold them in front of you at shoulder width with the palms of your hands facing each other. Raise the dumbbells up like you're pressing them, but stop and hold just before you lock out. This will be your starting position.",
+    "With a slight bend on your elbows in order to prevent stress at the biceps tendon, lower your arms out at both sides in a wide arc until you feel a stretch on your chest. Breathe in as you perform this portion of the movement. Tip: Keep in mind that throughout the movement, the arms should remain stationary; the movement should only occur at the shoulder joint.",
+    "Return your arms back to the starting position as you squeeze your chest muscles and breathe out. Tip: Make sure to use the same arc of motion used to lower the weights.",
+    "Hold for a second at the contracted position and repeat the movement for the prescribed amount of repetitions."
+  ],
+  "push-up": [
+    "Lie on the floor face down and place your hands about 36 inches apart while holding your torso up at arms length.",
+    "Next, lower yourself downward until your chest almost touches the floor as you inhale.",
+    "Now breathe out and press your upper body back up to the starting position while squeezing your chest.",
+    "After a brief pause at the top contracted position, you can begin to lower yourself downward again for as many repetitions as needed."
+  ],
+  "chest-dip": [
+    "For this exercise you will need access to parallel bars. To get yourself into the starting position, hold your body at arms length (arms locked) above the bars.",
+    "While breathing in, lower yourself slowly with your torso leaning forward around 30 degrees or so and your elbows flared out slightly until you feel a slight stretch in the chest.",
+    "Once you feel the stretch, use your chest to bring your body back to the starting position as you breathe out. Tip: Remember to squeeze the chest at the top of the movement for a second.",
+    "Repeat the movement for the prescribed amount of repetitions."
+  ],
+  "cable-crossover": [
+    "To get yourself into the starting position, place the pulleys on a high position (above your head), select the resistance to be used and hold the pulleys in each hand.",
+    "Step forward in front of an imaginary straight line between both pulleys while pulling your arms together in front of you. Your torso should have a small forward bend from the waist. This will be your starting position.",
+    "With a slight bend on your elbows in order to prevent stress at the biceps tendon, extend your arms to the side (straight out at both sides) in a wide arc until you feel a stretch on your chest. Breathe in as you perform this portion of the movement. Tip: Keep in mind that throughout the movement, the arms and torso should remain stationary; the movement should only occur at the shoulder joint.",
+    "Return your arms back to the starting position as you breathe out. Make sure to use the same arc of motion used to lower the weights.",
+    "Hold for a second at the starting position and repeat the movement for the prescribed amount of repetitions."
+  ],
+  "deadlift": [
+    "Stand in front of a loaded barbell.",
+    "While keeping the back as straight as possible, bend your knees, bend forward and grasp the bar using a medium (shoulder width) overhand grip. This will be the starting position of the exercise. Tip: If it is difficult to hold on to the bar with this grip, alternate your grip or use wrist straps.",
+    "While holding the bar, start the lift by pushing with your legs while simultaneously getting your torso to the upright position as you breathe out. In the upright position, stick your chest out and contract the back by bringing the shoulder blades back. Think of how the soldiers in the military look when they are in standing in attention.",
+    "Go back to the starting position by bending at the knees while simultaneously leaning the torso forward at the waist while keeping the back straight. When the weights on the bar touch the floor you are back at the starting position and ready to perform another repetition.",
+    "Perform the amount of repetitions prescribed in the program."
+  ],
+  "romanian-deadlift": [
+    "Put a barbell in front of you on the ground and grab it using a pronated (palms facing down) grip that a little wider than shoulder width. Tip: Depending on the weight used, you may need wrist wraps to perform the exercise and also a raised platform in order to allow for better range of motion.",
+    "Bend the knees slightly and keep the shins vertical, hips back and back straight. This will be your starting position.",
+    "Keeping your back and arms completely straight at all times, use your hips to lift the bar as you exhale. Tip: The movement should not be fast but steady and under control.",
+    "Once you are standing completely straight up, lower the bar by pushing the hips back, only slightly bending the knees, unlike when squatting. Tip: Take a deep breath at the start of the movement and keep your chest up. Hold your breath as you lower and exhale as you complete the movement.",
+    "Repeat for the recommended amount of repetitions."
+  ],
+  "pull-up": [
+    "Grab the pull-up bar with the palms facing forward using the prescribed grip. Note on grips: For a wide grip, your hands need to be spaced out at a distance wider than your shoulder width. For a medium grip, your hands need to be spaced out at a distance equal to your shoulder width and for a close grip at a distance smaller than your shoulder width.",
+    "As you have both arms extended in front of you holding the bar at the chosen grip width, bring your torso back around 30 degrees or so while creating a curvature on your lower back and sticking your chest out. This is your starting position.",
+    "Pull your torso up until the bar touches your upper chest by drawing the shoulders and the upper arms down and back. Exhale as you perform this portion of the movement. Tip: Concentrate on squeezing the back muscles once you reach the full contracted position. The upper torso should remain stationary as it moves through space and only the arms should move. The forearms should do no other work other than hold the bar.",
+    "After a second on the contracted position, start to inhale and slowly lower your torso back to the starting position when your arms are fully extended and the lats are fully stretched.",
+    "Repeat this motion for the prescribed amount of repetitions."
+  ],
+  "chin-up": [
+    "Grab the pull-up bar with the palms facing your torso and a grip closer than the shoulder width.",
+    "As you have both arms extended in front of you holding the bar at the chosen grip width, keep your torso as straight as possible while creating a curvature on your lower back and sticking your chest out. This is your starting position. Tip: Keeping the torso as straight as possible maximizes biceps stimulation while minimizing back involvement.",
+    "As you breathe out, pull your torso up until your head is around the level of the pull-up bar. Concentrate on using the biceps muscles in order to perform the movement. Keep the elbows close to your body. Tip: The upper torso should remain stationary as it moves through space and only the arms should move. The forearms should do no other work other than hold the bar.",
+    "After a second of squeezing the biceps in the contracted position, slowly lower your torso back to the starting position; when your arms are fully extended. Breathe in as you perform this portion of the movement.",
+    "Repeat this motion for the prescribed amount of repetitions."
+  ],
+  "lat-pulldown": [
+    "Sit down on a pull-down machine with a wide bar attached to the top pulley. Make sure that you adjust the knee pad of the machine to fit your height. These pads will prevent your body from being raised by the resistance attached to the bar.",
+    "Grab the bar with the palms facing forward using the prescribed grip. Note on grips: For a wide grip, your hands need to be spaced out at a distance wider than shoulder width. For a medium grip, your hands need to be spaced out at a distance equal to your shoulder width and for a close grip at a distance smaller than your shoulder width.",
+    "As you have both arms extended in front of you holding the bar at the chosen grip width, bring your torso back around 30 degrees or so while creating a curvature on your lower back and sticking your chest out. This is your starting position.",
+    "As you breathe out, bring the bar down until it touches your upper chest by drawing the shoulders and the upper arms down and back. Tip: Concentrate on squeezing the back muscles once you reach the full contracted position. The upper torso should remain stationary and only the arms should move. The forearms should do no other work except for holding the bar; therefore do not try to pull down the bar using the forearms.",
+    "After a second at the contracted position squeezing your shoulder blades together, slowly raise the bar back to the starting position when your arms are fully extended and the lats are fully stretched. Inhale during this portion of the movement.",
+    "Repeat this motion for the prescribed amount of repetitions."
+  ],
+  "bent-over-row": [
+    "Holding a barbell with a pronated grip (palms facing down), bend your knees slightly and bring your torso forward, by bending at the waist, while keeping the back straight until it is almost parallel to the floor. Tip: Make sure that you keep the head up. The barbell should hang directly in front of you as your arms hang perpendicular to the floor and your torso. This is your starting position.",
+    "Now, while keeping the torso stationary, breathe out and lift the barbell to you. Keep the elbows close to the body and only use the forearms to hold the weight. At the top contracted position, squeeze the back muscles and hold for a brief pause.",
+    "Then inhale and slowly lower the barbell back to the starting position.",
+    "Repeat for the recommended amount of repetitions."
+  ],
+  "seated-cable-row": [
+    "For this exercise you will need access to a low pulley row machine with a V-bar. Note: The V-bar will enable you to have a neutral grip where the palms of your hands face each other. To get into the starting position, first sit down on the machine and place your feet on the front platform or crossbar provided making sure that your knees are slightly bent and not locked.",
+    "Lean over as you keep the natural alignment of your back and grab the V-bar handles.",
+    "With your arms extended pull back until your torso is at a 90-degree angle from your legs. Your back should be slightly arched and your chest should be sticking out. You should be feeling a nice stretch on your lats as you hold the bar in front of you. This is the starting position of the exercise.",
+    "Keeping the torso stationary, pull the handles back towards your torso while keeping the arms close to it until you touch the abdominals. Breathe out as you perform that movement. At that point you should be squeezing your back muscles hard. Hold that contraction for a second and slowly go back to the original position while breathing in.",
+    "Repeat for the recommended amount of repetitions."
+  ],
+  "one-arm-dumbbell-row": [
+    "Choose a flat bench and place a dumbbell on each side of it.",
+    "Place the right leg on top of the end of the bench, bend your torso forward from the waist until your upper body is parallel to the floor, and place your right hand on the other end of the bench for support.",
+    "Use the left hand to pick up the dumbbell on the floor and hold the weight while keeping your lower back straight. The palm of the hand should be facing your torso. This will be your starting position.",
+    "Pull the resistance straight up to the side of your chest, keeping your upper arm close to your side and keeping the torso stationary. Breathe out as you perform this step. Tip: Concentrate on squeezing the back muscles once you reach the full contracted position. Also, make sure that the force is performed with the back muscles and not the arms. Finally, the upper torso should remain stationary and only the arms should move. The forearms should do no other work except for holding the dumbbell; therefore do not try to pull the dumbbell up using the forearms.",
+    "Lower the resistance straight down to the starting position. Breathe in as you perform this step.",
+    "Repeat the movement for the specified amount of repetitions.",
+    "Switch sides and repeat again with the other arm."
+  ],
+  "face-pull": [
+    "Facing a high pulley with a rope or dual handles attached, pull the weight directly towards your face, separating your hands as you do so. Keep your upper arms parallel to the ground."
+  ],
+  "overhead-press": [
+    "Start by placing a barbell that is about chest high on a squat rack. Once you have selected the weights, grab the barbell using a pronated (palms facing forward) grip. Make sure to grip the bar wider than shoulder width apart from each other.",
+    "Slightly bend the knees and place the barbell on your collar bone. Lift the barbell up keeping it lying on your chest. Take a step back and position your feet shoulder width apart from each other.",
+    "Once you pick up the barbell with the correct grip length, lift the bar up over your head by locking your arms. Hold at about shoulder level and slightly in front of your head. This is your starting position.",
+    "Lower the bar down to the collarbone slowly as you inhale.",
+    "Lift the bar back up to the starting position as you exhale.",
+    "Repeat for the recommended amount of repetitions."
+  ],
+  "dumbbell-shoulder-press": [
+    "While holding a dumbbell in each hand, sit on a military press bench or utility bench that has back support. Place the dumbbells upright on top of your thighs.",
+    "Now raise the dumbbells to shoulder height one at a time using your thighs to help propel them up into position.",
+    "Make sure to rotate your wrists so that the palms of your hands are facing forward. This is your starting position.",
+    "Now, exhale and push the dumbbells upward until they touch at the top.",
+    "Then, after a brief pause at the top contracted position, slowly lower the weights back down to the starting position while inhaling.",
+    "Repeat for the recommended amount of repetitions."
+  ],
+  "lateral-raise": [
+    "Pick a couple of dumbbells and stand with a straight torso and the dumbbells by your side at arms length with the palms of the hand facing you. This will be your starting position.",
+    "While maintaining the torso in a stationary position (no swinging), lift the dumbbells to your side with a slight bend on the elbow and the hands slightly tilted forward as if pouring water in a glass. Continue to go up until you arms are parallel to the floor. Exhale as you execute this movement and pause for a second at the top.",
+    "Lower the dumbbells back down slowly to the starting position as you inhale.",
+    "Repeat for the recommended amount of repetitions."
+  ],
+  "front-raise": [
+    "Pick a couple of dumbbells and stand with a straight torso and the dumbbells on front of your thighs at arms length with the palms of the hand facing your thighs. This will be your starting position.",
+    "While maintaining the torso stationary (no swinging), lift the left dumbbell to the front with a slight bend on the elbow and the palms of the hands always facing down. Continue to go up until you arm is slightly above parallel to the floor. Exhale as you execute this portion of the movement and pause for a second at the top. Inhale after the second pause.",
+    "Now lower the dumbbell back down slowly to the starting position as you simultaneously lift the right dumbbell.",
+    "Continue alternating in this fashion until all of the recommended amount of repetitions have been performed for each arm."
+  ],
+  "rear-delt-fly": [
+    "Adjust the pulleys to the appropriate height and adjust the weight. The pulleys should be above your head.",
+    "Grab the left pulley with your right hand and the right pulley with your left hand, crossing them in front of you. This will be your starting position.",
+    "Initiate the movement by moving your arms back and outward, keeping your arms straight as you execute the movement.",
+    "Pause at the end of the motion before returning the handles to the start position."
+  ],
+  "arnold-press": [
+    "Sit on an exercise bench with back support and hold two dumbbells in front of you at about upper chest level with your palms facing your body and your elbows bent. Tip: Your arms should be next to your torso. The starting position should look like the contracted portion of a dumbbell curl.",
+    "Now to perform the movement, raise the dumbbells as you rotate the palms of your hands until they are facing forward.",
+    "Continue lifting the dumbbells until your arms are extended above you in straight arm position. Breathe out as you perform this portion of the movement.",
+    "After a second pause at the top, begin to lower the dumbbells to the original position by rotating the palms of your hands towards you. Tip: The left arm will be rotated in a counter clockwise manner while the right one will be rotated clockwise. Breathe in as you perform this portion of the movement.",
+    "Repeat for the recommended amount of repetitions."
+  ],
+  "shrug": [
+    "Stand up straight with your feet at shoulder width as you hold a barbell with both hands in front of you using a pronated grip (palms facing the thighs). Tip: Your hands should be a little wider than shoulder width apart. You can use wrist wraps for this exercise for a better grip. This will be your starting position.",
+    "Raise your shoulders up as far as you can go as you breathe out and hold the contraction for a second. Tip: Refrain from trying to lift the barbell by using your biceps.",
+    "Slowly return to the starting position as you breathe in.",
+    "Repeat for the recommended amount of repetitions."
+  ],
+  "back-squat": [
+    "This exercise is best performed inside a squat rack for safety purposes. To begin, first set the bar on a rack just above shoulder level. Once the correct height is chosen and the bar is loaded, step under the bar and place the back of your shoulders (slightly below the neck) across it.",
+    "Hold on to the bar using both arms at each side and lift it off the rack by first pushing with your legs and at the same time straightening your torso.",
+    "Step away from the rack and position your legs using a shoulder-width medium stance with the toes slightly pointed out. Keep your head up at all times and maintain a straight back. This will be your starting position.",
+    "Begin to slowly lower the bar by bending the knees and sitting back with your hips as you maintain a straight posture with the head up. Continue down until your hamstrings are on your calves. Inhale as you perform this portion of the movement.",
+    "Begin to raise the bar as you exhale by pushing the floor with the heel or middle of your foot as you straighten the legs and extend the hips to go back to the starting position.",
+    "Repeat for the recommended amount of repetitions."
+  ],
+  "front-squat": [
+    "This exercise is best performed inside a squat rack for safety purposes. To begin, first set the bar on a rack that best matches your height. Once the correct height is chosen and the bar is loaded, bring your arms up under the bar while keeping the elbows high and the upper arm slightly above parallel to the floor. Rest the bar on top of the deltoids and cross your arms while grasping the bar for total control.",
+    "Lift the bar off the rack by first pushing with your legs and at the same time straightening your torso.",
+    "Step away from the rack and position your legs using a shoulder width medium stance with the toes slightly pointed out. Keep your head up at all times as looking down will get you off balance and also maintain a straight back. This will be your starting position. (Note: For the purposes of this discussion we will use the medium stance described above which targets overall development; however you can choose any of the three stances described in the foot positioning section).",
+    "Begin to slowly lower the bar by bending the knees as you maintain a straight posture with the head up. Continue down until the angle between the upper leg and the calves becomes slightly less than 90-degrees (which is the point in which the upper legs are below parallel to the floor). Inhale as you perform this portion of the movement. Tip: If you performed the exercise correctly, the front of the knees should make an imaginary straight line with the toes that is perpendicular to the front. If your knees are past that imaginary line (if they are past your toes) then you are placing undue stress on the knee and the exercise has been performed incorrectly.",
+    "Begin to raise the bar as you exhale by pushing the floor mainly with the middle of your foot as you straighten the legs again and go back to the starting position.",
+    "Repeat for the recommended amount of repetitions."
+  ],
+  "goblet-squat": [
+    "Stand holding a light kettlebell by the horns close to your chest. This will be your starting position.",
+    "Squat down between your legs until your hamstrings are on your calves. Keep your chest and head up and your back straight.",
+    "At the bottom position, pause and use your elbows to push your knees out. Return to the starting position, and repeat for 10-20 repetitions."
+  ],
+  "leg-press": [
+    "Using a leg press machine, sit down on the machine and place your legs on the platform directly in front of you at a medium (shoulder width) foot stance. (Note: For the purposes of this discussion we will use the medium stance described above which targets overall development; however you can choose any of the three stances described in the foot positioning section).",
+    "Lower the safety bars holding the weighted platform in place and press the platform all the way up until your legs are fully extended in front of you. Tip: Make sure that you do not lock your knees. Your torso and the legs should make a perfect 90-degree angle. This will be your starting position.",
+    "As you inhale, slowly lower the platform until your upper and lower legs make a 90-degree angle.",
+    "Pushing mainly with the heels of your feet and using the quadriceps go back to the starting position as you exhale.",
+    "Repeat for the recommended amount of repetitions and ensure to lock the safety pins properly once you are done. You do not want that platform falling on you fully loaded."
+  ],
+  "lunge": [
+    "Stand with your torso upright holding two dumbbells in your hands by your sides. This will be your starting position.",
+    "Step forward with your right leg around 2 feet or so from the foot being left stationary behind and lower your upper body down, while keeping the torso upright and maintaining balance. Inhale as you go down. Note: As in the other exercises, do not allow your knee to go forward beyond your toes as you come down, as this will put undue stress on the knee joint. Make sure that you keep your front shin perpendicular to the ground.",
+    "Using mainly the heel of your foot, push up and go back to the starting position as you exhale.",
+    "Repeat the movement for the recommended amount of repetitions and then perform with the left leg."
+  ],
+  "bulgarian-split-squat": [
+    "Position yourself into a staggered stance with the rear foot elevated and front foot forward.",
+    "Hold a dumbbell in each hand, letting them hang at the sides. This will be your starting position.",
+    "Begin by descending, flexing your knee and hip to lower your body down. Maintain good posture througout the movement. Keep the front knee in line with the foot as you perform the exercise.",
+    "At the bottom of the movement, drive through the heel to extend the knee and hip to return to the starting position."
+  ],
+  "leg-extension": [
+    "For this exercise you will need to use a leg extension machine. First choose your weight and sit on the machine with your legs under the pad (feet pointed forward) and the hands holding the side bars. This will be your starting position. Tip: You will need to adjust the pad so that it falls on top of your lower leg (just above your feet). Also, make sure that your legs form a 90-degree angle between the lower and upper leg. If the angle is less than 90-degrees then that means the knee is over the toes which in turn creates undue stress at the knee joint. If the machine is designed that way, either look for another machine or just make sure that when you start executing the exercise you stop going down once you hit the 90-degree angle.",
+    "Using your quadriceps, extend your legs to the maximum as you exhale. Ensure that the rest of the body remains stationary on the seat. Pause a second on the contracted position.",
+    "Slowly lower the weight back to the original position as you inhale, ensuring that you do not go past the 90-degree angle limit.",
+    "Repeat for the recommended amount of times."
+  ],
+  "leg-curl": [
+    "Adjust the machine lever to fit your height and lie face down on the leg curl machine with the pad of the lever on the back of your legs (just a few inches under the calves). Tip: Preferably use a leg curl machine that is angled as opposed to flat since an angled position is more favorable for hamstrings recruitment.",
+    "Keeping the torso flat on the bench, ensure your legs are fully stretched and grab the side handles of the machine. Position your toes straight (or you can also use any of the other two stances described on the foot positioning section). This will be your starting position.",
+    "As you exhale, curl your legs up as far as possible without lifting the upper legs from the pad. Once you hit the fully contracted position, hold it for a second.",
+    "As you inhale, bring the legs back to the initial position. Repeat for the recommended amount of repetitions."
+  ],
+  "calf-raise": [
+    "Adjust the padded lever of the calf raise machine to fit your height.",
+    "Place your shoulders under the pads provided and position your toes facing forward (or using any of the two other positions described at the beginning of the chapter). The balls of your feet should be secured on top of the calf block with the heels extending off it. Push the lever up by extending your hips and knees until your torso is standing erect. The knees should be kept with a slight bend; never locked. Toes should be facing forward, outwards or inwards as described at the beginning of the chapter. This will be your starting position.",
+    "Raise your heels as you breathe out by extending your ankles as high as possible and flexing your calf. Ensure that the knee is kept stationary at all times. There should be no bending at any time. Hold the contracted position by a second before you start to go back down.",
+    "Go back slowly to the starting position as you breathe in by lowering your heels as you bend the ankles until calves are stretched.",
+    "Repeat for the recommended amount of repetitions."
+  ],
+  "hip-thrust": [
+    "Begin seated on the ground with a bench directly behind you. Have a loaded barbell over your legs. Using a fat bar or having a pad on the bar can greatly reduce the discomfort caused by this exercise.",
+    "Roll the bar so that it is directly above your hips, and lean back against the bench so that your shoulder blades are near the top of it.",
+    "Begin the movement by driving through your feet, extending your hips vertically through the bar. Your weight should be supported by your shoulder blades and your feet. Extend as far as possible, then reverse the motion to return to the starting position."
+  ],
+  "barbell-curl": [
+    "Stand up with your torso upright while holding a barbell at a shoulder-width grip. The palm of your hands should be facing forward and the elbows should be close to the torso. This will be your starting position.",
+    "While holding the upper arms stationary, curl the weights forward while contracting the biceps as you breathe out. Tip: Only the forearms should move.",
+    "Continue the movement until your biceps are fully contracted and the bar is at shoulder level. Hold the contracted position for a second and squeeze the biceps hard.",
+    "Slowly begin to bring the bar back to starting position as your breathe in.",
+    "Repeat for the recommended amount of repetitions."
+  ],
+  "dumbbell-curl": [
+    "Stand up straight with a dumbbell in each hand at arm's length. Keep your elbows close to your torso and rotate the palms of your hands until they are facing forward. This will be your starting position.",
+    "Now, keeping the upper arms stationary, exhale and curl the weights while contracting your biceps. Continue to raise the weights until your biceps are fully contracted and the dumbbells are at shoulder level. Hold the contracted position for a brief pause as you squeeze your biceps.",
+    "Then, inhale and slowly begin to lower the dumbbells back to the starting position.",
+    "Repeat for the recommended amount of repetitions."
+  ],
+  "hammer-curl": [
+    "Stand up with your torso upright and a dumbbell on each hand being held at arms length. The elbows should be close to the torso.",
+    "The palms of the hands should be facing your torso. This will be your starting position.",
+    "Now, while holding your upper arm stationary, exhale and curl the weight forward while contracting the biceps. Continue to raise the weight until the biceps are fully contracted and the dumbbell is at shoulder level. Hold the contracted position for a brief moment as you squeeze the biceps. Tip: Focus on keeping the elbow stationary and only moving your forearm.",
+    "After the brief pause, inhale and slowly begin the lower the dumbbells back down to the starting position.",
+    "Repeat for the recommended amount of repetitions."
+  ],
+  "preacher-curl": [
+    "To perform this movement you will need a preacher bench and an E-Z bar. Grab the E-Z curl bar at the close inner handle (either have someone hand you the bar which is preferable or grab the bar from the front bar rest provided by most preacher benches). The palm of your hands should be facing forward and they should be slightly tilted inwards due to the shape of the bar.",
+    "With the upper arms positioned against the preacher bench pad and the chest against it, hold the E-Z Curl Bar at shoulder length. This will be your starting position.",
+    "As you breathe in, slowly lower the bar until your upper arm is extended and the biceps is fully stretched.",
+    "As you exhale, use the biceps to curl the weight up until your biceps is fully contracted and the bar is at shoulder height. Squeeze the biceps hard and hold this position for a second.",
+    "Repeat for the recommended amount of repetitions."
+  ],
+  "triceps-pushdown": [
+    "Attach a straight or angled bar to a high pulley and grab with an overhand grip (palms facing down) at shoulder width.",
+    "Standing upright with the torso straight and a very small inclination forward, bring the upper arms close to your body and perpendicular to the floor. The forearms should be pointing up towards the pulley as they hold the bar. This is your starting position.",
+    "Using the triceps, bring the bar down until it touches the front of your thighs and the arms are fully extended perpendicular to the floor. The upper arms should always remain stationary next to your torso and only the forearms should move. Exhale as you perform this movement.",
+    "After a second hold at the contracted position, bring the bar slowly up to the starting point. Breathe in as you perform this step.",
+    "Repeat for the recommended amount of repetitions."
+  ],
+  "skullcrusher": [
+    "Using a close grip, lift the EZ bar and hold it with your elbows in as you lie on the bench. Your arms should be perpendicular to the floor. This will be your starting position.",
+    "Keeping the upper arms stationary, lower the bar by allowing the elbows to flex. Inhale as you perform this portion of the movement. Pause once the bar is directly above the forehead.",
+    "Lift the bar back to the starting position by extending the elbow and exhaling.",
+    "Repeat."
+  ],
+  "overhead-triceps-extension": [
+    "Attach a rope to the bottom pulley of the pulley machine.",
+    "Grasping the rope with both hands, extend your arms with your hands directly above your head using a neutral grip (palms facing each other). Your elbows should be in close to your head and the arms should be perpendicular to the floor with the knuckles aimed at the ceiling. This will be your starting position.",
+    "Slowly lower the rope behind your head as you hold the upper arms stationary. Inhale as you perform this movement and pause when your triceps are fully stretched.",
+    "Return to the starting position by flexing your triceps as you breathe out.",
+    "Repeat for the recommended amount of repetitions."
+  ],
+  "close-grip-bench-press": [
+    "Lie back on a flat bench. Using a close grip (around shoulder width), lift the bar from the rack and hold it straight over you with your arms locked. This will be your starting position.",
+    "As you breathe in, come down slowly until you feel the bar on your middle chest. Tip: Make sure that - as opposed to a regular bench press - you keep the elbows close to the torso at all times in order to maximize triceps involvement.",
+    "After a second pause, bring the bar back to the starting position as you breathe out and push the bar using your triceps muscles. Lock your arms in the contracted position, hold for a second and then start coming down slowly again. Tip: It should take at least twice as long to go down than to come up.",
+    "Repeat the movement for the prescribed amount of repetitions.",
+    "When you are done, place the bar back in the rack."
+  ],
+  "plank": [
+    "Get into a prone position on the floor, supporting your weight on your toes and your forearms. Your arms are bent and directly below the shoulder.",
+    "Keep your body straight at all times, and hold this position as long as possible. To increase difficulty, an arm or leg can be raised."
+  ],
+  "crunch": [
+    "Lie flat on your back with your feet flat on the ground, or resting on a bench with your knees bent at a 90 degree angle. If you are resting your feet on a bench, place them three to four inches apart and point your toes inward so they touch.",
+    "Now place your hands lightly on either side of your head keeping your elbows in. Tip: Don't lock your fingers behind your head.",
+    "While pushing the small of your back down in the floor to better isolate your abdominal muscles, begin to roll your shoulders off the floor.",
+    "Continue to push down as hard as you can with your lower back as you contract your abdominals and exhale. Your shoulders should come up off the floor only about four inches, and your lower back should remain on the floor. At the top of the movement, contract your abdominals hard and keep the contraction for a second. Tip: Focus on slow, controlled movement - don't cheat yourself by using momentum.",
+    "After the one second contraction, begin to come down slowly again to the starting position as you inhale.",
+    "Repeat for the recommended amount of repetitions."
+  ],
+  "sit-up": [
+    "Lie down on the floor placing your feet either under something that will not move or by having a partner hold them. Your legs should be bent at the knees.",
+    "Place your hands behind your head and lock them together by clasping your fingers. This is the starting position.",
+    "Elevate your upper body so that it creates an imaginary V-shape with your thighs. Breathe out when performing this part of the exercise.",
+    "Once you feel the contraction for a second, lower your upper body back down to the starting position while inhaling.",
+    "Repeat for the recommended amount of repetitions."
+  ],
+  "hanging-leg-raise": [
+    "Hang from a chin-up bar with both arms extended at arms length in top of you using either a wide grip or a medium grip. The legs should be straight down with the pelvis rolled slightly backwards. This will be your starting position.",
+    "Raise your legs until the torso makes a 90-degree angle with the legs. Exhale as you perform this movement and hold the contraction for a second or so.",
+    "Go back slowly to the starting position as you breathe in.",
+    "Repeat for the recommended amount of repetitions."
+  ],
+  "russian-twist": [
+    "Lie down on the floor placing your feet either under something that will not move or by having a partner hold them. Your legs should be bent at the knees.",
+    "Elevate your upper body so that it creates an imaginary V-shape with your thighs. Your arms should be fully extended in front of you perpendicular to your torso and with the hands clasped. This is the starting position.",
+    "Twist your torso to the right side until your arms are parallel with the floor while breathing out.",
+    "Hold the contraction for a second and move back to the starting position while breathing out. Now move to the opposite side performing the same techniques you applied to the right side.",
+    "Repeat for the recommended amount of repetitions."
+  ],
+  "cable-crunch": [
+    "Kneel below a high pulley that contains a rope attachment.",
+    "Grasp cable rope attachment and lower the rope until your hands are placed next to your face.",
+    "Flex your hips slightly and allow the weight to hyperextend the lower back. This will be your starting position.",
+    "With the hips stationary, flex the waist as you contract the abs so that the elbows travel towards the middle of the thighs. Exhale as you perform this portion of the movement and hold the contraction for a second.",
+    "Slowly return to the starting position as you inhale. Tip: Make sure that you keep constant tension on the abs throughout the movement. Also, do not choose a weight so heavy that the lower back handles the brunt of the work.",
+    "Repeat for the recommended amount of repetitions."
+  ],
+  "mountain-climber": [
+    "Begin in a pushup position, with your weight supported by your hands and toes. Flexing the knee and hip, bring one leg until the knee is approximately under the hip. This will be your starting position.",
+    "Explosively reverse the positions of your legs, extending the bent leg until the leg is straight and supported by the toe, and bringing the other foot up with the hip and knee flexed. Repeat in an alternating fashion for 20-30 seconds."
+  ],
+  "burpee": [
+    "Stand with your feet shoulder-width apart and your arms at your sides.",
+    "Drop into a squat and place your hands on the floor in front of you.",
+    "Kick your feet back into a push-up position, then lower your chest to the floor.",
+    "Press up and jump your feet back to your hands, then explode upward into a jump with your arms overhead.",
+    "Land softly and immediately begin the next rep."
+  ],
+  "kettlebell-swing": [
+    "Stand with feet slightly wider than shoulder-width, a kettlebell on the floor about a foot in front of you.",
+    "Hinge at the hips, push your butt back, and grab the handle with both hands, keeping your back flat.",
+    "Hike the bell back between your legs, then snap your hips forward to swing it up to chest height. Let your hips, not your arms, drive the movement.",
+    "Let the bell fall back down, absorbing it with another hip hinge, and flow straight into the next rep."
+  ],
+  "jumping-jack": [
+    "Begin in a relaxed stance with your feet shoulder width apart and hold your arms close to the body.",
+    "To initiate the move, squat down halfway and explode back up as high as possible. Fully extend your entire body, spreading your legs and arms away from the body.",
+    "As you land, bring your limbs back in and absorb your impact through the legs."
+  ],
+  "box-jump": [
+    "Begin with a box of an appropriate height 1-2 feet in front of you. Stand with your feet should width apart. This will be your starting position.",
+    "Perform a short squat in preparation for jumping, swinging your arms behind you.",
+    "Rebound out of this position, extending through the hips, knees, and ankles to jump as high as possible. Swing your arms forward and up.",
+    "Land on the box with the knees bent, absorbing the impact through the legs. You can jump from the box back to the ground, or preferably step down one leg at a time."
+  ],
+  "soccer": [
+    "Log the minutes you spent playing and add any notes about the session.",
+    "Warm up with light jogging and dynamic stretches before intense play.",
+    "Stay hydrated and listen to your body during and after the match."
+  ],
+  "dumbbell-pullover": [
+    "Place a dumbbell standing up on a flat bench.",
+    "Ensuring that the dumbbell stays securely placed at the top of the bench, lie perpendicular to the bench (torso across it as in forming a cross) with only your shoulders lying on the surface. Hips should be below the bench and legs bent with feet firmly on the floor. The head will be off the bench as well.",
+    "Grasp the dumbbell with both hands and hold it straight over your chest with a bend in your arms. Both palms should be pressing against the underside one of the sides of the dumbbell. This will be your starting position. Caution: Always ensure that the dumbbell used for this exercise is secure. Using a dumbbell with loose plates can result in the dumbbell falling apart and falling on your face.",
+    "While keeping your arms locked in the bent arm position, lower the weight slowly in an arc behind your head while breathing in until you feel a stretch on the chest.",
+    "At that point, bring the dumbbell back to the starting position using the arc through which the weight was lowered and exhale as you perform this movement.",
+    "Hold the weight on the initial position for a second and repeat the motion for the prescribed number of repetitions."
+  ],
+  "machine-chest-press": [
+    "Sit down on the Chest Press Machine and select the weight.",
+    "Step on the lever provided by the machine since it will help you to bring the handles forward so that you can grab the handles and fully extend the arms.",
+    "Grab the handles with a palms-down grip and lift your elbows so that your upper arms are parallel to the floor to the sides of your torso. Tip: Your forearms will be pointing forward since you are grabbing the handles. Once you bring the handles forward and extend the arms you will be at the starting position.",
+    "Now bring the handles back towards you as you breathe in.",
+    "Push the handles away from you as you flex your pecs and you breathe out. Hold the contraction for a second before going back to the starting position.",
+    "Repeat for the recommended amount of reps.",
+    "When finished step on the lever again and slowly get the handles back to their original place."
+  ],
+  "pec-deck-fly": [
+    "Sit on the machine with your back flat on the pad.",
+    "Take hold of the handles. Tip: Your upper arms should be positioned parallel to the floor; adjust the machine accordingly. This will be your starting position.",
+    "Push the handles together slowly as you squeeze your chest in the middle. Breathe out during this part of the motion and hold the contraction for a second.",
+    "Return back to the starting position slowly as you inhale until your chest muscles are fully stretched.",
+    "Repeat for the recommended amount of repetitions."
+  ],
+  "incline-dumbbell-press": [
+    "Lie back on an incline bench with a dumbbell in each hand atop your thighs. The palms of your hands will be facing each other.",
+    "Then, using your thighs to help push the dumbbells up, lift the dumbbells one at a time so that you can hold them at shoulder width.",
+    "Once you have the dumbbells raised to shoulder width, rotate your wrists forward so that the palms of your hands are facing away from you. This will be your starting position.",
+    "Be sure to keep full control of the dumbbells at all times. Then breathe out and push the dumbbells up with your chest.",
+    "Lock your arms at the top, hold for a second, and then start slowly lowering the weight. Tip Ideally, lowering the weights should take about twice as long as raising them.",
+    "Repeat the movement for the prescribed amount of repetitions.",
+    "When you are done, place the dumbbells back on your thighs and then on the floor. This is the safest manner to release the dumbbells."
+  ],
+  "decline-bench-press": [
+    "Secure your legs at the end of the decline bench and slowly lay down on the bench.",
+    "Using a medium width grip (a grip that creates a 90-degree angle in the middle of the movement between the forearms and the upper arms), lift the bar from the rack and hold it straight over you with your arms locked. The arms should be perpendicular to the floor. This will be your starting position. Tip: In order to protect your rotator cuff, it is best if you have a spotter help you lift the barbell off the rack.",
+    "As you breathe in, come down slowly until you feel the bar on your lower chest.",
+    "After a second pause, bring the bar back to the starting position as you breathe out and push the bar using your chest muscles. Lock your arms and squeeze your chest in the contracted position, hold for a second and then start coming down slowly again. Tip: It should take at least twice as long to go down than to come up).",
+    "Repeat the movement for the prescribed amount of repetitions.",
+    "When you are done, place the bar back in the rack."
+  ],
+  "incline-dumbbell-fly": [
+    "Hold a dumbbell on each hand and lie on an incline bench that is set to an incline angle of no more than 30 degrees.",
+    "Extend your arms above you with a slight bend at the elbows.",
+    "Now rotate the wrists so that the palms of your hands are facing you. Tip: The pinky fingers should be next to each other. This will be your starting position.",
+    "As you breathe in, start to slowly lower the arms to the side while keeping the arms extended and while rotating the wrists until the palms of the hand are facing each other. Tip: At the end of the movement the arms will be by your side with the palms facing the ceiling.",
+    "As you exhale start to bring the dumbbells back up to the starting position by reversing the motion and rotating the hands so that the pinky fingers are next to each other again. Tip: Keep in mind that the movement will only happen at the shoulder joint and at the wrist. There is no motion that happens at the elbow joint.",
+    "Repeat for the recommended amount of repetitions."
+  ],
+  "diamond-push-up": [
+    "Lie on the floor face down and place your hands closer than shoulder width for a close hand position. Make sure that you are holding your torso up at arms' length.",
+    "Lower yourself until your chest almost touches the floor as you inhale.",
+    "Using your triceps and some of your pectoral muscles, press your upper body back up to the starting position and squeeze your chest. Breathe out as you perform this step.",
+    "After a second pause at the contracted position, repeat the movement for the prescribed amount of repetitions."
+  ],
+  "inverted-row": [
+    "Position a bar in a rack to about waist height. You can also use a smith machine.",
+    "Take a wider than shoulder width grip on the bar and position yourself hanging underneath the bar. Your body should be straight with your heels on the ground with your arms fully extended. This will be your starting position.",
+    "Begin by flexing the elbow, pulling your chest towards the bar. Retract your shoulder blades as you perform the movement.",
+    "Pause at the top of the motion, and return yourself to the start position.",
+    "Repeat for the desired number of repetitions."
+  ],
+  "decline-dumbbell-press": [
+    "Secure your legs at the end of the decline bench and lie down with a dumbbell on each hand on top of your thighs. The palms of your hand will be facing each other.",
+    "Once you are laying down, move the dumbbells in front of you at shoulder width.",
+    "Once at shoulder width, rotate your wrists forward so that the palms of your hands are facing away from you. This will be your starting position.",
+    "Bring down the weights slowly to your side as you breathe out. Keep full control of the dumbbells at all times. Tip: Throughout the motion, the forearms should always be perpendicular to the floor.",
+    "As you breathe out, push the dumbbells up using your pectoral muscles. Lock your arms in the contracted position, squeeze your chest, hold for a second and then start coming down slowly. Tip: It should take at least twice as long to go down than to come up..",
+    "Repeat the movement for the prescribed amount of repetitions of your training program."
+  ],
+  "t-bar-row": [
+    "Position a bar into a landmine or in a corner to keep it from moving. Load an appropriate weight onto your end.",
+    "Stand over the bar, and position a Double D row handle around the bar next to the collar. Using your hips and legs, rise to a standing position.",
+    "Assume a wide stance with your hips back and your chest up. Your arms should be extended. This will be your starting position.",
+    "Pull the weight to your upper abdomen by retracting the shoulder blades and flexing the elbows. Do not jerk the weight or cheat during the movement.",
+    "After a brief pause, return to the starting position."
+  ],
+  "good-morning": [
+    "This exercise is best performed inside a squat rack for safety purposes. To begin, first set the bar on a rack that best matches your height. Once the correct height is chosen and the bar is loaded, step under the bar and place the back of your shoulders (slightly below the neck) across it.",
+    "Hold on to the bar using both arms at each side and lift it off the rack by first pushing with your legs and at the same time straightening your torso.",
+    "Step away from the rack and position your legs using a shoulder width medium stance. Keep your head up at all times as looking down will get you off balance and also maintain a straight back. This will be your starting position.",
+    "Keeping your legs stationary, move your torso forward by bending at the hips while inhaling. Lower your torso until it is parallel with the floor.",
+    "Begin to raise the bar as you exhale by elevating your torso back to the starting position.",
+    "Repeat for the recommended amount of repetitions."
+  ],
+  "rack-pull": [
+    "Set up in a power rack with the bar on the pins. The pins should be set to the desired point; just below the knees, just above, or in the mid thigh position. Position yourself against the bar in proper deadlifting position. Your feet should be under your hips, your grip shoulder width, back arched, and hips back to engage the hamstrings. Since the weight is typically heavy, you may use a mixed grip, a hook grip, or use straps to aid in holding the weight.",
+    "With your head looking forward, extend through the hips and knees, pulling the weight up and back until lockout. Be sure to pull your shoulders back as you complete the movement.",
+    "Return the weight to the pins and repeat."
+  ],
+  "straight-arm-pulldown": [
+    "You will start by grabbing the wide bar from the top pulley of a pulldown machine and using a wider than shoulder-width pronated (palms down) grip. Step backwards two feet or so.",
+    "Bend your torso forward at the waist by around 30-degrees with your arms fully extended in front of you and a slight bend at the elbows. If your arms are not fully extended then you need to step a bit more backwards until they are. Once your arms are fully extended and your torso is slightly bent at the waist, tighten the lats and then you are ready to begin.",
+    "While keeping the arms straight, pull the bar down by contracting the lats until your hands are next to the side of the thighs. Breathe out as you perform this step.",
+    "While keeping the arms straight, go back to the starting position while breathing in.",
+    "Repeat for the recommended amount of repetitions."
+  ],
+  "back-extension": [
+    "Lie face down on a hyperextension bench, tucking your ankles securely under the footpads.",
+    "Adjust the upper pad if possible so your upper thighs lie flat across the wide pad, leaving enough room for you to bend at the waist without any restriction.",
+    "With your body straight, cross your arms in front of you (my preference) or behind your head. This will be your starting position. Tip: You can also hold a weight plate for extra resistance in front of you under your crossed arms.",
+    "Start bending forward slowly at the waist as far as you can while keeping your back flat. Inhale as you perform this movement. Keep moving forward until you feel a nice stretch on the hamstrings and you can no longer keep going without a rounding of the back. Tip: Never round the back as you perform this exercise. Also, some people can go farther than others. The key thing is that you go as far as your body allows you to without rounding the back.",
+    "Slowly raise your torso back to the initial position as you inhale. Tip: Avoid the temptation to arch your back past a straight line. Also, do not swing the torso at any time in order to protect the back from injury.",
+    "Repeat for the recommended amount of repetitions."
+  ],
+  "dumbbell-shrug": [
+    "Stand erect with a dumbbell on each hand (palms facing your torso), arms extended on the sides.",
+    "Lift the dumbbells by elevating the shoulders as high as possible while you exhale. Hold the contraction at the top for a second. Tip: The arms should remain extended at all times. Refrain from using the biceps to help lift the dumbbells. Only the shoulders should be moving up and down.",
+    "Lower the dumbbells back to the original position.",
+    "Repeat for the recommended amount of repetitions."
+  ],
+  "cable-pulldown-underhand": [
+    "Sit down on a pull-down machine with a wide bar attached to the top pulley. Adjust the knee pad of the machine to fit your height. These pads will prevent your body from being raised by the resistance attached to the bar.",
+    "Grab the pull-down bar with the palms facing your torso (a supinated grip). Make sure that the hands are placed closer than the shoulder width.",
+    "As you have both arms extended in front of you holding the bar at the chosen grip width, bring your torso back around 30 degrees or so while creating a curvature on your lower back and sticking your chest out. This is your starting position.",
+    "As you breathe out, pull the bar down until it touches your upper chest by drawing the shoulders and the upper arms down and back. Tip: Concentrate on squeezing the back muscles once you reach the fully contracted position and keep the elbows close to your body. The upper torso should remain stationary as your bring the bar to you and only the arms should move. The forearms should do no other work other than hold the bar.",
+    "After a second on the contracted position, while breathing in, slowly bring the bar back to the starting position when your arms are fully extended and the lats are fully stretched.",
+    "Repeat this motion for the prescribed amount of repetitions."
+  ],
+  "wide-grip-pull-up": [
+    "Grab the pull-up bar with the palms facing forward using a wide grip.",
+    "As you have both arms extended in front of you holding the bar, bring your torso forward and head so that there is an imaginary line from the pull-up bar to the back of your neck. This is your starting position.",
+    "Pull your torso up until the bar is near the back of your neck. To do this, draw the shoulders and upper arms down and back while slightly leaning your head forward. Exhale as you perform this portion of the movement. Tip: Concentrate on squeezing the back muscles once you reach the full contracted position. The upper torso should remain stationary as it moves through space and only the arms should move. The forearms should do no other work other than hold the bar.",
+    "After a second on the contracted position, start to inhale and slowly lower your torso back to the starting position when your arms are fully extended and the lats are fully stretched.",
+    "Repeat this motion for the prescribed amount of repetitions."
+  ],
+  "upright-row": [
+    "Grasp a barbell with an overhand grip that is slightly less than shoulder width. The bar should be resting on the top of your thighs with your arms extended and a slight bend in your elbows. Your back should also be straight. This will be your starting position.",
+    "Now exhale and use the sides of your shoulders to lift the bar, raising your elbows up and to the side. Keep the bar close to your body as you raise it. Continue to lift the bar until it nearly touches your chin. Tip: Your elbows should drive the motion, and should always be higher than your forearms. Remember to keep your torso stationary and pause for a second at the top of the movement.",
+    "Lower the bar back down slowly to the starting position. Inhale as you perform this portion of the movement.",
+    "Repeat for the recommended amount of repetitions."
+  ],
+  "cable-lateral-raise": [
+    "Stand in the middle of two low pulleys that are opposite to each other and place a flat bench right behind you (in perpendicular fashion to you; the narrow edge of the bench should be the one behind you). Select the weight to be used on each pulley.",
+    "Now sit at the edge of the flat bench behind you with your feet placed in front of your knees.",
+    "Bend forward while keeping your back flat and rest your torso on the thighs.",
+    "Have someone give you the single handles attached to the pulleys. Grasp the left pulley with the right hand and the right pulley with the left after you select your weight. The pulleys should run under your knees and your arms will be extended with palms facing each other and a slight bend at the elbows. This will be the starting position.",
+    "While keeping the arms stationary, raise the upper arms to the sides until they are parallel to the floor and at shoulder height. Exhale during the execution of this movement and hold the contraction for a second.",
+    "Slowly lower your arms to the starting position as you inhale.",
+    "Repeat for the recommended amount of repetitions. Tip: Maintain upper arms perpendicular to torso and a fixed elbow position (10 degree to 30 degree angle) throughout exercise."
+  ],
+  "reverse-dumbbell-fly": [
+    "To begin, lie down on an incline bench with the chest and stomach pressing against the incline. Have the dumbbells in each hand with the palms facing each other (neutral grip).",
+    "Extend the arms in front of you so that they are perpendicular to the angle of the bench. The legs should be stationary while applying pressure with the ball of your toes. This is the starting position.",
+    "Maintaining the slight bend of the elbows, move the weights out and away from each other (to the side) in an arc motion while exhaling. Tip: Try to squeeze your shoulder blades together to get the best results from this exercise.",
+    "The arms should be elevated until they are parallel to the floor.",
+    "Feel the contraction and slowly lower the weights back down to the starting position while inhaling.",
+    "Repeat for the recommended amount of repetitions."
+  ],
+  "seated-dumbbell-press": [
+    "Grab a couple of dumbbells and sit on a military press bench or a utility bench that has a back support on it as you place the dumbbells upright on top of your thighs.",
+    "Clean the dumbbells up one at a time by using your thighs to bring the dumbbells up to shoulder height at each side.",
+    "Rotate the wrists so that the palms of your hands are facing forward. This is your starting position.",
+    "As you exhale, push the dumbbells up until they touch at the top.",
+    "After a second pause, slowly come down back to the starting position as you inhale.",
+    "Repeat for the recommended amount of repetitions."
+  ],
+  "reverse-pec-deck": [
+    "Adjust the handles so that they are fully to the rear. Make an appropriate weight selection and adjust the seat height so the handles are at shoulder level. Grasp the handles with your hands facing inwards. This will be your starting position.",
+    "In a semicircular motion, pull your hands out to your side and back, contracting your rear delts.",
+    "Keep your arms slightly bent throughout the movement, with all of the motion occurring at the shoulder joint.",
+    "Pause at the rear of the movement, and slowly return the weight to the starting position."
+  ],
+  "external-rotation": [
+    "Lie sideways on a flat bench with one arm holding a dumbbell and the other hand on top of the bench folded so that you can rest your head on it.",
+    "Bend the elbows of the arm holding the dumbbell so that it creates a 90-degree angle between the upper arm and the forearm. Tip: Keep the arm parallel to your torso.",
+    "Now bend the elbow while keeping the upper arm stationary. In this manner, the forearm will be parallel to the floor and perpendicular to your torso (Tip: So the forearm will be directly in front of you). The upper arm will be stationary by your torso and should be parallel to the floor (aligned with your torso at all times). This will be your starting position.",
+    "As you breathe out, externally rotate your forearm so that the dumbbell is lifted up in a semicircle motion as you maintain the 90 degree angle bend between the upper arms and the forearm. You will continue this external rotation until the forearm is perpendicular to the floor and the torso pointing towards the ceiling. At this point you will hold the contraction for a second.",
+    "As you breathe in, slowly go back to the starting position.",
+    "Repeat for the recommended amount of repetitions and then switch to the other arm."
+  ],
+  "push-press": [
+    "Standing with the weight racked on the back of the shoulders, begin with the dip. With your feet directly under your hips, flex the knees without moving the hips backward. Go down only slightly, and reverse direction as powerfully as possible. Drive through the heels create as much speed and force as possible, moving the bar in a vertical path.",
+    "Using the momentum generated, finish pressing the weight overhead be extending through the arms.",
+    "Return to the starting position, using your legs to absorb the impact."
+  ],
+  "hack-squat": [
+    "Place the back of your torso against the back pad of the machine and hook your shoulders under the shoulder pads provided.",
+    "Position your legs in the platform using a shoulder width medium stance with the toes slightly pointed out. Tip: Keep your head up at all times and also maintain the back on the pad at all times.",
+    "Place your arms on the side handles of the machine and disengage the safety bars (which on most designs is done by moving the side handles from a facing front position to a diagonal position).",
+    "Now straighten your legs without locking the knees. This will be your starting position. (Note: For the purposes of this discussion we will use the medium stance described above which targets overall development; however you can choose any of the three stances described in the foot positioning section).",
+    "Begin to slowly lower the unit by bending the knees as you maintain a straight posture with the head up (back on the pad at all times). Continue down until the angle between the upper leg and the calves becomes slightly less than 90-degrees (which is the point in which the upper legs are below parallel to the floor). Inhale as you perform this portion of the movement. Tip: If you performed the exercise correctly, the front of the knees should make an imaginary straight line with the toes that is perpendicular to the front. If your knees are past that imaginary line (if they are past your toes) then you are placing undue stress on the knee and the exercise has been performed incorrectly.",
+    "Begin to raise the unit as you exhale by pushing the floor with mainly with the heel of your foot as you straighten the legs again and go back to the starting position.",
+    "Repeat for the recommended amount of repetitions."
+  ],
+  "barbell-lunge": [
+    "This exercise is best performed inside a squat rack for safety purposes. To begin, first set the bar on a rack just below shoulder level. Once the correct height is chosen and the bar is loaded, step under the bar and place the back of your shoulders (slightly below the neck) across it.",
+    "Hold on to the bar using both arms at each side and lift it off the rack by first pushing with your legs and at the same time straightening your torso.",
+    "Step away from the rack and step forward with your right leg and squat down through your hips, while keeping the torso upright and maintaining balance. Inhale as you go down. Note: Do not allow your knee to go forward beyond your toes as you come down, as this will put undue stress on the knee joint. li>",
+    "Using mainly the heel of your foot, push up and go back to the starting position as you exhale.",
+    "Repeat the movement for the recommended amount of repetitions and then perform with the left leg."
+  ],
+  "walking-lunge": [
+    "Begin standing with your feet shoulder width apart and a barbell across your upper back.",
+    "Step forward with one leg, flexing the knees to drop your hips. Descend until your rear knee nearly touches the ground. Your posture should remain upright, and your front knee should stay above the front foot.",
+    "Drive through the heel of your lead foot and extend both knees to raise yourself back up.",
+    "Step forward with your rear foot, repeating the lunge on the opposite leg."
+  ],
+  "dumbbell-step-up": [
+    "Stand up straight while holding a dumbbell on each hand (palms facing the side of your legs).",
+    "Place the right foot on the elevated platform. Step on the platform by extending the hip and the knee of your right leg. Use the heel mainly to lift the rest of your body up and place the foot of the left leg on the platform as well. Breathe out as you execute the force required to come up.",
+    "Step down with the left leg by flexing the hip and knee of the right leg as you inhale. Return to the original standing position by placing the right foot of to next to the left foot on the initial position.",
+    "Repeat with the right leg for the recommended amount of repetitions and then perform with the left leg."
+  ],
+  "sumo-deadlift": [
+    "Begin with a bar loaded on the ground. Approach the bar so that the bar intersects the middle of the feet. The feet should be set very wide, near the collars. Bend at the hips to grip the bar. The arms should be directly below the shoulders, inside the legs, and you can use a pronated grip, a mixed grip, or hook grip. Relax the shoulders, which in effect lengthens your arms.",
+    "Take a breath, and then lower your hips, looking forward with your head with your chest up. Drive through the floor, spreading your feet apart, with your weight on the back half of your feet. Extend through the hips and knees.",
+    "As the bar passes through the knees, lean back and drive the hips into the bar, pulling your shoulder blades together.",
+    "Return the weight to the ground by bending at the hips and controlling the weight on the way down."
+  ],
+  "glute-bridge": [
+    "Begin seated on the ground with a loaded barbell over your legs. Using a fat bar or having a pad on the bar can greatly reduce the discomfort caused by this exercise. Roll the bar so that it is directly above your hips, and lay down flat on the floor.",
+    "Begin the movement by driving through with your heels, extending your hips vertically through the bar. Your weight should be supported by your upper back and the heels of your feet.",
+    "Extend as far as possible, then reverse the motion to return to the starting position."
+  ],
+  "cable-pull-through": [
+    "Begin standing a few feet in front of a low pulley with a rope or handle attached. Face away from the machine, straddling the cable, with your feet set wide apart.",
+    "Begin the movement by reaching through your legs as far as possible, bending at the hips. Keep your knees slightly bent. Keeping your arms straight, extend through the hip to stand straight up. Avoid pulling upward through the shoulders; all of the motion should originate through the hips."
+  ],
+  "reverse-lunge": [
+    "Stand with your torso upright holding two dumbbells in your hands by your sides. This will be your starting position.",
+    "Step backward with your right leg around two feet or so from the left foot and lower your upper body down, while keeping the torso upright and maintaining balance. Inhale as you go down. Tip: As in the other exercises, do not allow your knee to go forward beyond your toes as you come down, as this will put undue stress on the knee joint. Make sure that you keep your front shin perpendicular to the ground. Keep the torso upright during the lunge; flexible hip flexors are important. A long lunge emphasizes the Gluteus Maximus; a short lunge emphasizes Quadriceps.",
+    "Push up and go back to the starting position as you exhale. Tip: Use the ball of your feet to push in order to accentuate the quadriceps. To focus on the glutes, press with your heels.",
+    "Now repeat with the opposite leg."
+  ],
+  "pli-dumbbell-squat": [
+    "Hold a dumbbell at the base with both hands and stand straight up. Move your legs so that they are wider than shoulder width apart from each other with your knees slightly bent.",
+    "Your toes should be facing out. Note: Your arms should be stationary while performing the exercise. This is the starting position.",
+    "Slowly bend the knees and lower your legs until your thighs are parallel to the floor. Make sure to inhale as this is the eccentric part of the exercise.",
+    "Press mainly with the heel of the foot to bring the body back to the starting position while exhaling.",
+    "Repeat for the recommended amount of repetitions."
+  ],
+  "glute-kickback": [
+    "Kneel on the floor or an exercise mat and bend at the waist with your arms extended in front of you (perpendicular to the torso) in order to get into a kneeling push-up position but with the arms spaced at shoulder width. Your head should be looking forward and the bend of the knees should create a 90-degree angle between the hamstrings and the calves. This will be your starting position.",
+    "As you exhale, lift up your right leg until the hamstrings are in line with the back while maintaining the 90-degree angle bend. Contract the glutes throughout this movement and hold the contraction at the top for a second. Tip: At the end of the movement the upper leg should be parallel to the floor while the calf should be perpendicular to it.",
+    "Go back to the initial position as you inhale and now repeat with the left leg.",
+    "Continue to alternate legs until all of the recommended repetitions have been performed."
+  ],
+  "seated-leg-curl": [
+    "Adjust the machine lever to fit your height and sit on the machine with your back against the back support pad.",
+    "Place the back of lower leg on top of padded lever (just a few inches under the calves) and secure the lap pad against your thighs, just above the knees. Then grasp the side handles on the machine as you point your toes straight (or you can also use any of the other two stances) and ensure that the legs are fully straight right in front of you. This will be your starting position.",
+    "As you exhale, pull the machine lever as far as possible to the back of your thighs by flexing at the knees. Keep your torso stationary at all times. Hold the contracted position for a second.",
+    "Slowly return to the starting position as you breathe in.",
+    "Repeat for the recommended amount of repetitions."
+  ],
+  "box-squat": [
+    "The box squat allows you to squat to desired depth and develop explosive strength in the squat movement. Begin in a power rack with a box at the appropriate height behind you. Typically, you would aim for a box height that brings you to a parallel squat, but you can train higher or lower if desired.",
+    "Begin by stepping under the bar and placing it across the back of the shoulders. Squeeze your shoulder blades together and rotate your elbows forward, attempting to bend the bar across your shoulders. Remove the bar from the rack, creating a tight arch in your lower back, and step back into position. Place your feet wider for more emphasis on the back, glutes, adductors, and hamstrings, or closer together for more quad development. Keep your head facing forward.",
+    "With your back, shoulders, and core tight, push your knees and butt out and you begin your descent. Sit back with your hips until you are seated on the box. Ideally, your shins should be perpendicular to the ground. Pause when you reach the box, and relax the hip flexors. Never bounce off of a box.",
+    "Keeping the weight on your heels and pushing your feet and knees out, drive upward off of the box as you lead the movement with your head. Continue upward, maintaining tightness head to toe."
+  ],
+  "hip-adduction-machine": [
+    "To begin, sit down on the adductor machine and select a weight you are comfortable with. When your legs are positioned properly on the leg pads of the machine, grip the handles on each side. Your entire upper body (from the waist up) should be stationary. This is the starting position.",
+    "Slowly press against the machine with your legs to move them towards each other while exhaling.",
+    "Feel the contraction for a second and begin to move your legs back to the starting position while breathing in. Note: Remember to keep your upper body stationary and avoid fast jerking motions in order to prevent any injuries from occurring.",
+    "Repeat for the recommended amount of repetitions."
+  ],
+  "step-up-with-knee-raise": [
+    "Stand facing a box or bench of an appropriate height with your feet together. This will be your starting position.",
+    "Begin the movement by stepping up, putting your left foot on the top of the bench. Extend through the hip and knee of your front leg to stand up on the box. As you stand on the box with your left leg, flex your right knee and hip, bringing your knee as high as you can.",
+    "Reverse this motion to step down off the box, and then repeat the sequence on the opposite leg."
+  ],
+  "ez-bar-curl": [
+    "Stand up straight while holding an EZ curl bar at the wide outer handle. The palms of your hands should be facing forward and slightly tilted inward due to the shape of the bar. Keep your elbows close to your torso. This will be your starting position.",
+    "Now, while keeping your upper arms stationary, exhale and curl the weights forward while contracting the biceps. Focus on only moving your forearms.",
+    "Continue to raise the weight until your biceps are fully contracted and the bar is at shoulder level. Hold the top contracted position for a moment and squeeze the biceps.",
+    "Then inhale and slowly lower the bar back to the starting position.",
+    "Repeat for the recommended amount of repetitions."
+  ],
+  "bodyweight-squat": [
+    "Stand with your feet shoulder width apart. You can place your hands behind your head. This will be your starting position.",
+    "Begin the movement by flexing your knees and hips, sitting back with your hips.",
+    "Continue down to full depth if you are able,and quickly reverse the motion until you return to the starting position. As you squat, keep your head and chest up and push your knees out."
+  ],
+  "stiff-legged-deadlift": [
+    "Grasp a couple of dumbbells holding them by your side at arm's length.",
+    "Stand with your torso straight and your legs spaced using a shoulder width or narrower stance. The knees should be slightly bent. This is your starting position.",
+    "Keeping the knees stationary, lower the dumbbells to over the top of your feet by bending at the waist while keeping your back straight. Keep moving forward as if you were going to pick something from the floor until you feel a stretch on the hamstrings. Exhale as you perform this movement",
+    "Start bringing your torso up straight again by extending your hips and waist until you are back at the starting position. Inhale as you perform this movement.",
+    "Repeat for the recommended amount of repetitions."
+  ],
+  "hip-abduction-machine": [
+    "To begin, sit down on the abductor machine and select a weight you are comfortable with. When your legs are positioned properly, grip the handles on each side. Your entire upper body (from the waist up) should be stationary. This is the starting position.",
+    "Slowly press against the machine with your legs to move them away from each other while exhaling.",
+    "Feel the contraction for a second and begin to move your legs back to the starting position while breathing in. Note: Remember to keep your upper body stationary to prevent any injuries from occurring.",
+    "Repeat for the recommended amount of repetitions."
+  ],
+  "concentration-curl": [
+    "Sit down on a flat bench with one dumbbell in front of you between your legs. Your legs should be spread with your knees bent and feet on the floor.",
+    "Use your right arm to pick the dumbbell up. Place the back of your right upper arm on the top of your inner right thigh. Rotate the palm of your hand until it is facing forward away from your thigh. Tip: Your arm should be extended and the dumbbell should be above the floor. This will be your starting position.",
+    "While holding the upper arm stationary, curl the weights forward while contracting the biceps as you breathe out. Only the forearms should move. Continue the movement until your biceps are fully contracted and the dumbbells are at shoulder level. Tip: At the top of the movement make sure that the little finger of your arm is higher than your thumb. This guarantees a good contraction. Hold the contracted position for a second as you squeeze the biceps.",
+    "Slowly begin to bring the dumbbells back to starting position as your breathe in. Caution: Avoid swinging motions at any time.",
+    "Repeat for the recommended amount of repetitions. Then repeat the movement with the left arm."
+  ],
+  "cable-hammer-curl": [
+    "Attach a rope attachment to a low pulley and stand facing the machine about 12 inches away from it.",
+    "Grasp the rope with a neutral (palms-in) grip and stand straight up keeping the natural arch of the back and your torso stationary.",
+    "Put your elbows in by your side and keep them there stationary during the entire movement. Tip: Only the forearms should move; not your upper arms. This will be your starting position.",
+    "Using your biceps, pull your arms up as you exhale until your biceps touch your forearms. Tip: Remember to keep the elbows in and your upper arms stationary.",
+    "After a 1 second contraction where you squeeze your biceps, slowly start to bring the weight back to the original position.",
+    "Repeat for the recommended amount of repetitions."
+  ],
+  "incline-dumbbell-curl": [
+    "Sit back on an incline bench with a dumbbell in each hand held at arms length. Keep your elbows close to your torso and rotate the palms of your hands until they are facing forward. This will be your starting position.",
+    "While holding the upper arm stationary, curl the weights forward while contracting the biceps as you breathe out. Only the forearms should move. Continue the movement until your biceps are fully contracted and the dumbbells are at shoulder level. Hold the contracted position for a second.",
+    "Slowly begin to bring the dumbbells back to starting position as your breathe in.",
+    "Repeat for the recommended amount of repetitions."
+  ],
+  "cable-curl": [
+    "Place a preacher bench about 2 feet in front of a pulley machine.",
+    "Attach a straight bar to the low pulley.",
+    "Sit at the preacher bench with your elbow and upper arms firmly on top of the bench pad and have someone hand you the bar from the low pulley.",
+    "Grab the bar and fully extend your arms on top of the preacher bench pad. This will be your starting position.",
+    "Now start pilling the weight up towards your shoulders and squeeze the biceps hard at the top of the movement. Exhale as you perform this motion. Also, hold for a second at the top.",
+    "Now slowly lower the weight to the starting position.",
+    "Repeat for the recommended amount of repetitions."
+  ],
+  "reverse-curl": [
+    "Stand up with your torso upright while holding a barbell at shoulder width with the elbows close to the torso. The palm of your hands should be facing down (pronated grip). This will be your starting position.",
+    "While holding the upper arms stationary, curl the weights while contracting the biceps as you breathe out. Only the forearms should move. Continue the movement until your biceps are fully contracted and the bar is at shoulder level. Hold the contracted position for a second as you squeeze the muscle.",
+    "Slowly begin to bring the bar back to starting position as your breathe in.",
+    "Repeat for the recommended amount of repetitions."
+  ],
+  "wrist-curl": [
+    "Start out by placing a flat bench in front of a low pulley cable that has a straight bar attachment.",
+    "Use your arms to grab the cable bar with a narrow to shoulder width supinated grip (palms up) and bring them up so that your forearms are resting against the top of your thighs. Your wrists should be hanging just beyond your knees.",
+    "Start out by curling your wrist upwards and exhaling. Keep the contraction for a second.",
+    "Slowly lower your wrists back down to the starting position while inhaling.",
+    "Your forearms should be stationary as your wrist is the only movement needed to perform this exercise.",
+    "Repeat for the recommended amount of repetitions."
+  ],
+  "bench-dip": [
+    "For this exercise you will need to place a bench behind your back. With the bench perpendicular to your body, and while looking away from it, hold on to the bench on its edge with the hands fully extended, separated at shoulder width. The legs will be extended forward, bent at the waist and perpendicular to your torso. This will be your starting position.",
+    "Slowly lower your body as you inhale by bending at the elbows until you lower yourself far enough to where there is an angle slightly smaller than 90 degrees between the upper arm and the forearm. Tip: Keep the elbows as close as possible throughout the movement. Forearms should always be pointing down.",
+    "Using your triceps to bring your torso up again, lift yourself back to the starting position.",
+    "Repeat for the recommended amount of repetitions."
+  ],
+  "floor-press": [
+    "Adjust the j-hooks so they are at the appropriate height to rack the bar. Begin lying on the floor with your head near the end of a power rack. Keeping your shoulder blades pulled together; pull the bar off of the hooks.",
+    "Lower the bar towards the bottom of your chest or upper stomach, squeezing the bar and attempting to pull it apart as you do so. Ensure that you tuck your elbows throughout the movement. Lower the bar until your upper arm contacts the ground and pause, preventing any slamming or bouncing of the weight.",
+    "Press the bar back up as fast as you can, keeping the bar, your wrists, and elbows in line as you do so."
+  ],
+  "reverse-crunch": [
+    "Lie on your back on a decline bench and hold on to the top of the bench with both hands. Don't let your body slip down from this position.",
+    "Hold your legs parallel to the floor using your abs to hold them there while keeping your knees and feet together. Tip: Your legs should be fully extended with a slight bend on the knee. This will be your starting position.",
+    "While exhaling, move your legs towards the torso as you roll your pelvis backwards and you raise your hips off the bench. At the end of this movement your knees will be touching your chest.",
+    "Hold the contraction for a second and move your legs back to the starting position while inhaling.",
+    "Repeat for the recommended amount of repetitions."
+  ],
+  "seated-triceps-press": [
+    "Sit down on a bench with back support and grasp a dumbbell with both hands and hold it overhead at arm's length. Tip: a better way is to have somebody hand it to you especially if it is very heavy. The resistance should be resting in the palms of your hands with your thumbs around it. The palm of the hand should be facing inward. This will be your starting position.",
+    "Keeping your upper arms close to your head (elbows in) and perpendicular to the floor, lower the resistance in a semi-circular motion behind your head until your forearms touch your biceps. Tip: The upper arms should remain stationary and only the forearms should move. Breathe in as you perform this step.",
+    "Go back to the starting position by using the triceps to raise the dumbbell. Breathe out as you perform this step.",
+    "Repeat for the recommended amount of repetitions."
+  ],
+  "dips-triceps": [
+    "To get into the starting position, hold your body at arm's length with your arms nearly locked above the bars.",
+    "Now, inhale and slowly lower yourself downward. Your torso should remain upright and your elbows should stay close to your body. This helps to better focus on tricep involvement. Lower yourself until there is a 90 degree angle formed between the upper arm and forearm.",
+    "Then, exhale and push your torso back up using your triceps to bring your body back to the starting position.",
+    "Repeat the movement for the prescribed amount of repetitions."
+  ],
+  "triceps-kickback": [
+    "Start with a dumbbell in each hand and your palms facing your torso. Keep your back straight with a slight bend in the knees and bend forward at the waist. Your torso should be almost parallel to the floor. Make sure to keep your head up. Your upper arms should be close to your torso and parallel to the floor. Your forearms should be pointed towards the floor as you hold the weights. There should be a 90-degree angle formed between your forearm and upper arm. This is your starting position.",
+    "Now, while keeping your upper arms stationary, exhale and use your triceps to lift the weights until the arm is fully extended. Focus on moving the forearm.",
+    "After a brief pause at the top contraction, inhale and slowly lower the dumbbells back down to the starting position.",
+    "Repeat the movement for the prescribed amount of repetitions."
+  ],
+  "side-plank": [
+    "Lie on your side with your legs straight and prop yourself up on your forearm, elbow directly under your shoulder.",
+    "Stack your feet and lift your hips so your body forms a straight line from head to feet.",
+    "Brace your core and hold, keeping your hips high without letting them sag.",
+    "Hold for the set time, then switch sides."
+  ],
+  "cross-body-crunch": [
+    "Lie flat on your back and bend your knees about 60 degrees.",
+    "Keep your feet flat on the floor and place your hands loosely behind your head. This will be your starting position.",
+    "Now curl up and bring your right elbow and shoulder across your body while bring your left knee in toward your left shoulder at the same time. Reach with your elbow and try to touch your knee. Exhale as you perform this movement. Tip: Try to bring your shoulder up towards your knee rather than just your elbow and remember that the key is to contract the abs as you perform the movement; not just to move the elbow.",
+    "Now go back down to the starting position as you inhale and repeat with the left elbow and the right knee.",
+    "Continue alternating in this manner until all prescribed repetitions are done."
+  ],
+  "lying-leg-raise": [
+    "While standing up straight with both feet next to each other at around shoulder width, grab a sturdy surface such as the sides of a squat rack or the top of a chair to brace yourself and keep balance.",
+    "With or without an ankle weight, lift one leg behind you as if performing a leg curl but standing up while keeping the other leg straight. Breathe out as you perform this movement.",
+    "Slowly bring the raised leg back to the floor as you breathe in.",
+    "Repeat for the recommended amount of repetitions.",
+    "Repeat the movement with the opposite leg."
+  ],
+  "v-up": [
+    "Lie flat on the floor (or exercise mat) on your back with your arms extended straight back behind your head and your legs extended also. This will be your starting position.",
+    "As you exhale, bend at the waist while simultaneously raising your legs and arms to meet in a jackknife position. Tip: The legs should be extended and lifted at approximately a 35-45 degree angle from the floor and the arms should be extended and parallel to your legs. The upper torso should be off the floor.",
+    "While inhaling, lower your arms and legs back to the starting position.",
+    "Repeat for the recommended amount of repetitions."
+  ],
+  "flutter-kicks": [
+    "On a flat bench lie facedown with the hips on the edge of the bench, the legs straight with toes high off the floor and with the arms on top of the bench holding on to the front edge.",
+    "Squeeze your glutes and hamstrings and straighten the legs until they are level with the hips. This will be your starting position.",
+    "Start the movement by lifting the left leg higher than the right leg.",
+    "Then lower the left leg as you lift the right leg.",
+    "Continue alternating in this manner (as though you are doing a flutter kick in water) until you have done the recommended amount of repetitions for each leg. Make sure that you keep a controlled movement at all times. Tip: You will breathe normally as you perform this movement."
+  ],
+  "bicycle-crunch": [
+    "Lie flat on the floor with your lower back pressed to the ground. For this exercise, you will need to put your hands beside your head. Be careful however to not strain with the neck as you perform it. Now lift your shoulders into the crunch position.",
+    "Bring knees up to where they are perpendicular to the floor, with your lower legs parallel to the floor. This will be your starting position.",
+    "Now simultaneously, slowly go through a cycle pedal motion kicking forward with the right leg and bringing in the knee of the left leg. Bring your right elbow close to your left knee by crunching to the side, as you breathe out.",
+    "Go back to the initial position as you breathe in.",
+    "Crunch to the opposite side as you cycle your legs and bring closer your left elbow to your right knee and exhale.",
+    "Continue alternating in this manner until all of the recommended repetitions for each side have been completed."
+  ],
+  "ab-rollout": [
+    "Hold the Ab Roller with both hands and kneel on the floor.",
+    "Now place the ab roller on the floor in front of you so that you are on all your hands and knees (as in a kneeling push up position). This will be your starting position.",
+    "Slowly roll the ab roller straight forward, stretching your body into a straight position. Tip: Go down as far as you can without touching the floor with your body. Breathe in during this portion of the movement.",
+    "After a pause at the stretched position, start pulling yourself back to the starting position as you breathe out. Tip: Go slowly and keep your abs tight at all times."
+  ],
+  "decline-crunch": [
+    "Secure your legs at the end of the decline bench and lie down.",
+    "Now place your hands lightly on either side of your head keeping your elbows in. Tip: Don't lock your fingers behind your head.",
+    "While pushing the small of your back down in the bench to better isolate your abdominal muscles, begin to roll your shoulders off it.",
+    "Continue to push down as hard as you can with your lower back as you contract your abdominals and exhale. Your shoulders should come up off the bench only about four inches, and your lower back should remain on the bench. At the top of the movement, contract your abdominals hard and keep the contraction for a second. Tip: Focus on slow, controlled movement - don't cheat yourself by using momentum.",
+    "After the one second contraction, begin to come down slowly again to the starting position as you inhale.",
+    "Repeat for the recommended amount of repetitions."
+  ],
+  "dead-bug": [
+    "Begin lying on your back with your hands extended above you toward the ceiling.",
+    "Bring your feet, knees, and hips up to 90 degrees.",
+    "Exhale hard to bring your ribcage down and flatten your back onto the floor, rotating your pelvis up and squeezing your glutes. Hold this position throughout the movement. This will be your starting position.",
+    "Initiate the exercise by extending one leg, straightening the knee and hip to bring the leg just above the ground.",
+    "Maintain the position of your lumbar and pelvis as you perform the movement, as your back is going to want to arch.",
+    "Stay tight and return the working leg to the starting position.",
+    "Repeat on the opposite side, alternating until the set is complete."
+  ],
+  "hip-raise": [
+    "Lay flat on the floor with your arms next to your sides.",
+    "Now bend your knees at around a 75 degree angle and lift your feet off the floor by around 2 inches.",
+    "Using your lower abs, bring your knees in towards you as you maintain the 75 degree angle bend in your legs. Continue this movement until you raise your hips off of the floor by rolling your pelvis backward. Breathe out as you perform this portion of the movement. Tip: At the end of the movement your knees will be over your chest.",
+    "Squeeze your abs at the top of the movement for a second and then return to the starting position slowly as you breathe in. Tip: Maintain a controlled motion at all times.",
+    "Repeat for the recommended amount of repetitions."
+  ],
+  "oblique-crunch": [
+    "Lie flat on the floor with your lower back pressed to the ground. For this exercise, you will need to put one hand beside your head and the other to the side against the floor.",
+    "Make sure your feet are elevated and resting on a flat surface.",
+    "Now lift the shoulder in which your hand is touching your head.",
+    "Simply elevate your shoulder and body upward until you touch your knee. For example, if you have your right hand besides your head, then you want to elevate your body upwards until your right elbow touches your left knee. The same variation can be applied doing the inverse and using your left elbow to touch your right knee.",
+    "After your knee touches your elbow, lower your body until you have reached the starting position.",
+    "Remember to breathe in during the eccentric (lowering) part of the exercise and to breathe out during the concentric (upward) part of the exercise.",
+    "Continue alternating in this manner until all of the recommended repetitions for each side have been completed."
+  ],
+  "cable-woodchopper": [
+    "Connect a standard handle to a tower, and move the cable to the highest pulley position.",
+    "With your side to the cable, grab the handle with one hand and step away from the tower. You should be approximately arm's length away from the pulley, with the tension of the weight on the cable. Your outstretched arm should be aligned with the cable.",
+    "With your feet positioned shoulder width apart, reach upward with your other hand and grab the handle with both hands. Your arms should still be fully extended.",
+    "In one motion, pull the handle down and across your body to your front knee while rotating your torso.",
+    "Keep your back and arms straight and core tight while you pivot your back foot and bend your knees to get a full range of motion.",
+    "Maintain your stance and straight arms. Return to the neutral position in a slow and controlled manner.",
+    "Repeat to failure.",
+    "Then, reposition and repeat the same series of movements on the opposite side."
+  ],
+  "jump-rope": [
+    "Hold an end of the rope in each hand. Position the rope behind you on the ground. Raise your arms up and turn the rope over your head bringing it down in front of you. When it reaches the ground, jump over it. Find a good turning pace that can be maintained. Different speeds and techniques can be used to introduce variation.",
+    "Rope jumping is exciting, challenges your coordination, and requires a lot of energy. A 150 lb person will burn about 350 calories jumping rope for 30 minutes, compared to over 450 calories running."
+  ],
+  "broad-jump": [
+    "This drill is best done in sand or other soft landing surface. Ensure that you are able to measure distance. Stand in a partial squat stance with feet shoulder width apart.",
+    "Utilizing a big arm swing and a countermovement of the legs, jump forward as far as you can.",
+    "Attempt to land with your feet out in front you, reaching as far as possible with your legs.",
+    "Measure the distance from your landing point to the starting point and track results."
+  ],
+  "stationary-bike": [
+    "To begin, seat yourself on the bike and adjust the seat to your height.",
+    "Select the desired option from the menu. You may have to start pedaling to turn it on. You can use the manual setting, or you can select a program to use. Typically, you can enter your age and weight to estimate the amount of calories burned during exercise. The level of resistance can be changed throughout the workout. The handles can be used to monitor your heart rate to help you stay at an appropriate intensity."
+  ],
+  "squat-jump": [
+    "Cross your arms over your chest.",
+    "With your head up and your back straight, position your feet at shoulder width.",
+    "Keeping your back straight and chest up, squat down as you inhale until your upper thighs are parallel, or lower, to the floor.",
+    "Now pressing mainly with the ball of your feet, jump straight up in the air as high as possible, using the thighs like springs. Exhale during this portion of the movement.",
+    "When you touch the floor again, immediately squat down and jump again.",
+    "Repeat for the recommended amount of repetitions."
+  ],
+  "rowing-machine": [
+    "To begin, seat yourself on the rower. Make sure that your heels are resting comfortably against the base of the foot pedals and that the straps are secured. Select the program that you wish to use, if applicable. Sit up straight and bend forward at the hips.",
+    "There are three phases of movement when using a rower. The first phase is when you come forward on the rower. Your knees are bent and against your chest. Your upper body is leaning slightly forward while still maintaining good posture. Next, push against the foot pedals and extend your legs while bringing your hands to your upper abdominal area, squeezing your shoulders back as you do so. To avoid straining your back, use primarily your leg and hip muscles.",
+    "The recovery phase simply involves straightening your arms, bending the knees, and bringing your body forward again as you transition back into the first phase."
+  ],
+  "treadmill-run": [
+    "To begin, step onto the treadmill and select the desired option from the menu. Most treadmills have a manual setting, or you can select a program to run. Typically, you can enter your age and weight to estimate the amount of calories burned during exercise. Elevation can be adjusted to change the intensity of the workout.",
+    "Treadmills offer convenience, cardiovascular benefits, and usually have less impact than running outside. A 150 lb person will burn over 450 calories running 8 miles per hour for 30 minutes. Maintain proper posture as you run, and only hold onto the handles when necessary, such as when dismounting or checking your heart rate."
+  ],
+  "skater-jump": [
+    "Assume a half squat position facing 90 degrees from your direction of travel. This will be your starting position.",
+    "Allow your lead leg to do a countermovement inward as you shift your weight to the outside leg.",
+    "Immediately push off and extend, attempting to bound to the side as far as possible.",
+    "Upon landing, immediately push off in the opposite direction, returning to your original start position.",
+    "Continue back and forth for several repetitions."
+  ],
+  "chest-supported-row": [
+    "With a dumbbell in each hand (palms facing your torso), bend your knees slightly and bring your torso forward by bending at the waist; as you bend make sure to keep your back straight until it is almost parallel to the floor. Tip: Make sure that you keep the head up. The weights should hang directly in front of you as your arms hang perpendicular to the floor and your torso. This is your starting position.",
+    "While keeping the torso stationary, lift the dumbbells to your side (as you breathe out), keeping the elbows close to the body (do not exert any force with the forearm other than holding the weights). On the top contracted position, squeeze the back muscles and hold for a second.",
+    "Slowly lower the weight again to the starting position as you inhale.",
+    "Repeat for the recommended amount of repetitions."
+  ],
+  "renegade-row": [
+    "Place two kettlebells on the floor about shoulder width apart. Position yourself on your toes and your hands as though you were doing a pushup, with the body straight and extended. Use the handles of the kettlebells to support your upper body. You may need to position your feet wide for support.",
+    "Push one kettlebell into the floor and row the other kettlebell, retracting the shoulder blade of the working side as you flex the elbow, pulling it to your side.",
+    "Then lower the kettlebell to the floor and begin the kettlebell in the opposite hand. Repeat for several reps."
+  ],
+  "zottman-curl": [
+    "Stand up with your torso upright and a dumbbell in each hand being held at arms length. The elbows should be close to the torso.",
+    "Make sure the palms of the hands are facing each other. This will be your starting position.",
+    "While holding the upper arm stationary, curl the weights while contracting the biceps as you breathe out. Only the forearms should move. Your wrist should rotate so that you have a supinated (palms up) grip. Continue the movement until your biceps are fully contracted and the dumbbells are at shoulder level.",
+    "Hold the contracted position for a second as you squeeze the biceps.",
+    "Now during the contracted position, rotate your wrist until you now have a pronated (palms facing down) grip with the thumb at a higher position than the pinky.",
+    "Slowly begin to bring the dumbbells back down using the pronated grip.",
+    "As the dumbbells close your thighs, start rotating the wrist so that you go back to a neutral (palms facing your body) grip.",
+    "Repeat for the recommended amount of repetitions."
+  ],
+  "tuck-jump": [
+    "Begin in a comfortable standing position with your knees slightly bent. Hold your hands in front of you, palms down with your fingertips together at chest height. This will be your starting position.",
+    "Rapidly dip down into a quarter squat and immediately explode upward. Drive the knees towards the chest, attempting to touch them to the palms of the hands.",
+    "Jump as high as you can, raising your knees up, and then ensure a good land be re-extending your legs, absorbing impact through be allowing the knees to rebend."
+  ],
+  "plyo-push-up": [
+    "Move into a prone position on the floor, supporting your weight on your hands and toes.",
+    "Your arms should be fully extended with the hands around shoulder width. Keep your body straight throughout the movement. This will be your starting position.",
+    "Descend by flexing at the elbow, lowering your chest towards the ground.",
+    "At the bottom, reverse the motion by pushing yourself up through elbow extension as quickly as possible. Attempt to push your upper body up until your hands leave the ground.",
+    "Return to the starting position and repeat the exercise.",
+    "For added difficulty, add claps into the movement while you are air borne."
+  ],
+  "sissy-squat": [
+    "Standing upright, with feet at shoulder width and toes raised, use one hand to hold onto the beams of a squat rack and the opposite arm to hold a plate on top of your chest. This is your starting position.",
+    "As you use one arm to hold yourself, bend at the knees and slowly lower your torso toward the ground by bringing your pelvis and knees forward. Inhale as you go down and stop when your upper and lower legs almost create a 90-degree angle. Hold the stretch position for a second.",
+    "After your one second hold, use your thigh muscles to bring your torso back up to the starting position. Exhale as you move up.",
+    "Repeat for the recommended amount of times."
+  ],
+  "seated-calf-raise": [
+    "Adjust the seat so that your legs are only slightly bent in the start position. The balls of your feet should be firmly on the platform.",
+    "Select an appropriate weight, and grasp the handles. This will be your starting position.",
+    "Straighten the legs by extending the knees, just barely lifting the weight from the stack. Your ankle should be fully flexed, toes pointing up. Execute the movement by pressing downward through the balls of your feet as far as possible.",
+    "After a brief pause, reverse the motion and repeat."
+  ],
+  "standing-cable-curl": [
+    "Stand up with your torso upright while holding a cable curl bar that is attached to a low pulley. Grab the cable bar at shoulder width and keep the elbows close to the torso. The palm of your hands should be facing up (supinated grip). This will be your starting position.",
+    "While holding the upper arms stationary, curl the weights while contracting the biceps as you breathe out. Only the forearms should move. Continue the movement until your biceps are fully contracted and the bar is at shoulder level. Hold the contracted position for a second as you squeeze the muscle.",
+    "Slowly begin to bring the curl bar back to starting position as your breathe in.",
+    "Repeat for the recommended amount of repetitions."
+  ],
+  "spider-curl": [
+    "Start out by setting the bar on the part of the preacher bench that you would normally sit on. Make sure to align the barbell properly so that it is balanced and will not fall off.",
+    "Move to the front side of the preacher bench (the part where the arms usually lay) and position yourself to lay at a 45 degree slant with your torso and stomach pressed against the front side of the preacher bench.",
+    "Make sure that your feet (especially the toes) are well positioned on the floor and place your upper arms on top of the pad located on the inside part of the preacher bench.",
+    "Use your arms to grab the barbell with a supinated grip (palms facing up) at about shoulder width apart or slightly closer from each other.",
+    "Slowly begin to lift the barbell upwards and exhale. Hold the contracted position for a second as you squeeze the biceps.",
+    "Slowly begin to bring the barbell back to the starting position as your breathe in. .",
+    "Repeat for the recommended amount of repetitions."
+  ],
+  "donkey-calf-raise": [
+    "For this exercise you will need access to a donkey calf raise machine. Start by positioning your lower back and hips under the padded lever provided. The tailbone area should be the one making contact with the pad.",
+    "Place both of your arms on the side handles and place the balls of your feet on the calf block with the heels extending off. Align the toes forward, inward or outward, depending on the area you wish to target, and straighten the knees without locking them. This will be your starting position.",
+    "Raise your heels as you breathe out by extending your ankles as high as possible and flexing your calf. Ensure that the knee is kept stationary at all times. There should be no bending at any time. Hold the contracted position by a second before you start to go back down.",
+    "Go back slowly to the starting position as you breathe in by lowering your heels as you bend the ankles until calves are stretched.",
+    "Repeat for the recommended amount of repetitions."
+  ],
+  "barbell-front-raise": [
+    "To begin, stand straight with a barbell in your hands. You should grip the bar with palms facing down and a closer than shoulder width grip apart from each other.",
+    "Your feet should be shoulder width apart from each other. Your elbows should be slightly bent. This is the starting position.",
+    "Lift the barbell up until it is directly over your head while exhaling. Make sure to keep your elbows slightly bent when performing each repetition.",
+    "Once you feel the contraction, begin to lower the barbell back down to the starting position as you inhale.",
+    "Repeat for the recommended amount of repetitions."
+  ],
+  "superman": [
+    "To begin, lie straight and face down on the floor or exercise mat. Your arms should be fully extended in front of you. This is the starting position.",
+    "Simultaneously raise your arms, legs, and chest off of the floor and hold this contraction for 2 seconds. Tip: Squeeze your lower back to get the best results from this exercise. Remember to exhale during this movement. Note: When holding the contracted position, you should look like superman when he is flying.",
+    "Slowly begin to lower your arms, legs and chest back down to the starting position while inhaling.",
+    "Repeat for the recommended amount of repetitions prescribed in your program."
+  ],
+  "wide-grip-push-up": [
+    "With your hands wide apart, support your body on your toes and hands in a plank position. Your elbows should be extended and your body straight. Do not allow your hips to sag. This will be your starting position.",
+    "To begin, allow the elbows to flex, lowering your chest to the floor as you inhale.",
+    "Using your pectoral muscles, press your upper body back up to the starting position by extending the elbows. Exhale as you perform this step.",
+    "After pausing at the contracted position, repeat the movement for the prescribed amount of repetitions."
+  ],
+  "decline-push-up": [
+    "Lie on the floor face down and place your hands about 36 inches apart from each other holding your torso up at arms length.",
+    "Place your toes on top of a flat bench. This will allow your body to be elevated. Note: The higher the elevation of the flat bench, the higher the resistance of the exercise is.",
+    "Lower yourself until your chest almost touches the floor as you inhale.",
+    "Using your pectoral muscles, press your upper body back up to the starting position and squeeze your chest. Breathe out as you perform this step.",
+    "After a second pause at the contracted position, repeat the movement for the prescribed amount of repetitions."
+  ],
+  "seated-leg-tuck": [
+    "Sit on a bench with the legs stretched out in front of you slightly below parallel and your arms holding on to the sides of the bench. Your torso should be leaning backwards around a 45-degree angle from the bench. This will be your starting position.",
+    "Bring the knees in toward you as you move your torso closer to them at the same time. Breathe out as you perform this movement.",
+    "After a second pause, go back to the starting position as you inhale.",
+    "Repeat for the recommended amount of repetitions."
+  ],
+  "incline-cable-fly": [
+    "To get yourself into the starting position, set the pulleys at the floor level (lowest level possible on the machine that is below your torso).",
+    "Place an incline bench (set at 45 degrees) in between the pulleys, select a weight on each one and grab a pulley on each hand.",
+    "With a handle on each hand, lie on the incline bench and bring your hands together at arms length in front of your face. This will be your starting position.",
+    "With a slight bend of your elbows (in order to prevent stress at the biceps tendon), lower your arms out at both sides in a wide arc until you feel a stretch on your chest. Breathe in as you perform this portion of the movement. Tip: Keep in mind that throughout the movement, the arms should remain stationary. The movement should only occur at the shoulder joint.",
+    "Return your arms back to the starting position as you squeeze your chest muscles and exhale. Hold the contracted position for a second. Tip: Make sure to use the same arc of motion used to lower the weights.",
+    "Repeat the movement for the prescribed amount of repetitions."
+  ],
 };
+// <<< EXERCISE_INSTRUCTIONS <<<
 
 // True when an exercise should use the built-in countdown timer (a hold),
 // rather than weight/reps rows (strength) or a minutes box (steady cardio).
@@ -2522,22 +3359,35 @@ function makeTodayExercise(plannedEx, source = "planned") {
   const targetDuration = Number(plannedEx.targetDuration) || 0;
   const metricProfile = getMetricProfile(exerciseInfo, plannedEx);
   const targetSubtype = plannedEx.targetSubtype || defaultExerciseSubtype(exerciseInfo.id);
+  // Rest target (seconds) between sets/holds. 0 = none. Usually set by the AI
+  // coach in the weekly plan, but also editable in the plan; shown as a quiet
+  // note on the live set screen — no timer.
+  const targetRest = Number(plannedEx.targetRest) || 0;
 
   // For a held move, the planned target reads like "3 x 45 sec": targetSets
   // holds, each held for some seconds. The seconds come through as the reps
   // number (e.g. "Plank: 3x45") or a duration; default to 45 if not given.
+  // Each hold is paged like a set, carrying its own actual seconds, note, and
+  // optional effort so e.g. 60/60/45 is captured faithfully.
   const holdSeconds = isTimed ? (targetDuration || targetReps || 45) : 0;
   const holdCount = isTimed ? (targetSets || 1) : 0;
-  const holds = Array.from({ length: holdCount }).map(() => ({ done: false }));
+  const holds = Array.from({ length: holdCount }).map(() => ({
+    seconds: holdSeconds,
+    done: false,
+    notes: "",
+    difficulty: null
+  }));
 
-  // One row per planned set, each holding the weight/reps actually done and a
-  // done flag you tap to check off. Pre-filled with the planned reps.
+  // One row per planned set, each holding the weight/reps actually done, a
+  // done flag, an optional note, and an optional 1-10 effort. Pre-filled with
+  // the planned reps.
   const setCount = targetSets || (durationLike || isTimed ? 0 : 1);
   const sets = Array.from({ length: (isTimed || isSport) ? 0 : setCount }).map(() => ({
     weight: targetWeight,
     reps: targetReps,
     done: false,
     notes: "",
+    difficulty: null,
     touchedWeight: false,
     touchedReps: false
   }));
@@ -2558,6 +3408,8 @@ function makeTodayExercise(plannedEx, source = "planned") {
     targetWeight,
     targetSubtype,
     metricProfile,
+    targetRest,
+    restSeconds: targetRest,
     sets,
     holds,
     holdSeconds,
@@ -2574,7 +3426,9 @@ function makeTodayExercise(plannedEx, source = "planned") {
     // the shared actualDuration minutes above.
     sportDone: false,
     sportNotes: "",
-    difficulty: 5,
+    // Optional overall effort (1-10) for cardio/sport, which have no per-set
+    // rows. Strength/timed effort is logged per set/hold instead. null = unrated.
+    difficulty: null,
     checked: false
   };
 }
@@ -2667,8 +3521,8 @@ function renderReviewReminder() {
   if (reviewReminderSub) {
     const overdue = today > reviewDate;
     reviewReminderSub.textContent = overdue
-      ? `Your review was due ${formatWorkoutDate(reviewDate)}. Export a packet for your coach and load the updated plan.`
-      : "Export a packet for your coach and load the updated plan.";
+      ? `Your review was due ${formatWorkoutDate(reviewDate)}. Copy your coach prompt, talk it through, and load next week's plan.`
+      : "Copy your coach prompt, talk it through, and load next week's plan.";
   }
   reviewReminder.hidden = false;
 }
@@ -2982,8 +3836,10 @@ function formatExerciseRecap(ex) {
     return `${Number(ex.actualDuration) || 0} min${note ? " · note" : ""}`;
   }
   if (ex.type === "timed") {
-    const doneHolds = (ex.holds || []).filter((hold) => hold.done).length;
-    return doneHolds ? `${doneHolds} × ${ex.holdSeconds || 0} sec` : "Not logged";
+    const done = (ex.holds || []).filter((hold) => hold.done);
+    if (!done.length) return "Not logged";
+    // Show each hold's actual length so e.g. 60/60/45 reads faithfully.
+    return done.map((hold) => `${Number(hold.seconds) || ex.holdSeconds || 0}s`).join(" · ");
   }
   const doneSets = (ex.sets || []).filter((set) => set.done);
   if (doneSets.length === 0) return "Not logged";
@@ -2993,15 +3849,26 @@ function formatExerciseRecap(ex) {
   return `${doneSets.length} set${doneSets.length === 1 ? "" : "s"}${weightPart}`;
 }
 
+// A friendly rest label. Rest is usually given in seconds (e.g. "90s"), so keep
+// seconds up to two minutes; only switch to minutes for longer rests ("3m").
+function formatRest(seconds) {
+  const sec = Math.max(0, Math.round(Number(seconds) || 0));
+  if (sec < 120) return `${sec}s`;
+  const m = Math.floor(sec / 60);
+  const s = sec % 60;
+  return s ? `${m}m ${s}s` : `${m}m`;
+}
+
 // Plain target line for the focused screen, e.g. "3 × 8 · 135 lb" or "10 min".
 function formatFocusTarget(ex) {
-  if (ex.type === "timed") return `${(ex.holds || []).length} × ${ex.holdSeconds || 0} sec`;
+  const rest = Number(ex.restSeconds) > 0 ? ` · rest ${formatRest(ex.restSeconds)}` : "";
+  if (ex.type === "timed") return `${(ex.holds || []).length} × ${ex.holdSeconds || 0} sec${rest}`;
   if (ex.type === "cardio" || ex.type === "sport") return `${ex.targetSubtype ? `${ex.targetSubtype} · ` : ""}${ex.targetDuration || ex.actualDuration || 0} min`;
   if (ex.targetReps) {
     const weight = Number(ex.targetWeight) > 0 ? ` · ${ex.targetWeight} lb` : "";
-    return `${ex.targetSets || (ex.sets || []).length} × ${ex.targetReps}${weight}`;
+    return `${ex.targetSets || (ex.sets || []).length} × ${ex.targetReps}${weight}${rest}`;
   }
-  return `${ex.targetSets || (ex.sets || []).length} sets`;
+  return `${ex.targetSets || (ex.sets || []).length} sets${rest}`;
 }
 
 // The progress bar across the top: a filled dot per exercise, with done ones
@@ -3066,28 +3933,28 @@ function renderEditTargetsSheet(ex) {
   `;
 }
 
-// Build the "How to do it" reference for an exercise. Detailed muscles/steps/
-// cues come from EXERCISE_REFERENCES when present; otherwise we fall back to the
-// library entry's primaryMuscle/equipment plus generic form cues. The start/
-// finish reference photos and any per-exercise video link are read from the
-// library entry (see exercises.json -> photos / optional video).
+// Build the "How to do it" reference for an exercise. The how-to steps come
+// from EXERCISE_INSTRUCTIONS (the real per-exercise instructions imported from
+// the Free Exercise DB into exercises.json); muscles/equipment come from the
+// library entry. Start/finish photos and any per-exercise video link are read
+// from the library entry (see exercises.json -> photos / optional video).
 function getExerciseReference(ex) {
   const lib = getExerciseById(ex.exerciseId);
-  const detailed = EXERCISE_REFERENCES[ex.exerciseId];
+  const steps = EXERCISE_INSTRUCTIONS[ex.exerciseId];
   const cap = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
   return {
-    muscles: detailed?.muscles
-      || (lib?.primaryMuscle ? cap(lib.primaryMuscle) : (ex.area || "Main working area")),
-    equipment: detailed?.equipment
-      || (lib?.equipment ? cap(lib.equipment) : (ex.type === "cardio" ? "Cardio equipment" : "As planned")),
+    muscles: lib?.primaryMuscle ? cap(lib.primaryMuscle) : (ex.area || "Main working area"),
+    equipment: lib?.equipment ? cap(lib.equipment) : (ex.type === "cardio" ? "Cardio equipment" : "As planned"),
     photos: getEffectivePhotos(lib),
     video: lib?.video || null,
-    steps: detailed?.steps || [
+    steps: (Array.isArray(steps) && steps.length) ? steps : [
       "Set up in a comfortable, controlled position.",
       "Move slowly enough that you can keep good form.",
       "Stop the set if you feel sharp pain or lose control."
     ],
-    cues: detailed?.cues || ["Smooth reps.", "Steady breathing.", "Good form first."]
+    // The imported instructions cover form already, so there are no separate
+    // one-line cues; the cue chips render only when an exercise supplies them.
+    cues: []
   };
 }
 
@@ -3141,9 +4008,9 @@ function buildReferenceSheetMarkup(ex, closeAction) {
         <ol class="lw-ref-steps">
           ${ref.steps.map((step) => `<li>${escapeHtml(step)}</li>`).join("")}
         </ol>
-        <div class="lw-ref-cues">
+        ${ref.cues.length ? `<div class="lw-ref-cues">
           ${ref.cues.map((cue) => `<span>${escapeHtml(cue)}</span>`).join("")}
-        </div>
+        </div>` : ""}
         <a class="lw-ref-video" href="${escapeHtml(videoHref)}" target="_blank" rel="noopener noreferrer">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="5" width="19" height="14" rx="3"/><path d="M10 9.5l5 2.5-5 2.5z" fill="currentColor" stroke="none"/></svg>
           Watch video tutorial
@@ -3255,7 +4122,10 @@ function resizeTodaySets(ex, count) {
 function resizeTodayHolds(ex, count) {
   const holds = Array.isArray(ex.holds) ? ex.holds : [];
   const safeCount = clampNumber(count, 1, 10);
-  while (holds.length < safeCount) holds.push({ done: false });
+  while (holds.length < safeCount) {
+    const last = holds[holds.length - 1];
+    holds.push({ seconds: last ? last.seconds : (ex.holdSeconds || 45), done: false, notes: "", difficulty: null });
+  }
   while (holds.length > safeCount) holds.pop();
   ex.holds = holds;
   ex.targetSets = safeCount;
@@ -3308,8 +4178,8 @@ function adjustTodayTarget(ex, field, delta, min, max) {
 // The set "breadcrumb": a row of right-pointing arrow segments, one per set,
 // with the current one highlighted. Capped at 6 arrows (more than that and we
 // fall back to a plain label). A single set shows one tidy box instead.
-function renderSetSteps(current, total) {
-  const label = `Set ${current + 1} of ${total}`;
+function renderSetSteps(current, total, unit = "Set") {
+  const label = `${unit} ${current + 1} of ${total}`;
   if (total === 1) {
     return `<div class="lw-steps"><span class="lw-step-single">${escapeHtml(label)}</span></div>`;
   }
@@ -3319,7 +4189,7 @@ function renderSetSteps(current, total) {
   let segs = "";
   for (let k = 0; k < total; k++) {
     const state = k < current ? "is-done" : (k === current ? "is-current" : "is-upcoming");
-    segs += `<button class="lw-step ${state}" type="button" data-action="goto-set" data-set-index="${k}" aria-label="Go to set ${k + 1}"${k === current ? ' aria-current="step"' : ""}>${k + 1}</button>`;
+    segs += `<button class="lw-step ${state}" type="button" data-action="goto-set" data-set-index="${k}" aria-label="Go to ${unit.toLowerCase()} ${k + 1}"${k === current ? ' aria-current="step"' : ""}>${k + 1}</button>`;
   }
   return `<div class="lw-steps" role="group" aria-label="${escapeHtml(label)}">${segs}</div>`;
 }
@@ -3377,6 +4247,53 @@ function getNextExerciseLabel() {
     : `Next: ${escapeHtml(activeWorkout.exercises[i + 1].name)} &rarr;`;
 }
 
+// Strength and timed moves both page one unit at a time: a "set" (weight x
+// reps) or a "hold" (seconds). This returns the array currentSet indexes into.
+function activeUnits(ex) {
+  return ex?.type === "timed" ? (ex.holds || []) : (ex.sets || []);
+}
+
+// The seconds the live countdown should run for the hold currently on screen.
+function currentHoldSeconds(ex) {
+  const hold = (ex.holds || [])[activeWorkout.currentSet];
+  return Math.max(5, Number(hold?.seconds) || Number(ex.holdSeconds) || 45);
+}
+
+// A quiet "Rest ~90s before your next set" note for the live set/hold page,
+// shown only when the plan set a rest target. No timer — just a reminder.
+function renderRestHint(ex) {
+  const sec = Number(ex.restSeconds) || 0;
+  if (sec <= 0) return "";
+  const what = ex.type === "timed" ? "between holds" : "before your next set";
+  return `<p class="lw-rest-hint">Rest ~<strong>${escapeHtml(formatRest(sec))}</strong> ${what}</p>`;
+}
+
+// Optional 1-10 effort control under a set/hold's note (request: a small red
+// button you can tap to rate, then proceed). Collapsed until tapped; tapping the
+// active number again clears it. Never required. index === -1 rates the whole
+// exercise (used for cardio/sport, which have no per-set rows).
+function renderEffortControl(ex, index) {
+  const unit = index === -1 ? ex : activeUnits(ex)[index];
+  if (!unit) return "";
+  const val = Number.isFinite(unit.difficulty) ? unit.difficulty : null;
+  const open = activeWorkout.effortOpenKey === `${ex.id}:${index}`;
+  const chips = open
+    ? `<div class="lw-effort-row" role="group" aria-label="Effort, 1 easy to 10 all-out">
+        ${Array.from({ length: 10 }, (_, k) => {
+          const v = k + 1;
+          return `<button type="button" class="lw-effort-chip${v === val ? " is-active" : ""}" data-action="set-effort" data-set-index="${index}" data-value="${v}" aria-pressed="${v === val}" aria-label="Effort ${v} of 10">${v}</button>`;
+        }).join("")}
+      </div>`
+    : "";
+  return `
+    <div class="lw-effort${val ? " has-val" : ""}">
+      <button type="button" class="lw-effort-toggle${val ? " has-val" : ""}" data-action="toggle-effort" data-set-index="${index}" aria-expanded="${open}">
+        <span class="lw-effort-dot" aria-hidden="true"></span>${val ? `Effort ${val}/10` : "Rate effort (optional)"}
+      </button>
+      ${chips}
+    </div>`;
+}
+
 function renderFocusedExercise() {
   const exercises = activeWorkout.exercises;
   const i = activeWorkout.currentIndex;
@@ -3384,43 +4301,82 @@ function renderFocusedExercise() {
   const total = exercises.length;
   const routineName = todayRoutineName?.textContent || "Workout";
 
-  // Strength exercises page one set at a time; keep the set index in range
-  // (0..sets.length, where sets.length is the wrap "add another set?" page).
-  if (ex.type === "strength") {
+  // Strength and timed moves page one unit at a time; keep the index in range
+  // (0..length, where length is the wrap "add another?" page).
+  if (ex.type === "strength" || ex.type === "timed") {
+    const units = activeUnits(ex);
     activeWorkout.currentSet = activeWorkout.flowMode === "round"
-      ? clampNumber(activeWorkout.roundNumber, 0, Math.max(0, (ex.sets || []).length - 1))
-      : clampNumber(activeWorkout.currentSet, 0, (ex.sets || []).length);
+      ? clampNumber(activeWorkout.roundNumber, 0, Math.max(0, units.length - 1))
+      : clampNumber(activeWorkout.currentSet, 0, units.length);
   }
   const nextLabel = getNextExerciseLabel();
 
   let body;
   if (ex.type === "timed") {
-    // Held move (e.g. plank): a real countdown timer with presets and one
-    // tappable pill per hold. Point the timer at this exercise on first view.
-    if (activeWorkout.timer.exerciseId !== ex.id) initTimerForExercise(ex);
-    const t = activeWorkout.timer;
-    const running = t.running;
-    const lock = running ? " disabled" : "";
-    const presets = [30, 45, 60, 90];
-    const toggleLabel = running
-      ? "Pause"
-      : (t.remaining < t.total && t.remaining > 0 ? "Resume" : "Start");
-    body = `
-      <div class="lw-timer${running ? " is-running" : ""}${t.finished ? " is-finished" : ""}">
-        <div class="lw-timer-num${t.finished ? " flash" : ""}" id="lw-timer-num" aria-live="off">${formatTimer(t.remaining)}</div>
-        <div class="lw-presets">
-          ${presets.map((sec) => `<button class="lw-preset${ex.holdSeconds === sec ? " on" : ""}" type="button" data-action="timer-preset" data-seconds="${sec}"${lock}>${sec}s</button>`).join("")}
+    // Held move (e.g. plank): paged one hold at a time, just like strength sets.
+    // Each hold has its own seconds (so 60/60/45 is captured), an optional
+    // countdown timer helper, a note, and optional effort. After the last hold a
+    // wrap page offers another hold or moving on.
+    const holds = ex.holds || [];
+    const n = holds.length;
+    const s = activeWorkout.currentSet;
+
+    if (s >= n) {
+      body = `
+        <div class="lw-wrap">
+          <p class="lw-wrap-title">That&rsquo;s all ${n} hold${n === 1 ? "" : "s"} of ${escapeHtml(ex.name)}.</p>
+          <p class="lw-wrap-sub">Add another hold, or move on.</p>
+          <div class="lw-wrap-actions">
+            <button class="lw-skip" type="button" data-action="add-set-page">+ Another hold</button>
+            <button class="primary-button lw-complete" type="button" data-action="lw-next">${nextLabel}</button>
+          </div>
         </div>
-        <div class="lw-timer-controls">
-          <button class="lw-tbtn primary" type="button" data-action="timer-toggle">${toggleLabel}</button>
-          <button class="lw-tbtn" type="button" data-action="timer-reset"${lock}>Reset</button>
+      `;
+    } else {
+      // Keep the live countdown pointed at this hold's seconds.
+      if (activeWorkout.timer.exerciseId !== ex.id || activeWorkout.timer.holdIndex !== s) initTimerForExercise(ex);
+      const hold = holds[s];
+      const t = activeWorkout.timer;
+      const running = t.running;
+      const lock = running ? " disabled" : "";
+      const toggleLabel = running
+        ? "Pause"
+        : (t.remaining < t.total && t.remaining > 0 ? "Resume" : "Start");
+      body = `
+        <div class="lw-setpage lw-hold-page" data-set-index="${s}">
+          ${renderSetSteps(s, n, "Hold")}
+          <div class="lw-bigstep">
+            <span class="lw-bigstep-label">Hold for</span>
+            <div class="lw-bigstep-row">
+              <button class="lw-wbtn lw-wbtn-lg" type="button" data-action="set-seconds-step" data-set-index="${s}" data-delta="-5" aria-label="Lower hold seconds"${lock}>&minus;</button>
+              <span class="lw-bigstep-val"><strong>${escapeHtml(Number(hold.seconds) || 0)}</strong> sec</span>
+              <button class="lw-wbtn lw-wbtn-lg" type="button" data-action="set-seconds-step" data-set-index="${s}" data-delta="5" aria-label="Raise hold seconds"${lock}>+</button>
+            </div>
+          </div>
+          <details class="lw-hold-timer"${running || t.finished ? " open" : ""}>
+            <summary>Countdown timer (optional)</summary>
+            <div class="lw-timer${running ? " is-running" : ""}${t.finished ? " is-finished" : ""}">
+              <div class="lw-timer-num${t.finished ? " flash" : ""}" id="lw-timer-num" aria-live="off">${formatTimer(t.remaining)}</div>
+              <div class="lw-timer-controls">
+                <button class="lw-tbtn primary" type="button" data-action="timer-toggle">${toggleLabel}</button>
+                <button class="lw-tbtn" type="button" data-action="timer-reset"${lock}>Reset</button>
+              </div>
+              <p class="lw-note">${t.finished ? "Time&rsquo;s up! Tap Complete hold to log it." : "Counts down this hold&rsquo;s seconds — logging stays on the number above."}</p>
+            </div>
+          </details>
+          <label class="lw-live-note">
+            <span>Hold note (optional)</span>
+            <textarea rows="2" data-action="set-notes" data-set-index="${s}" placeholder="Form, how it felt, cut short...">${escapeHtml(hold.notes || "")}</textarea>
+          </label>
+          ${renderEffortControl(ex, s)}
+          ${renderRestHint(ex)}
+          <div class="lw-setpage-actions">
+            <button class="lw-skip" type="button" data-action="skip-set">Skip hold</button>
+            <button class="primary-button lw-complete btn-ico" type="button" data-action="complete-set">${getUiIcon("check")}Complete hold</button>
+          </div>
         </div>
-        <div class="lw-pills">
-          ${(ex.holds || []).map((hold, hi) => `<button class="lw-pill${hold.done ? " is-done" : ""}" type="button" data-action="toggle-hold" data-hold-index="${hi}"${lock} aria-label="Mark hold ${hi + 1} done">${hi + 1}</button>`).join("")}
-        </div>
-        <p class="lw-note">${t.finished ? "Time&rsquo;s up! Tap the hold below to log it, then start the next one." : "Tap a number to mark each hold done."}</p>
-      </div>
-    `;
+      `;
+    }
   } else if (ex.type === "cardio") {
     const subtypes = getExerciseSubtypeOptions(ex.exerciseId);
     body = `
@@ -3461,6 +4417,7 @@ function renderFocusedExercise() {
         <span>Notes (optional)</span>
         <textarea rows="2" data-action="exercise-notes" placeholder="Anything to remember about this session">${escapeHtml(ex.notes || "")}</textarea>
       </label>
+      ${renderEffortControl(ex, -1)}
       <p class="lw-note">Enter your minutes and mark it done.</p>
     `;
   } else if (ex.type === "sport") {
@@ -3476,6 +4433,7 @@ function renderFocusedExercise() {
         <span>Notes (optional)</span>
         <textarea rows="3" data-action="sport-notes" placeholder="How it went, score, who you played, how you felt...">${escapeHtml(ex.sportNotes || "")}</textarea>
       </label>
+      ${renderEffortControl(ex, -1)}
       <p class="lw-note">Enter how long you played and mark it done.</p>
     `;
   } else {
@@ -3532,6 +4490,8 @@ function renderFocusedExercise() {
             <span>Set note (optional)</span>
             <textarea rows="2" data-action="set-notes" data-set-index="${s}" placeholder="Form, pain, setup, felt easy/hard...">${escapeHtml(set.notes || "")}</textarea>
           </label>
+          ${renderEffortControl(ex, s)}
+          ${renderRestHint(ex)}
           <div class="lw-setpage-actions">
             <button class="lw-skip" type="button" data-action="skip-set">Skip set</button>
             <button class="primary-button lw-complete btn-ico" type="button" data-action="complete-set">${getUiIcon("check")}Complete set</button>
@@ -3566,7 +4526,7 @@ function renderFocusedExercise() {
         <button class="lw-edit-targets" type="button" data-action="open-targets"${activeWorkout.timer.running ? " disabled" : ""}>Edit targets</button>
       </div>
       ${body}
-      ${ex.type === "strength" ? "" : `
+      ${(ex.type === "strength" || ex.type === "timed") ? "" : `
       <div class="lw-next-row">
         <button class="primary-button lw-next" type="button" data-action="lw-next">${nextLabel}</button>
       </div>`}
@@ -3578,19 +4538,17 @@ function renderFocusedExercise() {
   renderUiIcons();
 }
 
-// A compact 1-10 effort scale for one exercise on the finish screen. Defaults to
-// the exercise's current difficulty so a quick tap is all it takes to adjust.
-function renderFinishDifficulty(ex, index) {
-  const current = Number(ex.difficulty) || 0;
-  const chips = Array.from({ length: 10 }, (_, k) => {
-    const v = k + 1;
-    return `<button type="button" class="lw-diff-chip${v === current ? " is-active" : ""}" data-action="set-difficulty" data-ex-index="${index}" data-value="${v}" aria-label="Effort ${v} of 10 for ${escapeHtml(ex.name)}"${v === current ? ' aria-pressed="true"' : ""}>${v}</button>`;
-  }).join("");
-  return `
-    <div class="lw-diff">
-      <span class="lw-diff-label">Effort</span>
-      <div class="lw-diff-row">${chips}</div>
-    </div>`;
+// A read-only one-line summary of the efforts logged for an exercise, for the
+// finish recap. Effort is now rated per set/hold while working out, so this just
+// reflects what was already entered (e.g. "Effort 7 · 8 · 6"). "" when unrated.
+function formatLoggedEffort(ex) {
+  if (ex.type === "cardio" || ex.type === "sport") {
+    return Number.isFinite(ex.difficulty) && ex.difficulty > 0 ? `Effort ${ex.difficulty}/10` : "";
+  }
+  const rated = activeUnits(ex)
+    .filter((u) => u.done && Number.isFinite(u.difficulty) && u.difficulty > 0)
+    .map((u) => u.difficulty);
+  return rated.length ? `Effort ${rated.join(" · ")}` : "";
 }
 
 function renderFinishScreen() {
@@ -3609,17 +4567,20 @@ function renderFinishScreen() {
         </div>
         <h3 class="lw-finish-title">Workout complete</h3>
         <p class="lw-finish-sub">${escapeHtml(routineName)} · ${loggedCount} of ${total} logged</p>
-        ${anyLogged ? `<p class="lw-recap-hint">How hard did each one feel? Tap to rate (1 = easy, 10 = all-out).</p>` : ""}
+        ${anyLogged ? `<p class="lw-recap-hint">Here's what you logged. Effort you rated on each set is saved for your coach.</p>` : ""}
         <div class="lw-recap">
-          ${exercises.map((ex, idx) => `
-            <div class="lw-recap-row${isExerciseLogged(ex) ? " has-diff" : ""}">
+          ${exercises.map((ex) => {
+            const effort = isExerciseLogged(ex) ? formatLoggedEffort(ex) : "";
+            return `
+            <div class="lw-recap-row${effort ? " has-diff" : ""}">
               <div class="lw-recap-top">
                 <span>${escapeHtml(ex.name)}</span>
                 <b>${escapeHtml(formatExerciseRecap(ex))}</b>
               </div>
-              ${isExerciseLogged(ex) ? renderFinishDifficulty(ex, idx) : ""}
+              ${effort ? `<p class="lw-recap-effort">${escapeHtml(effort)}</p>` : ""}
             </div>
-          `).join("")}
+          `;
+          }).join("")}
         </div>
         <button class="primary-button lw-save" type="button" data-action="finish-save">Save workout</button>
         <button class="quiet-button lw-finish-back" type="button" data-action="finish-back">Back to workout</button>
@@ -3703,8 +4664,9 @@ function handleTodayWorkoutChange(event) {
   }
 
   if (action === "set-notes") {
-    const set = exercise.sets?.[Number(input.dataset.setIndex)];
-    if (set) set.notes = input.value;
+    // Works for both strength sets and timed holds (whichever is on screen).
+    const unit = activeUnits(exercise)[Number(input.dataset.setIndex)];
+    if (unit) unit.notes = input.value;
     persistActiveWorkoutDraft();
     return;
   }
@@ -3768,18 +4730,19 @@ function formatTimer(ms) {
   return `${m}:${String(s).padStart(2, "0")}.${String(cs).padStart(2, "0")}`;
 }
 
-// Point the live timer at a held exercise: set the countdown to its chosen
-// hold length and clear any previous run.
+// Point the live timer at the hold currently on screen: set the countdown to
+// that hold's seconds and clear any previous run.
 function initTimerForExercise(ex) {
   const t = activeWorkout.timer;
   cancelAnimationFrame(t.raf);
-  const ms = Math.max(1, Number(ex.holdSeconds) || 45) * 1000;
+  const ms = Math.max(1, currentHoldSeconds(ex)) * 1000;
   t.total = ms;
   t.remaining = ms;
   t.running = false;
   t.finished = false;
   t.lastTs = 0;
   t.exerciseId = ex.id;
+  t.holdIndex = activeWorkout.currentSet;
 }
 
 // Pause and clear the timer (used when leaving an exercise screen).
@@ -3843,15 +4806,16 @@ function moveBackLiveWorkout() {
     return false;
   }
   const exercise = getActiveExercise();
-  if (exercise && exercise.type === "strength" && activeWorkout.currentSet > 0) {
+  const paged = exercise && (exercise.type === "strength" || exercise.type === "timed");
+  if (paged && activeWorkout.currentSet > 0) {
     activeWorkout.currentSet -= 1;
     return true;
   }
   if (activeWorkout.currentIndex > 0) {
     activeWorkout.currentIndex -= 1;
     const prev = activeWorkout.exercises[activeWorkout.currentIndex];
-    activeWorkout.currentSet = (prev && prev.type === "strength")
-      ? Math.max(0, (prev.sets || []).length - 1)
+    activeWorkout.currentSet = (prev && (prev.type === "strength" || prev.type === "timed"))
+      ? Math.max(0, activeUnits(prev).length - 1)
       : 0;
     return true;
   }
@@ -3941,7 +4905,7 @@ async function handleTodayWorkoutClick(event) {
 
   if (action === "timer-toggle" && exercise) {
     const t = activeWorkout.timer;
-    if (t.exerciseId !== exercise.id) initTimerForExercise(exercise);
+    if (t.exerciseId !== exercise.id || t.holdIndex !== activeWorkout.currentSet) initTimerForExercise(exercise);
     if (t.running) {
       t.running = false;
       cancelAnimationFrame(t.raf);
@@ -3967,22 +4931,43 @@ async function handleTodayWorkoutClick(event) {
     return;
   }
 
-  if (action === "timer-preset" && exercise) {
-    if (activeWorkout.timer.running) return; // locked while running
-    exercise.holdSeconds = Number(button.dataset.seconds) || 45;
-    initTimerForExercise(exercise);
-    renderTodayWorkout();
-    persistActiveWorkoutDraft();
+  // Adjust the seconds for the hold on screen (timed move). Keeps the live
+  // countdown in sync if it's pointed at this hold and not currently running.
+  if (action === "set-seconds-step" && exercise) {
+    if (activeWorkout.timer.running) return;
+    const si = Number(button.dataset.setIndex);
+    const hold = exercise.holds?.[si];
+    if (hold) {
+      const delta = Number(button.dataset.delta) || 0;
+      hold.seconds = clampNumber((Number(hold.seconds) || 0) + delta, 5, 600);
+      if (activeWorkout.timer.exerciseId === exercise.id && activeWorkout.currentSet === si) {
+        initTimerForExercise(exercise);
+      }
+      renderTodayWorkout();
+      persistActiveWorkoutDraft();
+    }
     return;
   }
 
-  if (action === "toggle-hold" && exercise) {
-    if (activeWorkout.timer.running) return; // locked while running
-    const hi = Number(button.dataset.holdIndex);
-    const hold = exercise.holds?.[hi];
-    if (hold) hold.done = !hold.done;
+  // Expand/collapse the optional 1-10 effort chips for a set/hold.
+  if (action === "toggle-effort" && exercise) {
+    const key = `${exercise.id}:${Number(button.dataset.setIndex)}`;
+    activeWorkout.effortOpenKey = activeWorkout.effortOpenKey === key ? null : key;
     renderTodayWorkout();
-    persistActiveWorkoutDraft();
+    return;
+  }
+
+  // Pick (or clear, by re-tapping) the optional effort for a set/hold/exercise.
+  if (action === "set-effort" && exercise) {
+    const si = Number(button.dataset.setIndex);
+    const value = Number(button.dataset.value);
+    const unit = si === -1 ? exercise : activeUnits(exercise)[si];
+    if (unit && value >= 1 && value <= 10) {
+      unit.difficulty = unit.difficulty === value ? null : value;
+      activeWorkout.effortOpenKey = null;
+      renderTodayWorkout();
+      persistActiveWorkoutDraft();
+    }
     return;
   }
 
@@ -4067,12 +5052,15 @@ async function handleTodayWorkoutClick(event) {
     return;
   }
 
-  // Complete / Skip drive the one-set-per-page flow: mark the set, then advance
-  // to the next set (or the wrap page once past the last set).
+  // Complete / Skip drive the one-set-per-page flow (strength sets and timed
+  // holds alike): mark the unit, then advance to the next (or the wrap page once
+  // past the last one).
   if ((action === "complete-set" || action === "skip-set") && exercise) {
     const s = activeWorkout.currentSet;
-    const set = exercise.sets?.[s];
-    if (set) set.done = action === "complete-set";
+    const unit = activeUnits(exercise)[s];
+    if (unit) unit.done = action === "complete-set";
+    activeWorkout.effortOpenKey = null;
+    if (exercise.type === "timed") stopTimer();
     if (activeWorkout.flowMode === "round") {
       advanceLiveWorkout();
     } else {
@@ -4084,22 +5072,37 @@ async function handleTodayWorkoutClick(event) {
   }
 
   if (action === "goto-set" && exercise) {
-    activeWorkout.currentSet = clampNumber(Number(button.dataset.setIndex), 0, (exercise.sets || []).length);
+    if (exercise.type === "timed") stopTimer();
+    activeWorkout.effortOpenKey = null;
+    activeWorkout.currentSet = clampNumber(Number(button.dataset.setIndex), 0, activeUnits(exercise).length);
     renderTodayWorkout();
     return;
   }
 
   if (action === "add-set-page" && exercise) {
-    const last = exercise.sets?.[exercise.sets.length - 1];
-    exercise.sets.push({
-      weight: last ? last.weight : 0,
-      reps: last ? last.reps : (exercise.targetReps || 0),
-      done: false,
-      notes: "",
-      touchedWeight: false,
-      touchedReps: false
-    });
-    activeWorkout.currentSet = exercise.sets.length - 1;
+    if (exercise.type === "timed") {
+      const holds = exercise.holds || (exercise.holds = []);
+      const last = holds[holds.length - 1];
+      holds.push({
+        seconds: last ? last.seconds : (exercise.holdSeconds || 45),
+        done: false,
+        notes: "",
+        difficulty: null
+      });
+      activeWorkout.currentSet = holds.length - 1;
+    } else {
+      const last = exercise.sets?.[exercise.sets.length - 1];
+      exercise.sets.push({
+        weight: last ? last.weight : 0,
+        reps: last ? last.reps : (exercise.targetReps || 0),
+        done: false,
+        notes: "",
+        difficulty: null,
+        touchedWeight: false,
+        touchedReps: false
+      });
+      activeWorkout.currentSet = exercise.sets.length - 1;
+    }
     renderTodayWorkout();
     persistActiveWorkoutDraft();
     return;
@@ -4180,18 +5183,6 @@ async function handleTodayWorkoutClick(event) {
     return;
   }
 
-  if (action === "set-difficulty") {
-    const idx = Number(button.dataset.exIndex);
-    const value = Number(button.dataset.value);
-    const ex = activeWorkout.exercises[idx];
-    if (ex && value >= 1 && value <= 10) {
-      ex.difficulty = value;
-      persistActiveWorkoutDraft();
-      renderTodayWorkout();
-    }
-    return;
-  }
-
   if (action === "finish-back") {
     activeWorkout.phase = "exercise";
     persistActiveWorkoutDraft();
@@ -4200,11 +5191,45 @@ async function handleTodayWorkoutClick(event) {
   }
 
   if (action === "finish-save") {
-    saveTodayWorkout().catch((error) => {
-      console.error("Error saving today's workout:", error);
-      showStatusModal({ title: "Save failed", message: error.message, tone: "bad" });
-    });
+    // Guard against double-submit: while the save is in flight the button is
+    // disabled and shows a spinner, so a second tap can't create a duplicate.
+    if (isSavingWorkout) return;
+    isSavingWorkout = true;
+    if (button) {
+      button.disabled = true;
+      button.classList.add("is-saving");
+      button.innerHTML = `<span class="lw-save-spinner" aria-hidden="true"></span>Saving…`;
+    }
+    saveTodayWorkout()
+      .catch((error) => {
+        console.error("Error saving today's workout:", error);
+        showStatusModal({ title: "Save failed", message: error.message, tone: "bad" });
+      })
+      .finally(() => {
+        isSavingWorkout = false;
+        // The button may be gone (save resets the screen on success); only
+        // restore it if it's still on screen (e.g. after "nothing to save").
+        if (button && button.isConnected) {
+          button.disabled = false;
+          button.classList.remove("is-saving");
+          button.textContent = "Save workout";
+        }
+      });
   }
+}
+
+// True while a workout save is in flight, so finish-save can't be fired twice.
+let isSavingWorkout = false;
+
+// Roll a list of per-set/per-hold efforts up into one exercise-level number
+// (rounded average of the rated ones) for Progress and the AI export, which
+// read a single entry.difficulty. Returns null when nothing was rated.
+function rollupDifficulty(units) {
+  const rated = (units || [])
+    .map((u) => Number(u.difficulty))
+    .filter((v) => Number.isFinite(v) && v > 0);
+  if (!rated.length) return null;
+  return Math.round(rated.reduce((a, b) => a + b, 0) / rated.length);
 }
 
 async function saveTodayWorkout() {
@@ -4257,10 +5282,10 @@ async function saveTodayWorkout() {
           subtype: ex.targetSubtype || "",
           durationMinutes: Number(ex.actualDuration) || 0,
           done: true,
-          difficulty: Number(ex.difficulty) || 5,
           notes: (ex.notes || "").trim(),
           flowMode: activeWorkout.flowMode
         };
+        if (Number.isFinite(ex.difficulty) && ex.difficulty > 0) entry.difficulty = ex.difficulty;
         if (!entry.notes) delete entry.notes;
         if (stats) entry.stats = stats;
         return entry;
@@ -4279,18 +5304,18 @@ async function saveTodayWorkout() {
           },
           durationMinutes: Number(ex.actualDuration) || 0,
           done: true,
-          difficulty: Number(ex.difficulty) || 5,
           flowMode: activeWorkout.flowMode
         };
+        if (Number.isFinite(ex.difficulty) && ex.difficulty > 0) entry.difficulty = ex.difficulty;
         if (note) entry.notes = note;
         return entry;
       }
 
-      // Held move: record how many holds were completed and the seconds each
-      // (e.g. "3 x 45 sec"). Kept separate from steady cardio minutes.
+      // Held move: record each completed hold with its own seconds (so 60/60/45
+      // reads faithfully), plus optional per-hold note and effort.
       if (ex.type === "timed") {
-        const doneHolds = (ex.holds || []).filter((hold) => hold.done).length;
-        return {
+        const doneHolds = (ex.holds || []).filter((hold) => hold.done);
+        const entry = {
           id: ex.id,
           type: "timed",
           exerciseId: ex.exerciseId,
@@ -4300,13 +5325,22 @@ async function saveTodayWorkout() {
             seconds: ex.holdSeconds || 0
           },
           actualSummary: {
-            sets: doneHolds,
-            seconds: Number(ex.holdSeconds) || 0
+            sets: doneHolds.length,
+            // Back-compat single number = the first completed hold's length.
+            seconds: Number(doneHolds[0]?.seconds) || Number(ex.holdSeconds) || 0
           },
-          difficulty: Number(ex.difficulty) || 5,
+          holds: doneHolds.map((hold, idx) => {
+            const row = { id: `hold-${idx + 1}`, holdNumber: idx + 1, seconds: Number(hold.seconds) || 0, done: true };
+            const note = (hold.notes || "").trim();
+            if (note) row.notes = note;
+            if (Number.isFinite(hold.difficulty) && hold.difficulty > 0) row.difficulty = hold.difficulty;
+            return row;
+          }),
           notes: (ex.notes || "").trim(),
           flowMode: activeWorkout.flowMode
         };
+        const rolled = rollupDifficulty(doneHolds);
+        if (rolled) entry.difficulty = rolled;
         if (!entry.notes) delete entry.notes;
         return entry;
       }
@@ -4317,7 +5351,7 @@ async function saveTodayWorkout() {
       const topWeight = doneSets.reduce((max, set) => Math.max(max, Number(set.weight) || 0), 0);
       const repsAtTop = doneSets.find((set) => (Number(set.weight) || 0) === topWeight)?.reps || 0;
 
-      return {
+      const entry = {
         id: ex.id,
         type: "strength",
         exerciseId: ex.exerciseId,
@@ -4332,19 +5366,25 @@ async function saveTodayWorkout() {
           reps: Number(repsAtTop) || 0,
           weight: usesWeightMetric(ex) ? (Number(topWeight) || 0) : 0
         },
-        sets: doneSets.map((set, i) => ({
-          id: `set-${i + 1}`,
-          setNumber: i + 1,
-          reps: Number(set.reps) || 0,
-          weight: usesWeightMetric(ex) ? (Number(set.weight) || 0) : 0,
-          done: true,
-          notes: (set.notes || "").trim()
-        })),
+        sets: doneSets.map((set, i) => {
+          const row = {
+            id: `set-${i + 1}`,
+            setNumber: i + 1,
+            reps: Number(set.reps) || 0,
+            weight: usesWeightMetric(ex) ? (Number(set.weight) || 0) : 0,
+            done: true,
+            notes: (set.notes || "").trim()
+          };
+          if (Number.isFinite(set.difficulty) && set.difficulty > 0) row.difficulty = set.difficulty;
+          return row;
+        }),
         notes: (ex.notes || "").trim(),
         metricProfile: ex.metricProfile,
-        difficulty: Number(ex.difficulty) || 5,
         flowMode: activeWorkout.flowMode
       };
+      const rolled = rollupDifficulty(doneSets);
+      if (rolled) entry.difficulty = rolled;
+      return entry;
     });
 
   const savedWorkout = {
@@ -6329,8 +7369,12 @@ function formatEntryDetails(entry) {
   }
 
   if (entry.type === "timed") {
-    const secs = entry.actualSummary?.seconds || entry.planned?.seconds || 0;
     const planned = entry.planned?.sets ? `planned ${entry.planned.sets} × ${entry.planned.seconds || 0} sec, ` : "";
+    // New shape: each hold's actual seconds (e.g. "60s · 60s · 45s").
+    if (Array.isArray(entry.holds) && entry.holds.length) {
+      return `${planned}actual ${entry.holds.map((hold) => `${Number(hold.seconds) || 0}s`).join(" · ")}`;
+    }
+    const secs = entry.actualSummary?.seconds || entry.planned?.seconds || 0;
     return `${planned}actual ${entry.actualSummary?.sets || 0} × ${secs} sec`;
   }
 
@@ -6344,12 +7388,16 @@ function formatEntryDetails(entry) {
 function formatRoutineExercise(exercise) {
   const exerciseInfo = getExerciseById(exercise.exerciseId);
   const name = exerciseInfo?.name || exercise.exerciseId;
+  const rest = Number(exercise.targetRest) > 0 ? `, rest ${formatRest(exercise.targetRest)}` : "";
   if (exercise.targetDuration) {
     const subtype = exercise.targetSubtype ? `${exercise.targetSubtype}, ` : "";
     return `- ${name}: ${subtype}${exercise.targetDuration} min`;
   }
+  if (exerciseInfo?.type === "timed") {
+    return `- ${name}: ${exercise.targetSets || 1}x${exercise.targetReps || 0} sec${rest}`;
+  }
   const weight = Number(exercise.targetWeight) > 0 ? ` @ ${exercise.targetWeight} lb` : "";
-  return `- ${name}: ${exercise.targetSets || 1}x${exercise.targetReps || 0}${weight}`;
+  return `- ${name}: ${exercise.targetSets || 1}x${exercise.targetReps || 0}${weight}${rest}`;
 }
 
 function formatRoutineExerciseDisplay(exercise) {
@@ -6528,15 +7576,17 @@ function renderRoutineExerciseEditRow(routineId, ex, index, count) {
   const numInput = (field, value, label, min = 0) =>
     `<label class="routine-num"><span>${label}</span><input type="number" inputmode="numeric" min="${min}" value="${value}" data-action="routine-ex-field" data-id="${escapeHtml(routineId)}" data-index="${index}" data-field="${field}" aria-label="${escapeHtml(name)} ${label}" /></label>`;
 
+  const restInput = numInput("targetRest", Number(ex.targetRest) || 0, "rest s", 0);
   let fields;
   if (ex.targetDuration || type === "cardio" || type === "sport") {
     fields = numInput("targetDuration", ex.targetDuration || 20, "min", 1);
   } else if (type === "timed") {
-    fields = numInput("targetSets", ex.targetSets || 3, "sets", 1) + numInput("targetReps", ex.targetReps || 30, "sec", 1);
+    fields = numInput("targetSets", ex.targetSets || 3, "sets", 1) + numInput("targetReps", ex.targetReps || 30, "sec", 1) + restInput;
   } else {
     fields = numInput("targetSets", ex.targetSets || 3, "sets", 1)
       + numInput("targetReps", ex.targetReps || 8, "reps", 0)
-      + numInput("targetWeight", Number(ex.targetWeight) || 0, "lb", 0);
+      + numInput("targetWeight", Number(ex.targetWeight) || 0, "lb", 0)
+      + restInput;
   }
 
   return `
@@ -6599,9 +7649,9 @@ function renderPlanAiPanel(importMessageHtml, importPreviewHtml, importText) {
       <div class="plan-section-head">
         <div>
           <p class="card-kicker">AI coach · optional</p>
-          <p class="plan-muted">Hand your plan to an AI coach, then paste its updated version back in.</p>
+          <p class="plan-muted">Copies a ready-to-paste prompt with your goals, plan, and full workout history. Paste it into any AI chat and it acts as your coach — it'll ask about your week and talk through options, then hand back next week's plan for you to import below.</p>
         </div>
-        <button class="quiet-button small-button btn-ico" type="button" data-action="copy-packet">${getUiIcon("clipboard-list")}Copy packet</button>
+        <button class="quiet-button small-button btn-ico" type="button" data-action="copy-packet">${getUiIcon("clipboard-list")}Copy coach prompt</button>
       </div>
       <button class="ai-drawer-toggle btn-ico" type="button" data-action="toggle-ai" aria-expanded="${aiPanelOpen ? "true" : "false"}">
         ${getUiIcon(aiPanelOpen ? "chevron-up" : "chevron-down")}
@@ -6619,7 +7669,7 @@ function renderPlanAiPanel(importMessageHtml, importPreviewHtml, importText) {
           ${importMessageHtml}
           ${importPreviewHtml}
           <div class="plan-ai-foot">
-            <button class="quiet-button small-button" type="button" data-action="save-packet">Save packet as a file instead</button>
+            <button class="quiet-button small-button" type="button" data-action="save-packet">Save coach prompt as a file instead</button>
           </div>
         </div>
       ` : ""}
@@ -6687,8 +7737,8 @@ function defaultRoutineExercise(exerciseId) {
     const targetSubtype = defaultExerciseSubtype(exerciseId);
     return { exerciseId, targetDuration: 20, ...(targetSubtype ? { targetSubtype } : {}) };
   }
-  if (type === "timed") return { exerciseId, targetSets: 3, targetReps: 30 };
-  return { exerciseId, targetSets: 3, targetReps: 8 };
+  if (type === "timed") return { exerciseId, targetSets: 3, targetReps: 30, targetRest: 0 };
+  return { exerciseId, targetSets: 3, targetReps: 8, targetRest: 0 };
 }
 
 function assignWeeklyDay(day, routineId) {
@@ -6847,6 +7897,7 @@ function updateRoutineExerciseField(routineId, index, field, rawValue) {
     if (field === "targetSets") value = Math.max(1, Math.round(value));
     else if (field === "targetReps") value = Math.max(0, Math.round(value));
     else if (field === "targetDuration") value = Math.max(1, Math.round(value));
+    else if (field === "targetRest") value = Math.max(0, Math.round(value));
     ex[field] = value;
   }, { rerender: false });
 }
@@ -6916,11 +7967,17 @@ function formatWorkoutForExport(workout) {
   lines.push(`Date: ${workout.date} - ${workout.name || workout.routineName || "Workout"}${flow}`);
 
   workout.entries?.forEach((entry) => {
-    const setNotes = Array.isArray(entry.sets)
-      ? entry.sets.map((set) => set.notes).filter(Boolean).join("; ")
-      : "";
+    // Sets (strength) or holds (timed) carry the per-unit notes and efforts.
+    const units = Array.isArray(entry.sets) ? entry.sets : (Array.isArray(entry.holds) ? entry.holds : []);
+    const setNotes = units.map((u) => u.notes).filter(Boolean).join("; ");
     const notes = [entry.notes, setNotes].filter(Boolean).join(" | Notes: ");
-    lines.push(`  ${entry.exerciseName}: ${formatEntryDetails(entry)} | Difficulty: ${entry.difficulty || "not logged"}/10${notes ? ` | Notes: ${notes}` : ""}`);
+    // Prefer the per-set/hold efforts when any were rated, so the coach sees how
+    // each set felt; otherwise fall back to the overall difficulty.
+    const perUnitEfforts = units.map((u) => Number(u.difficulty)).filter((v) => Number.isFinite(v) && v > 0);
+    const effort = perUnitEfforts.length
+      ? `Effort per set: ${perUnitEfforts.join(" · ")}/10`
+      : `Difficulty: ${entry.difficulty || "not logged"}/10`;
+    lines.push(`  ${entry.exerciseName}: ${formatEntryDetails(entry)} | ${effort}${notes ? ` | Notes: ${notes}` : ""}`);
   });
 
   return lines.join("\n");
@@ -7283,8 +8340,14 @@ function getWeekStats(mondayDate) {
         }
       } else if (e.type === "cardio" || e.type === "sport") {
         minutes += Number(e.durationMinutes) || 0;
-      } else if (e.type === "timed" && e.actualSummary) {
-        minutes += ((Number(e.actualSummary.sets) || 0) * (Number(e.actualSummary.seconds) || 0)) / 60;
+      } else if (e.type === "timed") {
+        // Prefer the exact per-hold seconds (e.g. 60+60+45); fall back to the
+        // older sets×seconds summary for workouts saved before per-hold logging.
+        if (Array.isArray(e.holds) && e.holds.length) {
+          minutes += e.holds.reduce((sum, h) => sum + (Number(h.seconds) || 0), 0) / 60;
+        } else if (e.actualSummary) {
+          minutes += ((Number(e.actualSummary.sets) || 0) * (Number(e.actualSummary.seconds) || 0)) / 60;
+        }
       }
     });
   });
@@ -8183,10 +9246,14 @@ function saveWorkoutChanges(workoutId) {
       const difficultyInput = exerciseEl.querySelector('input[data-field="difficulty"]');
       const notesInput = exerciseEl.querySelector('textarea[data-field="notes"]');
       if (holdsInput || secondsInput) {
-        entry.actualSummary = {
-          sets: Number(holdsInput?.value) || 0,
-          seconds: Number(secondsInput?.value) || 0
-        };
+        const sets = Number(holdsInput?.value) || 0;
+        const seconds = Number(secondsInput?.value) || 0;
+        entry.actualSummary = { sets, seconds };
+        // Keep the per-hold list (preferred by the displays/export) consistent
+        // with this coarse edit: equal-length holds at the edited seconds.
+        entry.holds = Array.from({ length: sets }, (_, k) => ({
+          id: `hold-${k + 1}`, holdNumber: k + 1, seconds, done: true
+        }));
       }
       if (notesInput) {
         const note = notesInput.value.trim();
@@ -8236,28 +9303,48 @@ function generateReviewPacket() {
   const bodyWeights = Array.isArray(data.bodyWeights) ? data.bodyWeights.slice() : [];
   const weightTarget = typeof data.weightTarget === "number" ? data.weightTarget : null;
 
-  packet.push("=== TRAINING BOOK REVIEW PACKET ===");
+  packet.push("=== TRAINING BOOK — AI COACH HANDOFF ===");
   packet.push(`Exported: ${new Date().toISOString()}`);
   packet.push("");
 
-  packet.push("HOW TRAINING BOOK WORKS:");
-  packet.push("- Workout reads from the weekly plan and loaded routines, but Daniel can add ad-hoc exercises during a session.");
-  packet.push("- Strength targets use sets x reps, optionally with a starting weight like 3x8 @ 95 lb. Logged strength work includes actual sets, reps, weight when relevant, notes, and difficulty.");
-  packet.push("- Cardio/Peloton targets use subtype plus minutes, such as Peloton Tread: Incline Walk, 30 min. Logged cardio can include output, average power, distance, notes, and difficulty.");
-  packet.push("- Held moves (e.g. plank) are timed: targets read sets x seconds, and logged work records how many holds were completed and the seconds each.");
-  packet.push("- Skipped exercises may be marked as skipped in History; coach the work Daniel actually logged and adjust around repeated skips.");
-  packet.push("- Return the updated plan using the structured format at the end of this packet.");
+  packet.push("YOU ARE MY PERSONAL STRENGTH & CONDITIONING COACH.");
+  packet.push("Everything below is my real training context: my goals, my current plan, my");
+  packet.push("complete workout history (including how hard each set felt), my body weight, and");
+  packet.push("my exercise library. Please read all of it before you respond.");
   packet.push("");
 
-  packet.push("COACHING REQUEST:");
-  packet.push("Review the workouts I actually completed, my difficulty ratings, my current loaded plan, and my exercise library. Suggest an updated active plan, weekly schedule, and routines. Keep daily logging quick and realistic.");
+  packet.push("HOW TO COACH ME (read this carefully):");
+  packet.push("- Do NOT open by dumping a new plan. Start like a real coach: a short read on how");
+  packet.push("  last week actually went, based on the data below.");
+  packet.push("- Then ask me questions before deciding anything — e.g. how my body feels, any pain");
+  packet.push("  or niggles, what I want to focus on this week, how many days and how much time I");
+  packet.push("  have, equipment access, and anything the numbers can't tell you.");
+  packet.push("- Give me options with a clear recommendation and the reasoning behind it. This is a");
+  packet.push("  back-and-forth conversation — react to my answers, push back when useful, and help");
+  packet.push("  me decide. Don't rush to a final plan.");
+  packet.push("- Use my effort ratings, notes, skipped exercises, rest, and trends to progress me");
+  packet.push("  sensibly: add reps/weight where sets felt easy, hold or back off where something");
+  packet.push("  was painful, repeatedly skipped, or consistently maxed out.");
   packet.push("");
 
-  packet.push("COACHING QUESTIONS:");
-  packet.push("- What should change in the plan based on the recent logged workouts?");
-  packet.push("- Are any days too heavy, too light, or missing recovery?");
-  packet.push("- What should Daniel focus on this week?");
-  packet.push("- Return an updated plan in the import format at the end.");
+  packet.push("THE FINAL DELIVERABLE (important):");
+  packet.push("- After we've talked it through and I've confirmed I'm happy, your LAST message must");
+  packet.push("  be ONLY my next-week plan in the exact paste-ready format shown at the very bottom");
+  packet.push("  of this document — nothing else in that message, no commentary around it.");
+  packet.push("- I paste that block straight into Training Book's \"Paste an updated plan\" importer,");
+  packet.push("  so it must match the format exactly (including any rest targets).");
+  packet.push("- Do NOT give me that plan block until we've discussed and I ask for it. Until then,");
+  packet.push("  just coach me.");
+  packet.push("");
+
+  packet.push("HOW TRAINING BOOK WORKS (so the plan you give me imports cleanly):");
+  packet.push("- My workout follows the weekly plan and its routines, but I can add ad-hoc exercises mid-session.");
+  packet.push("- Strength targets are sets x reps, optionally a starting weight (3x8 @ 95 lb) and a rest target (rest 90s). I log actual sets, reps, weight, per-set notes, and an optional per-set effort 1-10.");
+  packet.push("- Cardio/Peloton targets are a subtype plus minutes (Peloton Tread: Incline Walk, 30 min). I log output, average power, distance, notes, and effort.");
+  packet.push("- Held moves (e.g. plank) are timed: targets are sets x seconds (3x45 sec), optionally a rest target. I log EACH hold's actual seconds separately (e.g. 60s · 60s · 45s) plus optional per-hold effort.");
+  packet.push("- Effort is rated 1-10 (1 = easy, 10 = all-out), logged per set/hold, and is optional — \"not logged\" means I didn't rate it, not that it was easy.");
+  packet.push("- Rest targets (rest 90s) show as a reminder note on the live screen; there's no timer. Add them to lines where rest matters.");
+  packet.push("- Skipped exercises are marked skipped in History; coach around repeated skips.");
   packet.push("");
 
   packet.push("ACTIVE PLAN:");
@@ -8315,8 +9402,11 @@ function generateReviewPacket() {
   }
   packet.push("");
 
-  packet.push("RETURN FORMAT FOR TRAINING BOOK IMPORT:");
-  packet.push("Please return only plain text in this format:");
+  packet.push("=== FINAL DELIVERABLE: RETURN FORMAT FOR TRAINING BOOK IMPORT ===");
+  packet.push("Only once we've talked through the week and I ask you for the plan, send a final");
+  packet.push("message containing ONLY plain text in exactly this format (no intro, no commentary");
+  packet.push("before or after — just this block so I can paste it straight into the app):");
+  packet.push("");
   packet.push("ACTIVE PLAN:");
   packet.push("name: Plan Name");
   packet.push("main goal: One sentence goal");
@@ -8335,12 +9425,16 @@ function generateReviewPacket() {
   packet.push("");
   packet.push("ROUTINE: Routine Name");
   packet.push("- Exercise Name: 3x8");
-  packet.push("- Bench Press: 3x8 @ 95 lb");
-  packet.push("- Plank: 3x45 sec");
+  packet.push("- Bench Press: 3x8 @ 95 lb, rest 90s");
+  packet.push("- Plank: 3x45 sec, rest 45s");
   packet.push("- Peloton Tread: Incline Walk, 30 min");
   packet.push("- Peloton Bike: Just Ride, 20 min");
   packet.push("");
-  packet.push("Use exercise names from the library when possible. Keep each routine exercise on one dash line. Do not include extra commentary outside this format.");
+  packet.push("Rules for the final block:");
+  packet.push("- Use exercise names from my library above when possible.");
+  packet.push("- Keep each routine exercise on one dash line.");
+  packet.push("- Add a rest target with \"rest 90s\" (seconds) on strength/timed lines where rest matters; leave it off where it doesn't.");
+  packet.push("- Do not include any text outside this format in that final message.");
 
   return packet.join("\n");
 }
@@ -8399,7 +9493,7 @@ async function saveTextFile(text, fileName) {
 async function copyReviewPacket() {
   const packet = generateReviewPacket();
   await copyTextToClipboard(packet);
-  alert("Coach packet copied to clipboard.");
+  alert("Coach prompt copied. Paste it into an AI chat (ChatGPT, Claude, etc.) to start your weekly review.");
 }
 
 async function saveReviewPacket() {
@@ -8408,9 +9502,9 @@ async function saveReviewPacket() {
   try {
     const saveMode = await saveTextFile(packet, fileName);
     if (saveMode === "picked") {
-      alert(`Coach packet saved as ${fileName}.`);
+      alert(`Coach prompt saved as ${fileName}.`);
     } else {
-      alert(`Coach packet downloaded as ${fileName}. Firefox and some mobile browsers do not support a Save As picker from web apps, so they use Downloads.`);
+      alert(`Coach prompt downloaded as ${fileName}. Firefox and some mobile browsers do not support a Save As picker from web apps, so they use Downloads.`);
     }
   } catch (error) {
     if (error?.name === "AbortError") {
@@ -8439,16 +9533,16 @@ saturday: Optional Walk
 sunday: rest
 
 ROUTINE: Full Body A
-- Goblet Squat: 3x8 @ 35
-- Push-up: 3x8
-- Dumbbell Row: 3x10 @ 30
-- Plank: 3x30
+- Goblet Squat: 3x8 @ 35, rest 90s
+- Push-up: 3x8, rest 60s
+- Dumbbell Row: 3x10 @ 30, rest 75s
+- Plank: 3x30, rest 45s
 
 ROUTINE: Full Body B
-- Deadlift: 3x8 @ 95
-- Shoulder Press: 3x8 @ 20
-- Squat: 3x8 @ 45
-- Plank: 2x30
+- Deadlift: 3x8 @ 95, rest 120s
+- Shoulder Press: 3x8 @ 20, rest 90s
+- Squat: 3x8 @ 45, rest 90s
+- Plank: 2x30, rest 45s
 
 ROUTINE: Optional Walk
 - Peloton Tread: Incline Walk, 30 min
@@ -8471,9 +9565,22 @@ function parseRoutineExerciseLine(line) {
   if (separatorIndex < 1) return null;
 
   const exerciseName = cleaned.slice(0, separatorIndex).trim();
-  const rawTarget = cleaned.slice(separatorIndex + 1).trim();
+  let rawTarget = cleaned.slice(separatorIndex + 1).trim();
+
+  // Optional rest target, e.g. "3x8 @ 135, rest 90s" or "90s rest". Pulled out
+  // (and stripped) first so its number can't be misread as reps/minutes below.
+  const restSeconds = parseRestSeconds(rawTarget);
+  rawTarget = rawTarget
+    .replace(/,?\s*rest\s*:?\s*\d+\s*(?:s|sec|secs|seconds?)?\b/i, "")
+    .replace(/,?\s*\d+\s*(?:s|sec|secs|seconds?)\s+rest\b/i, "")
+    .replace(/[,;|]\s*$/, "")
+    .trim();
   const target = rawTarget.toLowerCase();
   const exerciseId = findExerciseIdByName(exerciseName);
+  const withRest = (parsed) => {
+    if (restSeconds > 0) parsed.targetRest = restSeconds;
+    return parsed;
+  };
 
   const durationMatch = target.match(/(\d+)\s*(min|minute|minutes)/);
   if (durationMatch) {
@@ -8483,7 +9590,7 @@ function parseRoutineExerciseLine(line) {
     };
     const subtypeText = rawTarget.slice(0, rawTarget.toLowerCase().indexOf(durationMatch[0])).replace(/[,|-]+$/g, "").trim();
     if (subtypeText && !/^\d/.test(subtypeText)) parsed.targetSubtype = subtypeText;
-    return parsed;
+    return withRest(parsed);
   }
 
   const strengthMatch = target.match(/(\d+)\s*(x|sets?\s*(of)?|by)\s*(\d+)/);
@@ -8497,10 +9604,18 @@ function parseRoutineExerciseLine(line) {
     const weightMatch = target.match(/(?:@|at)\s*(\d+(?:\.\d+)?)|(\d+(?:\.\d+)?)\s*(?:lb|lbs|pounds?)\b/);
     const weight = weightMatch ? Number(weightMatch[1] || weightMatch[2]) : 0;
     if (weight > 0) parsed.targetWeight = weight;
-    return parsed;
+    return withRest(parsed);
   }
 
   return null;
+}
+
+// Read a rest target in seconds from a target string. Accepts "rest 90s",
+// "rest: 90", "rest 90 sec", or "90s rest". Returns 0 when none is present.
+function parseRestSeconds(target) {
+  const m = target.match(/rest\s*:?\s*(\d+)\s*(?:s|sec|secs|seconds?)?\b/i)
+    || target.match(/(\d+)\s*(?:s|sec|secs|seconds?)\s+rest\b/i);
+  return m ? Math.max(0, Math.round(Number(m[1]))) : 0;
 }
 
 function normalizeImportHeading(line) {

@@ -3562,6 +3562,127 @@ body.in-workout .today-panel {
   color: var(--accent-ink);
 }
 
+/* Read-only per-set effort summary on the finish recap. */
+.lw-recap-effort {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--danger);
+  letter-spacing: 0.01em;
+}
+
+/* Quiet rest reminder on a live set/hold page (no timer, just a note). */
+.lw-rest-hint {
+  margin: 2px 0 0;
+  padding: 7px 11px;
+  border-radius: var(--radius-xs, 8px);
+  background: rgba(182, 211, 50, 0.10);
+  border: 1px solid var(--accent-line);
+  color: var(--muted);
+  font-size: 13px;
+  text-align: center;
+}
+.lw-rest-hint strong { color: var(--accent); }
+
+/* Optional per-set / per-hold effort control (the small red "Rate effort"
+   button under the note, expanding to a 1-10 chip row). */
+.lw-effort {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.lw-effort-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  align-self: flex-start;
+  min-height: 34px;
+  padding: 6px 13px;
+  border: 1px solid rgba(196, 57, 57, 0.55);
+  border-radius: 999px;
+  background: rgba(196, 57, 57, 0.10);
+  color: var(--danger);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform .12s ease, background-color .12s ease, border-color .12s ease;
+}
+.lw-effort-toggle:hover { background: rgba(196, 57, 57, 0.16); }
+.lw-effort-toggle:active { transform: translateY(1px) scale(0.98); }
+.lw-effort-toggle.has-val {
+  border-color: var(--danger);
+  background: rgba(196, 57, 57, 0.18);
+}
+
+.lw-effort-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--danger);
+  flex: none;
+}
+
+.lw-effort-row {
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  gap: 4px;
+}
+
+.lw-effort-chip {
+  min-height: 34px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-xs, 8px);
+  background: rgba(9, 12, 11, 0.55);
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: transform .12s ease, background-color .12s ease, border-color .12s ease, color .12s ease;
+}
+.lw-effort-chip:hover { border-color: rgba(196, 57, 57, 0.55); color: var(--text); }
+.lw-effort-chip:active { transform: translateY(1px) scale(0.96); }
+.lw-effort-chip.is-active {
+  border-color: var(--danger);
+  background: var(--danger);
+  color: #fff;
+}
+
+/* The optional countdown timer is tucked into a <details> on the hold page. */
+.lw-hold-timer {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-xs, 8px);
+  background: rgba(9, 12, 11, 0.4);
+  padding: 4px 12px;
+}
+.lw-hold-timer > summary {
+  cursor: pointer;
+  padding: 8px 2px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--muted);
+  list-style: none;
+}
+.lw-hold-timer > summary::-webkit-details-marker { display: none; }
+.lw-hold-timer[open] > summary { color: var(--accent); }
+.lw-hold-timer .lw-timer { padding-top: 4px; }
+
+/* Spinner shown on the Save button while a save is in flight (anti double-tap). */
+.lw-save-spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  margin-right: 9px;
+  vertical-align: -3px;
+  border: 2px solid rgba(10, 16, 2, 0.35);
+  border-top-color: var(--accent-ink);
+  border-radius: 50%;
+  animation: lw-spin 0.7s linear infinite;
+}
+.lw-save.is-saving { opacity: 0.85; }
+@keyframes lw-spin { to { transform: rotate(360deg); } }
+
 .lw-save {
   width: 100%;
   min-height: 52px;
