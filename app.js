@@ -2655,16 +2655,28 @@ function renderTodayPreview(routine) {
     todayPreviewSub.textContent = `${count} exercise${count === 1 ? "" : "s"} planned`;
   }
 
-  todayRoutineList.innerHTML = `${items.map((ex, index) => `
-    <article class="today-preview-card">
-      <span class="pv-num">${index + 1}</span>
+  todayRoutineList.innerHTML = `${items.map((ex, index) => {
+    // Show the exercise's start photo (black & white, like the Library) behind
+    // the position number, dimmed so the number stays legible. Falls back to a
+    // plain numbered square for moves without a photo.
+    const lib = getExerciseById(ex.exerciseId);
+    const photo = lib ? getExerciseStartImage(lib) : null;
+    const thumb = photo
+      ? `<span class="pv-num pv-num-photo" style="background-image:url('${escapeHtml(photo)}')"><span class="pv-num-label">${index + 1}</span></span>`
+      : `<span class="pv-num"><span class="pv-num-label">${index + 1}</span></span>`;
+    const tag = ex.type === "sport"
+      ? `<span class="pv-tag">SPORT</span>`
+      : ((ex.type === "cardio" || ex.type === "timed") ? `<span class="pv-tag">TIMED</span>` : "");
+    return `
+    <article class="today-preview-card" data-action="preview-how-to" data-id="${escapeHtml(ex.exerciseId)}" role="button" tabindex="0" aria-label="How to do ${escapeHtml(ex.name)}">
+      ${thumb}
       <div class="pv-info">
         <h3 class="pv-name">${escapeHtml(ex.name)}</h3>
         <p class="pv-meta">${escapeHtml(formatPreviewMeta(ex))}</p>
       </div>
-      ${ex.type === "sport" ? `<span class="pv-tag">SPORT</span>` : ((ex.type === "cardio" || ex.type === "timed") ? `<span class="pv-tag">TIMED</span>` : "")}
-    </article>
-  `).join("")}${renderWorkoutFlowChoiceSheet()}`;
+      ${tag}
+    </article>`;
+  }).join("")}${renderWorkoutFlowChoiceSheet()}`;
 }
 
 function persistActiveWorkoutDraft() {
@@ -3779,6 +3791,14 @@ function moveBackLiveWorkout() {
 }
 
 async function handleTodayWorkoutClick(event) {
+  // Tapping a preview row (before a workout starts) opens its "How to do it"
+  // card. Handled before the button check since the row is an <article>.
+  const previewCard = event.target.closest('[data-action="preview-how-to"]');
+  if (previewCard) {
+    openTodayReference(previewCard.dataset.id);
+    return;
+  }
+
   const button = event.target.closest("button");
   if (!button) return;
   const action = button.dataset.action;
@@ -4890,6 +4910,35 @@ function openLibraryReference(id) {
 function closeLibraryReference() {
   libraryReferenceId = null;
   renderLibrarySheet();
+}
+
+// The same "How to do it" sheet, opened by tapping an exercise on the Today
+// preview list. Rendered into a top-level root (not the Library screen's, which
+// is hidden while Today is active) so it overlays from any screen.
+let todayReferenceId = null;
+
+function renderTodayHowToSheet() {
+  const root = document.querySelector("#today-howto-root");
+  if (!root) return;
+  const exercise = todayReferenceId ? getExerciseById(todayReferenceId) : null;
+  if (!exercise) {
+    root.innerHTML = "";
+    return;
+  }
+  root.innerHTML = buildReferenceSheetMarkup(
+    { exerciseId: exercise.id, name: exercise.name, type: exercise.type, area: exercise.area },
+    "close-today-how-to"
+  );
+}
+
+function openTodayReference(id) {
+  todayReferenceId = id;
+  renderTodayHowToSheet();
+}
+
+function closeTodayReference() {
+  todayReferenceId = null;
+  renderTodayHowToSheet();
 }
 
 // ===== Favorites + custom photos =====
@@ -8703,12 +8752,22 @@ librarySheetRoot?.addEventListener("click", (event) => {
   const onScrim = event.target.classList.contains("lw-sheet-scrim");
   if (onCloseButton || onScrim) closeLibraryReference();
 });
+
+// The Today preview's "How to do it" sheet: close on its close button or scrim.
+const todayHowToRoot = document.querySelector("#today-howto-root");
+todayHowToRoot?.addEventListener("click", (event) => {
+  const onCloseButton = event.target.closest('[data-action="close-today-how-to"]');
+  const onScrim = event.target.classList.contains("lw-sheet-scrim");
+  if (onCloseButton || onScrim) closeTodayReference();
+});
+
 document.addEventListener("keydown", (event) => {
   if (event.key !== "Escape") return;
   if (editingExerciseId) closeEditExerciseModal();
   else if (categoriesModalOpen) closeCategoriesModal();
   else if (addModalOpen) closeAddExerciseModal();
   else if (libraryReferenceId) closeLibraryReference();
+  else if (todayReferenceId) closeTodayReference();
 });
 
 // Library: the "Add an exercise" button opens a small modal (name + type).
@@ -8785,6 +8844,14 @@ saveWorkoutButton?.addEventListener("click", () => {
 todayRoutineList?.addEventListener("click", handleTodayWorkoutClick);
 todayRoutineList?.addEventListener("change", handleTodayWorkoutChange);
 todayRoutineList?.addEventListener("input", handleTodayWorkoutChange);
+// Keyboard activation for the tappable preview rows (role="button").
+todayRoutineList?.addEventListener("keydown", (event) => {
+  if (event.key !== "Enter" && event.key !== " ") return;
+  const card = event.target.closest('[data-action="preview-how-to"]');
+  if (!card) return;
+  event.preventDefault();
+  openTodayReference(card.dataset.id);
+});
 
 reviewReminderGo?.addEventListener("click", () => showScreen("plan", true));
 reviewReminderDismiss?.addEventListener("click", () => {

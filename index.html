@@ -12,7 +12,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="icons/icon.svg">
-  <link rel="stylesheet" href="styles.css?v=2026.06.17-muted-accent-settings">
+  <link rel="stylesheet" href="styles.css?v=2026.06.17-flat-images-redfix">
 </head>
 <body>
   <div class="app-shell">
@@ -54,6 +54,10 @@
     <!-- Settings modal (gear button in the header). The style guide now lives
          in here instead of on the main page. -->
     <div id="settings-modal-root"></div>
+
+    <!-- "How to do it" sheet for exercises tapped on the Today preview list.
+         Top-level so it overlays regardless of the active screen. -->
+    <div id="today-howto-root"></div>
 
     <div class="review-reminder" id="review-reminder" hidden>
       <div class="review-reminder-text">
@@ -262,6 +266,6 @@
     </nav>
   </div>
 
-  <script src="app.js?v=2026.06.17-muted-accent-settings"></script>
+  <script src="app.js?v=2026.06.17-flat-images-redfix"></script>
 </body>
 </html>

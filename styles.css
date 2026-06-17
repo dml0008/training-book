@@ -28,7 +28,7 @@
   --accent-soft: rgba(182, 211, 50, 0.12);
   --accent-line: rgba(182, 211, 50, 0.42);
   --glow: 0 10px 34px rgba(182, 211, 50, 0.22);
-  --danger: #ff6b6b;
+  --danger: #c43939;
   --shadow: 0 24px 60px -28px rgba(0, 0, 0, 0.7), 0 8px 24px -16px rgba(0, 0, 0, 0.5);
 
   /* ===== Shared design tokens (the style-guide scale) =====
@@ -598,9 +598,8 @@ p {
 
 .primary-button {
   border-color: var(--accent);
-  background: linear-gradient(180deg, var(--accent-strong), var(--accent));
+  background: var(--accent);
   color: var(--accent-ink);
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.25) inset, 0 6px 18px -10px rgba(183, 255, 53, 0.5);
 }
 
 /* Reusable: any button that holds a Lucide icon next to its label. Keeps the
@@ -1250,6 +1249,9 @@ p {
   justify-content: space-between;
   gap: 12px;
   margin-bottom: 12px;
+  /* Reserve room on the right so the count tag clears the absolutely
+     positioned delete button (38px wide + 10px inset) in the top corner. */
+  padding-right: 44px;
 }
 
 .history-card-head h3 {
@@ -2196,9 +2198,25 @@ p {
   border: 1px solid var(--line);
   border-radius: var(--radius-md);
   background: rgba(9, 12, 11, 0.44);
+  cursor: pointer;
+  text-align: left;
+  -webkit-tap-highlight-color: transparent;
+  transition: border-color 0.14s ease, background-color 0.14s ease;
+}
+
+.today-preview-card:hover {
+  border-color: var(--accent-line);
+  background: rgba(9, 12, 11, 0.62);
+}
+
+.today-preview-card:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 .today-preview-card .pv-num {
+  position: relative;
+  overflow: hidden;
   flex: 0 0 auto;
   width: 45px;
   height: 45px;
@@ -2210,6 +2228,31 @@ p {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+/* Photo variant: the exercise's start image in black & white, dimmed with a
+   dark overlay so the white position number stays readable on top. */
+.today-preview-card .pv-num-photo {
+  background-color: var(--panel-2);
+  background-size: cover;
+  background-position: center;
+  filter: grayscale(1) contrast(1.02);
+}
+
+.today-preview-card .pv-num-photo::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+}
+
+.today-preview-card .pv-num-label {
+  position: relative;
+  z-index: 1;
+}
+
+.today-preview-card .pv-num-photo .pv-num-label {
+  color: #fff;
 }
 
 .today-preview-card .pv-info {
@@ -2250,7 +2293,6 @@ p {
   min-height: 56px;
   font-size: 16.5px;
   letter-spacing: 0.01em;
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.25) inset, var(--glow);
 }
 
 /* ---------- Today: live focused workout (Slice 2) ---------- */
@@ -3537,6 +3579,7 @@ body.in-workout .today-panel {
   background: rgba(9, 12, 11, 0.72);
   color: var(--danger);
   cursor: pointer;
+  transition: border-color 0.14s ease, background-color 0.14s ease, color 0.14s ease;
 }
 
 .history-delete svg {
@@ -3816,7 +3859,9 @@ body.in-workout .today-panel {
   #progress-content {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    align-items: start;
+    /* stretch so two cards sharing a row match heights (no half-empty gap
+       beside the shorter one) */
+    align-items: stretch;
   }
   #progress-content > .prog-hero,
   #progress-content > .consistency-card,
@@ -4173,11 +4218,12 @@ body.in-workout .today-panel {
   position: absolute;
   inset: 0;
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: center;
   gap: 1px;
-  font-size: 26px;
+  font-size: 24px;
   font-weight: 850;
+  line-height: 1;
   color: var(--text);
 }
 
@@ -4521,7 +4567,6 @@ body.in-workout .today-panel {
 .exercise-action.primary:hover,
 .lw-tbtn.primary:hover {
   filter: brightness(1.05);
-  box-shadow: 0 6px 20px rgba(183, 255, 53, 0.28);
 }
 
 /* Quiet / outline buttons + neutral chips */
@@ -4542,8 +4587,12 @@ body.in-workout .today-panel {
   color: var(--text);
 }
 
-/* Danger (Remove) keeps red on hover */
-.exercise-action.danger:hover {
+/* Danger buttons keep red on hover - the Library "Remove" button, plus the
+   Plan/History text buttons (Clear / Delete) and the History trash icon, which
+   would otherwise pick up the shared lime hover or none at all. */
+.exercise-action.danger:hover,
+.quiet-button.danger-text:not(:disabled):hover,
+.history-delete:hover {
   border-color: rgba(255, 107, 107, 0.6);
   background: rgba(255, 107, 107, 0.1);
   color: var(--danger);
