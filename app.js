@@ -3,7 +3,7 @@ const DROPBOX_TOKEN_URL = "https://api.dropboxapi.com/oauth2/token";
 const DROPBOX_UPLOAD_URL = "https://content.dropboxapi.com/2/files/upload";
 const DROPBOX_DOWNLOAD_URL = "https://content.dropboxapi.com/2/files/download";
 const DATA_FILE_PATH = "/04_Technical/06_Side_Projects/Workout and Nutrition App/data/workout-data.json";
-const APP_VERSION = "2026.06.16-progress-overhaul";
+const APP_VERSION = "2026.06.16-visual-foundation";
 
 const STORAGE = {
   appKey: "trainingBookDropboxAppKey",
@@ -4436,8 +4436,8 @@ function getStarterRoutines() {
       location: "gym",
       exercises: [
         { exerciseId: "dumbbell-bench-press", targetSets: 3, targetReps: 8 },
-        { exerciseId: "dumbbell-row", targetSets: 3, targetReps: 8 },
-        { exerciseId: "biceps-curl", targetSets: 3, targetReps: 10 }
+        { exerciseId: "one-arm-dumbbell-row", targetSets: 3, targetReps: 8 },
+        { exerciseId: "dumbbell-curl", targetSets: 3, targetReps: 10 }
       ],
       notes: "Barbell or dumbbell bench as anchor"
     },
@@ -4446,10 +4446,10 @@ function getStarterRoutines() {
       name: "Home Strength",
       location: "home",
       exercises: [
-        { exerciseId: "shoulder-press", targetSets: 3, targetReps: 8 },
+        { exerciseId: "dumbbell-shoulder-press", targetSets: 3, targetReps: 8 },
         { exerciseId: "goblet-squat", targetSets: 3, targetReps: 10 },
-        { exerciseId: "biceps-curl", targetSets: 3, targetReps: 12 },
-        { exerciseId: "triceps-pressdown", targetSets: 2, targetReps: 12 }
+        { exerciseId: "dumbbell-curl", targetSets: 3, targetReps: 12 },
+        { exerciseId: "triceps-pushdown", targetSets: 2, targetReps: 12 }
       ],
       notes: "Dumbbell-focused at home"
     },
@@ -4459,7 +4459,7 @@ function getStarterRoutines() {
       location: "gym",
       exercises: [
         { exerciseId: "lat-pulldown", targetSets: 3, targetReps: 8 },
-        { exerciseId: "dumbbell-row", targetSets: 3, targetReps: 8 },
+        { exerciseId: "one-arm-dumbbell-row", targetSets: 3, targetReps: 8 },
         { exerciseId: "deadlift", targetSets: 3, targetReps: 5 }
       ],
       notes: "Pull-focused using rack and machines"
@@ -4469,7 +4469,7 @@ function getStarterRoutines() {
       name: "Peloton Cardio",
       location: "home",
       exercises: [
-        { exerciseId: "treadmill-walk", targetDuration: 30 }
+        { exerciseId: "treadmill-run", targetDuration: 30 }
       ],
       notes: "Bike or treadmill, duration-based"
     },
@@ -4480,7 +4480,7 @@ function getStarterRoutines() {
       exercises: [
         { exerciseId: "plank", targetSets: 3, targetReps: 45 },
         { exerciseId: "push-up", targetSets: 3, targetReps: 10 },
-        { exerciseId: "squat", targetSets: 2, targetReps: 15 }
+        { exerciseId: "bodyweight-squat", targetSets: 2, targetReps: 15 }
       ],
       notes: "Bodyweight core and mat work"
     }
@@ -6802,6 +6802,18 @@ function renderProgressCalendar(completedSet) {
   const weeklyPlan = data.weeklyPlan || getStarterWeeklyPlan();
   const todayKey = getTodayDateString();
 
+  // Don't paint days red before Daniel ever started using the app. "Missed"
+  // should mean "you planned this and skipped it," not "this calendar day
+  // existed before you had any data." The boundary is the earliest real signal
+  // we have: first completed workout, first logged workout, or first body
+  // weight entry. Before that, planned-but-not-done days read as neutral rest.
+  const activityKeys = [
+    ...(Array.isArray(data.completedWorkouts) ? data.completedWorkouts : []),
+    ...((Array.isArray(data.workouts) ? data.workouts : []).map((w) => w && w.date).filter(Boolean)),
+    ...((Array.isArray(data.bodyWeights) ? data.bodyWeights : []).map((b) => b && b.date).filter(Boolean))
+  ].filter(Boolean).sort();
+  const firstActivityKey = activityKeys.length ? activityKeys[0] : todayKey;
+
   const year = progressMonthDate.getUTCFullYear();
   const month = progressMonthDate.getUTCMonth();
   const first = new Date(Date.UTC(year, month, 1));
@@ -6824,10 +6836,12 @@ function renderProgressCalendar(completedSet) {
     const isToday = key === todayKey;
     const isPast = key < todayKey;
 
+    const afterStart = key >= firstActivityKey;
     let state = "is-rest";
     let label = "Rest day";
     if (isDone) { state = "is-done"; label = "Workout done"; }
-    else if (isPlanned && isPast) { state = "is-missed"; label = "Planned - missed"; }
+    else if (isPlanned && isPast && afterStart) { state = "is-missed"; label = "Planned - missed"; }
+    else if (isPlanned && isPast) { state = "is-rest"; label = "Before you started"; }
     else if (isPlanned) { state = "is-planned"; label = "Planned"; }
 
     const todayClass = isToday ? " is-today" : "";
