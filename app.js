@@ -2425,6 +2425,60 @@ function usesWeightMetric(ex) {
   return ex?.metricProfile !== "strength-bodyweight";
 }
 
+// ===== Barbell plate helper =====
+// Daniel's barbell weight in pounds. If his bar is NOT a standard 45 lb Olympic
+// bar, change this one number (e.g. 35, or 33 for a 15 kg bar) and the live
+// workout's plate hint updates everywhere automatically.
+const BAR_WEIGHT_LB = 45;
+// Plates available per side, heaviest first (standard home/Olympic set).
+const AVAILABLE_PLATES_LB = [45, 35, 25, 10, 5, 2.5];
+
+// A logged exercise carries only an exerciseId; the library entry holds the
+// equipment tag, so look it up to decide if this is a barbell lift.
+function isBarbellLift(ex) {
+  return getExerciseById(ex?.exerciseId)?.equipment === "barbell";
+}
+
+// Given a TOTAL target weight (bar + all plates), work out what to load on EACH
+// side of the bar. Returns { status, perSide, leftover }.
+//   status: "below-bar" | "bar-only" | "ok" | "approx"
+function computePlateLoad(total, bar = BAR_WEIGHT_LB, plates = AVAILABLE_PLATES_LB) {
+  const t = Number(total) || 0;
+  if (t < bar) return { status: "below-bar", perSide: [], leftover: 0 };
+  if (t === bar) return { status: "bar-only", perSide: [], leftover: 0 };
+  let remaining = (t - bar) / 2; // weight needed on each side
+  const perSide = [];
+  for (const p of plates) {
+    while (remaining >= p - 1e-9) {
+      perSide.push(p);
+      remaining = Math.round((remaining - p) * 100) / 100;
+    }
+  }
+  return { status: remaining > 1e-9 ? "approx" : "ok", perSide, leftover: remaining };
+}
+
+function formatPlateNum(p) {
+  return Number.isInteger(p) ? String(p) : String(p); // 2.5 stays "2.5"
+}
+
+// Returns a small HTML hint string for barbell lifts, "" otherwise.
+function renderPlateHint(ex, weight) {
+  if (!isBarbellLift(ex)) return "";
+  const w = Number(weight) || 0;
+  const { status, perSide, leftover } = computePlateLoad(w);
+  let text;
+  if (status === "below-bar") {
+    text = `That's under the empty bar (${BAR_WEIGHT_LB} lb)`;
+  } else if (status === "bar-only") {
+    text = `Just the empty bar &middot; ${BAR_WEIGHT_LB} lb`;
+  } else {
+    const label = perSide.map(formatPlateNum).join(" + ");
+    const extra = status === "approx" ? ` (+${formatPlateNum(leftover)} short)` : "";
+    text = `Load <strong>${escapeHtml(label)}</strong>${extra} per side &middot; ${BAR_WEIGHT_LB} lb bar`;
+  }
+  return `<p class="lw-plate-hint" aria-live="polite">${text}</p>`;
+}
+
 function getExerciseSubtypeOptions(exerciseId) {
   if (exerciseId === "peloton-tread") return ["Incline Walk", "Run", "Walk", "Hike"];
   if (exerciseId === "peloton-bike") return ["Just Ride", "Ride Class", "Power Zone"];
@@ -3446,6 +3500,7 @@ function renderFocusedExercise() {
               <span class="lw-bigstep-val"><strong>${escapeHtml(set.weight)}</strong> lb</span>
               <button class="lw-wbtn lw-wbtn-lg" type="button" data-action="set-weight-step" data-set-index="${s}" data-delta="5" aria-label="Raise weight 5 pounds">+</button>
             </div>
+            ${renderPlateHint(ex, set.weight)}
           </div>
       ` : "";
       body = `

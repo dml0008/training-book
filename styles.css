@@ -2873,6 +2873,21 @@ body.in-workout .today-panel {
   line-height: 1.1;
 }
 
+/* Auto plate breakdown shown under the weight on barbell lifts. */
+.lw-plate-hint {
+  margin: 0;
+  text-align: center;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.lw-plate-hint strong {
+  color: var(--accent);
+  font-weight: 850;
+}
+
 .lw-setpage-actions,
 .lw-wrap-actions {
   display: flex;
