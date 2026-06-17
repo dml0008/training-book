@@ -3336,19 +3336,78 @@ body.in-workout .today-panel {
   margin: 18px 0;
 }
 
+.lw-recap-hint {
+  width: 100%;
+  margin: 14px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  text-align: center;
+}
+
 .lw-recap-row {
   display: flex;
-  justify-content: space-between;
-  gap: 12px;
+  flex-direction: column;
+  gap: 8px;
   padding: 11px 2px;
   border-bottom: 1px solid var(--line);
   color: var(--muted);
   font-size: 14px;
 }
 
+.lw-recap-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
 .lw-recap-row b {
   color: var(--text);
   text-align: right;
+}
+
+/* Per-exercise effort scale on the finish screen */
+.lw-diff {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.lw-diff-label {
+  flex: none;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--dim);
+}
+
+.lw-diff-row {
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  gap: 4px;
+  flex: 1;
+}
+
+.lw-diff-chip {
+  min-height: 30px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-xs);
+  background: rgba(9, 12, 11, 0.55);
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: transform .12s ease, background-color .12s ease, border-color .12s ease, color .12s ease;
+}
+
+.lw-diff-chip:hover { border-color: var(--accent-line); color: var(--text); }
+.lw-diff-chip:active { transform: translateY(1px) scale(0.96); }
+
+.lw-diff-chip.is-active {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--accent-ink);
 }
 
 .lw-save {

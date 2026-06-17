@@ -3,7 +3,7 @@ const DROPBOX_TOKEN_URL = "https://api.dropboxapi.com/oauth2/token";
 const DROPBOX_UPLOAD_URL = "https://content.dropboxapi.com/2/files/upload";
 const DROPBOX_DOWNLOAD_URL = "https://content.dropboxapi.com/2/files/download";
 const DATA_FILE_PATH = "/04_Technical/06_Side_Projects/Workout and Nutrition App/data/workout-data.json";
-const APP_VERSION = "2026.06.16-visual-foundation";
+const APP_VERSION = "2026.06.16-effort-and-week-fixes";
 
 const STORAGE = {
   appKey: "trainingBookDropboxAppKey",
@@ -3498,11 +3498,27 @@ function renderFocusedExercise() {
   renderUiIcons();
 }
 
+// A compact 1-10 effort scale for one exercise on the finish screen. Defaults to
+// the exercise's current difficulty so a quick tap is all it takes to adjust.
+function renderFinishDifficulty(ex, index) {
+  const current = Number(ex.difficulty) || 0;
+  const chips = Array.from({ length: 10 }, (_, k) => {
+    const v = k + 1;
+    return `<button type="button" class="lw-diff-chip${v === current ? " is-active" : ""}" data-action="set-difficulty" data-ex-index="${index}" data-value="${v}" aria-label="Effort ${v} of 10 for ${escapeHtml(ex.name)}"${v === current ? ' aria-pressed="true"' : ""}>${v}</button>`;
+  }).join("");
+  return `
+    <div class="lw-diff">
+      <span class="lw-diff-label">Effort</span>
+      <div class="lw-diff-row">${chips}</div>
+    </div>`;
+}
+
 function renderFinishScreen() {
   const exercises = activeWorkout.exercises;
   const total = exercises.length;
   const routineName = todayRoutineName?.textContent || "Workout";
   const loggedCount = exercises.filter(isExerciseLogged).length;
+  const anyLogged = loggedCount > 0;
 
   todayRoutineList.innerHTML = `
     <div class="live-workout lw-finish-screen">
@@ -3513,11 +3529,15 @@ function renderFinishScreen() {
         </div>
         <h3 class="lw-finish-title">Workout complete</h3>
         <p class="lw-finish-sub">${escapeHtml(routineName)} · ${loggedCount} of ${total} logged</p>
+        ${anyLogged ? `<p class="lw-recap-hint">How hard did each one feel? Tap to rate (1 = easy, 10 = all-out).</p>` : ""}
         <div class="lw-recap">
-          ${exercises.map((ex) => `
-            <div class="lw-recap-row">
-              <span>${escapeHtml(ex.name)}</span>
-              <b>${escapeHtml(formatExerciseRecap(ex))}</b>
+          ${exercises.map((ex, idx) => `
+            <div class="lw-recap-row${isExerciseLogged(ex) ? " has-diff" : ""}">
+              <div class="lw-recap-top">
+                <span>${escapeHtml(ex.name)}</span>
+                <b>${escapeHtml(formatExerciseRecap(ex))}</b>
+              </div>
+              ${isExerciseLogged(ex) ? renderFinishDifficulty(ex, idx) : ""}
             </div>
           `).join("")}
         </div>
@@ -4063,6 +4083,18 @@ async function handleTodayWorkoutClick(event) {
     advanceLiveWorkout();
     persistActiveWorkoutDraft();
     renderTodayWorkout();
+    return;
+  }
+
+  if (action === "set-difficulty") {
+    const idx = Number(button.dataset.exIndex);
+    const value = Number(button.dataset.value);
+    const ex = activeWorkout.exercises[idx];
+    if (ex && value >= 1 && value <= 10) {
+      ex.difficulty = value;
+      persistActiveWorkoutDraft();
+      renderTodayWorkout();
+    }
     return;
   }
 
@@ -5730,7 +5762,14 @@ async function saveWorkout() {
   data.updatedAt = savedAt;
   data.updatedBy = getDeviceId();
   data.workouts = Array.isArray(data.workouts) ? data.workouts : [];
-  data.workouts.push(makeSavedWorkout());
+  const savedWorkout = makeSavedWorkout();
+  data.workouts.push(savedWorkout);
+  // Count this ad-hoc session toward Progress (streak, weekly ring, calendar),
+  // exactly like a Today-flow save does.
+  data.completedWorkouts = Array.isArray(data.completedWorkouts) ? data.completedWorkouts : [];
+  if (savedWorkout.date && !data.completedWorkouts.includes(savedWorkout.date)) {
+    data.completedWorkouts.push(savedWorkout.date);
+  }
 
   saveLocalData(data);
   markPendingData(data);
@@ -6768,6 +6807,19 @@ function getWeeklyTarget() {
   return DOW_NAMES.reduce((count, day) => count + (weeklyPlan[day] ? 1 : 0), 0);
 }
 
+// The set of days Daniel actually trained. Built from BOTH the explicit
+// completed list AND the dates of every saved workout, so an ad-hoc Log-tab
+// session (which only writes to `workouts`) and any older save still counts
+// toward the streak, weekly ring, consistency strip and calendar. Without this,
+// a real logged workout could sit in History yet show as "0 this week".
+function getCompletedDaySet(data) {
+  const set = new Set(Array.isArray(data.completedWorkouts) ? data.completedWorkouts : []);
+  if (Array.isArray(data.workouts)) {
+    data.workouts.forEach((w) => { if (w && w.date) set.add(w.date); });
+  }
+  return set;
+}
+
 function countCompletedInWeek(mondayDate, completedSet) {
   let count = 0;
   for (let i = 0; i < 7; i++) {
@@ -7256,7 +7308,7 @@ function renderProgress(resetMonth = true) {
   if (!progressContent) return;
 
   const data = getLocalData();
-  const completedSet = new Set(Array.isArray(data.completedWorkouts) ? data.completedWorkouts : []);
+  const completedSet = getCompletedDaySet(data);
   const target = getWeeklyTarget();
 
   if (resetMonth || !progressMonthDate) {
