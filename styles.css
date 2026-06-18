@@ -1313,6 +1313,10 @@ p {
   padding: 0;
   border: none;
   background: none;
+  /* Inherit the page text colour: without this the <button> falls back to the
+     UA default button text colour, which renders as link-blue on mobile and
+     turned the routine-name <h3> blue. */
+  color: inherit;
   cursor: pointer;
   text-align: left;
 }
@@ -5358,6 +5362,19 @@ svg.lw-glyph path {
 }
 
 @media (max-width: 640px) {
+  /* Stack each section's heading above its action buttons so the title/blurb
+     gets the full width instead of being crushed into a thin column beside
+     the (flex: 0 0 auto, wrapping) Clear schedule / Clear + Add routine buttons. */
+  .plan-section-head {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .plan-head-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
   .schedule-grid {
     grid-template-columns: 1fr;
   }
