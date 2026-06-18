@@ -4138,15 +4138,20 @@ body.in-workout .today-panel {
   gap: 12px;
 }
 
+/* Arrows pinned to the outer edges, month name gets the whole middle column
+   and stays centred - so it can't get squeezed into a thin sliver on a narrow
+   phone the way a plain flex/space-between row did. */
 .cal-nav {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
   align-items: center;
-  justify-content: space-between;
+  gap: 8px;
 }
 
 .cal-month {
   font-size: 16px;
   font-weight: 700;
+  text-align: center;
 }
 
 .cal-arrow {
@@ -4216,6 +4221,103 @@ body.in-workout .today-panel {
   outline-offset: 1px;
 }
 
+/* Day cells are <button>s (tap for the detail panel); strip the UA chrome so
+   they read exactly like the old static squares, then add a press affordance. */
+button.cal-cell {
+  font: inherit;
+  padding: 0;
+  background: transparent;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  transition: transform 0.08s ease;
+}
+
+button.cal-cell:hover {
+  border-color: var(--line-strong);
+}
+
+button.cal-cell:active {
+  transform: scale(0.94);
+}
+
+/* Selected day wins over the today outline (declared after it on purpose). */
+.cal-cell.is-selected {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.cal-day-detail {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--panel-3);
+  padding: 12px 14px;
+}
+
+.cal-day-detail-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.cal-day-detail-date {
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.cal-day-detail-status {
+  flex: 0 0 auto;
+  padding: 3px 9px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-full);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.cal-day-detail-status.is-done { color: var(--accent-ink); background: var(--accent); border-color: var(--accent); }
+.cal-day-detail-status.is-planned { color: var(--text); border-color: var(--accent-2); }
+.cal-day-detail-status.is-missed { color: var(--danger); border-color: rgba(255, 107, 107, 0.4); background: rgba(255, 107, 107, 0.08); }
+.cal-day-detail-status.is-rest { color: var(--muted); }
+
+.cal-day-detail-routine {
+  margin: 0 0 6px;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.cal-day-detail-list {
+  display: grid;
+  gap: 5px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cal-day-detail-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 13px;
+}
+
+.cal-day-detail-list li span:last-child {
+  flex: 0 0 auto;
+  color: var(--muted);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.cal-day-detail-empty {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
 .cal-legend {
   display: flex;
   flex-wrap: wrap;
@@ -4241,6 +4343,19 @@ body.in-workout .today-panel {
 .cal-legend .dot.is-planned { border-color: var(--accent-2); }
 .cal-legend .dot.is-missed { background: rgba(255, 107, 107, 0.18); border-color: rgba(255, 107, 107, 0.4); }
 .cal-legend .dot.is-rest { background: rgba(255, 255, 255, 0.05); }
+
+/* Calendar inside the modal: drop the card chrome so it blends into the sheet,
+   and let the sheet scroll if it ever runs tall on a short screen. */
+.calendar-sheet {
+  max-height: 92vh;
+  overflow-y: auto;
+}
+
+.calendar-sheet .cal-card {
+  border: none;
+  background: none;
+  padding: 0;
+}
 
 /* ===== Progress dashboard (Step 10 overhaul) ===== */
 
@@ -4577,6 +4692,12 @@ body.in-workout .today-panel {
   margin: 8px 0 4px;
 }
 
+.day-switch-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .day-switch-row {
   display: inline-flex;
   align-items: center;
@@ -4585,6 +4706,29 @@ body.in-workout .today-panel {
   background: var(--panel-2);
   border-radius: var(--radius-sm);
   padding: 4px 6px;
+}
+
+/* Calendar button beside the day switcher - opens the schedule modal. */
+.day-cal-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--line);
+  background: var(--panel-2);
+  color: var(--text);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.day-cal-button:hover {
+  background: var(--panel-3);
+}
+
+.day-cal-button svg {
+  width: 18px;
+  height: 18px;
 }
 
 .day-arrow {

@@ -46,6 +46,8 @@ const todayDayName = document.querySelector("#today-day-name");
 const dayPrevButton = document.querySelector("#day-prev");
 const dayNextButton = document.querySelector("#day-next");
 const dayTodayResetButton = document.querySelector("#day-today-reset");
+const openCalendarButton = document.querySelector("#open-calendar");
+const calendarModalRoot = document.querySelector("#calendar-modal-root");
 const todayFooter = document.querySelector(".today-footer");
 const todayAddExtra = document.querySelector(".today-add-extra");
 const todayExtraPicker = document.querySelector("#today-extra-picker");
@@ -8077,22 +8079,25 @@ function computeWeekStreak(target, completedSet) {
   return streak;
 }
 
-function renderProgressCalendar(completedSet) {
-  const data = getLocalData();
-  const weeklyPlan = data.weeklyPlan || getStarterWeeklyPlan();
-  const todayKey = getTodayDateString();
-
-  // Don't paint days red before Daniel ever started using the app. "Missed"
-  // should mean "you planned this and skipped it," not "this calendar day
-  // existed before you had any data." The boundary is the earliest real signal
-  // we have: first completed workout, first logged workout, or first body
-  // weight entry. Before that, planned-but-not-done days read as neutral rest.
+// The earliest real signal we have that Daniel was using the app: first
+// completed workout, first logged workout, or first body-weight entry. Used so
+// the calendar doesn't paint planned days red ("missed") before he ever
+// started - those read as neutral rest instead.
+function getFirstActivityKey(data) {
   const activityKeys = [
     ...(Array.isArray(data.completedWorkouts) ? data.completedWorkouts : []),
     ...((Array.isArray(data.workouts) ? data.workouts : []).map((w) => w && w.date).filter(Boolean)),
     ...((Array.isArray(data.bodyWeights) ? data.bodyWeights : []).map((b) => b && b.date).filter(Boolean))
   ].filter(Boolean).sort();
-  const firstActivityKey = activityKeys.length ? activityKeys[0] : todayKey;
+  return activityKeys.length ? activityKeys[0] : getTodayDateString();
+}
+
+function renderProgressCalendar(completedSet) {
+  const data = getLocalData();
+  const weeklyPlan = data.weeklyPlan || getStarterWeeklyPlan();
+  const routines = Array.isArray(data.routines) ? data.routines : [];
+  const todayKey = getTodayDateString();
+  const firstActivityKey = getFirstActivityKey(data);
 
   const year = progressMonthDate.getUTCFullYear();
   const month = progressMonthDate.getUTCMonth();
@@ -8125,7 +8130,11 @@ function renderProgressCalendar(completedSet) {
     else if (isPlanned) { state = "is-planned"; label = "Planned"; }
 
     const todayClass = isToday ? " is-today" : "";
-    cells += `<span class="cal-cell ${state}${todayClass}" title="${escapeHtml(`${key}: ${label}`)}">${day}</span>`;
+    // Routine name in the tooltip gives a quick hover preview on desktop; the
+    // tappable cell opens the same info as a detail panel (below) on mobile.
+    const routineName = isPlanned ? getRoutineNameById(weeklyPlan[DOW_NAMES[cellDate.getUTCDay()]], routines) : "";
+    const title = `${key}: ${label}${routineName && routineName !== "Rest" ? ` · ${routineName}` : ""}`;
+    cells += `<button type="button" class="cal-cell ${state}${todayClass}" data-cal-day="${key}" title="${escapeHtml(title)}">${day}</button>`;
   }
 
   return `
@@ -8137,6 +8146,7 @@ function renderProgressCalendar(completedSet) {
       </div>
       <div class="cal-grid cal-weekdays">${weekdayHeaders}</div>
       <div class="cal-grid">${cells}</div>
+      <div class="cal-day-detail" hidden></div>
       <div class="cal-legend">
         <span><i class="dot is-done"></i>Done</span>
         <span><i class="dot is-planned"></i>Planned</span>
@@ -8145,6 +8155,120 @@ function renderProgressCalendar(completedSet) {
       </div>
     </div>
   `;
+}
+
+// The little panel that appears under the grid when a day is tapped: the date,
+// a status badge, and (if a routine is scheduled) its exercise list. Mirrors
+// the calendar's own colour logic so "Missed" only shows for planned days that
+// fall after Daniel started using the app.
+function renderCalendarDayDetailInner(key) {
+  const data = getLocalData();
+  const weeklyPlan = data.weeklyPlan || getStarterWeeklyPlan();
+  const completedSet = getCompletedDaySet(data);
+  const todayKey = getTodayDateString();
+  const firstActivityKey = getFirstActivityKey(data);
+
+  const date = new Date(`${key}T00:00:00Z`);
+  const routineId = weeklyPlan[DOW_NAMES[date.getUTCDay()]];
+  const routine = routineId ? getRoutineById(routineId) : null;
+  const dateLabel = date.toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric", timeZone: "UTC" });
+
+  const isDone = completedSet.has(key);
+  const isPast = key < todayKey;
+  const afterStart = key >= firstActivityKey;
+
+  let statusClass = "is-rest";
+  let statusText = "Rest day";
+  if (isDone) { statusClass = "is-done"; statusText = "Completed"; }
+  else if (routine && isPast && afterStart) { statusClass = "is-missed"; statusText = "Missed"; }
+  else if (routine && isPast) { statusClass = "is-rest"; statusText = "Before you started"; }
+  else if (routine && key === todayKey) { statusClass = "is-planned"; statusText = "Planned today"; }
+  else if (routine) { statusClass = "is-planned"; statusText = "Planned"; }
+
+  const head = `
+    <div class="cal-day-detail-head">
+      <span class="cal-day-detail-date">${escapeHtml(dateLabel)}</span>
+      <span class="cal-day-detail-status ${statusClass}">${escapeHtml(statusText)}</span>
+    </div>`;
+
+  if (!routine) {
+    return `${head}<p class="cal-day-detail-empty">No workout scheduled — rest day.</p>`;
+  }
+
+  const exercises = Array.isArray(routine.exercises) ? routine.exercises : [];
+  const list = exercises.length
+    ? `<ul class="cal-day-detail-list">${exercises.map((ex) => {
+        const { name, detail } = describeRoutineExercise(ex);
+        return `<li><span>${escapeHtml(name)}</span><span>${escapeHtml(detail)}</span></li>`;
+      }).join("")}</ul>`
+    : `<p class="cal-day-detail-empty">No exercises in this routine yet.</p>`;
+  return `${head}<p class="cal-day-detail-routine">${escapeHtml(routine.name)}</p>${list}`;
+}
+
+// Fill (and reveal) the detail panel inside a given .cal-card, and mark the
+// tapped cell selected. Shared by the Progress tab and the calendar modal.
+function fillCalendarDayDetail(card, key) {
+  const panel = card.querySelector(".cal-day-detail");
+  if (!panel) return;
+  panel.innerHTML = renderCalendarDayDetailInner(key);
+  panel.hidden = false;
+  card.querySelectorAll(".cal-cell.is-selected").forEach((cell) => cell.classList.remove("is-selected"));
+  const cell = card.querySelector(`.cal-cell[data-cal-day="${key}"]`);
+  if (cell) cell.classList.add("is-selected");
+}
+
+// Delegated click handler for day cells inside any .cal-card (Progress tab and
+// the modal both use it). Month-nav arrows are handled separately.
+function handleCalendarDayClick(event) {
+  const cell = event.target.closest("[data-cal-day]");
+  if (!cell) return;
+  const card = cell.closest(".cal-card");
+  if (card) fillCalendarDayDetail(card, cell.dataset.calDay);
+}
+
+// ===== Schedule calendar modal (calendar button on the Workout day switcher) =====
+// Reuses renderProgressCalendar + the shared progressMonthDate, so the month
+// you leave it on carries over to the Progress tab and vice-versa.
+let calendarModalOpen = false;
+
+function renderCalendarModal() {
+  if (!calendarModalRoot) return;
+  if (!calendarModalOpen) {
+    calendarModalRoot.innerHTML = "";
+    return;
+  }
+  const completedSet = getCompletedDaySet(getLocalData());
+  calendarModalRoot.innerHTML = `
+    <div class="lw-sheet-scrim" role="presentation" data-calendar-scrim>
+      <section class="lw-sheet calendar-sheet" role="dialog" aria-modal="true" aria-label="Schedule calendar">
+        <div class="lw-sheet-head">
+          <div>
+            <h3>Schedule</h3>
+            <p>Tap any day to see what's planned.</p>
+          </div>
+          <button class="lw-sheet-close" type="button" data-action="close-calendar" aria-label="Close calendar">&times;</button>
+        </div>
+        ${renderProgressCalendar(completedSet)}
+      </section>
+    </div>
+  `;
+  renderUiIcons(calendarModalRoot);
+}
+
+function openCalendarModal() {
+  // The modal can be opened before the Progress tab has ever rendered, so make
+  // sure the shared month state is initialised to the current month.
+  if (!progressMonthDate) {
+    const now = new Date();
+    progressMonthDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+  }
+  calendarModalOpen = true;
+  renderCalendarModal();
+}
+
+function closeCalendarModal() {
+  calendarModalOpen = false;
+  renderCalendarModal();
 }
 
 // ===== Progress dashboard helpers (Step 10 overhaul) =====
@@ -10012,6 +10136,35 @@ settingsModalRoot?.addEventListener("click", (event) => {
 document.addEventListener("keydown", (event) => {
   if (event.key === "Escape" && settingsModalOpen) closeSettingsModal();
 });
+
+// Schedule calendar modal: open from the Workout day switcher, navigate months,
+// tap a day for its detail, and close via scrim / X / Escape.
+openCalendarButton?.addEventListener("click", openCalendarModal);
+
+calendarModalRoot?.addEventListener("click", (event) => {
+  if (event.target.hasAttribute("data-calendar-scrim")) { closeCalendarModal(); return; }
+  if (event.target.closest('[data-action="close-calendar"]')) { closeCalendarModal(); return; }
+  const step = event.target.closest("[data-cal-step]");
+  if (step) {
+    const delta = Number(step.dataset.calStep) || 0;
+    progressMonthDate = new Date(Date.UTC(
+      progressMonthDate.getUTCFullYear(),
+      progressMonthDate.getUTCMonth() + delta,
+      1
+    ));
+    renderCalendarModal();
+    return;
+  }
+  handleCalendarDayClick(event);
+});
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && calendarModalOpen) closeCalendarModal();
+});
+
+// Tapping a day on the Progress-tab calendar opens its detail panel too. The
+// month-nav arrows there are wired per-render inside renderProgress.
+progressContent?.addEventListener("click", handleCalendarDayClick);
 
 addExerciseButton?.addEventListener("click", addExerciseToWorkout);
 

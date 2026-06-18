@@ -55,6 +55,10 @@
          in here instead of on the main page. -->
     <div id="settings-modal-root"></div>
 
+    <!-- Schedule calendar modal (calendar button beside the Workout day
+         switcher). Reuses the same calendar the Progress tab draws. -->
+    <div id="calendar-modal-root"></div>
+
     <!-- "How to do it" sheet for exercises tapped on the Today preview list.
          Top-level so it overlays regardless of the active screen. -->
     <div id="today-howto-root"></div>
@@ -77,10 +81,15 @@
             <button class="quiet-button small-button btn-ico today-back-button" id="today-back-button" type="button" hidden><span data-icon="arrow-left" aria-hidden="true"></span>Back to plan</button>
             <p class="date-label" id="today-date">Today</p>
             <div class="today-day-switch" id="today-day-switch" hidden>
-              <div class="day-switch-row">
-                <button class="day-arrow" id="day-prev" type="button" aria-label="Previous day">&lsaquo;</button>
-                <span class="day-switch-name" id="today-day-name">Today</span>
-                <button class="day-arrow" id="day-next" type="button" aria-label="Next day">&rsaquo;</button>
+              <div class="day-switch-controls">
+                <div class="day-switch-row">
+                  <button class="day-arrow" id="day-prev" type="button" aria-label="Previous day">&lsaquo;</button>
+                  <span class="day-switch-name" id="today-day-name">Today</span>
+                  <button class="day-arrow" id="day-next" type="button" aria-label="Next day">&rsaquo;</button>
+                </div>
+                <button class="day-cal-button" id="open-calendar" type="button" aria-label="Open schedule calendar" aria-haspopup="dialog">
+                  <span data-icon="calendar" aria-hidden="true"></span>
+                </button>
               </div>
               <button class="day-today-reset" id="day-today-reset" type="button" hidden>Back to today</button>
             </div>
