@@ -1,7 +1,10 @@
-const CACHE_NAME = "training-book-shell-v52";
+const CACHE_NAME = "training-book-shell-v53";
 const STATIC_ASSETS = [
   "manifest.webmanifest",
   "icons/icon.svg",
+  "icons/apple-touch-icon.png",
+  "icons/icon-192.png",
+  "icons/icon-512.png",
   "fonts/figtree-latin.woff2"
 ];
 const APP_FILES = [
