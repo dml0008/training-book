@@ -1,7 +1,10 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Training Book app icon">
   <rect width="512" height="512" rx="96" fill="#101413"/>
-  <rect x="112" y="84" width="288" height="344" rx="34" fill="#171d1b" stroke="#b7ff35" stroke-width="18"/>
-  <path d="M170 164h172M170 224h126M170 284h158" fill="none" stroke="#f3f7f2" stroke-width="22" stroke-linecap="round"/>
-  <path d="M352 84v344" fill="none" stroke="#b7ff35" stroke-width="18"/>
-  <circle cx="352" cy="366" r="20" fill="#b7ff35"/>
+  <g transform="translate(101.6 101.6) scale(12.8)" fill="none" stroke="#b7ff35" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M14.4 14.4 9.6 9.6"/>
+    <path d="M18.657 21.485a2 2 0 1 1-2.829-2.828l-1.767 1.768a2 2 0 1 1-2.829-2.829l6.364-6.364a2 2 0 1 1 2.829 2.829l-1.768 1.767a2 2 0 1 1 2.828 2.829z"/>
+    <path d="m21.5 21.5-1.4-1.4"/>
+    <path d="M3.9 3.9 2.5 2.5"/>
+    <path d="M6.404 12.768a2 2 0 1 1-2.829-2.829l1.768-1.767a2 2 0 1 1-2.828-2.829l2.828-2.828a2 2 0 1 1 2.829 2.828l1.767-1.768a2 2 0 1 1 2.829 2.829z"/>
+  </g>
 </svg>
