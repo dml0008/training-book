@@ -8215,6 +8215,9 @@ function fillCalendarDayDetail(card, key) {
   card.querySelectorAll(".cal-cell.is-selected").forEach((cell) => cell.classList.remove("is-selected"));
   const cell = card.querySelector(`.cal-cell[data-cal-day="${key}"]`);
   if (cell) cell.classList.add("is-selected");
+  // In the modal the calendar can fill the whole bottom-sheet, so this panel
+  // lands below the fold - pull it into view so the tap visibly does something.
+  panel.scrollIntoView({ block: "nearest" });
 }
 
 // Delegated click handler for day cells inside any .cal-card (Progress tab and
