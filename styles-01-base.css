@@ -1,0 +1,419 @@
+/* Figtree, bundled locally (one variable file, weights 300-900) so the app
+   keeps its typeface offline with no web-font dependency. OFL licensed. */
+@font-face {
+  font-family: "Figtree";
+  font-style: normal;
+  font-weight: 300 900;
+  font-display: swap;
+  src: url("fonts/figtree-latin.woff2") format("woff2");
+}
+
+:root {
+  color-scheme: dark;
+  --bg: #080b0a;
+  --panel: #101413;
+  --panel-2: #171d1b;
+  --panel-3: #1e2623;
+  --line: #283330;
+  --line-strong: #38463f;
+  --text: #f3f7f2;
+  --muted: #9ba8a1;
+  --dim: #68746e;
+  /* Muted lime brand color. Every accent surface, border and glow reads from
+     the same family so the green stays consistent. */
+  --accent: #b6d332;
+  --accent-2: #a3b551;
+  --accent-strong: #c6dd5f;
+  --accent-ink: #0a1002;
+  --accent-soft: rgba(182, 211, 50, 0.12);
+  --accent-line: rgba(182, 211, 50, 0.42);
+  --glow: 0 10px 34px rgba(182, 211, 50, 0.22);
+  --danger: #c43939;
+  --shadow: 0 24px 60px -28px rgba(0, 0, 0, 0.7), 0 8px 24px -16px rgba(0, 0, 0, 0.5);
+
+  /* ===== Shared design tokens (the style-guide scale) =====
+     Spacing rhythm: every gap/padding should use one of these. */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+
+  /* ===== Border-radius scale =====
+     One ladder (mirrors the Tailwind/Radix convention) so every corner uses a
+     named step instead of a one-off value. Controls = sm, cards/rows = md,
+     outer panels = lg. Pills are gone: --radius-full is reserved for things
+     that are genuinely circular (status dots, progress tracks, range thumbs). */
+  --radius-xs: 6px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-full: 999px;
+
+  /* One shared treatment for every screen's main container, so all six
+     pages match and a single edit here updates them everywhere. */
+  --panel-pad: clamp(18px, 5vw, 42px);
+  --panel-min-h: min(680px, calc(100svh - 142px));
+
+  font-family: "Figtree", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-height: 100%;
+  background: var(--bg);
+}
+
+body {
+  min-height: 100%;
+  margin: 0;
+  touch-action: manipulation;
+  background:
+    radial-gradient(circle at top left, rgba(183, 255, 53, 0.08), transparent 28rem),
+    linear-gradient(180deg, #0d1110 0%, var(--bg) 55%);
+  color: var(--text);
+}
+
+button {
+  font: inherit;
+}
+
+input,
+textarea,
+select {
+  width: 100%;
+  max-width: 100%;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--panel-2);
+  color: var(--text);
+  font: inherit;
+  padding: 11px 12px;
+}
+
+input {
+  min-height: 48px;
+}
+
+select {
+  min-height: 48px;
+  appearance: none;
+  background:
+    linear-gradient(45deg, transparent 50%, var(--muted) 50%) right 18px center / 7px 7px no-repeat,
+    linear-gradient(135deg, var(--muted) 50%, transparent 50%) right 13px center / 7px 7px no-repeat,
+    var(--panel-2);
+}
+
+textarea {
+  min-height: 96px;
+  resize: vertical;
+}
+
+label {
+  display: block;
+  margin-bottom: 7px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 750;
+}
+
+.app-shell {
+  width: min(1120px, 100%);
+  min-height: 100svh;
+  margin: 0 auto;
+  padding: calc(18px + env(safe-area-inset-top)) 18px calc(92px + env(safe-area-inset-bottom));
+}
+
+.topbar {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 22px;
+}
+
+.eyebrow,
+.card-kicker,
+.date-label {
+  margin: 0;
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+h1,
+h2,
+h3,
+p {
+  overflow-wrap: anywhere;
+}
+
+h1 {
+  margin: 3px 0 0;
+  font-size: clamp(26px, 6vw, 40px);
+  line-height: 0.98;
+  letter-spacing: -0.015em;
+}
+
+h2 {
+  margin: 8px 0 10px;
+  font-size: clamp(28px, 5.4vw, 44px);
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+h3 {
+  margin: 8px 0 8px;
+  font-size: 22px;
+  line-height: 1.05;
+  letter-spacing: 0;
+}
+
+p {
+  line-height: 1.55;
+}
+
+.sync-menu {
+  position: relative;
+  display: grid;
+  justify-items: end;
+}
+
+.sync-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 34px;
+  padding: 8px 11px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: rgba(16, 20, 19, 0.82);
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.sync-pill:disabled {
+  cursor: wait;
+  opacity: 0.78;
+}
+
+.sync-pill:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.sync-pill.good {
+  border-color: rgba(183, 255, 53, 0.42);
+  color: var(--text);
+}
+
+.sync-pill.warn {
+  border-color: rgba(255, 211, 106, 0.5);
+  color: #ffd36a;
+}
+
+.sync-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-full);
+  background: var(--dim);
+}
+
+.sync-pill.good .sync-dot {
+  background: var(--accent);
+}
+
+.sync-pill.warn .sync-dot {
+  background: #ffd36a;
+}
+
+.sync-panel {
+  position: absolute;
+  z-index: 10;
+  top: calc(100% + 10px);
+  right: 0;
+  width: min(360px, calc(100vw - 24px));
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: rgba(16, 20, 19, 0.98);
+  box-shadow: var(--shadow);
+}
+
+.sync-panel[hidden] {
+  display: none;
+}
+
+.sync-panel-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.sync-panel-head h2 {
+  margin: 4px 0 0;
+  font-size: 24px;
+  line-height: 1;
+}
+
+.app-version {
+  max-width: 148px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.25;
+  text-align: right;
+}
+
+.sync-panel .sync-status {
+  margin: 0 0 12px;
+}
+
+.sync-panel-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.sync-panel-foot {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(155, 168, 161, 0.18);
+}
+
+.sync-panel-foot .quiet-button {
+  width: 100%;
+}
+
+.sync-panel button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+/* Header right cluster: sync pill + settings gear sit side by side */
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.settings-gear {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: rgba(16, 20, 19, 0.82);
+  color: var(--muted);
+  cursor: pointer;
+  transition: border-color .14s ease, color .14s ease, background-color .14s ease;
+}
+
+.settings-gear svg {
+  width: 18px;
+  height: 18px;
+}
+
+.settings-gear:hover {
+  border-color: var(--accent-line);
+  color: var(--text);
+}
+
+.settings-gear:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Settings sheet rows (style guide link for now) */
+.settings-list {
+  display: grid;
+  gap: 8px;
+}
+
+.settings-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--panel-2);
+  color: var(--text);
+  text-decoration: none;
+  transition: border-color .14s ease, background-color .14s ease;
+}
+
+.settings-row:hover {
+  border-color: var(--accent-line);
+  background: var(--accent-soft);
+}
+
+.settings-row-icon {
+  display: inline-flex;
+  color: var(--accent);
+}
+
+.settings-row-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.settings-row-text {
+  display: grid;
+  flex: 1 1 auto;
+}
+
+.settings-row-title {
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.settings-row-sub {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.settings-row-chev {
+  display: inline-flex;
+  color: var(--dim);
+}
+
+.settings-row-chev svg {
+  width: 18px;
+  height: 18px;
+}
+
+.screen-stack {
+  display: grid;
+  /* Without an explicit column the single implicit track defaults to `auto`
+     (max-content), so the stack grows to the widest screen's natural width —
+     the Library's photo cards — and drags the whole shell into horizontal
+     scroll. Pin the track to the container width and let children wrap. */
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.screen {
+  display: none;
+  grid-area: 1 / 1;
+  min-width: 0;
+}
+
+.screen.is-active {
+  display: block;
+}
+

@@ -4117,8 +4117,12 @@ function addExerciseToLiveWorkout(exerciseId) {
   renderTodayWorkout();
 }
 
-function renderLiveAddExerciseSheet() {
-  if (!activeWorkout.addExerciseOpen) return "";
+// Just the results list for the live add-exercise sheet. Split out so a search
+// keystroke can refresh only this list (preserving the input's focus and the
+// mobile keyboard) rather than re-rendering the whole workout screen, which
+// would tear the focused <input> out of the DOM mid-keystroke and lock up the
+// sheet on mobile.
+function renderLiveAddResults() {
   const query = (activeWorkout.addExerciseQuery || "").trim().toLowerCase();
   const matches = exercises
     .filter((exercise) => {
@@ -4127,6 +4131,16 @@ function renderLiveAddExerciseSheet() {
     })
     .slice(0, 18);
 
+  return matches.map((exercise) => `
+      <button class="live-add-result" type="button" data-action="add-live-exercise" data-id="${escapeHtml(exercise.id)}">
+        ${renderExerciseArt(exercise)}
+        <span><strong>${escapeHtml(exercise.name)}</strong><small>${escapeHtml(formatExerciseType(exercise.type || "strength"))} · ${escapeHtml(exercise.area || "Exercise")}</small></span>
+      </button>
+    `).join("") || `<p class="empty-state">No matching exercises.</p>`;
+}
+
+function renderLiveAddExerciseSheet() {
+  if (!activeWorkout.addExerciseOpen) return "";
   return `
     <div class="lw-sheet-scrim" role="presentation">
       <section class="lw-sheet live-add-sheet" role="dialog" aria-modal="true" aria-label="Add exercise to workout">
@@ -4142,12 +4156,7 @@ function renderLiveAddExerciseSheet() {
           <input type="search" id="live-add-search" value="${escapeHtml(activeWorkout.addExerciseQuery)}" data-action="live-add-search" placeholder="Search exercises" autocomplete="off" aria-label="Search exercises" />
         </div>
         <div class="live-add-results">
-          ${matches.map((exercise) => `
-            <button class="live-add-result" type="button" data-action="add-live-exercise" data-id="${escapeHtml(exercise.id)}">
-              ${renderExerciseArt(exercise)}
-              <span><strong>${escapeHtml(exercise.name)}</strong><small>${escapeHtml(formatExerciseType(exercise.type || "strength"))} · ${escapeHtml(exercise.area || "Exercise")}</small></span>
-            </button>
-          `).join("") || `<p class="empty-state">No matching exercises.</p>`}
+          ${renderLiveAddResults()}
         </div>
       </section>
     </div>
@@ -4557,24 +4566,24 @@ function renderFocusedExercise() {
 
   todayRoutineList.innerHTML = `
     <div class="live-workout">
-      <div class="lw-topbar">
-        <button class="quiet-button small-button btn-ico lw-back" type="button" data-action="lw-back" aria-label="${i > 0 ? "Previous exercise" : "Back to plan"}">${getUiIcon("arrow-left")}</button>
-        <span class="lw-count">${activeWorkout.flowMode === "round" ? `Round ${activeWorkout.roundNumber + 1} · ` : ""}${i + 1} of ${total}</span>
-        <button class="lw-exit" type="button" data-action="lw-exit">Exit</button>
+      <div class="lw-progress">
+        <div class="lw-topbar">
+          <button class="quiet-button small-button btn-ico lw-back" type="button" data-action="lw-back" aria-label="${i > 0 ? "Previous exercise" : "Back to plan"}">${getUiIcon("arrow-left")}</button>
+          <span class="lw-count">${activeWorkout.flowMode === "round" ? `Round ${activeWorkout.roundNumber + 1} · ` : ""}${i + 1} of ${total}</span>
+          <button class="lw-exit" type="button" data-action="lw-exit">Exit</button>
+        </div>
+        <div class="lw-dots">${renderProgressDots(i, total, false)}</div>
       </div>
-      <div class="lw-dots">${renderProgressDots(i, total, false)}</div>
       <div class="lw-hero">
         <div class="lw-hero-icon" aria-hidden="true">${renderLiveExerciseArt(ex)}</div>
         <div class="lw-hero-text">
-          <h3 class="lw-name">${escapeHtml(ex.name)}</h3>
+          <div class="lw-name-row">
+            <h3 class="lw-name">${escapeHtml(ex.name)}</h3>
+            <button class="lw-help-btn" type="button" data-action="open-reference" aria-label="How to do ${escapeHtml(ex.name)}">${getUiIcon("help-circle")}</button>
+          </div>
           <p class="lw-area">${escapeHtml(ex.area || "")}${ex.source === "added" ? " · added today" : ""}${ex.skipped ? " · skipped" : ""}</p>
         </div>
       </div>
-      <div class="lw-toolbar">
-        <button class="quiet-button small-button btn-ico" type="button" data-action="open-live-add">${getUiIcon("plus-circle")}Add exercise</button>
-        <button class="quiet-button small-button btn-ico danger-text" type="button" data-action="skip-exercise">${getUiIcon("x")}Skip exercise</button>
-      </div>
-      <button class="lw-reference-button btn-ico" type="button" data-action="open-reference">${getUiIcon("help-circle")}How to do it</button>
       <div class="lw-target">
         <span>Target: <strong>${escapeHtml(formatFocusTarget(ex))}</strong></span>
         <button class="lw-edit-targets" type="button" data-action="open-targets"${activeWorkout.timer.running ? " disabled" : ""}>Edit targets</button>
@@ -4584,6 +4593,10 @@ function renderFocusedExercise() {
       <div class="lw-next-row">
         <button class="primary-button lw-next" type="button" data-action="lw-next">${nextLabel}</button>
       </div>`}
+      <div class="lw-toolbar">
+        <button class="quiet-button small-button btn-ico" type="button" data-action="open-live-add">${getUiIcon("plus-circle")}Add exercise</button>
+        <button class="quiet-button small-button btn-ico danger-text" type="button" data-action="skip-exercise">${getUiIcon("x")}Skip exercise</button>
+      </div>
       ${renderEditTargetsSheet(ex)}
       ${renderReferenceSheet(ex)}
       ${renderLiveAddExerciseSheet()}
@@ -4727,7 +4740,15 @@ function handleTodayWorkoutChange(event) {
 
   if (action === "live-add-search") {
     activeWorkout.addExerciseQuery = input.value;
-    renderTodayWorkout();
+    // Refresh only the results list so the search field keeps focus and the
+    // mobile keyboard stays up. Re-rendering the whole screen here used to
+    // recreate the focused input on every keystroke, which froze the sheet.
+    const resultsEl = todayRoutineList.querySelector(".live-add-results");
+    if (resultsEl) {
+      resultsEl.innerHTML = renderLiveAddResults();
+    } else {
+      renderTodayWorkout();
+    }
     return;
   }
 

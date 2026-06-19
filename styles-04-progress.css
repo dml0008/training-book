@@ -1,0 +1,726 @@
+/* ===== Progress tab (Step 9) ===== */
+.progress-panel {
+  /* look + size from the shared container tokens; this only adds layout. */
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.progress-heading {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.progress-heading p:last-child {
+  margin: 0;
+  color: var(--muted);
+}
+
+.progress-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+#progress-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+/* Desktop is where Daniel reviews progress, so use the width: pair the two
+   charts and the two stat cards side by side, and let the full-bleed pieces
+   (headline strip, consistency strip, calendar) span the whole dashboard. */
+@media (min-width: 900px) {
+  #progress-content {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    /* stretch so two cards sharing a row match heights (no half-empty gap
+       beside the shorter one) */
+    align-items: stretch;
+  }
+  #progress-content > .prog-hero,
+  #progress-content > .consistency-card,
+  #progress-content > .cal-card {
+    grid-column: 1 / -1;
+  }
+}
+
+.stat-card {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--panel-2);
+  padding: 16px 18px;
+}
+
+.stat-card.is-hit {
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 1px rgba(183, 255, 53, 0.25);
+}
+
+.stat-number {
+  margin: 6px 0 4px;
+  font-size: clamp(34px, 9vw, 46px);
+  font-weight: 800;
+  line-height: 1;
+  color: var(--accent);
+}
+
+.stat-of {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.stat-note {
+  margin: 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.weight-card {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--panel-2);
+  padding: 16px 18px;
+}
+
+.weight-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.weight-head .card-kicker {
+  margin: 0;
+}
+
+.weight-mini {
+  min-height: 36px;
+  padding: 7px 12px;
+  font-size: 13px;
+}
+
+.weight-card .stat-number {
+  margin: 10px 0 4px;
+}
+
+.weight-empty {
+  margin: 12px 0 4px;
+}
+
+.weight-form {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 12px 0 4px;
+  flex-wrap: wrap;
+}
+
+.weight-input {
+  width: 110px;
+  min-height: 40px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: rgba(9, 12, 11, 0.42);
+  color: var(--text);
+  font: inherit;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.weight-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.weight-unit {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--muted);
+  margin-left: -2px;
+}
+
+.weight-target {
+  margin: 12px 0 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.weight-target strong {
+  color: var(--text);
+}
+
+.weight-link {
+  border: none;
+  background: none;
+  padding: 2px 4px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--accent);
+  cursor: pointer;
+}
+
+.cal-card {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--panel-2);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Arrows pinned to the outer edges, month name gets the whole middle column
+   and stays centred - so it can't get squeezed into a thin sliver on a narrow
+   phone the way a plain flex/space-between row did. */
+.cal-nav {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.cal-month {
+  font-size: 16px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.cal-arrow {
+  min-width: 44px;
+  min-height: 40px;
+}
+
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+}
+
+.cal-weekdays {
+  margin-bottom: 2px;
+}
+
+.cal-weekday {
+  text-align: center;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+
+.cal-cell {
+  aspect-ratio: 1 / 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  font-size: 20px;
+  font-weight: 700;
+  border: 1px solid transparent;
+}
+
+.cal-cell.is-blank {
+  border: none;
+  background: none;
+}
+
+.cal-cell.is-rest {
+  color: var(--dim);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.cal-cell.is-planned {
+  color: var(--text);
+  border-color: var(--accent-2);
+}
+
+.cal-cell.is-missed {
+  color: var(--danger);
+  border-color: rgba(255, 107, 107, 0.4);
+  background: rgba(255, 107, 107, 0.08);
+}
+
+.cal-cell.is-done {
+  color: #0c0f0e;
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.cal-cell.is-today {
+  outline: 2px solid var(--text);
+  outline-offset: 1px;
+}
+
+/* Day cells are <button>s (tap for the detail panel); strip the UA chrome so
+   they read exactly like the old static squares, then add a press affordance. */
+button.cal-cell {
+  font: inherit;
+  padding: 0;
+  background: transparent;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  transition: transform 0.08s ease;
+}
+
+button.cal-cell:hover {
+  border-color: var(--line-strong);
+}
+
+button.cal-cell:active {
+  transform: scale(0.94);
+}
+
+/* Selected day wins over the today outline (declared after it on purpose). */
+.cal-cell.is-selected {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.cal-day-detail {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--panel-3);
+  padding: 12px 14px;
+}
+
+.cal-day-detail-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.cal-day-detail-date {
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.cal-day-detail-status {
+  flex: 0 0 auto;
+  padding: 3px 9px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-full);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.cal-day-detail-status.is-done { color: var(--accent-ink); background: var(--accent); border-color: var(--accent); }
+.cal-day-detail-status.is-planned { color: var(--text); border-color: var(--accent-2); }
+.cal-day-detail-status.is-missed { color: var(--danger); border-color: rgba(255, 107, 107, 0.4); background: rgba(255, 107, 107, 0.08); }
+.cal-day-detail-status.is-rest { color: var(--muted); }
+
+.cal-day-detail-routine {
+  margin: 0 0 6px;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.cal-day-detail-list {
+  display: grid;
+  gap: 5px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cal-day-detail-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 13px;
+}
+
+.cal-day-detail-list li span:last-child {
+  flex: 0 0 auto;
+  color: var(--muted);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.cal-day-detail-empty {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.cal-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.cal-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cal-legend .dot {
+  width: 12px;
+  height: 12px;
+  border-radius: var(--radius-xs);
+  border: 1px solid transparent;
+}
+
+.cal-legend .dot.is-done { background: var(--accent); }
+.cal-legend .dot.is-planned { border-color: var(--accent-2); }
+.cal-legend .dot.is-missed { background: rgba(255, 107, 107, 0.18); border-color: rgba(255, 107, 107, 0.4); }
+.cal-legend .dot.is-rest { background: rgba(255, 255, 255, 0.05); }
+
+/* Calendar inside the modal: drop the card chrome so it blends into the sheet,
+   and let the sheet scroll if it ever runs tall on a short screen. */
+.calendar-sheet {
+  max-height: 92vh;
+  overflow-y: auto;
+}
+
+.calendar-sheet .cal-card {
+  border: none;
+  background: none;
+  padding: 0;
+}
+
+/* ===== Progress dashboard (Step 10 overhaul) ===== */
+
+/* A shared card shell for every dashboard section, matching weight/cal cards. */
+.prog-card {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--panel-2);
+  padding: var(--space-4);
+}
+
+.prog-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+
+.prog-card-head .card-kicker { margin: 0; }
+
+.prog-sub {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--dim);
+}
+
+.prog-empty {
+  margin: var(--space-2) 0 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.prog-select {
+  width: auto;
+  min-height: 38px;
+  max-width: 62%;
+  padding: 6px 30px 6px 12px;
+  font-size: 13px;
+  font-weight: 700;
+  border-radius: var(--radius-sm);
+}
+
+/* ---- Headline strip ---- */
+.prog-hero {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-3);
+}
+
+@media (max-width: 520px) {
+  .prog-hero { grid-template-columns: 1fr 1fr; }
+  .prog-hero .hero-tile:first-child { grid-column: 1 / -1; }
+}
+
+.hero-tile {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: linear-gradient(180deg, var(--panel-2), var(--panel));
+  padding: var(--space-4);
+}
+
+.hero-tile.is-hit {
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 1px rgba(182, 211, 50, 0.25);
+}
+
+.hero-num {
+  margin: 8px 0 2px;
+  font-size: clamp(34px, 9vw, 44px);
+  font-weight: 800;
+  line-height: 1;
+  color: var(--accent);
+}
+
+.hero-unit {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.hero-note {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.hero-ring-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-top: var(--space-2);
+}
+
+.hero-ring-row .hero-note { margin: 0; }
+
+.ring-wrap {
+  position: relative;
+  width: 78px;
+  height: 78px;
+  flex: none;
+}
+
+.ring { width: 78px; height: 78px; display: block; }
+.ring-bg { fill: none; stroke: var(--line); stroke-width: 6; }
+.ring-fg {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 6;
+  filter: drop-shadow(0 0 5px rgba(183, 255, 53, 0.45));
+  transition: stroke-dasharray 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.ring-label {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  font-size: 24px;
+  font-weight: 850;
+  line-height: 1;
+  color: var(--text);
+}
+
+.ring-label i { font-size: 15px; font-style: normal; font-weight: 700; color: var(--muted); }
+
+.ring-label i {
+  font-style: normal;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+/* ---- Inline SVG line charts (weight + strength) ---- */
+.line-chart {
+  width: 100%;
+  height: auto;
+  display: block;
+  overflow: visible;
+}
+
+.chart-line {
+  stroke: var(--accent);
+  stroke-width: 2.5;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.chart-dot { fill: var(--accent); }
+.chart-dot.is-last { fill: var(--text); stroke: var(--accent); stroke-width: 2; }
+
+.chart-target {
+  stroke: var(--muted);
+  stroke-width: 1;
+  stroke-dasharray: 4 4;
+  opacity: 0.55;
+}
+
+.chart-grad-top { stop-color: var(--accent); stop-opacity: 0.20; }
+.chart-grad-bottom { stop-color: var(--accent); stop-opacity: 0; }
+
+.prog-chart-foot {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-top: var(--space-2);
+}
+
+.mini-num {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--accent);
+}
+
+.mini-num.lonely { margin: var(--space-2) 0 4px; }
+.mini-unit { font-size: 14px; font-weight: 700; color: var(--muted); }
+.mini-note { margin: 2px 0 0; font-size: 12px; color: var(--dim); }
+
+.prog-change {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  text-align: right;
+}
+
+.prog-change svg { width: 16px; height: 16px; flex: none; }
+.prog-change.is-up { color: var(--accent); }
+.prog-change.is-down { color: var(--danger); }
+.prog-change.is-down svg { transform: scaleY(-1); }
+.prog-change.is-flat { color: var(--muted); }
+.prog-change.is-flat svg { display: none; }
+
+/* ---- Body-weight chart range toggle ---- */
+.weight-chart { margin-top: var(--space-3); }
+.weight-chart-empty { margin: var(--space-3) 0; }
+
+.range-toggle {
+  display: inline-flex;
+  gap: 4px;
+  margin-top: var(--space-2);
+  padding: 3px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--panel);
+}
+
+.range-btn {
+  border: none;
+  background: none;
+  color: var(--muted);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 5px 12px;
+  min-height: 30px;
+  border-radius: var(--radius-xs);
+  cursor: pointer;
+}
+
+.range-btn.is-active { background: var(--accent); color: #0c0f0e; }
+
+/* ---- Personal records ---- */
+.pr-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: var(--space-2);
+}
+
+.pr-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--panel);
+}
+
+.pr-medal {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  flex: none;
+  border-radius: var(--radius-full);
+  background: rgba(182, 211, 50, 0.14);
+  color: var(--accent);
+}
+
+.pr-medal svg { width: 17px; height: 17px; }
+.pr-body { min-width: 0; }
+
+.pr-name {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pr-value {
+  margin: 2px 0 0;
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1.05;
+  color: var(--text);
+}
+
+.pr-unit { font-size: 13px; font-weight: 700; color: var(--muted); }
+.pr-x { font-size: 13px; font-weight: 700; color: var(--dim); }
+.pr-date { margin: 2px 0 0; font-size: 11px; color: var(--dim); }
+
+/* ---- Last-12-weeks consistency strip ---- */
+.cbar-row {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-2);
+  height: 76px;
+}
+
+.cbar {
+  flex: 1 1 0;
+  display: flex;
+  align-items: flex-end;
+  height: 100%;
+}
+
+.cbar i {
+  display: block;
+  width: 100%;
+  min-height: 4px;
+  border-radius: var(--radius-xs);
+  transition: height 0.25s ease;
+}
+
+.cbar.is-hit i { background: var(--accent); }
+.cbar.is-partial i { background: var(--accent-2); opacity: 0.7; }
+.cbar.is-empty i { background: var(--line); }
+
+/* ---- This week's effort ---- */
+.effort-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-3);
+}
+
+@media (min-width: 560px) {
+  .effort-grid { grid-template-columns: repeat(4, 1fr); }
+}
+
+.effort-num {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--text);
+}
+
+.effort-unit { font-size: 13px; font-weight: 700; color: var(--muted); }
+.effort-label { margin: 4px 0 0; font-size: 12px; color: var(--dim); }
+

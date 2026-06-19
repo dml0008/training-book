@@ -1,4 +1,4 @@
-const CACHE_NAME = "training-book-shell-v54";
+const CACHE_NAME = "training-book-shell-v55";
 const STATIC_ASSETS = [
   "manifest.webmanifest",
   "icons/icon.svg",
@@ -10,7 +10,14 @@ const STATIC_ASSETS = [
 const APP_FILES = [
   "./",
   "index.html",
-  "styles.css",
+  // styles.css was split into ordered parts (load order set in index.html).
+  "styles-01-base.css",
+  "styles-02-layout.css",
+  "styles-03-workout.css",
+  "styles-04-progress.css",
+  "styles-05-interactions.css",
+  "styles-06-plan.css",
+  "styles-07-library.css",
   "app.js",
   // throwaway style-guide page: network-first so edits show fresh while iterating
   "styleguide.html"

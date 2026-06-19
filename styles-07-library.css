@@ -1,0 +1,441 @@
+/* =====================================================================
+   Round 2: favorites, B&W card photos, star toggle, add modal,
+   custom-photo editor, edit-mode button polish
+   ===================================================================== */
+
+/* Favorites filter chip (and icon sizing for any chip with an icon). */
+.filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.filter-chip svg {
+  width: 14px;
+  height: 14px;
+}
+
+.filter-chip-fav svg path {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+}
+
+.filter-chip-fav.is-active svg path {
+  fill: #101413;
+}
+
+/* Library card photos are black & white; on desktop they go colour on hover.
+   (The how-to sheet photos, .lw-ref-photo img, stay in colour.) */
+.exercise-photo {
+  filter: grayscale(1) contrast(1.02);
+  transition: filter 0.25s ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .exercise-art:hover .exercise-photo {
+    filter: none;
+  }
+}
+
+/* The art is now a container with two overlay buttons: a full-bleed how-to
+   button and the favourite star. */
+.exercise-art-howto-btn {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+.star-toggle {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-full);
+  background: rgba(9, 12, 11, 0.6);
+  color: #f3f7f2;
+  cursor: pointer;
+  -webkit-backdrop-filter: blur(2px);
+  backdrop-filter: blur(2px);
+  transition: transform 0.14s ease, background-color 0.14s ease, color 0.14s ease;
+}
+
+.star-toggle svg {
+  width: 17px;
+  height: 17px;
+}
+
+.star-toggle svg path {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+}
+
+.star-toggle.is-fav {
+  color: var(--accent);
+}
+
+.star-toggle.is-fav svg path {
+  fill: var(--accent);
+  stroke: var(--accent);
+}
+
+.star-toggle:hover {
+  background: rgba(9, 12, 11, 0.82);
+  color: var(--accent);
+}
+
+.star-toggle:active {
+  transform: scale(0.88);
+}
+
+/* ----- Add-exercise button + modal ----- */
+.library-add-row {
+  margin: 14px 0 16px;
+}
+
+.library-add-trigger {
+  width: 100%;
+  justify-content: center;
+  min-height: 48px;
+  border-style: dashed;
+}
+
+.add-sheet .add-field {
+  margin-bottom: 14px;
+}
+
+.add-field > span {
+  display: block;
+  margin-bottom: 7px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 750;
+}
+
+.add-field .type-toggle {
+  display: flex;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.add-field .type-toggle .type-option {
+  flex: 1 0 auto;
+}
+
+/* ----- Photo-upload slots (used by the Library edit card) ----- */
+.lw-photo-slot {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  cursor: pointer;
+}
+
+.lw-photo-slot-preview {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border: 1px dashed var(--line);
+  border-radius: var(--radius-sm);
+  background-color: var(--panel-2);
+  background-size: cover;
+  background-position: center;
+  color: var(--muted);
+}
+
+.lw-photo-slot-preview.has-img {
+  border-style: solid;
+}
+
+.lw-photo-slot-preview svg {
+  width: 26px;
+  height: 26px;
+}
+
+.lw-photo-slot-label {
+  text-align: center;
+  font-size: 11px;
+  font-weight: 750;
+  color: var(--muted);
+}
+
+.lw-photo-slot input[type="file"] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.lw-photo-slot:hover .lw-photo-slot-preview {
+  border-color: rgba(183, 255, 53, 0.5);
+}
+
+/* ----- Edit-exercise modal ----- */
+.edit-sheet .add-field {
+  margin-bottom: 16px;
+}
+
+.edit-sheet .add-field .type-toggle {
+  display: flex;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.edit-sheet .add-field .type-toggle .type-option {
+  flex: 1 0 auto;
+}
+
+/* Category tags as tap-to-toggle pills. */
+.cat-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.cat-chip {
+  min-height: 36px;
+  padding: 8px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-full);
+  background: rgba(9, 12, 11, 0.4);
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 750;
+}
+
+.cat-chip.is-on {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #101413;
+}
+
+.cat-chip:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.cat-multiselect-empty {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+/* The photo editor (the two slots) inside the edit modal. */
+.edit-photos-slots {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.edit-sheet .lw-photo-slot-preview {
+  aspect-ratio: 4 / 3;
+}
+
+.edit-sheet-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+/* Override .lw-sheet-done's full-width / top-margin inside the actions row. */
+.edit-sheet-actions .lw-sheet-done {
+  flex: 1 1 auto;
+  width: auto;
+  margin-top: 0;
+}
+
+.edit-sheet-actions .quiet-button {
+  flex: 0 0 auto;
+  min-height: 48px;
+}
+
+/* ----- Edit-categories modal ----- */
+.cat-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.cat-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cat-row-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 42px;
+  padding: 9px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: rgba(9, 12, 11, 0.55);
+  color: var(--text);
+  font-size: 16px;
+}
+
+.cat-row-input:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.cat-row-remove {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.cat-row-remove svg {
+  width: 17px;
+  height: 17px;
+}
+
+.cat-row-remove:hover {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.cat-add {
+  margin-bottom: 14px;
+}
+
+.cat-empty {
+  margin: 0 0 12px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+/* ----- Edit-mode button polish: hover + active on the move/remove controls,
+   and the new Cancel button layout ----- */
+.rx-move,
+.rx-remove {
+  transition: transform 0.14s ease, background-color 0.14s ease,
+              border-color 0.14s ease, color 0.14s ease;
+}
+
+.rx-move:not(:disabled):hover {
+  border-color: rgba(183, 255, 53, 0.55);
+  background: rgba(183, 255, 53, 0.08);
+  color: var(--text);
+}
+
+.rx-remove:hover {
+  border-color: rgba(255, 107, 107, 0.6);
+  background: rgba(255, 107, 107, 0.1);
+}
+
+.rx-move:not(:disabled):active,
+.rx-remove:active {
+  transform: translateY(1px) scale(0.96);
+}
+
+.routine-edit-actions {
+  flex-wrap: wrap;
+}
+
+.routine-edit-actions .primary-button,
+.routine-edit-actions [data-action="cancel-routine"] {
+  flex: 1 1 120px;
+}
+
+.routine-edit-actions [data-action="delete-routine"] {
+  flex: 0 0 auto;
+  margin-left: auto;
+}
+
+/* ===== Settings: Data & backups section ===== */
+/* Settings rows are <a> by default; the data tools use <button>, so reset them
+   to match the link rows exactly. */
+button.settings-row {
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+}
+
+.settings-section-label {
+  margin: 14px 2px 2px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+
+.settings-backups {
+  display: grid;
+  gap: 8px;
+  padding: 6px 2px 2px;
+}
+
+.backups-group-label {
+  margin: 6px 2px 0;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.backup-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--panel-2);
+}
+
+.backup-row-text {
+  display: grid;
+  min-width: 0;
+}
+
+.backup-row-when {
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.backup-row-detail {
+  font-size: 12px;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.settings-foot-note {
+  margin: 8px 2px 0;
+  min-height: 1em;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.settings-foot-note.good { color: var(--accent); }
+.settings-foot-note.bad { color: var(--danger); }

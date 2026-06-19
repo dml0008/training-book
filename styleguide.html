@@ -16,7 +16,14 @@
     temporary "View style guide" banner block in index.html.
     ============================================================
   -->
-  <link rel="stylesheet" href="styles.css?v=2026.06.21-styleguide-v2">
+  <!-- Stylesheet split into ordered parts (load order matters; see index.html). -->
+  <link rel="stylesheet" href="styles-01-base.css?v=2026.06.19-css-split">
+  <link rel="stylesheet" href="styles-02-layout.css?v=2026.06.19-css-split">
+  <link rel="stylesheet" href="styles-03-workout.css?v=2026.06.19-css-split">
+  <link rel="stylesheet" href="styles-04-progress.css?v=2026.06.19-css-split">
+  <link rel="stylesheet" href="styles-05-interactions.css?v=2026.06.19-css-split">
+  <link rel="stylesheet" href="styles-06-plan.css?v=2026.06.19-css-split">
+  <link rel="stylesheet" href="styles-07-library.css?v=2026.06.19-css-split">
 
   <!-- Proposed new typeface: Figtree (cleaner than the current Inter) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">

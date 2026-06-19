@@ -1,0 +1,415 @@
+/* ===== Change-day control on Today ===== */
+.today-day-switch {
+  margin: 8px 0 4px;
+}
+
+.day-switch-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.day-switch-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--line);
+  background: var(--panel-2);
+  border-radius: var(--radius-sm);
+  padding: 4px 6px;
+}
+
+/* Calendar button beside the day switcher - opens the schedule modal. */
+.day-cal-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--line);
+  background: var(--panel-2);
+  color: var(--text);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.day-cal-button:hover {
+  background: var(--panel-3);
+}
+
+.day-cal-button svg {
+  width: 18px;
+  height: 18px;
+}
+
+.day-arrow {
+  border: none;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 20px;
+  line-height: 1;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.day-arrow:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.day-switch-name {
+  min-width: 122px;
+  text-align: center;
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--text);
+}
+
+.day-today-reset {
+  display: block;
+  margin-top: 6px;
+  border: none;
+  background: transparent;
+  color: var(--accent);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 2px 0;
+  cursor: pointer;
+}
+
+/* ===== Sport (e.g. soccer) notes in the live workout ===== */
+.lw-sport-notes {
+  display: block;
+  margin-top: 12px;
+}
+
+.lw-sport-notes > span {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+
+.lw-sport-notes textarea {
+  width: 100%;
+  resize: vertical;
+  border: 1px solid var(--line);
+  background: var(--panel-2);
+  color: var(--text);
+  font: inherit;
+  font-size: 14px;
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+}
+
+.lw-sport-notes textarea:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+/* Sport notes in the History edit view */
+.detail-sport-notes {
+  display: block;
+  margin-top: 10px;
+}
+
+.detail-sport-notes > span {
+  display: block;
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+.detail-sport-notes textarea {
+  width: 100%;
+  resize: vertical;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  color: var(--text);
+  font: inherit;
+  font-size: 14px;
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+}
+
+/* ============================================================
+   Button interaction layer (hover + on-click) - shared app-wide
+   Agreed on the style-guide page, now applied everywhere so every
+   button behaves the same:
+     - Lime (primary) buttons: gentle brightness + soft lime glow on hover
+     - Quiet / outline buttons & neutral chips: border + faint lime wash
+     - Danger (Remove) buttons keep their red identity
+     - Steppers invert to lime
+     - No lift on hover; every button presses in slightly on click
+   ============================================================ */
+.primary-button, .quiet-button, .small-button, .library-add-btn,
+.exercise-action, .filter-chip, .type-option, .day-arrow, .day-today-reset,
+.tab, .difficulty-chip, .today-done-button, .stepper-button, .sync-pill,
+.lw-check, .lw-bigcheck, .lw-tbtn, .lw-preset, .lw-pill, .lw-add, .lw-remove,
+.lw-reference-button, .lw-edit-targets {
+  transition: transform .14s ease, box-shadow .14s ease,
+              background-color .14s ease, border-color .14s ease,
+              color .14s ease, filter .14s ease;
+}
+
+/* Lime (primary) buttons */
+.primary-button:not(:disabled):hover,
+.library-add-btn:hover,
+.exercise-action.primary:hover,
+.lw-tbtn.primary:hover {
+  filter: brightness(1.05);
+}
+
+/* Quiet / outline buttons + neutral chips */
+.quiet-button:not(:disabled):hover,
+.lw-tbtn:not(.primary):hover,
+.lw-preset:not(.on):hover,
+.lw-pill:not(.is-done):hover,
+.lw-check:not(.is-done):hover,
+.difficulty-chip:not(.is-active):hover,
+.today-done-button:not(.is-done):hover,
+.exercise-action:not(.primary):not(.danger):hover,
+.lw-bigcheck:not(.is-done):hover,
+.lw-reference-button:hover,
+.filter-chip:not(.is-active):hover,
+.type-option:not(.is-active):hover {
+  border-color: rgba(183, 255, 53, 0.55);
+  background: rgba(183, 255, 53, 0.07);
+  color: var(--text);
+}
+
+/* Danger buttons keep red on hover - the Library "Remove" button, plus the
+   Plan/History text buttons (Clear / Delete) and the History trash icon, which
+   would otherwise pick up the shared lime hover or none at all. */
+.exercise-action.danger:hover,
+.quiet-button.danger-text:not(:disabled):hover,
+.history-delete:hover {
+  border-color: rgba(255, 107, 107, 0.6);
+  background: rgba(255, 107, 107, 0.1);
+  color: var(--danger);
+}
+
+/* Steppers invert to lime */
+.stepper-button:hover {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #101413;
+}
+
+/* Sync pill + bottom-nav tabs: gentle highlight */
+.sync-pill:hover { border-color: rgba(183, 255, 53, 0.45); color: var(--text); }
+.tab:not(.is-active):hover { background: rgba(183, 255, 53, 0.06); color: var(--text); }
+
+/* Plain text-style buttons */
+.lw-edit-targets:not(:disabled):hover,
+.day-today-reset:hover { filter: brightness(1.25); }
+
+/* On-click: press in slightly (no lift on hover, only on click) */
+.primary-button:not(:disabled):active,
+.quiet-button:not(:disabled):active,
+.small-button:not(:disabled):active,
+.library-add-btn:active,
+.exercise-action:active,
+.filter-chip:active,
+.type-option:active,
+.day-arrow:active,
+.day-today-reset:active,
+.difficulty-chip:active,
+.today-done-button:active,
+.stepper-button:active,
+.lw-check:active,
+.lw-bigcheck:active,
+.lw-tbtn:not(:disabled):active,
+.lw-preset:not(:disabled):active,
+.lw-pill:not(:disabled):active,
+.lw-add:active, .lw-remove:active,
+.lw-reference-button:active,
+.tab:active {
+  transform: translateY(1px) scale(0.985);
+  box-shadow: none;
+  filter: brightness(0.95);
+}
+
+/* ===== Shared exercise glyphs =====
+   The library exercise icons are now 24-viewBox line glyphs (Tabler/Lucide).
+   They are drawn by getExerciseIcon() as <svg class="lw-glyph">. The various
+   icon containers (.exercise-art, .lw-hero-icon, .mini-exercise-art) force a
+   thick 3.4 stroke that suits the old 116-viewBox stick figures but is far too
+   heavy at 24 units, so override stroke-width here. The higher specificity of
+   `svg.lw-glyph path` (and placement at end of file) wins over those rules.
+   Setting stroke/fill on the glyph itself also makes it render correctly in any
+   container that does not style its paths. */
+svg.lw-glyph {
+  stroke: var(--accent);
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+svg.lw-glyph path {
+  stroke: var(--accent);
+  stroke-width: 1;
+  fill: none;
+}
+
+/* =====================================================================
+   Library refresh: search box, real photo cards, tap-for-how-to
+   ===================================================================== */
+
+.library-search {
+  position: relative;
+  margin: 2px 0 16px;
+}
+
+.library-search-icon {
+  position: absolute;
+  left: 13px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  color: var(--muted);
+  pointer-events: none;
+}
+
+.library-search-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.library-search input {
+  padding-left: 42px;
+}
+
+/* The card art is now a tappable button that opens the "How to do it" sheet.
+   It holds either a real start-position photo or the shared line glyph. */
+.exercise-art {
+  position: relative;
+  overflow: hidden;
+  padding: 0;
+  cursor: pointer;
+  transition: border-color 0.15s ease, transform 0.05s ease;
+}
+
+.exercise-art.has-photo {
+  border-color: rgba(155, 168, 161, 0.28);
+}
+
+.exercise-art:hover {
+  border-color: var(--accent);
+}
+
+.exercise-art:active {
+  transform: scale(0.985);
+}
+
+.exercise-art.is-static {
+  cursor: default;
+}
+
+.exercise-art.is-static:hover {
+  border-color: rgba(183, 255, 53, 0.18);
+}
+
+.exercise-photo {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 120px;
+  background-size: cover;
+  background-position: center top;
+}
+
+.exercise-glyph {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  min-height: 120px;
+}
+
+/* Scope glyph sizing so it doesn't also blow up the small how-to badge icon. */
+.exercise-glyph svg {
+  width: 74%;
+  height: 74%;
+}
+
+/* The small "How to" badge sitting on the art. */
+.exercise-art-howto {
+  position: absolute;
+  left: 6px;
+  bottom: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px 3px 6px;
+  border-radius: var(--radius-full);
+  background: rgba(9, 12, 11, 0.82);
+  color: var(--text);
+  font-size: 10px;
+  font-weight: 850;
+  letter-spacing: 0.02em;
+  pointer-events: none;
+}
+
+.exercise-art-howto svg {
+  width: 12px;
+  height: 12px;
+}
+
+.exercise-art-howto svg * {
+  stroke: var(--accent);
+  stroke-width: 2.2;
+  fill: none;
+}
+
+.exercise-art.is-static .exercise-art-howto {
+  display: none;
+}
+
+/* The exercise name is now a button (tapping it also opens how-to). */
+.exercise-name-btn {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  min-height: 0;
+  margin: 2px 0 0;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1.15;
+  text-align: left;
+  cursor: pointer;
+}
+
+.exercise-name-btn:hover {
+  color: var(--accent);
+}
+
+.exercise-name-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: var(--radius-xs);
+}
+
+@media (max-width: 640px) {
+  .exercise-name-btn {
+    font-size: 18px;
+  }
+
+  .exercise-photo,
+  .exercise-glyph {
+    min-height: 104px;
+  }
+}
+
