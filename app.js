@@ -3,7 +3,7 @@ const DROPBOX_TOKEN_URL = "https://api.dropboxapi.com/oauth2/token";
 const DROPBOX_UPLOAD_URL = "https://content.dropboxapi.com/2/files/upload";
 const DROPBOX_DOWNLOAD_URL = "https://content.dropboxapi.com/2/files/download";
 const DATA_FILE_PATH = "/04_Technical/06_Side_Projects/Workout and Nutrition App/data/workout-data.json";
-const APP_VERSION = "2026.06.17-coach-prompt-rest-holds-effort";
+const APP_VERSION = "2026.06.19-safe-sync-merge-backups";
 
 const STORAGE = {
   appKey: "trainingBookDropboxAppKey",
@@ -14,6 +14,7 @@ const STORAGE = {
   refreshToken: "trainingBookDropboxRefreshToken",
   localData: "trainingBookWorkoutData",
   pendingData: "trainingBookPendingWorkoutData",
+  localSnapshots: "trainingBookLocalSnapshots",
   activeWorkoutDraft: "trainingBookActiveWorkoutDraft",
   workoutFlowMode: "trainingBookWorkoutFlowMode",
   deviceId: "trainingBookDeviceId",
@@ -157,11 +158,62 @@ let cloudUser = null;     // { uid, email } when signed in, else null
 let _fbDoc = null;        // reference to this user's data document
 let _setDoc = null;       // Firebase's save function, captured after it loads
 let _cloudUnsub = null;   // function to stop listening for remote changes
+let _fb = null;           // captured Firestore module helpers (see initCloud)
 
-// Save the whole data blob to the cloud database for the signed-in user.
+// How many rolling version-history copies to keep in the cloud. Each is a small
+// JSON snapshot; 30 is plenty to undo an accident and stays free-tier friendly.
+const CLOUD_BACKUP_KEEP = 30;
+
+// Save the whole data blob to the cloud database for the signed-in user, and
+// (best-effort) tuck a timestamped copy into a version-history subcollection so
+// a bad overwrite from any single device can always be rolled back. The history
+// write never blocks or fails the main save.
 async function cloudSave(data) {
   if (!_fbDoc || !_setDoc) throw new Error("Sign in to sync across your devices.");
   await _setDoc(_fbDoc, data);
+  saveCloudBackup(data).catch((e) => console.error("Cloud backup write skipped:", e));
+}
+
+// Write one version-history snapshot and prune the oldest beyond the keep limit.
+async function saveCloudBackup(data) {
+  if (!_fb || !cloudUser) return;
+  // Don't archive empty/default states - they are not worth keeping and would
+  // push real snapshots out of the keep window.
+  if (!hasRealHistory(data)) return;
+  const col = _fb.collection(_fb.db, "users", cloudUser.uid, "backups");
+  const id = `${Date.now()}-${getDeviceId()}`;
+  await _fb.setDoc(_fb.doc(col, id), {
+    savedAt: new Date().toISOString(),
+    savedBy: getDeviceId(),
+    workoutCount: Array.isArray(data.workouts) ? data.workouts.length : 0,
+    planName: data.activePlan?.name || "",
+    data
+  });
+  // Prune oldest beyond the keep limit.
+  try {
+    const snap = await _fb.getDocs(_fb.query(col, _fb.orderBy("savedAt", "desc")));
+    const docs = snap.docs;
+    for (let i = CLOUD_BACKUP_KEEP; i < docs.length; i += 1) {
+      _fb.deleteDoc(docs[i].ref).catch(() => {});
+    }
+  } catch {
+    // Pruning is best-effort; a failure here is harmless.
+  }
+}
+
+// List version-history snapshots (newest first) for the restore UI.
+async function listCloudBackups() {
+  if (!_fb || !cloudUser) return [];
+  const col = _fb.collection(_fb.db, "users", cloudUser.uid, "backups");
+  const snap = await _fb.getDocs(_fb.query(col, _fb.orderBy("savedAt", "desc")));
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+}
+
+async function fetchCloudBackup(id) {
+  if (!_fb || !cloudUser) return null;
+  const col = _fb.collection(_fb.db, "users", cloudUser.uid, "backups");
+  const d = await _fb.getDoc(_fb.doc(col, id));
+  return d.exists() ? d.data().data : null;
 }
 
 // Update the header pill and the sync panel to reflect signed-in / signed-out.
@@ -5729,6 +5781,9 @@ function saveLocalData(data) {
 
 function markPendingData(data) {
   localStorage.setItem(STORAGE.pendingData, JSON.stringify(data));
+  // Every real edit becomes a one-tap undo point on this device (deduped, so a
+  // run of identical saves doesn't flood the list).
+  pushLocalSnapshot("after edit", data);
   updateConnectionState();
 }
 
@@ -5739,6 +5794,201 @@ function clearPendingData() {
 
 function hasPendingData() {
   return Boolean(localStorage.getItem(STORAGE.pendingData));
+}
+
+// ===== Data safety: merge, snapshots, and backups =====
+// Background: cloud sync used to be naive last-write-wins by `updatedAt`. A
+// device that woke up with empty/seeded defaults carried a brand-new timestamp,
+// so its blank data could win and wipe real history off every other device.
+// The functions below replace that with a content-preserving merge plus rolling
+// local + cloud backups, so an empty/default copy can never destroy real work.
+
+// True when the data holds anything the user would be upset to lose.
+function hasRealHistory(data) {
+  if (!data || typeof data !== "object") return false;
+  const w = Array.isArray(data.workouts) ? data.workouts.length : 0;
+  const c = Array.isArray(data.completedWorkouts) ? data.completedWorkouts.length : 0;
+  const b = Array.isArray(data.bodyWeights) ? data.bodyWeights.length : 0;
+  return w + c + b > 0;
+}
+
+// True when the plan looks like the untouched starter template - i.e. a freshly
+// seeded device that has not been customised. Used so a fresh seed never
+// overwrites a real, edited plan during a merge.
+function looksLikeStarterPlan(data) {
+  try {
+    const starter = JSON.stringify(getStarterWeeklyPlan());
+    const here = JSON.stringify(data?.weeklyPlan || {});
+    if (here !== starter) return false;
+    const starterIds = new Set(getStarterRoutines().map((r) => r.id));
+    const ids = Array.isArray(data?.routines) ? data.routines.map((r) => r.id) : [];
+    // Every routine is a starter routine and there are no extra/renamed ones.
+    return ids.length > 0 && ids.every((id) => starterIds.has(id))
+      && !(data?.activePlan && data.activePlan.name && data.activePlan.name !== "Current Training Plan");
+  } catch {
+    return false;
+  }
+}
+
+// Union two arrays by a stable key, keeping the *first* seen for a given key.
+// Callers pass the preferred list first.
+function unionBy(preferred, other, keyFn) {
+  const out = [];
+  const seen = new Set();
+  for (const item of [...(preferred || []), ...(other || [])]) {
+    const key = keyFn(item);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(item);
+  }
+  return out;
+}
+
+// Merge two copies of the whole data blob without ever dropping history.
+// Lists (workouts, completed dates, missed, body weights) are unioned; plan and
+// library follow whichever copy is newer, except a freshly-seeded starter plan
+// never overrides a customised one. The result carries the latest timestamp.
+function mergeWorkoutData(local, remote) {
+  if (!remote) return local;
+  if (!local) return remote;
+
+  const lt = Date.parse(local.updatedAt || 0) || 0;
+  const rt = Date.parse(remote.updatedAt || 0) || 0;
+  const newer = lt >= rt ? local : remote;
+  const older = lt >= rt ? remote : local;
+
+  // Settings/plan/library come from the newer copy by default...
+  const merged = { ...older, ...newer };
+
+  // ...but a freshly-seeded starter plan must not clobber a customised one.
+  if (looksLikeStarterPlan(newer) && !looksLikeStarterPlan(older)) {
+    merged.activePlan = older.activePlan;
+    merged.routines = older.routines;
+    merged.weeklyPlan = older.weeklyPlan;
+    if (Array.isArray(older.library) && older.library.length >= (newer.library?.length || 0)) {
+      merged.library = older.library;
+      merged.categories = older.categories;
+    }
+  }
+
+  // History lists are always unioned so two devices can never delete each
+  // other's sessions. Prefer the newer copy's version of a duplicate key.
+  merged.workouts = unionBy(newer.workouts, older.workouts, (w) => w?.id || JSON.stringify(w));
+  merged.completedWorkouts = Array.from(new Set([
+    ...(newer.completedWorkouts || []),
+    ...(older.completedWorkouts || [])
+  ]));
+  merged.missedWorkouts = unionBy(
+    newer.missedWorkouts, older.missedWorkouts,
+    (m) => (typeof m === "string" ? m : (m?.id || m?.date || JSON.stringify(m)))
+  );
+  merged.bodyWeights = unionBy(newer.bodyWeights, older.bodyWeights, (b) => b?.date || JSON.stringify(b));
+
+  merged.updatedAt = new Date(Math.max(lt, rt)).toISOString();
+  return merged;
+}
+
+// Cheap "do these differ in anything worth syncing" check, used to decide
+// whether a merge result needs to be pushed back to the cloud.
+function dataChanged(a, b) {
+  const pick = (d) => JSON.stringify({
+    workouts: d?.workouts || [],
+    completedWorkouts: d?.completedWorkouts || [],
+    missedWorkouts: d?.missedWorkouts || [],
+    bodyWeights: d?.bodyWeights || [],
+    weeklyPlan: d?.weeklyPlan || {},
+    routines: d?.routines || [],
+    activePlan: d?.activePlan || {},
+    library: d?.library || [],
+    categories: d?.categories || [],
+    weightTarget: d?.weightTarget ?? null
+  });
+  return pick(a) !== pick(b);
+}
+
+// ---- Rolling on-device snapshots (instant in-app undo) ----
+const LOCAL_SNAPSHOT_KEEP = 12;
+
+function getLocalSnapshots() {
+  const list = readJson(STORAGE.localSnapshots);
+  return Array.isArray(list) ? list : [];
+}
+
+// Save a snapshot of `data` (defaults to current local) under a short label,
+// keeping the most recent LOCAL_SNAPSHOT_KEEP. Skips no-op duplicates so a row
+// of identical syncs doesn't flood the list.
+function pushLocalSnapshot(label, data) {
+  try {
+    const payload = data || readJson(STORAGE.localData);
+    if (!payload || !hasRealHistory(payload)) return;
+    const list = getLocalSnapshots();
+    const last = list[0];
+    if (last && !dataChanged(last.data, payload)) return;
+    list.unshift({
+      id: `${Date.now()}-${randomString(4)}`,
+      savedAt: new Date().toISOString(),
+      label: label || "snapshot",
+      workoutCount: Array.isArray(payload.workouts) ? payload.workouts.length : 0,
+      planName: payload.activePlan?.name || "",
+      data: payload
+    });
+    localStorage.setItem(STORAGE.localSnapshots, JSON.stringify(list.slice(0, LOCAL_SNAPSHOT_KEEP)));
+  } catch (e) {
+    // Snapshots are a safety net; never let one break a save (e.g. quota).
+    console.error("Local snapshot skipped:", e);
+  }
+}
+
+// ---- Apply a recovered/merged blob everywhere and refresh the UI ----
+// Used by reconcile and every restore path so screens update consistently.
+function applyRecoveredData(data, { pushToCloud = false } = {}) {
+  saveLocalData(data);
+  refreshLibrary();
+  renderFilterStrip();
+  renderExercises();
+  renderExercisePicker();
+  renderTodayRoutine();
+  renderActiveWorkout();
+  renderPlan();
+  renderHistory();
+  if (typeof renderProgress === "function") renderProgress();
+  if (pushToCloud && navigator.onLine) {
+    uploadWorkoutData(data).then(clearPendingData).catch((e) => {
+      markPendingData(data);
+      console.error("Restore cloud push queued:", e);
+    });
+  }
+}
+
+// ---- Download / restore a backup file (works on every browser) ----
+function downloadBackup() {
+  const data = getLocalData();
+  const stamp = new Date().toISOString().replace(/[:T]/g, "-").slice(0, 16);
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `training-book-backup-${stamp}.json`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+// Read a chosen .json backup, snapshot the current state first, then merge it in
+// (merge, not replace, so importing an old file can only add back lost history).
+async function restoreFromFile(file) {
+  const text = await file.text();
+  const incoming = JSON.parse(text);
+  if (!incoming || typeof incoming !== "object" || !Array.isArray(incoming.workouts)) {
+    throw new Error("That file doesn't look like a Training Book backup.");
+  }
+  pushLocalSnapshot("before restore (file)");
+  const merged = mergeWorkoutData(getLocalData(), incoming);
+  merged.updatedAt = new Date().toISOString();
+  merged.updatedBy = getDeviceId();
+  applyRecoveredData(merged, { pushToCloud: true });
+  return merged;
 }
 
 function escapeHtml(value) {
@@ -5841,9 +6091,64 @@ function renderUiIcons(root = document) {
   });
 }
 
-// Settings sheet - opened from the gear button in the header. Currently just
-// holds the (now hidden) style guide link; built to grow as more settings land.
+// Settings sheet - opened from the gear button in the header. Holds the style
+// guide link plus the Data & backups tools (download/restore + version history).
 let settingsModalOpen = false;
+let settingsBackupsView = false;      // is the "restore a previous version" list expanded?
+let cloudBackupsCache = null;         // null = not loaded; [] = loaded but empty
+let cloudBackupsLoading = false;
+
+function formatBackupTime(iso) {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  return d.toLocaleString(undefined, {
+    month: "short", day: "numeric", hour: "numeric", minute: "2-digit"
+  });
+}
+
+function renderBackupRow(source, entry) {
+  const when = formatBackupTime(entry.savedAt);
+  const count = entry.workoutCount ?? (Array.isArray(entry.data?.workouts) ? entry.data.workouts.length : 0);
+  const plan = entry.planName || entry.data?.activePlan?.name || "";
+  const detail = [`${count} workout${count === 1 ? "" : "s"}`, plan].filter(Boolean).join(" · ");
+  return `
+    <div class="backup-row">
+      <div class="backup-row-text">
+        <span class="backup-row-when">${escapeHtml(when)}</span>
+        <span class="backup-row-detail">${escapeHtml(detail)}</span>
+      </div>
+      <button class="quiet-button small-button" type="button"
+        data-action="restore-backup" data-source="${source}" data-id="${escapeHtml(entry.id)}">Restore</button>
+    </div>`;
+}
+
+function renderBackupsView() {
+  const locals = getLocalSnapshots();
+  const localHtml = locals.length
+    ? locals.map((s) => renderBackupRow("local", s)).join("")
+    : `<p class="plan-muted">No on-device versions yet.</p>`;
+
+  let cloudHtml;
+  if (!cloudUser) {
+    cloudHtml = `<p class="plan-muted">Sign in to see cloud version history.</p>`;
+  } else if (cloudBackupsLoading) {
+    cloudHtml = `<p class="plan-muted">Loading cloud versions…</p>`;
+  } else if (cloudBackupsCache === null) {
+    cloudHtml = `<button class="quiet-button small-button" type="button" data-action="load-cloud-backups">Load cloud versions</button>`;
+  } else if (cloudBackupsCache.length === 0) {
+    cloudHtml = `<p class="plan-muted">No cloud versions yet.</p>`;
+  } else {
+    cloudHtml = cloudBackupsCache.map((b) => renderBackupRow("cloud", b)).join("");
+  }
+
+  return `
+    <div class="settings-backups">
+      <p class="backups-group-label">On this device</p>
+      ${localHtml}
+      <p class="backups-group-label">In the cloud</p>
+      ${cloudHtml}
+    </div>`;
+}
 
 function renderSettingsModal() {
   const root = document.querySelector("#settings-modal-root");
@@ -5852,6 +6157,7 @@ function renderSettingsModal() {
     root.innerHTML = "";
     return;
   }
+  const localCount = getLocalSnapshots().length;
   root.innerHTML = `
     <div class="lw-sheet-scrim" role="presentation" data-settings-scrim>
       <section class="lw-sheet settings-sheet" role="dialog" aria-modal="true" aria-label="Settings">
@@ -5871,6 +6177,36 @@ function renderSettingsModal() {
             </span>
             <span class="settings-row-chev" data-icon="chevron-right" aria-hidden="true"></span>
           </a>
+
+          <p class="settings-section-label">Data &amp; backups</p>
+
+          <button class="settings-row" type="button" data-action="download-backup">
+            <span class="settings-row-icon" data-icon="clipboard-list" aria-hidden="true"></span>
+            <span class="settings-row-text">
+              <span class="settings-row-title">Download backup file</span>
+              <span class="settings-row-sub">Save a .json copy (keep it in your data folder)</span>
+            </span>
+          </button>
+
+          <button class="settings-row" type="button" data-action="pick-restore-file">
+            <span class="settings-row-icon" data-icon="circle-plus" aria-hidden="true"></span>
+            <span class="settings-row-text">
+              <span class="settings-row-title">Restore from a file</span>
+              <span class="settings-row-sub">Load a backup .json — only ever adds back history</span>
+            </span>
+          </button>
+          <input type="file" id="restore-file-input" accept="application/json,.json" hidden />
+
+          <button class="settings-row" type="button" data-action="toggle-backups" aria-expanded="${settingsBackupsView}">
+            <span class="settings-row-icon" data-icon="history" aria-hidden="true"></span>
+            <span class="settings-row-text">
+              <span class="settings-row-title">Restore a previous version</span>
+              <span class="settings-row-sub">${localCount} saved on this device${cloudUser ? " · cloud history available" : ""}</span>
+            </span>
+            <span class="settings-row-chev" data-icon="${settingsBackupsView ? "chevron-up" : "chevron-down"}" aria-hidden="true"></span>
+          </button>
+          ${settingsBackupsView ? renderBackupsView() : ""}
+          <p class="settings-foot-note" id="settings-data-status" role="status"></p>
         </div>
       </section>
     </div>
@@ -5878,14 +6214,97 @@ function renderSettingsModal() {
   renderUiIcons(root);
 }
 
+function setSettingsDataStatus(message, tone = "") {
+  const el = document.querySelector("#settings-data-status");
+  if (!el) return;
+  el.textContent = message;
+  el.className = `settings-foot-note${tone ? " " + tone : ""}`;
+}
+
 function openSettingsModal() {
   settingsModalOpen = true;
+  settingsBackupsView = false;
+  cloudBackupsCache = null;
   renderSettingsModal();
 }
 
 function closeSettingsModal() {
   settingsModalOpen = false;
   renderSettingsModal();
+}
+
+// Pull restored data into the app: keep the restored plan/library, but union in
+// any workouts the current copy has that the snapshot lacks, so a restore can
+// never delete a session logged since the snapshot. Bumps the timestamp so the
+// recovered copy propagates to the other devices.
+function restoreSnapshotData(restored) {
+  if (!restored || typeof restored !== "object") return;
+  pushLocalSnapshot("before restore", getLocalData());
+  const current = getLocalData();
+  const merged = { ...restored };
+  merged.workouts = unionBy(restored.workouts, current.workouts, (w) => w?.id || JSON.stringify(w));
+  merged.completedWorkouts = Array.from(new Set([
+    ...(restored.completedWorkouts || []),
+    ...(current.completedWorkouts || [])
+  ]));
+  merged.bodyWeights = unionBy(restored.bodyWeights, current.bodyWeights, (b) => b?.date || JSON.stringify(b));
+  merged.updatedAt = new Date().toISOString();
+  merged.updatedBy = getDeviceId();
+  applyRecoveredData(merged, { pushToCloud: true });
+}
+
+// Wire the Data & backups controls. Attached once; works across re-renders
+// because the listener lives on the modal root and matches by data-action.
+async function handleSettingsDataAction(event) {
+  const btn = event.target.closest("[data-action]");
+  if (!btn) return;
+  const action = btn.dataset.action;
+  try {
+    if (action === "download-backup") {
+      downloadBackup();
+      setSettingsDataStatus("Backup file downloaded.", "good");
+    } else if (action === "pick-restore-file") {
+      document.querySelector("#restore-file-input")?.click();
+    } else if (action === "toggle-backups") {
+      settingsBackupsView = !settingsBackupsView;
+      renderSettingsModal();
+    } else if (action === "load-cloud-backups") {
+      cloudBackupsLoading = true; renderSettingsModal();
+      cloudBackupsCache = await listCloudBackups();
+      cloudBackupsLoading = false; renderSettingsModal();
+    } else if (action === "restore-backup") {
+      const { source, id } = btn.dataset;
+      let data = null;
+      if (source === "local") {
+        data = getLocalSnapshots().find((s) => s.id === id)?.data || null;
+      } else {
+        setSettingsDataStatus("Fetching that version…");
+        data = await fetchCloudBackup(id);
+      }
+      if (!data) { setSettingsDataStatus("Couldn't load that version.", "bad"); return; }
+      restoreSnapshotData(data);
+      const n = Array.isArray(data.workouts) ? data.workouts.length : 0;
+      setSettingsDataStatus(`Restored: ${n} workout${n === 1 ? "" : "s"} are back.`, "good");
+    }
+  } catch (error) {
+    setSettingsDataStatus(error.message || "Something went wrong.", "bad");
+  }
+}
+
+async function handleRestoreFileChosen(event) {
+  if (event.target.id !== "restore-file-input") return;
+  const file = event.target.files && event.target.files[0];
+  if (!file) return;
+  try {
+    setSettingsDataStatus("Reading backup…");
+    const merged = await restoreFromFile(file);
+    const n = Array.isArray(merged.workouts) ? merged.workouts.length : 0;
+    setSettingsDataStatus(`Restored from file: ${n} workout${n === 1 ? "" : "s"} now on this device.`, "good");
+  } catch (error) {
+    setSettingsDataStatus(error.message || "That file could not be read.", "bad");
+  } finally {
+    event.target.value = "";
+  }
 }
 
 // Library tab state: the filter currently selected, the live search text, the
@@ -10134,8 +10553,10 @@ const settingsModalRoot = document.querySelector("#settings-modal-root");
 settingsModalRoot?.addEventListener("click", (event) => {
   if (event.target.hasAttribute("data-settings-scrim")) { closeSettingsModal(); return; }
   const button = event.target.closest("[data-action]");
-  if (button?.dataset.action === "close-settings") closeSettingsModal();
+  if (button?.dataset.action === "close-settings") { closeSettingsModal(); return; }
+  if (button) handleSettingsDataAction(event);
 });
+settingsModalRoot?.addEventListener("change", handleRestoreFileChosen);
 document.addEventListener("keydown", (event) => {
   if (event.key === "Escape" && settingsModalOpen) closeSettingsModal();
 });
@@ -10318,34 +10739,53 @@ async function initCloud() {
   const fbDb = fsMod.getFirestore(fbApp);
   const provider = new authMod.GoogleAuthProvider();
   _setDoc = fsMod.setDoc;
+  // Capture the Firestore helpers the version-history backup layer needs.
+  _fb = {
+    db: fbDb,
+    collection: fsMod.collection,
+    doc: fsMod.doc,
+    setDoc: fsMod.setDoc,
+    getDoc: fsMod.getDoc,
+    getDocs: fsMod.getDocs,
+    query: fsMod.query,
+    orderBy: fsMod.orderBy,
+    deleteDoc: fsMod.deleteDoc
+  };
 
-  // Decide what to do when the cloud sends us the latest saved data.
+  // Decide what to do when the cloud sends us the latest saved data. We MERGE
+  // rather than overwrite: history lists are unioned and a freshly-seeded
+  // starter plan never replaces a customised one, so an empty/default copy from
+  // one device can no longer wipe real data off the others (the bug that lost
+  // Daniel's history on 2026-06-18). If our merge recovers something the cloud
+  // was missing, we push the repaired copy back so all devices converge on it.
   function reconcile(remote) {
     const local = readJson(STORAGE.localData);
-    const localTime = local?.updatedAt ? Date.parse(local.updatedAt) : 0;
-    const remoteTime = remote?.updatedAt ? Date.parse(remote.updatedAt) : 0;
 
     if (!remote) {
-      // Nothing saved in the cloud yet: push this device's data up as the
-      // starting point (this carries over existing local workouts).
-      if (local) cloudSave(local).catch((e) => console.error("Initial cloud push failed:", e));
+      // Nothing in the cloud yet: seed it from this device, but never write a
+      // blank/starter doc as the canonical copy.
+      if (local && hasRealHistory(local)) {
+        cloudSave(local).catch((e) => console.error("Initial cloud push failed:", e));
+      }
       return;
     }
 
-    if (remoteTime >= localTime) {
-      // Cloud has the newest data: take it and refresh the screens.
-      saveLocalData(remote);
-      refreshLibrary();
-      renderFilterStrip();
-      renderExercises();
-      renderExercisePicker();
-      renderTodayRoutine();
-      renderActiveWorkout();
-      renderPlan();
-      renderHistory();
-    } else if (local) {
-      // This device has newer data (e.g. logged offline): push it up.
-      cloudSave(local).catch((e) => console.error("Cloud push failed:", e));
+    if (!local) {
+      // First run on this device: take the cloud copy as-is.
+      applyRecoveredData(remote);
+      return;
+    }
+
+    const merged = mergeWorkoutData(local, remote);
+
+    // Keep a one-tap undo point whenever an incoming sync changes this device.
+    if (dataChanged(local, merged)) pushLocalSnapshot("before sync", local);
+
+    applyRecoveredData(merged);
+
+    // Heal the cloud if our merge holds data the remote copy was missing.
+    if (dataChanged(merged, remote)) {
+      cloudSave(merged).catch((e) => console.error("Cloud heal push failed:", e));
     }
   }
 

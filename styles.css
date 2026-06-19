@@ -5911,3 +5911,74 @@ svg.lw-glyph path {
   flex: 0 0 auto;
   margin-left: auto;
 }
+
+/* ===== Settings: Data & backups section ===== */
+/* Settings rows are <a> by default; the data tools use <button>, so reset them
+   to match the link rows exactly. */
+button.settings-row {
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+}
+
+.settings-section-label {
+  margin: 14px 2px 2px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+
+.settings-backups {
+  display: grid;
+  gap: 8px;
+  padding: 6px 2px 2px;
+}
+
+.backups-group-label {
+  margin: 6px 2px 0;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.backup-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--panel-2);
+}
+
+.backup-row-text {
+  display: grid;
+  min-width: 0;
+}
+
+.backup-row-when {
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.backup-row-detail {
+  font-size: 12px;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.settings-foot-note {
+  margin: 8px 2px 0;
+  min-height: 1em;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.settings-foot-note.good { color: var(--accent); }
+.settings-foot-note.bad { color: var(--danger); }
