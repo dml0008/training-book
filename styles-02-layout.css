@@ -902,18 +902,28 @@
   text-align: left;
 }
 
+/* The History editor is a full-screen surface that slides over the list: its
+   own top bar (Back + title), a scrolling body, and a pinned Save bar. Because
+   we set display here, [hidden] must be re-asserted or it would stay visible. */
 .history-detail-panel {
-  padding: 18px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-md);
-  background: rgba(9, 12, 11, 0.44);
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
 }
 
+.history-detail-panel[hidden] { display: none; }
+
 .history-detail-header {
+  flex: 0 0 auto;
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-bottom: 18px;
+  padding: 14px 16px calc(14px + env(safe-area-inset-top, 0px));
+  border-bottom: 1px solid var(--line);
+  background: var(--panel);
 }
 
 .history-detail-header button {
@@ -923,14 +933,113 @@
 
 .history-detail-header h3 {
   margin: 0;
-  font-size: 21px;
+  font-size: 19px;
   flex: 1;
+  min-width: 0;
 }
 
 .history-detail-body {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   display: grid;
   gap: 24px;
+  align-content: start;
+  padding: 16px;
 }
+
+.history-detail-foot {
+  flex: 0 0 auto;
+  padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid var(--line);
+  background: var(--panel);
+}
+
+.history-detail-foot .primary-button { width: 100%; }
+
+/* Desktop/tablet: float the editor as a centred column over a dimmed backdrop
+   instead of edge-to-edge, since History is reviewed desktop-first. */
+@media (min-width: 760px) {
+  .history-detail-panel {
+    padding: 32px 24px;
+    background: rgba(4, 6, 5, 0.66);
+    align-items: center;
+  }
+  .history-detail-header,
+  .history-detail-body,
+  .history-detail-foot {
+    width: min(760px, 100%);
+    border-radius: 0;
+  }
+  .history-detail-header { border-radius: var(--radius-md) var(--radius-md) 0 0; }
+  .history-detail-foot { border-radius: 0 0 var(--radius-md) var(--radius-md); }
+}
+
+/* One editable row per set/hold inside an exercise. Flex-wrap so the optional
+   effort chips drop to their own line on a narrow phone. */
+.hist-planned-line {
+  margin: 0 0 10px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.hist-set-list {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.hist-set-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
+  padding: 8px 10px;
+  border: 1px solid rgba(155, 168, 161, 0.16);
+  border-radius: var(--radius-sm);
+  background: rgba(16, 20, 19, 0.5);
+}
+
+.hist-set-num {
+  flex: 0 0 auto;
+  min-width: 44px;
+  font-weight: 850;
+  font-size: 13px;
+}
+
+.hist-set-field {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-size: 12px;
+  color: var(--dim);
+}
+
+.hist-set-field input { width: 66px; }
+
+.hist-set-remove {
+  flex: 0 0 auto;
+  margin-left: auto;
+  color: var(--dim);
+}
+
+/* The effort control always takes its own line within a set row. */
+.hist-set-row .lw-effort { flex: 1 1 100%; }
+
+.hist-effort-wrap { margin-top: 10px; }
+
+.hist-inline-field {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+}
+
+.hist-inline-field input { width: 84px; }
+
+.add-exercise-button { margin-top: 12px; }
 
 .detail-section {
   display: grid;

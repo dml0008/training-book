@@ -1311,7 +1311,7 @@ body.in-workout .today-panel {
 /* Peloton stat boxes in the History edit view */
 .cardio-stats-edit {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(92px, 1fr));
   gap: 8px;
   margin-top: 10px;
 }

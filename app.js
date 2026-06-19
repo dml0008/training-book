@@ -3,7 +3,7 @@ const DROPBOX_TOKEN_URL = "https://api.dropboxapi.com/oauth2/token";
 const DROPBOX_UPLOAD_URL = "https://content.dropboxapi.com/2/files/upload";
 const DROPBOX_DOWNLOAD_URL = "https://content.dropboxapi.com/2/files/download";
 const DATA_FILE_PATH = "/04_Technical/06_Side_Projects/Workout and Nutrition App/data/workout-data.json";
-const APP_VERSION = "2026.06.19-safe-sync-merge-backups";
+const APP_VERSION = "2026.06.19-history-rework";
 
 const STORAGE = {
   appKey: "trainingBookDropboxAppKey",
@@ -4777,9 +4777,13 @@ function collectCardioStats(ex) {
   const output = Number(ex.cardioOutput);
   const avgPower = Number(ex.cardioAvgPower);
   const distance = Number(ex.cardioDistance);
+  const elevation = Number(ex.cardioElevation);
+  const calories = Number(ex.cardioCalories);
   if (output > 0) stats.output = output;
   if (avgPower > 0) stats.avgPower = avgPower;
   if (distance > 0) stats.distance = distance;
+  if (elevation > 0) stats.elevation = elevation;
+  if (calories > 0) stats.calories = calories;
   return Object.keys(stats).length ? stats : null;
 }
 
@@ -4791,6 +4795,8 @@ function formatCardioStats(stats) {
   if (Number(stats.output) > 0) parts.push(`${stats.output} kJ`);
   if (Number(stats.avgPower) > 0) parts.push(`${stats.avgPower} w`);
   if (Number(stats.distance) > 0) parts.push(`${stats.distance} mi`);
+  if (Number(stats.elevation) > 0) parts.push(`${stats.elevation} ft`);
+  if (Number(stats.calories) > 0) parts.push(`${stats.calories} kcal`);
   return parts.length ? ` · ${parts.join(" · ")}` : "";
 }
 
@@ -9427,25 +9433,72 @@ function renderHistory() {
   renderUiIcons();
 }
 
+// The workout currently open in the full-screen History editor. We edit a
+// working COPY here and only write it back to saved data on "Save changes", so
+// nothing touches Daniel's real history until he commits — and "Back" can warn
+// about unsaved edits. null when the editor is closed.
+let historyEdit = null;
+
 function openHistoryDetail(workoutId) {
   const data = getLocalData();
   const workout = data.workouts?.find((w) => w.id === workoutId);
   if (!workout) return;
 
+  const working = JSON.parse(JSON.stringify(workout));
+  hydrateHistoryEntries(working);
+  historyEdit = {
+    workoutId,
+    workout: working,
+    dirty: false,
+    effortOpenKey: null,
+    addOpen: false,
+    addQuery: ""
+  };
+
   const detailPanel = document.querySelector("#history-detail-panel");
-  if (detailPanel) {
-    renderHistoryDetail(workout);
-    detailPanel.hidden = false;
-    historyContent.style.display = "none";
-  }
+  if (!detailPanel) return;
+  detailPanel.hidden = false;
+  document.body.classList.add("history-detail-open");
+  renderHistoryDetail();
+  detailPanel.scrollTop = 0;
 }
 
-function closeHistoryDetail() {
-  const detailPanel = document.querySelector("#history-detail-panel");
-  if (detailPanel) {
-    detailPanel.hidden = true;
-    historyContent.style.display = "block";
+// Older saved entries (from before per-set logging) may carry only the coarse
+// actualSummary and no per-set sets[]/holds[]. Synthesise rows from the summary
+// so they show in the per-set editor and their numbers are never lost on save.
+// Never touches entries that already have a real per-set log.
+function hydrateHistoryEntries(workout) {
+  (workout.entries || []).forEach((entry) => {
+    if (entry.skipped) return;
+    // Carry an old exercise-level effort onto the synthesised rows so re-saving
+    // (which rolls effort up from the per-set log) never drops it.
+    const effort = Number(entry.difficulty) > 0 ? Number(entry.difficulty) : null;
+    if (entry.type === "strength" && (!Array.isArray(entry.sets) || entry.sets.length === 0)) {
+      const n = Number(entry.actualSummary?.sets) || 0;
+      const reps = Number(entry.actualSummary?.reps) || 0;
+      const weight = Number(entry.actualSummary?.weight) || 0;
+      entry.sets = Array.from({ length: n }, () => ({ reps, weight, done: true, ...(effort ? { difficulty: effort } : {}) }));
+    } else if (entry.type === "timed" && (!Array.isArray(entry.holds) || entry.holds.length === 0)) {
+      const n = Number(entry.actualSummary?.sets) || 0;
+      const seconds = Number(entry.actualSummary?.seconds) || 0;
+      entry.holds = Array.from({ length: n }, () => ({ seconds, done: true, ...(effort ? { difficulty: effort } : {}) }));
+    }
+  });
+}
+
+async function closeHistoryDetail(force) {
+  if (!force && historyEdit?.dirty) {
+    const ok = await showConfirmModal({
+      title: "Discard changes?",
+      message: "You have unsaved edits to this workout. Close without saving them?",
+      confirmLabel: "Discard changes"
+    });
+    if (!ok) return;
   }
+  const detailPanel = document.querySelector("#history-detail-panel");
+  if (detailPanel) detailPanel.hidden = true;
+  document.body.classList.remove("history-detail-open");
+  historyEdit = null;
 }
 
 async function deleteHistoryWorkout(workoutId) {
@@ -9460,7 +9513,7 @@ async function deleteHistoryWorkout(workoutId) {
   if (!ok) return;
   data.workouts = (data.workouts || []).filter((item) => item.id !== workoutId);
   commitProgressData(data);
-  closeHistoryDetail();
+  closeHistoryDetail(true);
   renderHistory();
 }
 
@@ -9477,7 +9530,7 @@ async function clearWorkoutHistory() {
   data.workouts = [];
   data.completedWorkouts = [];
   commitProgressData(data);
-  closeHistoryDetail();
+  closeHistoryDetail(true);
   renderHistory();
 }
 
@@ -9498,8 +9551,11 @@ function handleHistoryClick(event) {
   if (workoutId) openHistoryDetail(workoutId);
 }
 
-function renderHistoryDetail(workout) {
+function renderHistoryDetail() {
+  if (!historyEdit) return;
+  const workout = historyEdit.workout;
   const detailBody = document.querySelector("#history-detail-body");
+  const detailFoot = document.querySelector("#history-detail-foot");
   const detailTitle = document.querySelector("#history-detail-title");
   const entries = Array.isArray(workout.entries) ? workout.entries : [];
 
@@ -9507,77 +9563,312 @@ function renderHistoryDetail(workout) {
     detailTitle.textContent = `${workout.name || workout.routineName || "Workout"} • ${formatWorkoutDate(workout.date)}`;
   }
 
-  if (!detailBody) return;
-
-  detailBody.innerHTML = `
-    <div class="detail-section">
-      <div class="detail-field">
-        <label for="detail-workout-date">Date</label>
-        <input id="detail-workout-date" type="date" value="${escapeHtml(workout.date)}" data-field="date">
+  if (detailBody) {
+    detailBody.innerHTML = `
+      <div class="detail-section">
+        <div class="detail-field">
+          <label for="detail-workout-date">Date</label>
+          <input id="detail-workout-date" type="date" value="${escapeHtml(workout.date)}" data-hfield="date">
+        </div>
       </div>
-    </div>
 
-    <div class="detail-section">
-      <h4 class="section-label">Exercises</h4>
-      <div id="detail-exercises-list">
-        ${entries.map((entry, index) => renderDetailExercise(entry, index)).join("")}
+      <div class="detail-section">
+        <h4 class="section-label">Exercises</h4>
+        <div id="detail-exercises-list">
+          ${entries.length
+            ? entries.map((entry, index) => renderDetailExercise(entry, index)).join("")
+            : `<p class="empty-state">No exercises in this workout. Add one below.</p>`}
+        </div>
+        <button class="quiet-button btn-ico add-exercise-button" type="button" data-haction="add-exercise">${getUiIcon("plus")}Add exercise</button>
       </div>
-    </div>
 
-    <div class="detail-actions">
-      <button class="primary-button" id="detail-save-button" type="button">Save changes</button>
-    </div>
-  `;
+      ${renderHistoryAddSheet()}
+    `;
+  }
 
-  // Store the workout ID for saving
-  detailBody.dataset.workoutId = workout.id;
-
-  // Add event listeners
-  document.querySelectorAll("#detail-exercises-list input, #detail-exercises-list select").forEach((field) => {
-    field.addEventListener("change", () => {
-      // Just mark as dirty for now
-    });
-  });
-
-  document.getElementById("detail-save-button")?.addEventListener("click", () => {
-    saveWorkoutChanges(workout.id);
-  });
-
-  document.querySelectorAll("[data-action='remove-history-entry']").forEach((button) => {
-    button.addEventListener("click", () => {
-      removeHistoryEntry(workout.id, Number(button.dataset.entryIndex));
-    });
-  });
+  if (detailFoot) {
+    detailFoot.innerHTML = `<button class="primary-button" type="button" data-haction="save">Save changes</button>`;
+  }
 
   renderUiIcons();
 }
 
-async function removeHistoryEntry(workoutId, entryIndex) {
-  const data = getLocalData();
-  const workout = data.workouts?.find((item) => item.id === workoutId);
-  const entry = workout?.entries?.[entryIndex];
-  if (!workout || !entry) return;
+// The picker that slides over the editor. Reuses the live-workout add-exercise
+// sheet styling and search so it looks and behaves the same.
+function renderHistoryAddSheet() {
+  if (!historyEdit?.addOpen) return "";
+  return `
+    <div class="lw-sheet-scrim" role="presentation">
+      <section class="lw-sheet live-add-sheet" role="dialog" aria-modal="true" aria-label="Add exercise to this workout">
+        <div class="lw-sheet-head">
+          <div>
+            <h3>Add exercise</h3>
+            <p>Add it to this saved workout.</p>
+          </div>
+          <button class="lw-sheet-close" type="button" data-haction="close-add" aria-label="Close add exercise">&times;</button>
+        </div>
+        <div class="library-search live-add-search">
+          <span class="library-search-icon" data-icon="search" aria-hidden="true"></span>
+          <input type="search" id="history-add-search" value="${escapeHtml(historyEdit.addQuery)}" placeholder="Search exercises" autocomplete="off" aria-label="Search exercises" data-hfield="add-search" />
+        </div>
+        <div class="live-add-results" id="history-add-results">
+          ${renderHistoryAddResults()}
+        </div>
+      </section>
+    </div>
+  `;
+}
+
+function renderHistoryAddResults() {
+  const query = (historyEdit?.addQuery || "").trim().toLowerCase();
+  const matches = exercises
+    .filter((exercise) => {
+      if (!query) return true;
+      return `${exercise.name} ${exercise.area || ""} ${(exercise.tags || []).join(" ")}`.toLowerCase().includes(query);
+    })
+    .slice(0, 18);
+  return matches.map((exercise) => `
+      <button class="live-add-result" type="button" data-haction="pick-exercise" data-id="${escapeHtml(exercise.id)}">
+        ${renderExerciseArt(exercise)}
+        <span><strong>${escapeHtml(exercise.name)}</strong><small>${escapeHtml(formatExerciseType(exercise.type || "strength"))} · ${escapeHtml(exercise.area || "Exercise")}</small></span>
+      </button>
+    `).join("") || `<p class="empty-state">No matching exercises.</p>`;
+}
+
+// A per-set / per-hold (or, with setIndex -1, per-exercise) effort control that
+// reuses the live-workout 1-10 chip styling. Collapsed to a small red toggle;
+// tapping opens the chips; tapping the active chip again clears it. No rating =
+// "not logged" (we never fabricate a number).
+function renderHistoryEffort(entryIndex, setIndex, value) {
+  const num = Number(value);
+  const val = Number.isFinite(num) && num > 0 ? num : null;
+  const open = historyEdit?.effortOpenKey === `${entryIndex}:${setIndex}`;
+  const chips = open
+    ? `<div class="lw-effort-row" role="group" aria-label="Effort, 1 easy to 10 all-out">
+        ${Array.from({ length: 10 }, (_, k) => {
+          const v = k + 1;
+          return `<button type="button" class="lw-effort-chip${v === val ? " is-active" : ""}" data-haction="set-effort" data-entry-index="${entryIndex}" data-set-index="${setIndex}" data-value="${v}" aria-pressed="${v === val}" aria-label="Effort ${v} of 10">${v}</button>`;
+        }).join("")}
+      </div>`
+    : "";
+  return `
+    <div class="lw-effort hist-effort${val ? " has-val" : ""}">
+      <button type="button" class="lw-effort-toggle${val ? " has-val" : ""}" data-haction="toggle-effort" data-entry-index="${entryIndex}" data-set-index="${setIndex}" aria-expanded="${open}">
+        <span class="lw-effort-dot" aria-hidden="true"></span>${val ? `Effort ${val}/10` : "Rate effort (optional)"}
+      </button>
+      ${chips}
+    </div>`;
+}
+
+async function removeHistoryEntry(entryIndex) {
+  if (!historyEdit) return;
+  const entry = historyEdit.workout.entries?.[entryIndex];
+  if (!entry) return;
   const ok = await showConfirmModal({
     title: `Remove ${entry.exerciseName || "exercise"}?`,
-    message: "This removes only this exercise from the saved workout entry.",
+    message: "This removes the exercise from this workout when you save your changes.",
     confirmLabel: "Remove exercise"
   });
   if (!ok) return;
-  workout.entries.splice(entryIndex, 1);
-  commitProgressData(data);
-  if (workout.entries.length === 0) {
-    closeHistoryDetail();
-    renderHistory();
+  historyEdit.workout.entries.splice(entryIndex, 1);
+  historyEdit.dirty = true;
+  renderHistoryDetail();
+}
+
+// Append a new exercise to the workout being edited, in the exact saved shape
+// for its type. Strength/held moves start with one editable row; cardio/sport
+// start blank. Nothing is written until "Save changes".
+function appendHistoryEntry(exerciseId) {
+  if (!historyEdit) return;
+  const lib = getExerciseById(exerciseId);
+  if (!lib) return;
+  const type = lib.type || "strength";
+  const flowMode = historyEdit.workout.flowMode || "linear";
+  const base = {
+    id: `added-${Date.now()}-${randomString(4)}`,
+    type,
+    exerciseId,
+    exerciseName: lib.name,
+    flowMode
+  };
+  if (type === "cardio") {
+    const subtype = defaultExerciseSubtype(exerciseId) || "";
+    Object.assign(base, { planned: { durationMinutes: 0, subtype }, subtype, durationMinutes: 0, done: true, stats: {}, notes: "" });
+  } else if (type === "sport") {
+    Object.assign(base, { planned: { durationMinutes: 0 }, durationMinutes: 0, done: true, notes: "" });
+  } else if (type === "timed") {
+    Object.assign(base, { planned: { sets: 0, seconds: 0 }, actualSummary: { sets: 0, seconds: 0 }, holds: [{ seconds: 30, done: true }], notes: "" });
   } else {
-    renderHistoryDetail(workout);
+    Object.assign(base, { planned: { sets: 0, reps: 0, weight: 0 }, actualSummary: { sets: 0, reps: 0, weight: 0 }, sets: [{ reps: 0, weight: 0, done: true }], notes: "", metricProfile: getMetricProfile(lib, {}) });
+  }
+  historyEdit.workout.entries = Array.isArray(historyEdit.workout.entries) ? historyEdit.workout.entries : [];
+  historyEdit.workout.entries.push(base);
+  historyEdit.addOpen = false;
+  historyEdit.addQuery = "";
+  historyEdit.dirty = true;
+  renderHistoryDetail();
+}
+
+function setHistoryStat(entry, key, value) {
+  entry.stats = entry.stats || {};
+  entry.stats[key] = Number(value) || 0;
+}
+
+// All button taps inside the History editor (delegated from the panel).
+function handleHistoryDetailClick(event) {
+  if (!historyEdit) return;
+
+  // Tap the dimmed area behind the add-exercise sheet to close it.
+  if (event.target.classList.contains("lw-sheet-scrim")) {
+    historyEdit.addOpen = false;
+    renderHistoryDetail();
+    return;
+  }
+
+  const btn = event.target.closest("[data-haction]");
+  if (!btn) return;
+  const action = btn.dataset.haction;
+  const entryIndex = btn.dataset.entryIndex != null ? Number(btn.dataset.entryIndex) : null;
+
+  if (action === "save") { saveWorkoutChanges(); return; }
+
+  if (action === "add-exercise") {
+    historyEdit.addOpen = true;
+    historyEdit.addQuery = "";
+    renderHistoryDetail();
+    setTimeout(() => document.querySelector("#history-add-search")?.focus(), 0);
+    return;
+  }
+
+  if (action === "close-add") {
+    historyEdit.addOpen = false;
+    renderHistoryDetail();
+    return;
+  }
+
+  if (action === "pick-exercise") { appendHistoryEntry(btn.dataset.id); return; }
+
+  if (action === "remove-entry") { removeHistoryEntry(entryIndex); return; }
+
+  if (action === "add-set") {
+    const entry = historyEdit.workout.entries?.[entryIndex];
+    if (!entry) return;
+    if (entry.type === "timed") {
+      entry.holds = Array.isArray(entry.holds) ? entry.holds : [];
+      const last = entry.holds[entry.holds.length - 1];
+      entry.holds.push({ seconds: last ? Number(last.seconds) || 0 : 30, done: true });
+    } else {
+      entry.sets = Array.isArray(entry.sets) ? entry.sets : [];
+      const last = entry.sets[entry.sets.length - 1];
+      entry.sets.push({ reps: last ? Number(last.reps) || 0 : 0, weight: last ? Number(last.weight) || 0 : 0, done: true });
+    }
+    historyEdit.dirty = true;
+    renderHistoryDetail();
+    return;
+  }
+
+  if (action === "remove-set") {
+    const entry = historyEdit.workout.entries?.[entryIndex];
+    const si = Number(btn.dataset.setIndex);
+    const arr = entry?.type === "timed" ? entry.holds : entry?.sets;
+    if (Array.isArray(arr) && arr.length) {
+      arr.splice(si, 1);
+      historyEdit.dirty = true;
+      renderHistoryDetail();
+    }
+    return;
+  }
+
+  if (action === "toggle-effort") {
+    const key = `${btn.dataset.entryIndex}:${btn.dataset.setIndex}`;
+    historyEdit.effortOpenKey = historyEdit.effortOpenKey === key ? null : key;
+    renderHistoryDetail();
+    return;
+  }
+
+  if (action === "set-effort") {
+    const ei = Number(btn.dataset.entryIndex);
+    const si = Number(btn.dataset.setIndex);
+    const v = Number(btn.dataset.value);
+    const entry = historyEdit.workout.entries?.[ei];
+    if (!entry || !(v >= 1 && v <= 10)) return;
+    const unit = si === -1 ? entry : (entry.type === "timed" ? entry.holds?.[si] : entry.sets?.[si]);
+    if (!unit) return;
+    unit.difficulty = unit.difficulty === v ? null : v;
+    historyEdit.effortOpenKey = null;
+    historyEdit.dirty = true;
+    renderHistoryDetail();
+    return;
   }
 }
 
+// Typed/selected values inside the History editor. Updates the working copy in
+// place WITHOUT re-rendering, so the focused field keeps focus while typing.
+function handleHistoryDetailInput(event) {
+  if (!historyEdit) return;
+  const field = event.target.closest("[data-hfield]");
+  if (!field) return;
+  const key = field.dataset.hfield;
+
+  if (key === "add-search") {
+    historyEdit.addQuery = field.value;
+    const results = document.querySelector("#history-add-results");
+    if (results) { results.innerHTML = renderHistoryAddResults(); renderUiIcons(results); }
+    return;
+  }
+
+  if (key === "date") {
+    historyEdit.workout.date = field.value;
+    historyEdit.dirty = true;
+    return;
+  }
+
+  const exEl = field.closest(".detail-exercise");
+  if (!exEl) return;
+  const entry = historyEdit.workout.entries?.[Number(exEl.dataset.entryIndex)];
+  if (!entry) return;
+
+  const rowEl = field.closest(".hist-set-row");
+  if (rowEl) {
+    const si = Number(rowEl.dataset.setIndex);
+    if (entry.type === "timed") {
+      const hold = entry.holds?.[si];
+      if (hold && key === "seconds") hold.seconds = Number(field.value) || 0;
+    } else {
+      const set = entry.sets?.[si];
+      if (set) {
+        if (key === "reps") set.reps = Number(field.value) || 0;
+        else if (key === "weight") set.weight = Number(field.value) || 0;
+      }
+    }
+    historyEdit.dirty = true;
+    return;
+  }
+
+  switch (key) {
+    case "durationMinutes": entry.durationMinutes = Number(field.value) || 0; break;
+    case "subtype":
+      entry.subtype = field.value;
+      entry.planned = { ...(entry.planned || {}), subtype: field.value };
+      break;
+    case "notes": entry.notes = field.value; break;
+    case "statOutput": setHistoryStat(entry, "output", field.value); break;
+    case "statAvgPower": setHistoryStat(entry, "avgPower", field.value); break;
+    case "statDistance": setHistoryStat(entry, "distance", field.value); break;
+    case "statElevation": setHistoryStat(entry, "elevation", field.value); break;
+    case "statCalories": setHistoryStat(entry, "calories", field.value); break;
+    default: return;
+  }
+  historyEdit.dirty = true;
+}
+
 function renderDetailExercise(entry, index) {
+  const head = `<div class="detail-exercise-head"><h5>${escapeHtml(entry.exerciseName || "Exercise")}</h5><button class="quiet-button small-button btn-ico danger-text" type="button" data-haction="remove-entry" data-entry-index="${index}">${getUiIcon("trash-2")}Remove</button></div>`;
+
   if (entry.skipped) {
     return `
       <div class="detail-exercise" data-entry-index="${index}">
-        <div class="detail-exercise-head"><h5>${escapeHtml(entry.exerciseName || "Exercise")}</h5><button class="quiet-button small-button btn-ico danger-text" type="button" data-action="remove-history-entry" data-entry-index="${index}">${getUiIcon("trash-2")}Remove</button></div>
+        ${head}
         <p class="empty-state">Skipped in this workout.</p>
       </div>
     `;
@@ -9585,13 +9876,14 @@ function renderDetailExercise(entry, index) {
 
   if (entry.type === "cardio") {
     const subtypeOptions = getExerciseSubtypeOptions(entry.exerciseId);
+    const stats = entry.stats || {};
     return `
       <div class="detail-exercise" data-entry-index="${index}">
-        <div class="detail-exercise-head"><h5>${escapeHtml(entry.exerciseName || "Exercise")}</h5><button class="quiet-button small-button btn-ico danger-text" type="button" data-action="remove-history-entry" data-entry-index="${index}">${getUiIcon("trash-2")}Remove</button></div>
+        ${head}
         ${subtypeOptions.length ? `
           <label class="detail-sport-notes">
             <span>Session type</span>
-            <select data-field="subtype">
+            <select data-hfield="subtype">
               ${subtypeOptions.map((item) => `<option value="${escapeHtml(item)}"${item === (entry.subtype || entry.planned?.subtype) ? " selected" : ""}>${escapeHtml(item)}</option>`).join("")}
             </select>
           </label>
@@ -9603,37 +9895,24 @@ function renderDetailExercise(entry, index) {
           </div>
           <div class="compare-col">
             <p class="compare-label">Actual</p>
-            <label>
-              <input type="number" min="0" step="1" value="${escapeHtml(entry.durationMinutes || 0)}" data-field="durationMinutes" placeholder="0">
+            <label class="hist-inline-field">
+              <input type="number" min="0" step="1" value="${escapeHtml(entry.durationMinutes || 0)}" data-hfield="durationMinutes" placeholder="0">
               <span>min</span>
             </label>
           </div>
         </div>
         <div class="cardio-stats-edit">
-          <label>
-            <input type="number" min="0" step="1" value="${escapeHtml(entry.stats?.output || "")}" data-field="cardioOutput" placeholder="0">
-            <span>kJ</span>
-          </label>
-          <label>
-            <input type="number" min="0" step="1" value="${escapeHtml(entry.stats?.avgPower || "")}" data-field="cardioAvgPower" placeholder="0">
-            <span>watts</span>
-          </label>
-          <label>
-            <input type="number" min="0" step="0.1" value="${escapeHtml(entry.stats?.distance || "")}" data-field="cardioDistance" placeholder="0">
-            <span>mi</span>
-          </label>
+          <label><input type="number" min="0" step="1" value="${escapeHtml(stats.output || "")}" data-hfield="statOutput" placeholder="0"><span>kJ</span></label>
+          <label><input type="number" min="0" step="1" value="${escapeHtml(stats.avgPower || "")}" data-hfield="statAvgPower" placeholder="0"><span>watts</span></label>
+          <label><input type="number" min="0" step="0.1" value="${escapeHtml(stats.distance || "")}" data-hfield="statDistance" placeholder="0"><span>mi</span></label>
+          <label><input type="number" min="0" step="1" value="${escapeHtml(stats.elevation || "")}" data-hfield="statElevation" placeholder="0"><span>ft</span></label>
+          <label><input type="number" min="0" step="1" value="${escapeHtml(stats.calories || "")}" data-hfield="statCalories" placeholder="0"><span>kcal</span></label>
         </div>
         <label class="detail-sport-notes">
           <span>Notes</span>
-          <textarea rows="2" data-field="notes" placeholder="Optional notes">${escapeHtml(entry.notes || "")}</textarea>
+          <textarea rows="2" data-hfield="notes" placeholder="Optional notes">${escapeHtml(entry.notes || "")}</textarea>
         </label>
-        <div class="exercise-difficulty">
-          <label>
-            <span>Difficulty</span>
-            <input type="range" min="1" max="10" value="${escapeHtml(entry.difficulty || 5)}" data-field="difficulty">
-            <span class="difficulty-value">${escapeHtml(entry.difficulty || 5)}/10</span>
-          </label>
-        </div>
+        <div class="hist-effort-wrap">${renderHistoryEffort(index, -1, entry.difficulty)}</div>
       </div>
     `;
   }
@@ -9641,7 +9920,7 @@ function renderDetailExercise(entry, index) {
   if (entry.type === "sport") {
     return `
       <div class="detail-exercise" data-entry-index="${index}">
-        <div class="detail-exercise-head"><h5>${escapeHtml(entry.exerciseName || "Exercise")}</h5><button class="quiet-button small-button btn-ico danger-text" type="button" data-action="remove-history-entry" data-entry-index="${index}">${getUiIcon("trash-2")}Remove</button></div>
+        ${head}
         <div class="compare-row">
           <div class="compare-col">
             <p class="compare-label">Planned</p>
@@ -9649,216 +9928,183 @@ function renderDetailExercise(entry, index) {
           </div>
           <div class="compare-col">
             <p class="compare-label">Actual</p>
-            <label>
-              <input type="number" min="0" step="1" value="${escapeHtml(entry.durationMinutes || 0)}" data-field="durationMinutes" placeholder="0">
+            <label class="hist-inline-field">
+              <input type="number" min="0" step="1" value="${escapeHtml(entry.durationMinutes || 0)}" data-hfield="durationMinutes" placeholder="0">
               <span>min</span>
             </label>
           </div>
         </div>
         <label class="detail-sport-notes">
           <span>Notes</span>
-          <textarea rows="2" data-field="sportNotes" placeholder="Optional notes">${escapeHtml(entry.notes || "")}</textarea>
+          <textarea rows="2" data-hfield="notes" placeholder="Optional notes">${escapeHtml(entry.notes || "")}</textarea>
         </label>
-        <div class="exercise-difficulty">
-          <label>
-            <span>Difficulty</span>
-            <input type="range" min="1" max="10" value="${escapeHtml(entry.difficulty || 5)}" data-field="difficulty">
-            <span class="difficulty-value">${escapeHtml(entry.difficulty || 5)}/10</span>
-          </label>
-        </div>
+        <div class="hist-effort-wrap">${renderHistoryEffort(index, -1, entry.difficulty)}</div>
       </div>
     `;
   }
 
   if (entry.type === "timed") {
+    const holds = Array.isArray(entry.holds) ? entry.holds : [];
+    const planned = entry.planned?.sets ? `${entry.planned.sets} × ${entry.planned.seconds || 0} sec` : "—";
+    const rows = holds.map((hold, si) => `
+      <div class="hist-set-row" data-set-index="${si}">
+        <span class="hist-set-num">Hold ${si + 1}</span>
+        <label class="hist-set-field"><span>sec</span><input type="number" min="0" step="1" value="${escapeHtml(hold.seconds ?? 0)}" data-hfield="seconds"></label>
+        <button class="hist-set-remove btn-ico" type="button" data-haction="remove-set" data-entry-index="${index}" data-set-index="${si}" aria-label="Remove hold ${si + 1}">${getUiIcon("x")}</button>
+        ${renderHistoryEffort(index, si, hold.difficulty)}
+      </div>
+    `).join("");
     return `
       <div class="detail-exercise" data-entry-index="${index}">
-        <div class="detail-exercise-head"><h5>${escapeHtml(entry.exerciseName || "Exercise")}</h5><button class="quiet-button small-button btn-ico danger-text" type="button" data-action="remove-history-entry" data-entry-index="${index}">${getUiIcon("trash-2")}Remove</button></div>
-        <div class="compare-row">
-          <div class="compare-col">
-            <p class="compare-label">Planned</p>
-            <p>${escapeHtml(entry.planned?.sets ? `${entry.planned.sets} × ${entry.planned.seconds || 0} sec` : "—")}</p>
-          </div>
-          <div class="compare-col">
-            <p class="compare-label">Actual</p>
-            <div class="strength-inputs">
-              <label>
-                <span>Holds</span>
-                <input type="number" min="0" step="1" value="${escapeHtml(entry.actualSummary?.sets || 0)}" data-field="timedSets" placeholder="0">
-              </label>
-              <label>
-                <span>Seconds</span>
-                <input type="number" min="0" step="1" value="${escapeHtml(entry.actualSummary?.seconds || 0)}" data-field="timedSeconds" placeholder="0">
-              </label>
-            </div>
-          </div>
-        </div>
+        ${head}
+        <p class="hist-planned-line">Planned ${escapeHtml(planned)}</p>
+        <div class="hist-set-list">${rows || `<p class="empty-state">No holds logged.</p>`}</div>
+        <button class="quiet-button small-button btn-ico" type="button" data-haction="add-set" data-entry-index="${index}">${getUiIcon("plus")}Add hold</button>
         <label class="detail-sport-notes">
           <span>Notes</span>
-          <textarea rows="2" data-field="notes" placeholder="Optional notes">${escapeHtml(entry.notes || "")}</textarea>
+          <textarea rows="2" data-hfield="notes" placeholder="Optional notes">${escapeHtml(entry.notes || "")}</textarea>
         </label>
-        <div class="exercise-difficulty">
-          <label>
-            <span>Difficulty</span>
-            <input type="range" min="1" max="10" value="${escapeHtml(entry.difficulty || 5)}" data-field="difficulty">
-            <span class="difficulty-value">${escapeHtml(entry.difficulty || 5)}/10</span>
-          </label>
-        </div>
       </div>
     `;
   }
 
-  // Strength exercise
+  // Strength exercise — one editable row per set, each with optional effort.
+  const showWeight = entry.metricProfile !== "strength-bodyweight";
+  const sets = Array.isArray(entry.sets) ? entry.sets : [];
+  const planned = entry.planned?.sets ? `${entry.planned.sets}×${entry.planned.reps || 0}${Number(entry.planned.weight) > 0 ? ` @ ${entry.planned.weight} lb` : ""}` : "—";
+  const rows = sets.map((set, si) => `
+    <div class="hist-set-row" data-set-index="${si}">
+      <span class="hist-set-num">Set ${si + 1}</span>
+      <label class="hist-set-field"><span>reps</span><input type="number" min="0" step="1" value="${escapeHtml(set.reps ?? 0)}" data-hfield="reps"></label>
+      ${showWeight ? `<label class="hist-set-field"><span>lb</span><input type="number" min="0" step="0.5" value="${escapeHtml(set.weight ?? 0)}" data-hfield="weight"></label>` : ""}
+      <button class="hist-set-remove btn-ico" type="button" data-haction="remove-set" data-entry-index="${index}" data-set-index="${si}" aria-label="Remove set ${si + 1}">${getUiIcon("x")}</button>
+      ${renderHistoryEffort(index, si, set.difficulty)}
+    </div>
+  `).join("");
   return `
-      <div class="detail-exercise" data-entry-index="${index}">
-      <div class="detail-exercise-head"><h5>${escapeHtml(entry.exerciseName || "Exercise")}</h5><button class="quiet-button small-button btn-ico danger-text" type="button" data-action="remove-history-entry" data-entry-index="${index}">${getUiIcon("trash-2")}Remove</button></div>
-      <div class="compare-row">
-        <div class="compare-col">
-          <p class="compare-label">Planned</p>
-          <p>${escapeHtml(entry.planned?.sets ? `${entry.planned.sets}x${entry.planned.reps || 0}` : "—")}</p>
-        </div>
-        <div class="compare-col">
-          <p class="compare-label">Actual</p>
-          <div class="strength-inputs">
-            <label>
-              <span>Sets</span>
-              <input type="number" min="0" step="1" value="${escapeHtml(entry.actualSummary?.sets || 0)}" data-field="actualSets" placeholder="0">
-            </label>
-            <label>
-              <span>Reps</span>
-              <input type="number" min="0" step="1" value="${escapeHtml(entry.actualSummary?.reps || 0)}" data-field="actualReps" placeholder="0">
-            </label>
-            <label>
-              <span>Weight</span>
-              <input type="number" min="0" step="0.5" value="${escapeHtml(entry.actualSummary?.weight || 0)}" data-field="actualWeight" placeholder="0">
-              <span>lb</span>
-            </label>
-          </div>
-        </div>
-      </div>
+    <div class="detail-exercise" data-entry-index="${index}">
+      ${head}
+      <p class="hist-planned-line">Planned ${escapeHtml(planned)}</p>
+      <div class="hist-set-list">${rows || `<p class="empty-state">No sets logged.</p>`}</div>
+      <button class="quiet-button small-button btn-ico" type="button" data-haction="add-set" data-entry-index="${index}">${getUiIcon("plus")}Add set</button>
       <label class="detail-sport-notes">
         <span>Notes</span>
-        <textarea rows="2" data-field="notes" placeholder="Optional notes">${escapeHtml(entry.notes || "")}</textarea>
+        <textarea rows="2" data-hfield="notes" placeholder="Optional notes">${escapeHtml(entry.notes || "")}</textarea>
       </label>
-      <div class="exercise-difficulty">
-        <label>
-          <span>Difficulty</span>
-          <input type="range" min="1" max="10" value="${escapeHtml(entry.difficulty || 5)}" data-field="difficulty">
-          <span class="difficulty-value">${escapeHtml(entry.difficulty || 5)}/10</span>
-        </label>
-      </div>
     </div>
   `;
 }
 
-function saveWorkoutChanges(workoutId) {
-  const data = getLocalData();
-  const workoutIndex = data.workouts?.findIndex((w) => w.id === workoutId);
-  if (workoutIndex === undefined || workoutIndex < 0) return;
-
-  const workout = data.workouts[workoutIndex];
-  const detailBody = document.querySelector("#history-detail-body");
-
-  // Update date
-  const dateInput = detailBody?.querySelector('input[data-field="date"]');
-  if (dateInput) {
-    workout.date = dateInput.value;
+// Turn a working-copy entry back into the exact saved shape the rest of the app
+// reads (a per-set log + a one-line actualSummary + a rolled-up effort), exactly
+// mirroring how a live workout is saved. This keeps History edits in sync with
+// Progress, PRs, and the AI export. Empty stats/notes/effort are dropped (so
+// "not rated" stays not rated — we never write a fake difficulty).
+function normalizeHistoryEntry(entry) {
+  if (entry.skipped) {
+    return { id: entry.id, type: entry.type, exerciseId: entry.exerciseId, exerciseName: entry.exerciseName, planned: entry.planned || {}, skipped: true, flowMode: entry.flowMode };
   }
 
-  // Update exercises
-  detailBody?.querySelectorAll(".detail-exercise").forEach((exerciseEl, index) => {
-    const entry = workout.entries?.[index];
-    if (!entry) return;
+  if (entry.type === "cardio") {
+    const out = {
+      id: entry.id, type: "cardio", exerciseId: entry.exerciseId, exerciseName: entry.exerciseName,
+      planned: entry.planned || {}, subtype: entry.subtype || entry.planned?.subtype || "",
+      durationMinutes: Number(entry.durationMinutes) || 0, done: true, flowMode: entry.flowMode
+    };
+    const stats = {};
+    ["output", "avgPower", "distance", "elevation", "calories"].forEach((k) => {
+      const v = Number(entry.stats?.[k]);
+      if (v > 0) stats[k] = v;
+    });
+    if (Object.keys(stats).length) out.stats = stats;
+    const note = (entry.notes || "").trim();
+    if (note) out.notes = note;
+    if (Number(entry.difficulty) > 0) out.difficulty = Number(entry.difficulty);
+    return out;
+  }
 
-    if (entry.type === "cardio") {
-      const durationInput = exerciseEl.querySelector('input[data-field="durationMinutes"]');
-      const difficultyInput = exerciseEl.querySelector('input[data-field="difficulty"]');
-      const subtypeInput = exerciseEl.querySelector('select[data-field="subtype"]');
-      const notesInput = exerciseEl.querySelector('textarea[data-field="notes"]');
-      if (durationInput) entry.durationMinutes = Number(durationInput.value) || 0;
-      if (difficultyInput) entry.difficulty = Number(difficultyInput.value) || 5;
-      if (subtypeInput) {
-        entry.subtype = subtypeInput.value;
-        entry.planned = { ...(entry.planned || {}), subtype: subtypeInput.value };
-      }
-      if (notesInput) {
-        const note = notesInput.value.trim();
-        if (note) entry.notes = note;
-        else delete entry.notes;
-      }
-      // Optional Peloton numbers: keep only the ones above zero.
-      const stats = {};
-      const output = Number(exerciseEl.querySelector('input[data-field="cardioOutput"]')?.value);
-      const avgPower = Number(exerciseEl.querySelector('input[data-field="cardioAvgPower"]')?.value);
-      const distance = Number(exerciseEl.querySelector('input[data-field="cardioDistance"]')?.value);
-      if (output > 0) stats.output = output;
-      if (avgPower > 0) stats.avgPower = avgPower;
-      if (distance > 0) stats.distance = distance;
-      if (Object.keys(stats).length) entry.stats = stats;
-      else delete entry.stats;
-    } else if (entry.type === "sport") {
-      const durationInput = exerciseEl.querySelector('input[data-field="durationMinutes"]');
-      const notesInput = exerciseEl.querySelector('textarea[data-field="sportNotes"]');
-      const difficultyInput = exerciseEl.querySelector('input[data-field="difficulty"]');
-      if (durationInput) entry.durationMinutes = Number(durationInput.value) || 0;
-      if (notesInput) {
-        const note = notesInput.value.trim();
-        if (note) entry.notes = note;
-        else delete entry.notes;
-      }
-      if (difficultyInput) entry.difficulty = Number(difficultyInput.value) || 5;
-    } else if (entry.type === "timed") {
-      const holdsInput = exerciseEl.querySelector('input[data-field="timedSets"]');
-      const secondsInput = exerciseEl.querySelector('input[data-field="timedSeconds"]');
-      const difficultyInput = exerciseEl.querySelector('input[data-field="difficulty"]');
-      const notesInput = exerciseEl.querySelector('textarea[data-field="notes"]');
-      if (holdsInput || secondsInput) {
-        const sets = Number(holdsInput?.value) || 0;
-        const seconds = Number(secondsInput?.value) || 0;
-        entry.actualSummary = { sets, seconds };
-        // Keep the per-hold list (preferred by the displays/export) consistent
-        // with this coarse edit: equal-length holds at the edited seconds.
-        entry.holds = Array.from({ length: sets }, (_, k) => ({
-          id: `hold-${k + 1}`, holdNumber: k + 1, seconds, done: true
-        }));
-      }
-      if (notesInput) {
-        const note = notesInput.value.trim();
-        if (note) entry.notes = note;
-        else delete entry.notes;
-      }
-      if (difficultyInput) entry.difficulty = Number(difficultyInput.value) || 5;
-    } else {
-      const setsInput = exerciseEl.querySelector('input[data-field="actualSets"]');
-      const repsInput = exerciseEl.querySelector('input[data-field="actualReps"]');
-      const weightInput = exerciseEl.querySelector('input[data-field="actualWeight"]');
-      const difficultyInput = exerciseEl.querySelector('input[data-field="difficulty"]');
-      const notesInput = exerciseEl.querySelector('textarea[data-field="notes"]');
+  if (entry.type === "sport") {
+    const out = {
+      id: entry.id, type: "sport", exerciseId: entry.exerciseId, exerciseName: entry.exerciseName,
+      planned: entry.planned || {}, durationMinutes: Number(entry.durationMinutes) || 0, done: true, flowMode: entry.flowMode
+    };
+    const note = (entry.notes || "").trim();
+    if (note) out.notes = note;
+    if (Number(entry.difficulty) > 0) out.difficulty = Number(entry.difficulty);
+    return out;
+  }
 
-      if (setsInput || repsInput || weightInput) {
-        entry.actualSummary = {
-          sets: Number(setsInput?.value) || 0,
-          reps: Number(repsInput?.value) || 0,
-          weight: Number(weightInput?.value) || 0
-        };
-      }
-      if (notesInput) {
-        const note = notesInput.value.trim();
-        if (note) entry.notes = note;
-        else delete entry.notes;
-      }
-      if (difficultyInput) entry.difficulty = Number(difficultyInput.value) || 5;
-    }
+  if (entry.type === "timed") {
+    const holds = (Array.isArray(entry.holds) ? entry.holds : []).map((hold, i) => {
+      const row = { id: `hold-${i + 1}`, holdNumber: i + 1, seconds: Number(hold.seconds) || 0, done: true };
+      const note = (hold.notes || "").trim();
+      if (note) row.notes = note;
+      if (Number(hold.difficulty) > 0) row.difficulty = Number(hold.difficulty);
+      return row;
+    });
+    const out = {
+      id: entry.id, type: "timed", exerciseId: entry.exerciseId, exerciseName: entry.exerciseName,
+      planned: entry.planned || {}, actualSummary: { sets: holds.length, seconds: Number(holds[0]?.seconds) || 0 },
+      holds, flowMode: entry.flowMode
+    };
+    const note = (entry.notes || "").trim();
+    if (note) out.notes = note;
+    const rolled = rollupDifficulty(holds);
+    if (rolled) out.difficulty = rolled;
+    return out;
+  }
+
+  // Strength
+  const useWeight = entry.metricProfile !== "strength-bodyweight";
+  const sets = (Array.isArray(entry.sets) ? entry.sets : []).map((set, i) => {
+    const row = { id: `set-${i + 1}`, setNumber: i + 1, reps: Number(set.reps) || 0, weight: useWeight ? (Number(set.weight) || 0) : 0, done: true };
+    const note = (set.notes || "").trim();
+    if (note) row.notes = note;
+    if (Number(set.difficulty) > 0) row.difficulty = Number(set.difficulty);
+    return row;
   });
+  const topWeight = sets.reduce((max, set) => Math.max(max, Number(set.weight) || 0), 0);
+  const repsAtTop = sets.find((set) => (Number(set.weight) || 0) === topWeight)?.reps || sets[0]?.reps || 0;
+  const out = {
+    id: entry.id, type: "strength", exerciseId: entry.exerciseId, exerciseName: entry.exerciseName,
+    planned: entry.planned || {},
+    actualSummary: { sets: sets.length, reps: Number(repsAtTop) || 0, weight: useWeight ? (Number(topWeight) || 0) : 0 },
+    sets, flowMode: entry.flowMode
+  };
+  if (entry.metricProfile) out.metricProfile = entry.metricProfile;
+  const note = (entry.notes || "").trim();
+  if (note) out.notes = note;
+  const rolled = rollupDifficulty(sets);
+  if (rolled) out.difficulty = rolled;
+  return out;
+}
+
+function saveWorkoutChanges() {
+  if (!historyEdit) return;
+  const data = getLocalData();
+  const idx = data.workouts?.findIndex((w) => w.id === historyEdit.workoutId);
+  if (idx === undefined || idx < 0) { closeHistoryDetail(true); return; }
+
+  const wc = historyEdit.workout;
+  const cleanedEntries = (Array.isArray(wc.entries) ? wc.entries : []).map(normalizeHistoryEntry);
+  // Preserve every original field (id, name, startedAt, savedAt, …); only the
+  // edited date and the normalised entries change.
+  data.workouts[idx] = { ...data.workouts[idx], ...wc, entries: cleanedEntries };
 
   commitProgressData(data);
-
-  closeHistoryDetail();
+  closeHistoryDetail(true);
   renderHistory();
 }
 
 const historyDetailCloseButton = document.querySelector("#history-detail-close");
-historyDetailCloseButton?.addEventListener("click", closeHistoryDetail);
+historyDetailCloseButton?.addEventListener("click", () => closeHistoryDetail());
+
+// One delegated listener pair for the whole History editor (it re-renders often,
+// so per-element listeners would leak; delegation survives re-renders).
+const historyDetailPanel = document.querySelector("#history-detail-panel");
+historyDetailPanel?.addEventListener("click", handleHistoryDetailClick);
+historyDetailPanel?.addEventListener("input", handleHistoryDetailInput);
+historyDetailPanel?.addEventListener("change", handleHistoryDetailInput);
 
 function generateReviewPacket() {
   const data = getLocalData();
