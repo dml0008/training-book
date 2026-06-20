@@ -3,7 +3,7 @@ const DROPBOX_TOKEN_URL = "https://api.dropboxapi.com/oauth2/token";
 const DROPBOX_UPLOAD_URL = "https://content.dropboxapi.com/2/files/upload";
 const DROPBOX_DOWNLOAD_URL = "https://content.dropboxapi.com/2/files/download";
 const DATA_FILE_PATH = "/04_Technical/06_Side_Projects/Workout and Nutrition App/data/workout-data.json";
-const APP_VERSION = "2026.06.19-history-rework-2";
+const APP_VERSION = "2026.06.19-history-rework-3";
 
 const STORAGE = {
   appKey: "trainingBookDropboxAppKey",
@@ -9581,14 +9581,17 @@ function renderHistoryDetail() {
         </div>
         <button class="quiet-button btn-ico add-exercise-button" type="button" data-haction="add-exercise">${getUiIcon("plus")}Add exercise</button>
       </div>
-
-      ${renderHistoryAddSheet()}
     `;
   }
 
   if (detailFoot) {
     detailFoot.innerHTML = `<button class="primary-button" type="button" data-haction="save">Save changes</button>`;
   }
+
+  // The add-exercise popup lives OUTSIDE the scrolling body (direct child of the
+  // panel) so iOS doesn't trap taps inside the overflow container.
+  const addRoot = document.querySelector("#history-add-root");
+  if (addRoot) addRoot.innerHTML = renderHistoryAddSheet();
 
   renderUiIcons();
 }
@@ -9834,11 +9837,13 @@ function handleHistoryDetailInput(event) {
     if (entry.type === "timed") {
       const hold = entry.holds?.[si];
       if (hold && key === "seconds") hold.seconds = Number(field.value) || 0;
+      else if (hold && key === "setnote") hold.notes = field.value;
     } else {
       const set = entry.sets?.[si];
       if (set) {
         if (key === "reps") set.reps = Number(field.value) || 0;
         else if (key === "weight") set.weight = Number(field.value) || 0;
+        else if (key === "setnote") set.notes = field.value;
       }
     }
     historyEdit.dirty = true;
@@ -9952,6 +9957,7 @@ function renderDetailExercise(entry, index) {
         <label class="hist-set-field"><span>sec</span><input type="number" min="0" step="1" value="${escapeHtml(hold.seconds ?? 0)}" data-hfield="seconds"></label>
         <button class="hist-set-remove btn-ico" type="button" data-haction="remove-set" data-entry-index="${index}" data-set-index="${si}" aria-label="Remove hold ${si + 1}">${getUiIcon("x")}</button>
         ${renderHistoryEffort(index, si, hold.difficulty)}
+        <input type="text" class="hist-set-note" data-hfield="setnote" value="${escapeHtml(hold.notes || "")}" placeholder="Hold note (optional)">
       </div>
     `).join("");
     return `
@@ -9979,6 +9985,7 @@ function renderDetailExercise(entry, index) {
       ${showWeight ? `<label class="hist-set-field"><span>lb</span><input type="number" min="0" step="0.5" value="${escapeHtml(set.weight ?? 0)}" data-hfield="weight"></label>` : ""}
       <button class="hist-set-remove btn-ico" type="button" data-haction="remove-set" data-entry-index="${index}" data-set-index="${si}" aria-label="Remove set ${si + 1}">${getUiIcon("x")}</button>
       ${renderHistoryEffort(index, si, set.difficulty)}
+      <input type="text" class="hist-set-note" data-hfield="setnote" value="${escapeHtml(set.notes || "")}" placeholder="Set note (optional)">
     </div>
   `).join("");
   return `

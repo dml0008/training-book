@@ -1036,8 +1036,14 @@
   color: var(--dim);
 }
 
-/* The effort control always takes its own line within a set row. */
+/* The effort control and the per-set note each take their own line in a row. */
 .hist-set-row .lw-effort { flex: 1 1 100%; }
+
+.hist-set-note {
+  flex: 1 1 100%;
+  min-height: 40px;
+  font-size: 13px;
+}
 
 .hist-effort-wrap { margin-top: 10px; }
 

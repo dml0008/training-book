@@ -18,7 +18,7 @@
        sequence. Concatenating them in this order reproduces the old styles.css
        byte-for-byte. -->
   <link rel="stylesheet" href="styles-01-base.css?v=2026.06.19-css-split">
-  <link rel="stylesheet" href="styles-02-layout.css?v=2026.06.19-history-rework-2">
+  <link rel="stylesheet" href="styles-02-layout.css?v=2026.06.19-history-rework-3">
   <link rel="stylesheet" href="styles-03-workout.css?v=2026.06.19-history-rework">
   <link rel="stylesheet" href="styles-04-progress.css?v=2026.06.19-css-split">
   <link rel="stylesheet" href="styles-05-interactions.css?v=2026.06.19-css-split">
@@ -248,6 +248,10 @@
           <div id="history-detail-body" class="history-detail-body">
           </div>
           <div id="history-detail-foot" class="history-detail-foot"></div>
+          <!-- Add-exercise popup renders here, a DIRECT child of the panel (NOT
+               inside the scrolling body) so iOS doesn't trap taps inside the
+               overflow container. -->
+          <div id="history-add-root"></div>
         </div>
       </section>
 
@@ -287,6 +291,6 @@
     </nav>
   </div>
 
-  <script src="app.js?v=2026.06.19-history-rework-2"></script>
+  <script src="app.js?v=2026.06.19-history-rework-3"></script>
 </body>
 </html>
