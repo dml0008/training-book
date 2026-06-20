@@ -3,7 +3,7 @@ const DROPBOX_TOKEN_URL = "https://api.dropboxapi.com/oauth2/token";
 const DROPBOX_UPLOAD_URL = "https://content.dropboxapi.com/2/files/upload";
 const DROPBOX_DOWNLOAD_URL = "https://content.dropboxapi.com/2/files/download";
 const DATA_FILE_PATH = "/04_Technical/06_Side_Projects/Workout and Nutrition App/data/workout-data.json";
-const APP_VERSION = "2026.06.19-history-rework-5";
+const APP_VERSION = "2026.06.19-history-rework-6";
 
 const STORAGE = {
   appKey: "trainingBookDropboxAppKey",
@@ -9460,7 +9460,7 @@ function openHistoryDetail(workoutId) {
   detailPanel.hidden = false;
   document.body.classList.add("history-detail-open");
   renderHistoryDetail();
-  detailPanel.scrollTop = 0;
+  window.scrollTo(0, 0);
 }
 
 // Older saved entries (from before per-set logging) may carry only the coarse
@@ -9589,10 +9589,6 @@ function renderHistoryDetail() {
       ? ""
       : `<button class="primary-button" type="button" data-haction="save">Save changes</button>`;
   }
-
-  // Scroll the editor body back to the top when switching between the exercise
-  // list and the add-exercise page.
-  if (detailBody) detailBody.scrollTop = 0;
 
   renderUiIcons();
 }
@@ -9728,13 +9724,14 @@ function handleHistoryDetailClick(event) {
     historyEdit.addOpen = true;
     historyEdit.addQuery = "";
     renderHistoryDetail();
-    setTimeout(() => document.querySelector("#history-add-search")?.focus(), 0);
+    window.scrollTo(0, 0);
     return;
   }
 
   if (action === "close-add") {
     historyEdit.addOpen = false;
     renderHistoryDetail();
+    window.scrollTo(0, 0);
     return;
   }
 
@@ -10100,6 +10097,7 @@ historyDetailCloseButton?.addEventListener("click", () => {
     historyEdit.addOpen = false;
     historyEdit.addQuery = "";
     renderHistoryDetail();
+    window.scrollTo(0, 0);
     return;
   }
   closeHistoryDetail();

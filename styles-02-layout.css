@@ -902,28 +902,40 @@
   text-align: left;
 }
 
-/* The History editor is a full-screen surface that slides over the list: its
-   own top bar (Back + title), a scrolling body, and a pinned Save bar. Because
-   we set display here, [hidden] must be re-asserted or it would stay visible. */
-.history-detail-panel {
-  position: fixed;
-  inset: 0;
-  z-index: 60;
-  display: flex;
-  flex-direction: column;
-  background: var(--bg);
-}
-
+/* The History editor is a NORMAL in-flow "page" that replaces the list while
+   editing — deliberately NOT position:fixed. On an installed iOS PWA, tapping an
+   <input> inside a position:fixed container brings up no keyboard and freezes
+   the page, and this editor is full of inputs. So it stays in normal flow (the
+   page scrolls normally) and only the list + app chrome are hidden (via
+   body.history-detail-open) to give it a focused full-screen feel. The header
+   and Save bar use position:sticky, which — unlike fixed — does not break iOS
+   input focus. */
 .history-detail-panel[hidden] { display: none; }
 
+/* Focused editor: hide the history list and the app chrome while editing. */
+body.history-detail-open .history-panel,
+body.history-detail-open .topbar,
+body.history-detail-open .review-reminder,
+body.history-detail-open .tabbar {
+  display: none;
+}
+
+/* Drop the bottom-nav reserve space while the (now hidden) tab bar is away. */
+body.history-detail-open .app-shell {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
 .history-detail-header {
-  flex: 0 0 auto;
+  position: sticky;
+  top: 0;
+  z-index: 5;
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 14px 16px calc(14px + env(safe-area-inset-top, 0px));
+  padding: calc(env(safe-area-inset-top, 0px) + 10px) 0 12px;
+  margin-bottom: 12px;
+  background: var(--bg);
   border-bottom: 1px solid var(--line);
-  background: var(--panel);
 }
 
 /* The phone breakpoint (max-width:640px) forces every .quiet-button to
@@ -950,45 +962,34 @@
 }
 
 .history-detail-body {
-  flex: 1 1 auto;
-  overflow-y: auto;
-  overflow-x: hidden;
-  -webkit-overflow-scrolling: touch;
   display: grid;
   /* Pin the single column to the container width; the implicit `auto` track is
      max-content and would grow to the widest child, forcing horizontal scroll. */
   grid-template-columns: minmax(0, 1fr);
   gap: 24px;
-  align-content: start;
-  padding: 16px;
   min-width: 0;
 }
 
 .history-detail-foot {
-  flex: 0 0 auto;
-  padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px));
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+  margin-top: 16px;
+  padding: 12px 0 calc(env(safe-area-inset-bottom, 0px) + 12px);
+  background: var(--bg);
   border-top: 1px solid var(--line);
-  background: var(--panel);
 }
 
 .history-detail-foot .primary-button { width: 100%; }
 
-/* Desktop/tablet: float the editor as a centred column over a dimmed backdrop
-   instead of edge-to-edge, since History is reviewed desktop-first. */
+/* Desktop/tablet: keep the editor a comfortably narrow centred column. */
 @media (min-width: 760px) {
-  .history-detail-panel {
-    padding: 32px 24px;
-    background: rgba(4, 6, 5, 0.66);
-    align-items: center;
-  }
   .history-detail-header,
   .history-detail-body,
   .history-detail-foot {
     width: min(760px, 100%);
-    border-radius: 0;
+    margin-inline: auto;
   }
-  .history-detail-header { border-radius: var(--radius-md) var(--radius-md) 0 0; }
-  .history-detail-foot { border-radius: 0 0 var(--radius-md) var(--radius-md); }
 }
 
 /* One editable row per set/hold inside an exercise. Flex-wrap so the optional
