@@ -3,7 +3,7 @@ const DROPBOX_TOKEN_URL = "https://api.dropboxapi.com/oauth2/token";
 const DROPBOX_UPLOAD_URL = "https://content.dropboxapi.com/2/files/upload";
 const DROPBOX_DOWNLOAD_URL = "https://content.dropboxapi.com/2/files/download";
 const DATA_FILE_PATH = "/04_Technical/06_Side_Projects/Workout and Nutrition App/data/workout-data.json";
-const APP_VERSION = "2026.06.19-history-rework-8";
+const APP_VERSION = "2026.06.19-cardio-fields";
 
 const STORAGE = {
   appKey: "trainingBookDropboxAppKey",
@@ -3378,13 +3378,35 @@ function renderPlateHint(ex, weight) {
 }
 
 function getExerciseSubtypeOptions(exerciseId) {
-  if (exerciseId === "peloton-tread") return ["Incline Walk", "Run", "Walk", "Hike"];
+  if (exerciseId === "peloton-tread") return ["Incline Walk", "Run", "Walk", "Run + Walk", "Hike"];
   if (exerciseId === "peloton-bike") return ["Just Ride", "Ride Class", "Power Zone"];
   return [];
 }
 
 function defaultExerciseSubtype(exerciseId) {
   return getExerciseSubtypeOptions(exerciseId)[0] || "";
+}
+
+// Cardio stat fields, each with a clear label + unit. Average power (watts) is a
+// Peloton BIKE metric only — the tread has no power meter, so it gets elevation
+// instead. Which fields a given exercise shows is decided by getCardioMetrics().
+const CARDIO_METRIC_META = {
+  output:    { label: "Total Output",     unit: "kJ",    step: "1"   },
+  avgPower:  { label: "Average Power",     unit: "watts", step: "1"   },
+  distance:  { label: "Distance",          unit: "mi",    step: "0.1" },
+  elevation: { label: "Elevation Climbed", unit: "ft",    step: "1"   },
+  calories:  { label: "Calories",          unit: "kcal",  step: "1"   }
+};
+
+function getCardioMetrics(exerciseId) {
+  if (exerciseId === "peloton-bike") return ["output", "avgPower", "distance", "calories"];
+  if (exerciseId === "peloton-tread") return ["output", "distance", "elevation", "calories"];
+  return ["distance", "elevation", "calories"];
+}
+
+// data-hfield name the editor uses for a stat (output -> statOutput, etc.).
+function cardioStatField(metric) {
+  return "stat" + metric.charAt(0).toUpperCase() + metric.slice(1);
 }
 
 function clampNumber(value, min, max) {
@@ -9884,36 +9906,33 @@ function renderDetailExercise(entry, index) {
   if (entry.type === "cardio") {
     const subtypeOptions = getExerciseSubtypeOptions(entry.exerciseId);
     const stats = entry.stats || {};
+    const planned = entry.planned?.durationMinutes ? `Planned ${entry.planned.durationMinutes} min` : "";
+    const sessionField = subtypeOptions.length ? `
+      <div class="detail-field cardio-field cardio-field-wide">
+        <label>Session type</label>
+        <select data-hfield="subtype">
+          ${subtypeOptions.map((item) => `<option value="${escapeHtml(item)}"${item === (entry.subtype || entry.planned?.subtype) ? " selected" : ""}>${escapeHtml(item)}</option>`).join("")}
+        </select>
+      </div>` : "";
+    const statFields = getCardioMetrics(entry.exerciseId).map((m) => {
+      const meta = CARDIO_METRIC_META[m];
+      return `
+        <div class="detail-field cardio-field">
+          <label>${escapeHtml(meta.label)}</label>
+          <span class="field-with-unit"><input type="number" min="0" step="${meta.step}" value="${escapeHtml(stats[m] || "")}" data-hfield="${cardioStatField(m)}" placeholder="0"><span class="field-unit">${escapeHtml(meta.unit)}</span></span>
+        </div>`;
+    }).join("");
     return `
       <div class="detail-exercise" data-entry-index="${index}">
         ${head}
-        ${subtypeOptions.length ? `
-          <label class="detail-sport-notes">
-            <span>Session type</span>
-            <select data-hfield="subtype">
-              ${subtypeOptions.map((item) => `<option value="${escapeHtml(item)}"${item === (entry.subtype || entry.planned?.subtype) ? " selected" : ""}>${escapeHtml(item)}</option>`).join("")}
-            </select>
-          </label>
-        ` : ""}
-        <div class="compare-row">
-          <div class="compare-col">
-            <p class="compare-label">Planned</p>
-            <p>${escapeHtml(entry.planned?.durationMinutes ? `${entry.planned.durationMinutes} min` : "—")}</p>
+        ${planned ? `<p class="hist-planned-line">${escapeHtml(planned)}</p>` : ""}
+        <div class="cardio-fields">
+          ${sessionField}
+          <div class="detail-field cardio-field">
+            <label>Time</label>
+            <span class="field-with-unit"><input type="number" min="0" step="1" value="${escapeHtml(entry.durationMinutes || "")}" data-hfield="durationMinutes" placeholder="0"><span class="field-unit">min</span></span>
           </div>
-          <div class="compare-col">
-            <p class="compare-label">Actual</p>
-            <label class="hist-inline-field">
-              <input type="number" min="0" step="1" value="${escapeHtml(entry.durationMinutes || 0)}" data-hfield="durationMinutes" placeholder="0">
-              <span>min</span>
-            </label>
-          </div>
-        </div>
-        <div class="cardio-stats-edit">
-          <label><input type="number" min="0" step="1" value="${escapeHtml(stats.output || "")}" data-hfield="statOutput" placeholder="0"><span>kJ</span></label>
-          <label><input type="number" min="0" step="1" value="${escapeHtml(stats.avgPower || "")}" data-hfield="statAvgPower" placeholder="0"><span>watts</span></label>
-          <label><input type="number" min="0" step="0.1" value="${escapeHtml(stats.distance || "")}" data-hfield="statDistance" placeholder="0"><span>mi</span></label>
-          <label><input type="number" min="0" step="1" value="${escapeHtml(stats.elevation || "")}" data-hfield="statElevation" placeholder="0"><span>ft</span></label>
-          <label><input type="number" min="0" step="1" value="${escapeHtml(stats.calories || "")}" data-hfield="statCalories" placeholder="0"><span>kcal</span></label>
+          ${statFields}
         </div>
         <label class="detail-sport-notes">
           <span>Notes</span>
@@ -10021,7 +10040,9 @@ function normalizeHistoryEntry(entry) {
       durationMinutes: Number(entry.durationMinutes) || 0, done: true, flowMode: entry.flowMode
     };
     const stats = {};
-    ["output", "avgPower", "distance", "elevation", "calories"].forEach((k) => {
+    // Only keep the metrics this exercise actually shows, so e.g. a tread never
+    // keeps a watts value (average power is bike-only).
+    getCardioMetrics(entry.exerciseId).forEach((k) => {
       const v = Number(entry.stats?.[k]);
       if (v > 0) stats[k] = v;
     });

@@ -1123,6 +1123,40 @@ body.history-detail-open .app-shell {
   text-transform: capitalize;
 }
 
+/* Cardio entry editor: each metric is a clearly labelled field. */
+.cardio-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 14px;
+}
+
+.cardio-field { margin: 0; }
+.cardio-field-wide { grid-column: 1 / -1; }
+
+.cardio-field > label {
+  font-size: 12px;
+  font-weight: 750;
+  color: var(--muted);
+}
+
+.field-with-unit {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.field-with-unit input {
+  flex: 1 1 auto;
+  width: 100%;
+  min-width: 0;
+}
+
+.field-unit {
+  flex: 0 0 auto;
+  font-size: 13px;
+  color: var(--dim);
+}
+
 .detail-section {
   display: grid;
   gap: 12px;
