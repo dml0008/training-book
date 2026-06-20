@@ -1304,6 +1304,26 @@
       "instructionsSource": "authored"
     },
     {
+      "name": "Pickleball",
+      "slug": "pickleball",
+      "group": "cardio",
+      "equipment": "body only",
+      "primaryMuscle": "full body",
+      "icon": {
+        "glyph": "soccer",
+        "file": "assets/icons/glyphs/soccer.svg",
+        "source": "tabler"
+      },
+      "dbId": null,
+      "photos": null,
+      "instructions": [
+        "Log the minutes you spent playing and add any notes about the session.",
+        "Warm up with light footwork drills and dynamic stretches before fast rallies.",
+        "Stay light on your feet, keep paddle up, and listen to your body between games."
+      ],
+      "instructionsSource": "authored"
+    },
+    {
       "name": "Dumbbell Pullover",
       "slug": "dumbbell-pullover",
       "group": "chest",

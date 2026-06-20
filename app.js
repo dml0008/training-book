@@ -23,7 +23,8 @@ const STORAGE = {
   soccerSeeded: "trainingBookSoccerSeeded",
   libraryV2Seeded: "trainingBookLibraryV2Seeded",
   libraryV3Merged: "trainingBookLibraryV3Merged",
-  pelotonSeeded: "trainingBookPelotonSeeded"
+  pelotonSeeded: "trainingBookPelotonSeeded",
+  pickleballSeeded: "trainingBookPickleballSeeded"
 };
 
 const screens = Array.from(document.querySelectorAll(".screen"));
@@ -894,6 +895,18 @@ function getStarterExercises() {
   {
     id: "soccer",
     name: "Soccer",
+    type: "sport",
+    area: "Cardio",
+    group: "cardio",
+    equipment: "body only",
+    primaryMuscle: "full body",
+    icon: "soccer",
+    photos: null,
+    tags: ["sport"]
+  },
+  {
+    id: "pickleball",
+    name: "Pickleball",
     type: "sport",
     area: "Cardio",
     group: "cardio",
@@ -2162,6 +2175,51 @@ function seedPelotonOnce() {
   }
 }
 
+// One-time, additive seed so Pickleball shows up in the library on Daniel's
+// existing install (getStarterExercises only seeds brand-new installs, and the
+// V3 merge flag is already set). Library-only - it never touches routines or the
+// weekly plan - and guarded by a localStorage flag, so it never re-imposes itself
+// if Daniel later removes Pickleball. Mirrors seedPelotonOnce.
+function seedPickleballOnce() {
+  if (localStorage.getItem(STORAGE.pickleballSeeded) === "1") return;
+  const data = getLocalData();
+  const library = Array.isArray(data.library) ? data.library.slice() : getStarterExercises();
+  let changed = false;
+  const addIfMissing = (exercise) => {
+    if (library.some((item) => item.id === exercise.id || item.name.toLowerCase() === exercise.name.toLowerCase())) return;
+    library.push(exercise);
+    changed = true;
+  };
+
+  addIfMissing({
+    id: "pickleball",
+    name: "Pickleball",
+    type: "sport",
+    area: "Cardio",
+    group: "cardio",
+    equipment: "body only",
+    primaryMuscle: "full body",
+    icon: "soccer",
+    photos: null,
+    tags: ["sport"]
+  });
+
+  localStorage.setItem(STORAGE.pickleballSeeded, "1");
+  if (!changed) return;
+  data.library = library;
+  data.updatedAt = new Date().toISOString();
+  data.updatedBy = getDeviceId();
+  saveLocalData(data);
+  markPendingData(data);
+  refreshLibrary();
+  renderExercises();
+  renderExercisePicker();
+  renderTodayRoutine();
+  if (navigator.onLine) {
+    uploadWorkoutData(data).then(clearPendingData).catch(() => {});
+  }
+}
+
 // Reload the live exercise list from saved data (after an edit or a cloud sync).
 function refreshLibrary() {
   const data = getLocalData();
@@ -2569,6 +2627,11 @@ const EXERCISE_INSTRUCTIONS = {
     "Log the minutes you spent playing and add any notes about the session.",
     "Warm up with light jogging and dynamic stretches before intense play.",
     "Stay hydrated and listen to your body during and after the match."
+  ],
+  "pickleball": [
+    "Log the minutes you spent playing and add any notes about the session.",
+    "Warm up with light footwork drills and dynamic stretches before fast rallies.",
+    "Stay light on your feet, keep paddle up, and listen to your body between games."
   ],
   "dumbbell-pullover": [
     "Place a dumbbell standing up on a flat bench.",
@@ -11038,6 +11101,7 @@ async function initCloud() {
     mergeLibraryV3Once();
     seedSoccerOnce();
     seedPelotonOnce();
+    seedPickleballOnce();
     updateCloudUi();
     return;
   }
@@ -11114,6 +11178,7 @@ async function initCloud() {
         mergeLibraryV3Once();
         seedSoccerOnce();
         seedPelotonOnce();
+        seedPickleballOnce();
       }, (error) => console.error("Cloud listener error:", error));
     } else {
       cloudUser = null;
@@ -11123,6 +11188,7 @@ async function initCloud() {
       mergeLibraryV3Once();
       seedSoccerOnce();
       seedPelotonOnce();
+      seedPickleballOnce();
     }
     updateCloudUi();
   });
