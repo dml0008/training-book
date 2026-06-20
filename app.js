@@ -24,7 +24,8 @@ const STORAGE = {
   libraryV2Seeded: "trainingBookLibraryV2Seeded",
   libraryV3Merged: "trainingBookLibraryV3Merged",
   pelotonSeeded: "trainingBookPelotonSeeded",
-  pickleballSeeded: "trainingBookPickleballSeeded"
+  pickleballSeeded: "trainingBookPickleballSeeded",
+  sportTypeFixed: "trainingBookSportTypeFixed"
 };
 
 const screens = Array.from(document.querySelectorAll(".screen"));
@@ -2207,6 +2208,43 @@ function seedPickleballOnce() {
   localStorage.setItem(STORAGE.pickleballSeeded, "1");
   if (!changed) return;
   data.library = library;
+  data.updatedAt = new Date().toISOString();
+  data.updatedBy = getDeviceId();
+  saveLocalData(data);
+  markPendingData(data);
+  refreshLibrary();
+  renderExercises();
+  renderExercisePicker();
+  renderTodayRoutine();
+  if (navigator.onLine) {
+    uploadWorkoutData(data).then(clearPendingData).catch(() => {});
+  }
+}
+
+// One-time repair: the Edit-exercise modal used to omit the "Sport" type, so
+// saving an edited sport move (e.g. Pickleball or Soccer - opening it just to add
+// photos was enough) silently reset its type to "strength" while KEEPING its
+// "sport" tag. That mismatch made the live workout show Sets/Reps/Weight instead
+// of minutes + notes. Restore the type for any library exercise still tagged
+// "sport" but mistyped. The Edit modal now offers Sport, so this can't recur; the
+// flag keeps it a one-shot. Does not touch an already-running workout draft - a
+// mistyped exercise added to one needs re-adding.
+function restoreSportTypesOnce() {
+  if (localStorage.getItem(STORAGE.sportTypeFixed) === "1") return;
+  const data = getLocalData();
+  const library = Array.isArray(data.library) ? data.library : null;
+  if (!library) { localStorage.setItem(STORAGE.sportTypeFixed, "1"); return; }
+
+  let changed = false;
+  library.forEach((ex) => {
+    if (ex && Array.isArray(ex.tags) && ex.tags.includes("sport") && ex.type !== "sport") {
+      ex.type = "sport";
+      changed = true;
+    }
+  });
+
+  localStorage.setItem(STORAGE.sportTypeFixed, "1");
+  if (!changed) return;
   data.updatedAt = new Date().toISOString();
   data.updatedBy = getDeviceId();
   saveLocalData(data);
@@ -6885,6 +6923,7 @@ function renderEditExerciseModal() {
             ${renderTypeOption("strength", exerciseType)}
             ${renderTypeOption("cardio", exerciseType)}
             ${renderTypeOption("timed", exerciseType)}
+            ${renderTypeOption("sport", exerciseType)}
           </div>
         </div>
         <div class="add-field">
@@ -11114,6 +11153,7 @@ async function initCloud() {
     seedSoccerOnce();
     seedPelotonOnce();
     seedPickleballOnce();
+    restoreSportTypesOnce();
     updateCloudUi();
     return;
   }
@@ -11191,6 +11231,7 @@ async function initCloud() {
         seedSoccerOnce();
         seedPelotonOnce();
         seedPickleballOnce();
+        restoreSportTypesOnce();
       }, (error) => console.error("Cloud listener error:", error));
     } else {
       cloudUser = null;
@@ -11201,6 +11242,7 @@ async function initCloud() {
       seedSoccerOnce();
       seedPelotonOnce();
       seedPickleballOnce();
+      restoreSportTypesOnce();
     }
     updateCloudUi();
   });
