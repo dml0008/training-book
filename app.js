@@ -3,7 +3,7 @@ const DROPBOX_TOKEN_URL = "https://api.dropboxapi.com/oauth2/token";
 const DROPBOX_UPLOAD_URL = "https://content.dropboxapi.com/2/files/upload";
 const DROPBOX_DOWNLOAD_URL = "https://content.dropboxapi.com/2/files/download";
 const DATA_FILE_PATH = "/04_Technical/06_Side_Projects/Workout and Nutrition App/data/workout-data.json";
-const APP_VERSION = "2026.06.19-history-rework-6";
+const APP_VERSION = "2026.06.19-history-rework-7";
 
 const STORAGE = {
   appKey: "trainingBookDropboxAppKey",
@@ -9599,13 +9599,16 @@ function renderHistoryDetail() {
 // an <input> inside a position:fixed overlay here), but in-flow inputs — like
 // the reps/weight/notes fields — focus fine.
 function renderHistoryAddView() {
+  // Plain text input in a .detail-field, identical in shape to the editor's
+  // reps/weight/notes fields (which focus fine on iPhone). The previous
+  // type="search" box wrapped in .library-search would not open the keyboard
+  // on the installed iOS app.
   return `
     <div class="detail-section hist-add-view">
       <button class="quiet-button small-button btn-ico hist-add-back" type="button" data-haction="close-add">${getUiIcon("arrow-left")}Back to workout</button>
-      <h4 class="section-label">Add an exercise</h4>
-      <div class="library-search">
-        <span class="library-search-icon" data-icon="search" aria-hidden="true"></span>
-        <input type="search" id="history-add-search" value="${escapeHtml(historyEdit.addQuery)}" placeholder="Search exercises" autocomplete="off" aria-label="Search exercises" data-hfield="add-search" />
+      <div class="detail-field">
+        <label for="history-add-search">Add an exercise</label>
+        <input type="text" id="history-add-search" value="${escapeHtml(historyEdit.addQuery)}" placeholder="Search exercises by name" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" inputmode="search" aria-label="Search exercises" data-hfield="add-search">
       </div>
       <div class="live-add-results" id="history-add-results">
         ${renderHistoryAddResults()}
