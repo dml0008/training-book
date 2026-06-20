@@ -3,7 +3,7 @@ const DROPBOX_TOKEN_URL = "https://api.dropboxapi.com/oauth2/token";
 const DROPBOX_UPLOAD_URL = "https://content.dropboxapi.com/2/files/upload";
 const DROPBOX_DOWNLOAD_URL = "https://content.dropboxapi.com/2/files/download";
 const DATA_FILE_PATH = "/04_Technical/06_Side_Projects/Workout and Nutrition App/data/workout-data.json";
-const APP_VERSION = "2026.06.19-history-rework-3";
+const APP_VERSION = "2026.06.19-history-rework-4";
 
 const STORAGE = {
   appKey: "trainingBookDropboxAppKey",
@@ -9439,6 +9439,25 @@ function renderHistory() {
 // about unsaved edits. null when the editor is closed.
 let historyEdit = null;
 
+// The add-exercise popup renders into this <body>-level element, NOT inside the
+// fixed editor panel. iOS Safari breaks touch + keyboard focus for an <input>
+// nested in a position:fixed element that is itself inside another position:fixed
+// element (the search box froze, couldn't type or close). A single body-level
+// fixed sheet behaves like the working live-workout add sheet. Created once and
+// reused; its own delegated listeners reuse the editor's click/input handlers.
+let historyAddOverlayEl = null;
+function getHistoryAddOverlay() {
+  if (!historyAddOverlayEl) {
+    historyAddOverlayEl = document.createElement("div");
+    historyAddOverlayEl.id = "history-add-overlay";
+    historyAddOverlayEl.addEventListener("click", handleHistoryDetailClick);
+    historyAddOverlayEl.addEventListener("input", handleHistoryDetailInput);
+    historyAddOverlayEl.addEventListener("change", handleHistoryDetailInput);
+    document.body.appendChild(historyAddOverlayEl);
+  }
+  return historyAddOverlayEl;
+}
+
 function openHistoryDetail(workoutId) {
   const data = getLocalData();
   const workout = data.workouts?.find((w) => w.id === workoutId);
@@ -9497,6 +9516,7 @@ async function closeHistoryDetail(force) {
   }
   const detailPanel = document.querySelector("#history-detail-panel");
   if (detailPanel) detailPanel.hidden = true;
+  if (historyAddOverlayEl) historyAddOverlayEl.innerHTML = "";
   document.body.classList.remove("history-detail-open");
   historyEdit = null;
 }
@@ -9588,10 +9608,11 @@ function renderHistoryDetail() {
     detailFoot.innerHTML = `<button class="primary-button" type="button" data-haction="save">Save changes</button>`;
   }
 
-  // The add-exercise popup lives OUTSIDE the scrolling body (direct child of the
-  // panel) so iOS doesn't trap taps inside the overflow container.
-  const addRoot = document.querySelector("#history-add-root");
-  if (addRoot) addRoot.innerHTML = renderHistoryAddSheet();
+  // The add-exercise popup renders at <body> level (see getHistoryAddOverlay)
+  // so an iOS keyboard can focus its search box.
+  const addOverlay = getHistoryAddOverlay();
+  addOverlay.innerHTML = renderHistoryAddSheet();
+  renderUiIcons(addOverlay);
 
   renderUiIcons();
 }

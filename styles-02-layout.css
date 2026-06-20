@@ -1058,6 +1058,10 @@
 
 .add-exercise-button { margin-top: 12px; }
 
+/* The add-exercise popup is a <body>-level overlay, so lift its scrim above the
+   fixed editor panel (z-index 60). */
+#history-add-overlay .lw-sheet-scrim { z-index: 90; }
+
 .detail-section {
   display: grid;
   gap: 12px;
