@@ -926,9 +926,20 @@
   background: var(--panel);
 }
 
+/* The phone breakpoint (max-width:640px) forces every .quiet-button to
+   width:100%. These header/row buttons sit beside other content, so pin them
+   back to their content width or they stretch full-width and crush their
+   siblings (the Back button was eating the whole row, squashing the title). */
 .history-detail-header button {
   flex: 0 0 auto;
+  width: auto;
   padding: 8px 12px;
+}
+
+.detail-exercise-head button,
+.detail-exercise > button[data-haction="add-set"] {
+  flex: 0 0 auto;
+  width: auto;
 }
 
 .history-detail-header h3 {
