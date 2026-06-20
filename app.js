@@ -3,7 +3,7 @@ const DROPBOX_TOKEN_URL = "https://api.dropboxapi.com/oauth2/token";
 const DROPBOX_UPLOAD_URL = "https://content.dropboxapi.com/2/files/upload";
 const DROPBOX_DOWNLOAD_URL = "https://content.dropboxapi.com/2/files/download";
 const DATA_FILE_PATH = "/04_Technical/06_Side_Projects/Workout and Nutrition App/data/workout-data.json";
-const APP_VERSION = "2026.06.19-history-rework-7";
+const APP_VERSION = "2026.06.19-history-rework-8";
 
 const STORAGE = {
   appKey: "trainingBookDropboxAppKey",
@@ -9610,13 +9610,18 @@ function renderHistoryAddView() {
         <label for="history-add-search">Add an exercise</label>
         <input type="text" id="history-add-search" value="${escapeHtml(historyEdit.addQuery)}" placeholder="Search exercises by name" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" inputmode="search" aria-label="Search exercises" data-hfield="add-search">
       </div>
-      <div class="live-add-results" id="history-add-results">
+      <div class="hist-add-results" id="history-add-results">
         ${renderHistoryAddResults()}
       </div>
     </div>
   `;
 }
 
+// A clean, compact result list: one row per exercise (small icon + name + type).
+// Deliberately NOT renderExerciseArt — that nests <button>s (How-to, favourite)
+// inside the result <button>, which is invalid HTML; the browser reshuffles it
+// and a stray "How to" button ends up floating over the search box, swallowing
+// taps (which is why the keyboard never opened).
 function renderHistoryAddResults() {
   const query = (historyEdit?.addQuery || "").trim().toLowerCase();
   const matches = exercises
@@ -9624,13 +9629,21 @@ function renderHistoryAddResults() {
       if (!query) return true;
       return `${exercise.name} ${exercise.area || ""} ${(exercise.tags || []).join(" ")}`.toLowerCase().includes(query);
     })
-    .slice(0, 18);
-  return matches.map((exercise) => `
-      <button class="live-add-result" type="button" data-haction="pick-exercise" data-id="${escapeHtml(exercise.id)}">
-        ${renderExerciseArt(exercise)}
-        <span><strong>${escapeHtml(exercise.name)}</strong><small>${escapeHtml(formatExerciseType(exercise.type || "strength"))} · ${escapeHtml(exercise.area || "Exercise")}</small></span>
+    .slice(0, 30);
+  if (!matches.length) return `<p class="empty-state">No matching exercises.</p>`;
+  return matches.map((exercise) => {
+    const photo = getExerciseStartImage(exercise);
+    const icon = photo
+      ? `<span class="hist-add-result-icon" style="background-image:url('${escapeHtml(photo)}')"></span>`
+      : `<span class="hist-add-result-icon">${getExerciseIcon(exercise.icon)}</span>`;
+    const sub = `${formatExerciseType(exercise.type || "strength")}${exercise.area ? ` · ${exercise.area}` : ""}`;
+    return `
+      <button class="hist-add-result" type="button" data-haction="pick-exercise" data-id="${escapeHtml(exercise.id)}">
+        ${icon}
+        <span class="hist-add-result-text"><strong>${escapeHtml(exercise.name)}</strong><small>${escapeHtml(sub)}</small></span>
       </button>
-    `).join("") || `<p class="empty-state">No matching exercises.</p>`;
+    `;
+  }).join("");
 }
 
 // A per-set / per-hold (or, with setIndex -1, per-exercise) effort control that
