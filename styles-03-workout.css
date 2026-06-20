@@ -803,8 +803,7 @@ body.in-workout .today-panel {
   gap: var(--space-2);
 }
 
-.flow-choice,
-.live-add-result {
+.flow-choice {
   width: 100%;
   border: 1px solid var(--line);
   border-radius: var(--radius-md);
@@ -812,9 +811,6 @@ body.in-workout .today-panel {
   color: var(--text);
   cursor: pointer;
   text-align: left;
-}
-
-.flow-choice {
   display: grid;
   gap: 4px;
   padding: 14px;
@@ -825,14 +821,12 @@ body.in-workout .today-panel {
   box-shadow: inset 0 0 0 1px rgba(183, 255, 53, 0.25);
 }
 
-.flow-choice strong,
-.live-add-result strong {
+.flow-choice strong {
   display: block;
   font-size: 15px;
 }
 
-.flow-choice span,
-.live-add-result small {
+.flow-choice span {
   display: block;
   color: var(--muted);
   font-size: 13px;
@@ -842,22 +836,81 @@ body.in-workout .today-panel {
   margin-bottom: var(--space-3);
 }
 
+/* Compact result list (small photo/glyph + name + type), mirroring the History
+   add-exercise rows. The list fills the remaining sheet height and scrolls. */
 .live-add-results {
-  max-height: 54vh;
+  flex: 1 1 auto;
+  min-height: 0;
   overflow-y: auto;
   padding-right: 2px;
+  gap: 6px;
 }
 
 .live-add-result {
-  display: grid;
-  grid-template-columns: 64px minmax(0, 1fr);
-  gap: 12px;
+  display: flex;
   align-items: center;
-  padding: 10px;
+  gap: 12px;
+  width: 100%;
+  min-height: 54px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: rgba(16, 20, 19, 0.5);
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
 }
 
-.live-add-result .exercise-art {
-  min-height: 62px;
+.live-add-result-icon {
+  flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-xs, 8px);
+  background: rgba(9, 12, 11, 0.5) center / cover no-repeat;
+  color: var(--accent);
+  overflow: hidden;
+}
+
+.live-add-result-icon svg { width: 22px; height: 22px; }
+
+.live-add-result-text {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+
+.live-add-result-text strong {
+  display: block;
+  font-size: 15px;
+  font-weight: 800;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.live-add-result-text small {
+  display: block;
+  font-size: 12px;
+  color: var(--muted);
+  text-transform: capitalize;
+}
+
+/* The add-exercise sheet fills the screen as a focused "page", not a small
+   bottom-popup. On desktop the capped-width bottom sheet read as a cramped
+   modal; full height + flat edges + a comfortable max width make it a full-page
+   panel on every viewport. */
+.lw-sheet.live-add-sheet {
+  width: 100%;
+  max-width: 640px;
+  height: 100%;
+  max-height: 100%;
+  border-radius: 0;
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  animation: none;
 }
 
 .lw-sets {

@@ -4216,12 +4216,24 @@ function renderLiveAddResults() {
     })
     .slice(0, 18);
 
-  return matches.map((exercise) => `
+  // A clean, compact row per exercise: small photo/glyph thumbnail + name + type.
+  // Deliberately NOT renderExerciseArt — that nests the How-to and favourite
+  // <button>s inside this result <button>, which is invalid HTML; the browser
+  // reshuffles it, the stray How-to button floats over the row, and taps land on
+  // it instead of adding the exercise (matches the History add-exercise fix).
+  return matches.map((exercise) => {
+    const photo = getExerciseStartImage(exercise);
+    const thumb = photo
+      ? `<span class="live-add-result-icon" style="background-image:url('${escapeHtml(photo)}')"></span>`
+      : `<span class="live-add-result-icon">${getExerciseIcon(exercise.icon)}</span>`;
+    const sub = `${formatExerciseType(exercise.type || "strength")}${exercise.area ? ` · ${exercise.area}` : ""}`;
+    return `
       <button class="live-add-result" type="button" data-action="add-live-exercise" data-id="${escapeHtml(exercise.id)}">
-        ${renderExerciseArt(exercise)}
-        <span><strong>${escapeHtml(exercise.name)}</strong><small>${escapeHtml(formatExerciseType(exercise.type || "strength"))} · ${escapeHtml(exercise.area || "Exercise")}</small></span>
+        ${thumb}
+        <span class="live-add-result-text"><strong>${escapeHtml(exercise.name)}</strong><small>${escapeHtml(sub)}</small></span>
       </button>
-    `).join("") || `<p class="empty-state">No matching exercises.</p>`;
+    `;
+  }).join("") || `<p class="empty-state">No matching exercises.</p>`;
 }
 
 function renderLiveAddExerciseSheet() {
