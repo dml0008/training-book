@@ -952,11 +952,16 @@
 .history-detail-body {
   flex: 1 1 auto;
   overflow-y: auto;
+  overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
   display: grid;
+  /* Pin the single column to the container width; the implicit `auto` track is
+     max-content and would grow to the widest child, forcing horizontal scroll. */
+  grid-template-columns: minmax(0, 1fr);
   gap: 24px;
   align-content: start;
   padding: 16px;
+  min-width: 0;
 }
 
 .history-detail-foot {
@@ -1058,9 +1063,8 @@
 
 .add-exercise-button { margin-top: 12px; }
 
-/* The add-exercise popup is a <body>-level overlay, so lift its scrim above the
-   fixed editor panel (z-index 60). */
-#history-add-overlay .lw-sheet-scrim { z-index: 90; }
+/* The add-exercise page (a full in-editor view, not a popup). */
+.hist-add-view .hist-add-back { align-self: flex-start; }
 
 .detail-section {
   display: grid;

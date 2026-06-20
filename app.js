@@ -3,7 +3,7 @@ const DROPBOX_TOKEN_URL = "https://api.dropboxapi.com/oauth2/token";
 const DROPBOX_UPLOAD_URL = "https://content.dropboxapi.com/2/files/upload";
 const DROPBOX_DOWNLOAD_URL = "https://content.dropboxapi.com/2/files/download";
 const DATA_FILE_PATH = "/04_Technical/06_Side_Projects/Workout and Nutrition App/data/workout-data.json";
-const APP_VERSION = "2026.06.19-history-rework-4";
+const APP_VERSION = "2026.06.19-history-rework-5";
 
 const STORAGE = {
   appKey: "trainingBookDropboxAppKey",
@@ -9439,25 +9439,6 @@ function renderHistory() {
 // about unsaved edits. null when the editor is closed.
 let historyEdit = null;
 
-// The add-exercise popup renders into this <body>-level element, NOT inside the
-// fixed editor panel. iOS Safari breaks touch + keyboard focus for an <input>
-// nested in a position:fixed element that is itself inside another position:fixed
-// element (the search box froze, couldn't type or close). A single body-level
-// fixed sheet behaves like the working live-workout add sheet. Created once and
-// reused; its own delegated listeners reuse the editor's click/input handlers.
-let historyAddOverlayEl = null;
-function getHistoryAddOverlay() {
-  if (!historyAddOverlayEl) {
-    historyAddOverlayEl = document.createElement("div");
-    historyAddOverlayEl.id = "history-add-overlay";
-    historyAddOverlayEl.addEventListener("click", handleHistoryDetailClick);
-    historyAddOverlayEl.addEventListener("input", handleHistoryDetailInput);
-    historyAddOverlayEl.addEventListener("change", handleHistoryDetailInput);
-    document.body.appendChild(historyAddOverlayEl);
-  }
-  return historyAddOverlayEl;
-}
-
 function openHistoryDetail(workoutId) {
   const data = getLocalData();
   const workout = data.workouts?.find((w) => w.id === workoutId);
@@ -9516,7 +9497,6 @@ async function closeHistoryDetail(force) {
   }
   const detailPanel = document.querySelector("#history-detail-panel");
   if (detailPanel) detailPanel.hidden = true;
-  if (historyAddOverlayEl) historyAddOverlayEl.innerHTML = "";
   document.body.classList.remove("history-detail-open");
   historyEdit = null;
 }
@@ -9584,7 +9564,7 @@ function renderHistoryDetail() {
   }
 
   if (detailBody) {
-    detailBody.innerHTML = `
+    detailBody.innerHTML = historyEdit.addOpen ? renderHistoryAddView() : `
       <div class="detail-section">
         <div class="detail-field">
           <label for="detail-workout-date">Date</label>
@@ -9605,40 +9585,35 @@ function renderHistoryDetail() {
   }
 
   if (detailFoot) {
-    detailFoot.innerHTML = `<button class="primary-button" type="button" data-haction="save">Save changes</button>`;
+    detailFoot.innerHTML = historyEdit.addOpen
+      ? ""
+      : `<button class="primary-button" type="button" data-haction="save">Save changes</button>`;
   }
 
-  // The add-exercise popup renders at <body> level (see getHistoryAddOverlay)
-  // so an iOS keyboard can focus its search box.
-  const addOverlay = getHistoryAddOverlay();
-  addOverlay.innerHTML = renderHistoryAddSheet();
-  renderUiIcons(addOverlay);
+  // Scroll the editor body back to the top when switching between the exercise
+  // list and the add-exercise page.
+  if (detailBody) detailBody.scrollTop = 0;
 
   renderUiIcons();
 }
 
-// The picker that slides over the editor. Reuses the live-workout add-exercise
-// sheet styling and search so it looks and behaves the same.
-function renderHistoryAddSheet() {
-  if (!historyEdit?.addOpen) return "";
+// A full in-editor "page" for adding an exercise (NOT a floating popup). The
+// search box is an ordinary in-flow input in the editor body. The previous
+// floating-sheet version froze the keyboard on iPhone (iOS won't reliably focus
+// an <input> inside a position:fixed overlay here), but in-flow inputs — like
+// the reps/weight/notes fields — focus fine.
+function renderHistoryAddView() {
   return `
-    <div class="lw-sheet-scrim" role="presentation">
-      <section class="lw-sheet live-add-sheet" role="dialog" aria-modal="true" aria-label="Add exercise to this workout">
-        <div class="lw-sheet-head">
-          <div>
-            <h3>Add exercise</h3>
-            <p>Add it to this saved workout.</p>
-          </div>
-          <button class="lw-sheet-close" type="button" data-haction="close-add" aria-label="Close add exercise">&times;</button>
-        </div>
-        <div class="library-search live-add-search">
-          <span class="library-search-icon" data-icon="search" aria-hidden="true"></span>
-          <input type="search" id="history-add-search" value="${escapeHtml(historyEdit.addQuery)}" placeholder="Search exercises" autocomplete="off" aria-label="Search exercises" data-hfield="add-search" />
-        </div>
-        <div class="live-add-results" id="history-add-results">
-          ${renderHistoryAddResults()}
-        </div>
-      </section>
+    <div class="detail-section hist-add-view">
+      <button class="quiet-button small-button btn-ico hist-add-back" type="button" data-haction="close-add">${getUiIcon("arrow-left")}Back to workout</button>
+      <h4 class="section-label">Add an exercise</h4>
+      <div class="library-search">
+        <span class="library-search-icon" data-icon="search" aria-hidden="true"></span>
+        <input type="search" id="history-add-search" value="${escapeHtml(historyEdit.addQuery)}" placeholder="Search exercises" autocomplete="off" aria-label="Search exercises" data-hfield="add-search" />
+      </div>
+      <div class="live-add-results" id="history-add-results">
+        ${renderHistoryAddResults()}
+      </div>
     </div>
   `;
 }
@@ -9741,13 +9716,6 @@ function setHistoryStat(entry, key, value) {
 // All button taps inside the History editor (delegated from the panel).
 function handleHistoryDetailClick(event) {
   if (!historyEdit) return;
-
-  // Tap the dimmed area behind the add-exercise sheet to close it.
-  if (event.target.classList.contains("lw-sheet-scrim")) {
-    historyEdit.addOpen = false;
-    renderHistoryDetail();
-    return;
-  }
 
   const btn = event.target.closest("[data-haction]");
   if (!btn) return;
@@ -10125,7 +10093,17 @@ function saveWorkoutChanges() {
 }
 
 const historyDetailCloseButton = document.querySelector("#history-detail-close");
-historyDetailCloseButton?.addEventListener("click", () => closeHistoryDetail());
+// Back goes up one level: from the add-exercise page back to the workout, or
+// from the workout back to the History list.
+historyDetailCloseButton?.addEventListener("click", () => {
+  if (historyEdit?.addOpen) {
+    historyEdit.addOpen = false;
+    historyEdit.addQuery = "";
+    renderHistoryDetail();
+    return;
+  }
+  closeHistoryDetail();
+});
 
 // One delegated listener pair for the whole History editor (it re-renders often,
 // so per-element listeners would leak; delegation survives re-renders).
