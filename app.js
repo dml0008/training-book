@@ -2308,6 +2308,18 @@ const activeWorkout = {
     lastTs: 0,         // last animation timestamp, for accurate elapsed time
     finished: false,   // true for a moment after hitting zero (drives the flash)
     holdIndex: 0       // which hold the countdown is currently pointed at
+  },
+  // Guided rest countdown shown between sets/holds, but only when the coach
+  // turned on restTimer for the exercise. Separate from the hold timer above
+  // because it's about the gap between units, not a held move. Always skippable.
+  rest: {
+    active: false,     // true while the between-set rest screen is showing
+    total: 0,          // chosen rest length in milliseconds
+    remaining: 0,      // milliseconds left
+    running: false,    // true while counting down
+    raf: null,         // requestAnimationFrame handle
+    lastTs: 0,         // last animation timestamp
+    exerciseId: null   // which exercise this rest belongs to
   }
 };
 
@@ -3538,8 +3550,14 @@ function makeTodayExercise(plannedEx, source = "planned") {
   const targetSubtype = plannedEx.targetSubtype || defaultExerciseSubtype(exerciseInfo.id);
   // Rest target (seconds) between sets/holds. 0 = none. Usually set by the AI
   // coach in the weekly plan, but also editable in the plan; shown as a quiet
-  // note on the live set screen — no timer.
+  // note on the live set screen, or as a live countdown when restTimer is on.
   const targetRest = Number(plannedEx.targetRest) || 0;
+  // A free-text note from the AI coach for this move (e.g. "ease off the last
+  // set — you burned out here last week"). Shown as a callout while working out.
+  const coachNote = (plannedEx.coachNote || "").trim();
+  // When the coach turns the rest into a guided countdown between sets/holds.
+  // Only meaningful when targetRest > 0; you can always tap past it.
+  const restTimer = Boolean(plannedEx.restTimer) && targetRest > 0;
 
   // For a held move, the planned target reads like "3 x 45 sec": targetSets
   // holds, each held for some seconds. The seconds come through as the reps
@@ -3587,6 +3605,8 @@ function makeTodayExercise(plannedEx, source = "planned") {
     metricProfile,
     targetRest,
     restSeconds: targetRest,
+    coachNote,
+    restTimer,
     sets,
     holds,
     holdSeconds,
@@ -3765,6 +3785,7 @@ function renderTodayPreview(routine) {
       <div class="pv-info">
         <h3 class="pv-name">${escapeHtml(ex.name)}</h3>
         <p class="pv-meta">${escapeHtml(formatPreviewMeta(ex))}</p>
+        ${ex.coachNote ? `<p class="pv-note">${getUiIcon("sparkles")}${escapeHtml(ex.coachNote)}</p>` : ""}
       </div>
       ${tag}
     </article>`;
@@ -4459,11 +4480,30 @@ function currentHoldSeconds(ex) {
 
 // A quiet "Rest ~90s before your next set" note for the live set/hold page,
 // shown only when the plan set a rest target. No timer — just a reminder.
+// Suppressed when the guided rest countdown will take over instead (restTimer
+// in straight mode); round-by-round flows still get the quiet hint.
 function renderRestHint(ex) {
   const sec = Number(ex.restSeconds) || 0;
-  if (sec <= 0) return "";
+  const timerTakesOver = ex.restTimer && activeWorkout.flowMode !== "round";
+  if (sec <= 0 || timerTakesOver) return "";
   const what = ex.type === "timed" ? "between holds" : "before your next set";
   return `<p class="lw-rest-hint">Rest ~<strong>${escapeHtml(formatRest(sec))}</strong> ${what}</p>`;
+}
+
+// A note from the AI coach for this move (e.g. "ease off the last set — you
+// burned out here last week"). Shown as a calm callout on every set/hold page
+// of the exercise so it's in view the whole time you're on it. "" when none.
+function renderCoachNote(ex) {
+  const note = (ex.coachNote || "").trim();
+  if (!note) return "";
+  return `
+    <div class="lw-coach-note" role="note">
+      <span class="lw-coach-note-icon" aria-hidden="true">${getUiIcon("sparkles")}</span>
+      <div class="lw-coach-note-body">
+        <span class="lw-coach-note-label">Coach</span>
+        <p class="lw-coach-note-text">${escapeHtml(note)}</p>
+      </div>
+    </div>`;
 }
 
 // Optional 1-10 effort control under a set/hold's note (request: a small red
@@ -4509,8 +4549,15 @@ function renderFocusedExercise() {
   }
   const nextLabel = getNextExerciseLabel();
 
+  // If a guided rest is mid-countdown but we've moved to a different exercise,
+  // drop it so it can't bleed onto the wrong screen.
+  if (activeWorkout.rest.active && activeWorkout.rest.exerciseId !== ex.id) stopRest();
+  const restingHere = activeWorkout.rest.active && activeWorkout.rest.exerciseId === ex.id;
+
   let body;
-  if (ex.type === "timed") {
+  if (restingHere) {
+    body = renderRestBody(ex);
+  } else if (ex.type === "timed") {
     // Held move (e.g. plank): paged one hold at a time, just like strength sets.
     // Each hold has its own seconds (so 60/60/45 is captured), an optional
     // countdown timer helper, a note, and optional effort. After the last hold a
@@ -4723,6 +4770,7 @@ function renderFocusedExercise() {
         <span>Target: <strong>${escapeHtml(formatFocusTarget(ex))}</strong></span>
         <button class="lw-edit-targets" type="button" data-action="open-targets"${activeWorkout.timer.running ? " disabled" : ""}>Edit targets</button>
       </div>
+      ${renderCoachNote(ex)}
       ${body}
       ${(ex.type === "strength" || ex.type === "timed") ? "" : `
       <div class="lw-next-row">
@@ -5001,6 +5049,93 @@ function timerLoop(ts) {
   t.raf = requestAnimationFrame(timerLoop);
 }
 
+// Whole-second clock for the rest countdown ("1:30", "0:45"). Calmer than the
+// centisecond hold readout, and it reaches 0:00 exactly when rest is up.
+function formatClockSeconds(ms) {
+  const totalSec = Math.max(0, Math.ceil(ms / 1000));
+  const m = Math.floor(totalSec / 60);
+  const s = totalSec % 60;
+  return `${m}:${String(s).padStart(2, "0")}`;
+}
+
+// Begin the guided rest countdown before the next set/hold of `ex`.
+function startRestTimer(ex) {
+  const r = activeWorkout.rest;
+  cancelAnimationFrame(r.raf);
+  const ms = Math.max(1, Number(ex.restSeconds) || 0) * 1000;
+  r.active = true;
+  r.total = ms;
+  r.remaining = ms;
+  r.running = true;
+  r.lastTs = 0;
+  r.exerciseId = ex.id;
+  r.raf = requestAnimationFrame(restLoop);
+  renderTodayWorkout();
+}
+
+// Cancel the rest countdown without advancing (used when leaving the screen).
+function stopRest() {
+  const r = activeWorkout.rest;
+  cancelAnimationFrame(r.raf);
+  r.active = false;
+  r.running = false;
+  r.lastTs = 0;
+}
+
+// End the rest (timer hit zero, or you tapped Proceed) and show the next set.
+// currentSet was already advanced when the set was completed, so a plain
+// re-render lands on the next set/hold.
+function finishRest() {
+  stopRest();
+  if (activeWorkout.started && activeWorkout.phase !== "finish") renderTodayWorkout();
+  persistActiveWorkoutDraft();
+}
+
+// The rest countdown loop: updates the readout each frame without a full
+// re-render, then buzzes and auto-advances to the next set when it reaches zero.
+function restLoop(ts) {
+  const r = activeWorkout.rest;
+  if (!r.running) return;
+  if (!r.lastTs) r.lastTs = ts;
+  r.remaining -= (ts - r.lastTs);
+  r.lastTs = ts;
+
+  const numEl = document.getElementById("lw-rest-num");
+  if (numEl) numEl.textContent = formatClockSeconds(r.remaining);
+
+  if (r.remaining <= 0) {
+    r.remaining = 0;
+    r.running = false;
+    r.lastTs = 0;
+    if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+    finishRest();
+    return;
+  }
+  r.raf = requestAnimationFrame(restLoop);
+}
+
+// The rest screen body (slots into the focused-exercise shell, so the hero,
+// target and coach note stay in view). One clear "Proceed" override plus +15s.
+function renderRestBody(ex) {
+  const r = activeWorkout.rest;
+  const units = activeUnits(ex);
+  const nextIdx = activeWorkout.currentSet;
+  const unitWord = ex.type === "timed" ? "hold" : "set";
+  const nextLabel = nextIdx < units.length
+    ? `Next: ${unitWord} ${nextIdx + 1} of ${units.length}`
+    : "Next exercise";
+  return `
+    <div class="lw-rest-screen">
+      <p class="lw-rest-eyebrow">Rest</p>
+      <div class="lw-rest-num" id="lw-rest-num" aria-live="off">${formatClockSeconds(r.remaining)}</div>
+      <p class="lw-rest-next">${escapeHtml(nextLabel)}</p>
+      <div class="lw-rest-controls">
+        <button class="lw-tbtn" type="button" data-action="rest-add" data-delta="15">+15s</button>
+        <button class="lw-tbtn primary btn-ico" type="button" data-action="rest-proceed">${getUiIcon("chevron-right")}Proceed to ${unitWord}</button>
+      </div>
+    </div>`;
+}
+
 function advanceLiveWorkout() {
   if (activeWorkout.flowMode === "round") {
     moveToRoundPosition(findNextRoundPosition());
@@ -5051,6 +5186,30 @@ async function handleTodayWorkoutClick(event) {
   if (!button) return;
   const action = button.dataset.action;
   const exercise = getActiveExercise();
+
+  // Extend the rest countdown without leaving the rest screen.
+  if (action === "rest-add") {
+    const r = activeWorkout.rest;
+    if (!r.active) return;
+    const delta = (Number(button.dataset.delta) || 0) * 1000;
+    r.remaining = Math.max(1000, r.remaining + delta);
+    r.total += delta;
+    const numEl = document.getElementById("lw-rest-num");
+    if (numEl) numEl.textContent = formatClockSeconds(r.remaining);
+    persistActiveWorkoutDraft();
+    return;
+  }
+
+  // Any other tap while resting leaves the rest screen (Proceed is the explicit
+  // override; navigation buttons cancel rest then run their own handler below).
+  if (activeWorkout.rest.active) {
+    stopRest();
+    if (action === "rest-proceed" || !action) {
+      renderTodayWorkout();
+      persistActiveWorkoutDraft();
+      return;
+    }
+  }
 
   if (action === "close-flow-choice") {
     closeWorkoutFlowChoice();
@@ -5281,6 +5440,16 @@ async function handleTodayWorkoutClick(event) {
       advanceLiveWorkout();
     } else {
       activeWorkout.currentSet = s + 1;
+      // Guided rest before the next set/hold, when the coach asked for a timer
+      // and there's actually another unit to come. Skipping a set goes straight
+      // through (no rest earned). The rest screen always offers Proceed.
+      const units = activeUnits(exercise);
+      if (action === "complete-set" && exercise.restTimer && Number(exercise.restSeconds) > 0
+          && activeWorkout.currentSet < units.length) {
+        startRestTimer(exercise);
+        persistActiveWorkoutDraft();
+        return;
+      }
     }
     persistActiveWorkoutDraft();
     renderTodayWorkout();
@@ -8005,7 +8174,9 @@ function formatEntryDetails(entry) {
 function formatRoutineExercise(exercise) {
   const exerciseInfo = getExerciseById(exercise.exerciseId);
   const name = exerciseInfo?.name || exercise.exerciseId;
-  const rest = Number(exercise.targetRest) > 0 ? `, rest ${formatRest(exercise.targetRest)}` : "";
+  const rest = Number(exercise.targetRest) > 0
+    ? `, rest ${formatRest(exercise.targetRest)}${exercise.restTimer ? " timer" : ""}`
+    : "";
   if (exercise.targetDuration) {
     const subtype = exercise.targetSubtype ? `${exercise.targetSubtype}, ` : "";
     return `- ${name}: ${subtype}${exercise.targetDuration} min`;
@@ -8194,17 +8365,23 @@ function renderRoutineExerciseEditRow(routineId, ex, index, count) {
     `<label class="routine-num"><span>${label}</span><input type="number" inputmode="numeric" min="${min}" value="${value}" data-action="routine-ex-field" data-id="${escapeHtml(routineId)}" data-index="${index}" data-field="${field}" aria-label="${escapeHtml(name)} ${label}" /></label>`;
 
   const restInput = numInput("targetRest", Number(ex.targetRest) || 0, "rest s", 0);
+  // A countdown for the rest while working out. Only offered where rest applies
+  // (strength sets and timed holds); it does nothing without a rest target.
+  const restTimerToggle = `<label class="routine-toggle" title="Run a countdown for this rest while working out"><input type="checkbox" data-action="routine-ex-toggle" data-id="${escapeHtml(routineId)}" data-index="${index}" data-field="restTimer"${ex.restTimer ? " checked" : ""} aria-label="${escapeHtml(name)} rest timer" /><span>timer</span></label>`;
   let fields;
   if (ex.targetDuration || type === "cardio" || type === "sport") {
     fields = numInput("targetDuration", ex.targetDuration || 20, "min", 1);
   } else if (type === "timed") {
-    fields = numInput("targetSets", ex.targetSets || 3, "sets", 1) + numInput("targetReps", ex.targetReps || 30, "sec", 1) + restInput;
+    fields = numInput("targetSets", ex.targetSets || 3, "sets", 1) + numInput("targetReps", ex.targetReps || 30, "sec", 1) + restInput + restTimerToggle;
   } else {
     fields = numInput("targetSets", ex.targetSets || 3, "sets", 1)
       + numInput("targetReps", ex.targetReps || 8, "reps", 0)
       + numInput("targetWeight", Number(ex.targetWeight) || 0, "lb", 0)
-      + restInput;
+      + restInput + restTimerToggle;
   }
+
+  // Free-text coaching note for this move, shown as a callout while working out.
+  const noteInput = `<label class="routine-note"><span>Coach note</span><input type="text" maxlength="240" value="${escapeHtml(ex.coachNote || "")}" data-action="routine-ex-text" data-id="${escapeHtml(routineId)}" data-index="${index}" data-field="coachNote" placeholder="optional — e.g. ease off the last set, you burned out here last week" aria-label="${escapeHtml(name)} coach note" /></label>`;
 
   return `
     <div class="routine-ex-row">
@@ -8215,6 +8392,7 @@ function renderRoutineExerciseEditRow(routineId, ex, index, count) {
       <div class="routine-ex-main">
         <span class="routine-ex-name">${escapeHtml(name)}</span>
         <div class="routine-ex-fields">${fields}</div>
+        ${noteInput}
       </div>
       <button class="rx-remove btn-ico" type="button" data-action="remove-ex" data-id="${escapeHtml(routineId)}" data-index="${index}" aria-label="Remove ${escapeHtml(name)}">${getUiIcon("x")}</button>
     </div>
@@ -8276,7 +8454,7 @@ function renderPlanAiPanel(importMessageHtml, importPreviewHtml, importText) {
       </button>
       ${aiPanelOpen ? `
         <div class="ai-drawer">
-          <p class="plan-muted">Paste the coach's plan, preview what Training Book reads, then save. Add a starting weight with "@", e.g. <code>Bench Press: 3x8 @ 135</code>.</p>
+          <p class="plan-muted">Paste the coach's plan, preview what Training Book reads, then save. Add a starting weight with "@", e.g. <code>Bench Press: 3x8 @ 135</code>. Add <code>timer</code> after a rest (<code>rest 90s timer</code>) for a between-set countdown, and a <code>note:</code> line under a move for coaching shown while you work out.</p>
           <textarea id="plan-import-text" class="plan-import-text" spellcheck="false" placeholder="Paste the AI coach's updated plan here.">${escapeHtml(importText)}</textarea>
           <div class="plan-import-actions">
             <button class="quiet-button small-button" type="button" data-action="import-example">Use example</button>
@@ -8519,6 +8697,22 @@ function updateRoutineExerciseField(routineId, index, field, rawValue) {
   }, { rerender: false });
 }
 
+// Set a coach note / rest-timer flag on a planned exercise. Kept separate from
+// the numeric field path above so text and booleans aren't coerced to numbers.
+function setRoutineExerciseExtra(routineId, index, field, value) {
+  mutatePlanData((data) => {
+    const routine = findRoutineInData(data, routineId);
+    const ex = routine?.exercises?.[index];
+    if (!ex) return;
+    if (field === "restTimer") {
+      if (value) ex.restTimer = true; else delete ex.restTimer;
+    } else if (field === "coachNote") {
+      const text = String(value || "").trim();
+      if (text) ex.coachNote = text; else delete ex.coachNote;
+    }
+  }, { rerender: false });
+}
+
 // One delegated click handler for the whole Plan screen.
 function handlePlanClick(event) {
   const button = event.target.closest("[data-action]");
@@ -8564,12 +8758,20 @@ function handlePlanChange(event) {
     addRoutineExercise(control.dataset.id, exerciseId);
   } else if (action === "routine-ex-field") {
     updateRoutineExerciseField(control.dataset.id, Number(control.dataset.index), control.dataset.field, control.value);
+  } else if (action === "routine-ex-toggle") {
+    setRoutineExerciseExtra(control.dataset.id, Number(control.dataset.index), control.dataset.field, control.checked);
   }
 }
 
 // Delegated input handler: clearing a previewed import the moment the pasted
 // text changes (so a stale preview can't be saved by accident).
 function handlePlanInput(event) {
+  // Coach note typed on an exercise row: save as typed, no re-render (keeps focus).
+  const noteField = event.target.closest('[data-action="routine-ex-text"]');
+  if (noteField) {
+    setRoutineExerciseExtra(noteField.dataset.id, Number(noteField.dataset.index), noteField.dataset.field, noteField.value);
+    return;
+  }
   if (event.target.id !== "plan-import-text") return;
   planImportPreview = null;
   planImportSummary = "";
@@ -10374,6 +10576,7 @@ function generateReviewPacket() {
     packet.push(`ROUTINE: ${routine.name}`);
     routine.exercises?.forEach((exercise) => {
       packet.push(formatRoutineExercise(exercise));
+      if (exercise.coachNote) packet.push(`  note: ${exercise.coachNote}`);
     });
     if (routine.notes) packet.push(`Notes: ${routine.notes}`);
     packet.push("");
@@ -10534,7 +10737,8 @@ saturday: Optional Walk
 sunday: rest
 
 ROUTINE: Full Body A
-- Goblet Squat: 3x8 @ 35, rest 90s
+- Goblet Squat: 3x8 @ 35, rest 90s timer
+  note: Chest tall and drive through your heels — ease off the last set, you burned out here last week.
 - Push-up: 3x8, rest 60s
 - Dumbbell Row: 3x10 @ 30, rest 75s
 - Plank: 3x30, rest 45s
@@ -10568,18 +10772,34 @@ function parseRoutineExerciseLine(line) {
   const exerciseName = cleaned.slice(0, separatorIndex).trim();
   let rawTarget = cleaned.slice(separatorIndex + 1).trim();
 
+  // Optional inline coach note at the tail, e.g. "3x8 @ 135 | note: chest tall"
+  // or "...(note: ease off here)". Pulled out first so its words can't be
+  // misread as reps/rest/timer below. A note may also arrive on its own line
+  // (see parseAiPlanText), so this is just the convenient one-line form.
+  let coachNote = "";
+  const noteMatch = rawTarget.match(/[|(\-–—]?\s*(?:coach\s*note|coach|note)\s*[:=]\s*(.+)$/i);
+  if (noteMatch) {
+    coachNote = noteMatch[1].replace(/[)\s]+$/, "").trim();
+    rawTarget = rawTarget.slice(0, noteMatch.index).replace(/[|(\-–—,;\s]+$/, "").trim();
+  }
+
   // Optional rest target, e.g. "3x8 @ 135, rest 90s" or "90s rest". Pulled out
   // (and stripped) first so its number can't be misread as reps/minutes below.
   const restSeconds = parseRestSeconds(rawTarget);
+  // "rest 90s timer" / "90s rest (timer)" turns the rest into a live countdown.
+  const restTimer = /\btimer\b/i.test(rawTarget);
   rawTarget = rawTarget
     .replace(/,?\s*rest\s*:?\s*\d+\s*(?:s|sec|secs|seconds?)?\b/i, "")
     .replace(/,?\s*\d+\s*(?:s|sec|secs|seconds?)\s+rest\b/i, "")
+    .replace(/[(]?\s*timer\s*[)]?/ig, "")
     .replace(/[,;|]\s*$/, "")
     .trim();
   const target = rawTarget.toLowerCase();
   const exerciseId = findExerciseIdByName(exerciseName);
   const withRest = (parsed) => {
     if (restSeconds > 0) parsed.targetRest = restSeconds;
+    if (restSeconds > 0 && restTimer) parsed.restTimer = true;
+    if (coachNote) parsed.coachNote = coachNote;
     return parsed;
   };
 
@@ -10693,9 +10913,23 @@ function parseAiPlanText(text) {
       return;
     }
 
-    if (mode === "routine" && currentRoutine && /^[-*]\s*/.test(line)) {
-      const parsedExercise = parseRoutineExerciseLine(line);
-      if (parsedExercise) currentRoutine.exercises.push(parsedExercise);
+    if (mode === "routine" && currentRoutine) {
+      // A standalone note line (e.g. "note: ease off the last set you burned
+      // out on") attaches to the most recently listed exercise, so the coach
+      // can write longer guidance on its own line under each move.
+      const noteLine = line.replace(/^[-*•]\s*/, "").match(/^(?:coach\s*note|coach|note)\s*[:=]\s*(.+)$/i);
+      if (noteLine) {
+        const last = currentRoutine.exercises[currentRoutine.exercises.length - 1];
+        if (last) {
+          const text = noteLine[1].trim();
+          last.coachNote = last.coachNote ? `${last.coachNote} ${text}` : text;
+        }
+        return;
+      }
+      if (/^[-*]\s*/.test(line)) {
+        const parsedExercise = parseRoutineExerciseLine(line);
+        if (parsedExercise) currentRoutine.exercises.push(parsedExercise);
+      }
     }
   });
 

@@ -429,6 +429,23 @@
   font-size: 13px;
 }
 
+/* Coach note hint under a preview card's meta line. */
+.today-preview-card .pv-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 5px;
+  margin: 5px 0 0;
+  color: var(--accent);
+  font-size: 12px;
+  line-height: 1.35;
+}
+.today-preview-card .pv-note svg {
+  width: 13px;
+  height: 13px;
+  flex: 0 0 auto;
+  margin-top: 1px;
+}
+
 .today-preview-card .pv-tag {
   margin-left: auto;
   flex: 0 0 auto;
@@ -1865,6 +1882,101 @@ body.in-workout .today-panel {
   text-align: center;
 }
 .lw-rest-hint strong { color: var(--accent); }
+
+/* Coach note callout, shown under the target on every set/hold page. */
+.lw-coach-note {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  margin: 2px 0 4px;
+  padding: 11px 13px;
+  border-radius: var(--radius-sm);
+  background: rgba(182, 211, 50, 0.10);
+  border: 1px solid var(--accent-line);
+}
+
+.lw-coach-note-icon {
+  flex: 0 0 auto;
+  display: inline-flex;
+  margin-top: 1px;
+  color: var(--accent);
+}
+.lw-coach-note-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.lw-coach-note-body {
+  min-width: 0;
+}
+
+.lw-coach-note-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 2px;
+}
+
+.lw-coach-note-text {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--text);
+}
+
+/* Guided rest countdown shown between sets/holds (restTimer). */
+.lw-rest-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 18px 0 4px;
+}
+
+.lw-rest-eyebrow {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.lw-rest-num {
+  font-size: 76px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
+  line-height: 1.05;
+  margin: 6px 0 4px;
+  color: var(--accent);
+}
+
+.lw-rest-next {
+  margin: 0 0 18px;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.lw-rest-controls {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  width: 100%;
+}
+.lw-rest-controls .lw-tbtn.primary.btn-ico {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.lw-rest-controls .lw-tbtn.primary svg {
+  width: 18px;
+  height: 18px;
+}
 
 /* Optional per-set / per-hold effort control (the small red "Rate effort"
    button under the note, expanding to a 1-10 chip row). */
