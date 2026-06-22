@@ -3,7 +3,7 @@ const DROPBOX_TOKEN_URL = "https://api.dropboxapi.com/oauth2/token";
 const DROPBOX_UPLOAD_URL = "https://content.dropboxapi.com/2/files/upload";
 const DROPBOX_DOWNLOAD_URL = "https://content.dropboxapi.com/2/files/download";
 const DATA_FILE_PATH = "/04_Technical/06_Side_Projects/Workout and Nutrition App/data/workout-data.json";
-const APP_VERSION = "2026.06.22-ai-coach-section";
+const APP_VERSION = "2026.06.22-plan-exercise-picker";
 
 const STORAGE = {
   appKey: "trainingBookDropboxAppKey",
@@ -3309,6 +3309,11 @@ let planImportMessage = "";
 let editingRoutineId = null;
 let routineEditSnapshot = null;
 let routineEditIsNew = false;
+
+// The Plan "add an exercise" picker: a searchable, photo-row sheet that replaces
+// the old long <select>. routineId is the routine being added to (null = closed);
+// query is the live search text. Mirrors the live-workout add-exercise sheet.
+let planPicker = { routineId: null, query: "" };
 
 function getTodayDateString() {
   const today = new Date();
@@ -8226,7 +8231,15 @@ function renderPlan() {
     ${renderPlanRoutines(routines)}
     ${renderPlanOverview(activePlan)}
     ${renderPlanAiPanel(importMessageHtml, importPreviewHtml, importText)}
+    ${renderPlanPickerSheet(routines)}
   `;
+
+  if (planPicker.routineId) {
+    // Hydrate the search-box magnifying glass (a data-icon placeholder) and put
+    // the cursor in the field so you can type straight away.
+    renderUiIcons(planContent);
+    setTimeout(() => planContent.querySelector("#plan-picker-search")?.focus(), 0);
+  }
 }
 
 // ===== Plan: section renderers =====
@@ -8350,10 +8363,7 @@ function renderRoutineEditCard(routine) {
       </div>
 
       <div class="routine-add-ex">
-        <select class="routine-add-select" data-action="add-ex" data-id="${escapeHtml(routine.id)}" aria-label="Add an exercise to this routine">
-          <option value="">+ Add an exercise…</option>
-          ${exercises.map((e) => `<option value="${escapeHtml(e.id)}">${escapeHtml(e.name)}</option>`).join("")}
-        </select>
+        <button class="quiet-button btn-ico routine-add-button" type="button" data-action="open-plan-picker" data-id="${escapeHtml(routine.id)}">${getUiIcon("plus")}Add an exercise</button>
       </div>
 
       <div class="routine-edit-actions">
@@ -8403,6 +8413,107 @@ function renderRoutineExerciseEditRow(routineId, ex, index, count) {
         ${noteInput}
       </div>
       <button class="rx-remove btn-ico" type="button" data-action="remove-ex" data-id="${escapeHtml(routineId)}" data-index="${index}" aria-label="Remove ${escapeHtml(name)}">${getUiIcon("x")}</button>
+    </div>
+  `;
+}
+
+// ===== Plan: searchable add-exercise picker =====
+// Replaces the old unsorted, photo-less <select>. A full-page sheet (consistent
+// with the live-workout add) with a search box and compact photo rows, sorted
+// alphabetically. Stays open after each pick so several moves can be added in a
+// row; the count badge updates live so you can see what's already in the routine.
+
+function openPlanPicker(routineId) {
+  planPicker = { routineId, query: "" };
+  renderPlan();
+}
+
+function closePlanPicker() {
+  if (!planPicker.routineId) return;
+  planPicker = { routineId: null, query: "" };
+  // Full re-render so the routine card behind the sheet shows the new exercises.
+  renderPlan();
+  renderTodayRoutine();
+}
+
+// Add the picked exercise without a full re-render, then refresh only the results
+// list — this keeps the search field focused (and the mobile keyboard up) and
+// updates the "in routine" count badges live, the same trick the live-add uses.
+function addExerciseFromPicker(exerciseId) {
+  const routineId = planPicker.routineId;
+  if (!routineId || !exerciseId) return;
+  mutatePlanData((data) => {
+    const routine = findRoutineInData(data, routineId);
+    if (!routine) return;
+    routine.exercises = Array.isArray(routine.exercises) ? routine.exercises : [];
+    routine.exercises.push(defaultRoutineExercise(exerciseId));
+  }, { rerender: false });
+  const resultsEl = planContent?.querySelector(".plan-picker-results");
+  if (resultsEl) resultsEl.innerHTML = renderPlanPickerResults();
+}
+
+// Just the result rows, split out so a search keystroke or a pick can refresh
+// the list alone (preserving the focused input), as the live-add sheet does.
+function renderPlanPickerResults() {
+  const routine = findRoutineInData(getLocalData(), planPicker.routineId);
+  // How many of each exercise the routine already holds, for the count badge.
+  const counts = {};
+  (routine?.exercises || []).forEach((ex) => {
+    counts[ex.exerciseId] = (counts[ex.exerciseId] || 0) + 1;
+  });
+
+  const query = (planPicker.query || "").trim().toLowerCase();
+  const matches = exercises
+    .filter((exercise) => {
+      if (!query) return true;
+      return `${exercise.name} ${exercise.area || ""} ${(exercise.tags || []).join(" ")}`.toLowerCase().includes(query);
+    })
+    .slice()
+    .sort((a, b) => a.name.localeCompare(b.name));
+
+  // A compact row per exercise: small photo/glyph thumbnail + name + type.
+  // Deliberately NOT renderExerciseArt — that nests the How-to and favourite
+  // <button>s inside this result <button>, which is invalid HTML and steals taps.
+  return matches.map((exercise) => {
+    const photo = getExerciseStartImage(exercise);
+    const thumb = photo
+      ? `<span class="live-add-result-icon" style="background-image:url('${escapeHtml(photo)}')"></span>`
+      : `<span class="live-add-result-icon">${getExerciseIcon(exercise.icon)}</span>`;
+    const sub = `${formatExerciseType(exercise.type || "strength")}${exercise.area ? ` · ${exercise.area}` : ""}`;
+    const count = counts[exercise.id] || 0;
+    const badge = count ? `<span class="plan-picker-count" aria-label="${count} in this routine">${count}×</span>` : "";
+    return `
+      <button class="live-add-result plan-picker-result" type="button" data-action="pick-plan-exercise" data-id="${escapeHtml(exercise.id)}">
+        ${thumb}
+        <span class="live-add-result-text"><strong>${escapeHtml(exercise.name)}</strong><small>${escapeHtml(sub)}</small></span>
+        ${badge}
+      </button>
+    `;
+  }).join("") || `<p class="empty-state">No matching exercises.</p>`;
+}
+
+function renderPlanPickerSheet(routines) {
+  if (!planPicker.routineId) return "";
+  const routine = (routines || []).find((r) => r.id === planPicker.routineId);
+  if (!routine) return "";
+  return `
+    <div class="lw-sheet-scrim plan-picker-scrim" role="presentation">
+      <section class="lw-sheet live-add-sheet" role="dialog" aria-modal="true" aria-label="Add exercise to ${escapeHtml(routine.name)}">
+        <div class="lw-sheet-head">
+          <div>
+            <h3>Add an exercise</h3>
+            <p>Adding to ${escapeHtml(routine.name)} — pick as many as you like.</p>
+          </div>
+          <button class="lw-sheet-close" type="button" data-action="close-plan-picker" aria-label="Done adding exercises">&times;</button>
+        </div>
+        <div class="library-search live-add-search">
+          <span class="library-search-icon" data-icon="search" aria-hidden="true"></span>
+          <input type="search" id="plan-picker-search" value="${escapeHtml(planPicker.query)}" data-action="plan-picker-search" placeholder="Search exercises" autocomplete="off" aria-label="Search exercises" />
+        </div>
+        <div class="live-add-results plan-picker-results">
+          ${renderPlanPickerResults()}
+        </div>
+      </section>
     </div>
   `;
 }
@@ -8712,6 +8823,7 @@ function finishRoutineEdit() {
   editingRoutineId = null;
   routineEditSnapshot = null;
   routineEditIsNew = false;
+  planPicker = { routineId: null, query: "" };
   renderPlan();
 }
 
@@ -8730,6 +8842,7 @@ function cancelRoutineEdit(id) {
       if (index >= 0) data.routines[index] = snapshot;
     }, { rerender: false });
   }
+  planPicker = { routineId: null, query: "" };
   finishRoutineEdit();
   renderTodayRoutine();
 }
@@ -8757,16 +8870,6 @@ function updateRoutineField(id, field, value) {
     const routine = findRoutineInData(data, id);
     if (routine) routine[field] = value;
   }, { rerender: false });
-}
-
-function addRoutineExercise(routineId, exerciseId) {
-  if (!exerciseId) return;
-  mutatePlanData((data) => {
-    const routine = findRoutineInData(data, routineId);
-    if (!routine) return;
-    routine.exercises = Array.isArray(routine.exercises) ? routine.exercises : [];
-    routine.exercises.push(defaultRoutineExercise(exerciseId));
-  });
 }
 
 async function removeRoutineExercise(routineId, index) {
@@ -8829,12 +8932,18 @@ function setRoutineExerciseExtra(routineId, index, field, value) {
 
 // One delegated click handler for the whole Plan screen.
 function handlePlanClick(event) {
+  // Tapping the dimmed backdrop (but not the sheet itself) closes the picker.
+  if (event.target.classList.contains("plan-picker-scrim")) { closePlanPicker(); return; }
+
   const button = event.target.closest("[data-action]");
   if (!button) return;
   const action = button.dataset.action;
   const id = button.dataset.id;
 
   switch (action) {
+    case "open-plan-picker": openPlanPicker(id); break;
+    case "close-plan-picker": closePlanPicker(); break;
+    case "pick-plan-exercise": addExerciseFromPicker(id); break;
     case "save-plan-notes": saveActivePlanFromScreen(); break;
     case "swap-day": handleSwapDayTap(button.dataset.day); break;
     case "clear-weekly-plan": clearWeeklyPlan(); break;
@@ -8856,7 +8965,7 @@ function handlePlanClick(event) {
 }
 
 // Delegated change handler: weekly-day selects, routine name/location fields,
-// the per-routine "add exercise" picker, and the numeric target inputs.
+// and the numeric target inputs.
 function handlePlanChange(event) {
   const control = event.target.closest("[data-action]");
   if (!control) return;
@@ -8866,10 +8975,6 @@ function handlePlanChange(event) {
     assignWeeklyDay(control.dataset.day, control.value);
   } else if (action === "routine-field") {
     updateRoutineField(control.dataset.id, control.dataset.field, control.value);
-  } else if (action === "add-ex") {
-    const exerciseId = control.value;
-    control.value = "";
-    addRoutineExercise(control.dataset.id, exerciseId);
   } else if (action === "routine-ex-field") {
     updateRoutineExerciseField(control.dataset.id, Number(control.dataset.index), control.dataset.field, control.value);
   } else if (action === "routine-ex-toggle") {
@@ -8880,6 +8985,14 @@ function handlePlanChange(event) {
 // Delegated input handler: clearing a previewed import the moment the pasted
 // text changes (so a stale preview can't be saved by accident).
 function handlePlanInput(event) {
+  // Add-exercise picker search: filter the list as you type. Refresh only the
+  // results so the search field keeps focus and the mobile keyboard stays up.
+  if (event.target.id === "plan-picker-search") {
+    planPicker.query = event.target.value;
+    const resultsEl = planContent?.querySelector(".plan-picker-results");
+    if (resultsEl) resultsEl.innerHTML = renderPlanPickerResults();
+    return;
+  }
   // Coach note typed on an exercise row: save as typed, no re-render (keeps focus).
   const noteField = event.target.closest('[data-action="routine-ex-text"]');
   if (noteField) {
@@ -11304,6 +11417,7 @@ document.addEventListener("keydown", (event) => {
   if (editingExerciseId) closeEditExerciseModal();
   else if (categoriesModalOpen) closeCategoriesModal();
   else if (addModalOpen) closeAddExerciseModal();
+  else if (planPicker.routineId) closePlanPicker();
   else if (libraryReferenceId) closeLibraryReference();
   else if (todayReferenceId) closeTodayReference();
 });

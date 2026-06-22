@@ -410,8 +410,29 @@
   margin-top: 10px;
 }
 
-.routine-add-select {
-  min-height: 44px;
+/* Trigger for the searchable add-exercise picker. Full-width and dashed so it
+   reads as an "add a row" affordance rather than a normal button. */
+.routine-add-button {
+  width: 100%;
+  min-height: 46px;
+  justify-content: center;
+  border-style: dashed;
+}
+
+/* "in this routine" count badge on a picker result row. */
+.plan-picker-count {
+  margin-left: auto;
+  flex: 0 0 auto;
+  align-self: center;
+  min-width: 30px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: rgba(183, 255, 53, 0.16);
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 800;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
 }
 
 .routine-edit-actions {
