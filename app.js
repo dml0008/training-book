@@ -3,7 +3,7 @@ const DROPBOX_TOKEN_URL = "https://api.dropboxapi.com/oauth2/token";
 const DROPBOX_UPLOAD_URL = "https://content.dropboxapi.com/2/files/upload";
 const DROPBOX_DOWNLOAD_URL = "https://content.dropboxapi.com/2/files/download";
 const DATA_FILE_PATH = "/04_Technical/06_Side_Projects/Workout and Nutrition App/data/workout-data.json";
-const APP_VERSION = "2026.06.22-plan-swap-days";
+const APP_VERSION = "2026.06.22-ai-coach-section";
 
 const STORAGE = {
   appKey: "trainingBookDropboxAppKey",
@@ -3304,10 +3304,9 @@ let planImportSummary = "";
 let planImportMessage = "";
 
 // Plan editing state: which routine (if any) is expanded into its edit form,
-// whether the optional "paste an updated plan" AI drawer is open, and a snapshot
-// of the routine taken when edit mode opened so Cancel can revert all changes.
+// and a snapshot of the routine taken when edit mode opened so Cancel can revert
+// all changes.
 let editingRoutineId = null;
-let aiPanelOpen = false;
 let routineEditSnapshot = null;
 let routineEditIsNew = false;
 
@@ -8452,22 +8451,34 @@ function renderPlanAiPanel(importMessageHtml, importPreviewHtml, importText) {
     <section class="plan-section plan-ai">
       <div class="plan-section-head">
         <div>
-          <p class="card-kicker">AI coach · optional</p>
-          <p class="plan-muted">Copies a ready-to-paste prompt with your goals, plan, and full workout history. Paste it into any AI chat and it acts as your coach — it'll ask about your week and talk through options, then hand back next week's plan for you to import below.</p>
-        </div>
-        <div class="plan-head-actions">
-          <button class="quiet-button small-button btn-ico" type="button" data-action="copy-packet">${getUiIcon("clipboard-list")}Copy prompt</button>
-          <button class="quiet-button small-button btn-ico" type="button" data-action="save-packet">${getUiIcon("download")}Save as file</button>
+          <p class="card-kicker">AI coach</p>
+          <p class="plan-muted">The way Training Book is meant to run. Copy your prompt into any AI chat — ChatGPT, Claude, or similar — and it becomes your coach: it reviews your week, talks through what to change, and writes next week's plan for you to paste back below.</p>
         </div>
       </div>
-      <button class="ai-drawer-toggle btn-ico" type="button" data-action="toggle-ai" aria-expanded="${aiPanelOpen ? "true" : "false"}">
-        ${getUiIcon(aiPanelOpen ? "chevron-up" : "chevron-down")}
-        <span>Paste an updated plan from your coach</span>
-      </button>
-      ${aiPanelOpen ? `
-        <div class="ai-drawer">
-          <p class="plan-muted">Paste the coach's plan, preview what Training Book reads, then save. Add a starting weight with "@", e.g. <code>Bench Press: 3x8 @ 135</code>. Add <code>timer</code> after a rest (<code>rest 90s timer</code>) for a between-set countdown, and a <code>note:</code> line under a move for coaching shown while you work out.</p>
-          <textarea id="plan-import-text" class="plan-import-text" spellcheck="false" placeholder="Paste the AI coach's updated plan here.">${escapeHtml(importText)}</textarea>
+      <div class="ai-steps">
+        <div class="ai-step">
+          <div class="ai-step-text">
+            <span class="ai-step-num">1</span>
+            <div>
+              <h3 class="ai-step-title">Copy your prompt</h3>
+              <p class="plan-muted">Bundles your goals, current plan, and full workout history — ready to paste into any AI chat.</p>
+            </div>
+          </div>
+          <div class="ai-step-actions">
+            <button class="primary-button small-button btn-ico" type="button" data-action="copy-packet">${getUiIcon("clipboard-list")}Copy prompt</button>
+            <button class="quiet-button small-button btn-ico" type="button" data-action="save-packet">${getUiIcon("download")}Save as file</button>
+          </div>
+        </div>
+        <div class="ai-step">
+          <div class="ai-step-text">
+            <span class="ai-step-num">2</span>
+            <div>
+              <h3 class="ai-step-title">Paste the new plan</h3>
+              <p class="plan-muted">When your coach hands back next week's plan, drop it in here, preview what Training Book reads, then save.</p>
+            </div>
+          </div>
+          <textarea id="plan-import-text" class="plan-import-text" spellcheck="false" placeholder="Paste your coach's plan here…">${escapeHtml(importText)}</textarea>
+          <p class="plan-muted ai-format-hint">Optional extras you can include: a starting weight with <code>@</code> (<code>Bench Press: 3x8 @ 135</code>), <code>timer</code> after a rest (<code>rest 90s timer</code>), or a <code>note:</code> line under a move for in-workout coaching.</p>
           <div class="plan-import-actions">
             <button class="quiet-button small-button" type="button" data-action="import-example">Use example</button>
             <button class="primary-button" type="button" data-action="import-preview">Preview changes</button>
@@ -8476,7 +8487,7 @@ function renderPlanAiPanel(importMessageHtml, importPreviewHtml, importText) {
           ${importMessageHtml}
           ${importPreviewHtml}
         </div>
-      ` : ""}
+      </div>
     </section>
   `;
 }
@@ -8835,7 +8846,6 @@ function handlePlanClick(event) {
     case "delete-routine": deleteRoutine(id); break;
     case "remove-ex": removeRoutineExercise(id, Number(button.dataset.index)); break;
     case "move-ex": moveRoutineExercise(id, Number(button.dataset.index), Number(button.dataset.dir)); break;
-    case "toggle-ai": aiPanelOpen = !aiPanelOpen; renderPlan(); break;
     case "copy-packet": copyReviewPacket(); break;
     case "save-packet": saveReviewPacket(); break;
     case "import-example": fillPlanImportExample(); break;

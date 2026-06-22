@@ -476,45 +476,71 @@
   margin-top: 18px;
 }
 
-/* ----- AI coach drawer ----- */
-.ai-drawer-toggle {
+/* ----- AI coach: the copy-out / paste-back round trip, shown as two steps ----- */
+.ai-steps {
   display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 8px;
-  width: 100%;
-  min-height: 46px;
-  padding: 11px 14px;
-  border: 1px dashed var(--line);
-  border-radius: var(--radius-sm);
-  background: rgba(9, 12, 11, 0.35);
-  color: var(--text);
-  font: inherit;
-  font-size: 14px;
-  font-weight: 800;
-  text-align: left;
-  cursor: pointer;
+  flex-direction: column;
+  gap: 14px;
 }
 
-.ai-drawer-toggle:hover {
-  border-color: var(--accent);
-}
-
-.ai-drawer-toggle svg {
-  flex: 0 0 auto;
-  width: 16px;
-  height: 16px;
-}
-
-.ai-drawer {
+.ai-step {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  margin-top: 12px;
+  padding: 16px;
+  border: 1px solid rgba(155, 168, 161, 0.18);
+  border-radius: var(--radius-md);
+  background: rgba(9, 12, 11, 0.35);
 }
 
-.ai-drawer .plan-import-text {
-  min-height: 200px;
+.ai-step-text {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.ai-step-num {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 26px;
+  height: 26px;
+  border-radius: var(--radius-full);
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-size: 14px;
+  font-weight: 850;
+  font-variant-numeric: tabular-nums;
+}
+
+.ai-step-title {
+  margin: 1px 0 4px;
+  font-size: 16px;
+}
+
+.ai-step-text .plan-muted {
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.ai-step-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.ai-format-hint {
+  margin: -2px 0 0;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.ai-format-hint code {
+  padding: 1px 5px;
+  border-radius: var(--radius-xs);
+  background: rgba(155, 168, 161, 0.14);
+  font-family: ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-size: 11px;
 }
 
 @media (max-width: 640px) {
