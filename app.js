@@ -7734,6 +7734,39 @@ async function finishDropboxConnect() {
 async function uploadWorkoutData(data) {
   // Saves now go to the Firebase cloud database for the signed-in user.
   await cloudSave(data);
+  // Best-effort: also mirror the full data blob into the Dropbox folder as
+  // data/workout-data.json so on-disk tools (e.g. the weekly AI coach review)
+  // always have fresh data without a manual export. Never blocks or fails the
+  // main save; silently no-ops when Dropbox isn't connected.
+  pushDataFileToDropbox(data).catch((e) => console.error("Dropbox mirror skipped:", e));
+}
+
+// Mirror the live data file into the user's Dropbox at DATA_FILE_PATH. Only runs
+// when a Dropbox refresh token is present (getAccessToken returns null otherwise),
+// so it's a no-op for users who never connected Dropbox. Uses overwrite mode and
+// mute:true so it doesn't spam Dropbox notifications on every save.
+async function pushDataFileToDropbox(data) {
+  if (!localStorage.getItem(STORAGE.refreshToken)) return;
+  const token = await getAccessToken();
+  if (!token) return;
+  const body = JSON.stringify(data, null, 2);
+  const response = await fetch(DROPBOX_UPLOAD_URL, {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${token}`,
+      "Dropbox-API-Arg": JSON.stringify({
+        path: DATA_FILE_PATH,
+        mode: "overwrite",
+        mute: true
+      }),
+      "Content-Type": "application/octet-stream"
+    },
+    body
+  });
+  if (!response.ok) {
+    const message = await response.text();
+    throw new Error(`Dropbox mirror failed: ${message}`);
+  }
 }
 
 async function downloadWorkoutData() {
