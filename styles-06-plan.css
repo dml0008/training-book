@@ -31,6 +31,15 @@
   line-height: 1.4;
 }
 
+/* Inline icon dropped into descriptive text (e.g. the swap hint). */
+.plan-muted svg {
+  display: inline-block;
+  width: 1.05em;
+  height: 1.05em;
+  vertical-align: -0.18em;
+  margin: 0 1px;
+}
+
 .plan-head-actions {
   display: flex;
   flex: 0 0 auto;
@@ -68,11 +77,20 @@
   border: 1px solid rgba(155, 168, 161, 0.18);
   border-radius: var(--radius-md);
   background: rgba(23, 29, 27, 0.5);
+  transition: border-color 0.12s ease, background 0.12s ease, opacity 0.12s ease;
 }
 
 .schedule-day.is-training {
   border-color: rgba(183, 255, 53, 0.32);
   background: rgba(183, 255, 53, 0.06);
+}
+
+/* Day header: name on the left, swap handle on the right. */
+.schedule-day-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
 }
 
 .schedule-day-name {
@@ -81,10 +99,61 @@
   font-weight: 850;
   letter-spacing: 0.03em;
   text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .schedule-day.is-training .schedule-day-name {
   color: var(--accent);
+}
+
+/* Swap handle: doubles as the tap-to-swap button and the drag grip. */
+.schedule-swap {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  flex: 0 0 auto;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-xs);
+  background: var(--panel-2);
+  color: var(--muted);
+  cursor: grab;
+}
+
+.schedule-swap svg {
+  width: 15px;
+  height: 15px;
+}
+
+.schedule-swap:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* Armed for tap-to-swap (first tap) — waiting for the second day. */
+.schedule-day.is-swapping {
+  border-color: var(--accent);
+  background: rgba(183, 255, 53, 0.12);
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+.schedule-day.is-swapping .schedule-swap {
+  border-color: var(--accent);
+  background: rgba(183, 255, 53, 0.18);
+  color: var(--accent);
+}
+
+/* Drag-and-drop feedback (desktop). */
+.schedule-day.is-dragging {
+  opacity: 0.45;
+  cursor: grabbing;
+}
+
+.schedule-day.is-drop-target {
+  border-style: dashed;
+  border-color: var(--accent);
+  background: rgba(183, 255, 53, 0.1);
 }
 
 .schedule-select {
@@ -448,10 +517,6 @@
   min-height: 200px;
 }
 
-.plan-ai-foot {
-  margin-top: 2px;
-}
-
 @media (max-width: 640px) {
   /* Stack each section's heading above its action buttons so the title/blurb
      gets the full width instead of being crushed into a thin column beside
@@ -477,9 +542,21 @@
     gap: 12px;
   }
 
+  /* Name + swap handle hug the left; the menu sits on the right. */
+  .schedule-day-top {
+    flex: 0 0 auto;
+    gap: 10px;
+  }
+
+  /* Roomier swap handle for thumbs on a phone. */
+  .schedule-swap {
+    width: 34px;
+    height: 34px;
+  }
+
   .schedule-select {
     flex: 0 0 auto;
-    width: 60%;
+    width: 55%;
     max-width: 220px;
   }
 

@@ -3,7 +3,7 @@ const DROPBOX_TOKEN_URL = "https://api.dropboxapi.com/oauth2/token";
 const DROPBOX_UPLOAD_URL = "https://content.dropboxapi.com/2/files/upload";
 const DROPBOX_DOWNLOAD_URL = "https://content.dropboxapi.com/2/files/download";
 const DATA_FILE_PATH = "/04_Technical/06_Side_Projects/Workout and Nutrition App/data/workout-data.json";
-const APP_VERSION = "2026.06.22-coach-notes-timers";
+const APP_VERSION = "2026.06.22-plan-swap-days";
 
 const STORAGE = {
   appKey: "trainingBookDropboxAppKey",
@@ -6388,6 +6388,8 @@ const UI_ICONS = {
   // Row actions (Edit / Swap / Remove + the edit-mode Save / Cancel)
   pencil: '<path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/>',
   "repeat": '<path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/>',
+  "arrow-left-right": '<path d="M8 3 4 7l4 4"/><path d="M4 7h16"/><path d="m16 21 4-4-4-4"/><path d="M20 17H4"/>',
+  download: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/>',
   "trash-2": '<path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/>',
   plus: '<path d="M5 12h14"/><path d="M12 5v14"/>',
   check: '<path d="M20 6 9 17l-5-5"/>',
@@ -8204,6 +8206,10 @@ function getRoutineNameById(routineId, routines) {
 function renderPlan() {
   if (!planContent) return;
 
+  // A rebuild discards the schedule cards, so any in-progress swap is void.
+  pendingSwapDay = null;
+  draggingSwapDay = null;
+
   const data = getLocalData();
   const activePlan = { ...getStarterActivePlan(), ...(data.activePlan || {}) };
   const routines = Array.isArray(data.routines) ? data.routines : [];
@@ -8255,7 +8261,7 @@ function renderPlanSchedule(weeklyPlan, routines) {
       <div class="plan-section-head">
         <div>
           <p class="card-kicker">Weekly schedule</p>
-          <p class="plan-muted">Pick a routine for each day, or leave it as a rest day. Saves instantly.</p>
+          <p class="plan-muted">Use a day's menu to set its routine, or leave it as a rest day. To trade two days, drag one onto another — or tap ${getUiIcon("arrow-left-right")} on one day, then on another. Saves instantly.</p>
         </div>
         <div class="plan-head-actions">
           <span class="plan-pill">${planned} training ${planned === 1 ? "day" : "days"}</span>
@@ -8264,13 +8270,16 @@ function renderPlanSchedule(weeklyPlan, routines) {
       </div>
       <div class="schedule-grid">
         ${PLAN_WEEK_ORDER.map((day) => `
-          <label class="schedule-day${weeklyPlan[day] ? " is-training" : ""}">
-            <span class="schedule-day-name">${formatDayName(day)}</span>
+          <div class="schedule-day${weeklyPlan[day] ? " is-training" : ""}" data-day="${day}" draggable="true">
+            <div class="schedule-day-top">
+              <span class="schedule-day-name" title="${formatDayName(day)}">${formatDayName(day).slice(0, 3)}</span>
+              <button class="schedule-swap btn-ico" type="button" data-action="swap-day" data-day="${day}" aria-label="Swap ${formatDayName(day)} with another day" title="Swap day">${getUiIcon("arrow-left-right")}</button>
+            </div>
             <select class="schedule-select" data-action="assign-day" data-day="${day}" aria-label="${formatDayName(day)} routine">
               <option value=""${!weeklyPlan[day] ? " selected" : ""}>Rest day</option>
               ${routines.map((routine) => `<option value="${escapeHtml(routine.id)}"${weeklyPlan[day] === routine.id ? " selected" : ""}>${escapeHtml(routine.name)}</option>`).join("")}
             </select>
-          </label>
+          </div>
         `).join("")}
       </div>
     </section>
@@ -8446,7 +8455,10 @@ function renderPlanAiPanel(importMessageHtml, importPreviewHtml, importText) {
           <p class="card-kicker">AI coach · optional</p>
           <p class="plan-muted">Copies a ready-to-paste prompt with your goals, plan, and full workout history. Paste it into any AI chat and it acts as your coach — it'll ask about your week and talk through options, then hand back next week's plan for you to import below.</p>
         </div>
-        <button class="quiet-button small-button btn-ico" type="button" data-action="copy-packet">${getUiIcon("clipboard-list")}Copy coach prompt</button>
+        <div class="plan-head-actions">
+          <button class="quiet-button small-button btn-ico" type="button" data-action="copy-packet">${getUiIcon("clipboard-list")}Copy prompt</button>
+          <button class="quiet-button small-button btn-ico" type="button" data-action="save-packet">${getUiIcon("download")}Save as file</button>
+        </div>
       </div>
       <button class="ai-drawer-toggle btn-ico" type="button" data-action="toggle-ai" aria-expanded="${aiPanelOpen ? "true" : "false"}">
         ${getUiIcon(aiPanelOpen ? "chevron-up" : "chevron-down")}
@@ -8463,9 +8475,6 @@ function renderPlanAiPanel(importMessageHtml, importPreviewHtml, importText) {
           </div>
           ${importMessageHtml}
           ${importPreviewHtml}
-          <div class="plan-ai-foot">
-            <button class="quiet-button small-button" type="button" data-action="save-packet">Save coach prompt as a file instead</button>
-          </div>
         </div>
       ` : ""}
     </section>
@@ -8540,6 +8549,100 @@ function assignWeeklyDay(day, routineId) {
   mutatePlanData((data) => {
     data.weeklyPlan[day] = routineId || null;
   });
+}
+
+// ===== Plan: swap two days (drag-and-drop on desktop, tap-to-swap on touch) =====
+// Both paths land here. Swapping trades the two days' routines (so a rest day and
+// a training day exchange places) rather than shifting the whole week.
+function swapWeeklyDays(dayA, dayB) {
+  if (!dayA || !dayB || dayA === dayB) return;
+  mutatePlanData((data) => {
+    const a = data.weeklyPlan[dayA] || null;
+    const b = data.weeklyPlan[dayB] || null;
+    data.weeklyPlan[dayA] = b;
+    data.weeklyPlan[dayB] = a;
+  });
+}
+
+// Tap-to-swap: first tap on a day's swap handle arms it (highlight); the next tap
+// on a different day's handle performs the swap; tapping the armed day again cancels.
+// Arming toggles the highlight directly so the rest of the page isn't re-rendered.
+let pendingSwapDay = null;
+
+function handleSwapDayTap(day) {
+  if (!day) return;
+  if (pendingSwapDay === null) {
+    pendingSwapDay = day;
+    markPendingSwapDay(day);
+    return;
+  }
+  if (pendingSwapDay === day) {
+    pendingSwapDay = null;
+    markPendingSwapDay(null);
+    return;
+  }
+  const from = pendingSwapDay;
+  pendingSwapDay = null;
+  swapWeeklyDays(from, day); // re-renders, which clears the highlight
+}
+
+function markPendingSwapDay(day) {
+  planContent?.querySelectorAll(".schedule-day").forEach((el) => {
+    el.classList.toggle("is-swapping", Boolean(day) && el.dataset.day === day);
+  });
+}
+
+// HTML5 drag-and-drop (desktop / mouse). Touch screens don't fire these, so the
+// tap-to-swap handle above is the path there.
+let draggingSwapDay = null;
+
+function clearSwapDropTargets() {
+  planContent?.querySelectorAll(".schedule-day.is-drop-target")
+    .forEach((el) => el.classList.remove("is-drop-target"));
+}
+
+function handlePlanDragStart(event) {
+  const card = event.target.closest(".schedule-day");
+  if (!card || !card.dataset.day) return;
+  // Let the menu work normally — only the card itself is a drag source.
+  if (event.target.closest("select")) { event.preventDefault(); return; }
+  draggingSwapDay = card.dataset.day;
+  card.classList.add("is-dragging");
+  if (event.dataTransfer) {
+    event.dataTransfer.effectAllowed = "move";
+    try { event.dataTransfer.setData("text/plain", card.dataset.day); } catch (_) {}
+  }
+}
+
+function handlePlanDragOver(event) {
+  if (draggingSwapDay === null) return;
+  const card = event.target.closest(".schedule-day");
+  if (!card || !card.dataset.day) return;
+  event.preventDefault(); // mark this card as a valid drop target
+  if (event.dataTransfer) event.dataTransfer.dropEffect = "move";
+  if (card.dataset.day !== draggingSwapDay && !card.classList.contains("is-drop-target")) {
+    clearSwapDropTargets();
+    card.classList.add("is-drop-target");
+  }
+}
+
+function handlePlanDrop(event) {
+  if (draggingSwapDay === null) return;
+  const card = event.target.closest(".schedule-day");
+  if (!card || !card.dataset.day) return;
+  event.preventDefault();
+  const from = draggingSwapDay;
+  const to = card.dataset.day;
+  draggingSwapDay = null;
+  if (from !== to) swapWeeklyDays(from, to); // re-renders (clears drag classes)
+  else { card.classList.remove("is-dragging"); clearSwapDropTargets(); }
+}
+
+function handlePlanDragEnd() {
+  draggingSwapDay = null;
+  planContent?.querySelectorAll(".schedule-day.is-dragging")
+    .forEach((el) => el.classList.remove("is-dragging"));
+  clearSwapDropTargets();
 }
 
 async function clearWeeklyPlan() {
@@ -8722,6 +8825,7 @@ function handlePlanClick(event) {
 
   switch (action) {
     case "save-plan-notes": saveActivePlanFromScreen(); break;
+    case "swap-day": handleSwapDayTap(button.dataset.day); break;
     case "clear-weekly-plan": clearWeeklyPlan(); break;
     case "clear-routines": clearRoutines(); break;
     case "add-routine": addRoutine(); break;
@@ -11348,6 +11452,11 @@ importPlanButton?.addEventListener("click", importUpdatedPlan);
 planContent?.addEventListener("click", handlePlanClick);
 planContent?.addEventListener("change", handlePlanChange);
 planContent?.addEventListener("input", handlePlanInput);
+// Weekly-schedule drag-and-drop (desktop). Touch screens use the tap-to-swap handle.
+planContent?.addEventListener("dragstart", handlePlanDragStart);
+planContent?.addEventListener("dragover", handlePlanDragOver);
+planContent?.addEventListener("drop", handlePlanDrop);
+planContent?.addEventListener("dragend", handlePlanDragEnd);
 
 syncPill?.addEventListener("click", () => {
   handleSyncPillClick().catch((error) => {
