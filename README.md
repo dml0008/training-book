@@ -3,6 +3,17 @@
 This folder contains the live Training Book app files that get uploaded to the
 public GitHub repo named `training-book`.
 
+> **Current state (2026-06-26).** Data now lives in **Firebase** (Cloud
+> Firestore), not Dropbox — the older Dropbox notes below are historical. The
+> app is **multi-user**: each person signs in with their own Google account and
+> gets a private data space scoped to `users/{uid}`. A brand-new account starts
+> with a blank plan on top of the shared exercise-library catalog. The Firestore
+> security rules are in `firestore.rules` (any signed-in user reads/writes only
+> their own document + `backups`). `styles.css` was split into ordered
+> `styles-01..07` part files. The web API key in `app.js` is a public project
+> identifier, not a secret. Onboard a new person via the AI prompt in
+> `../../ai-fitness-coach/new-user-plan-prompt.md`.
+
 It is intentionally simple static web files so GitHub Pages can host it:
 
 - `index.html` - the visible app frame
@@ -29,4 +40,4 @@ Before Step 6 is accepted as done, the sync/update UX needs one more reliability
 
 Future routine planning should be AI-ready, not AI-connected: Training Book should store private goals, preferences, routines, weekly plans, and workout logs in Dropbox app data, generate a copyable review packet for an outside AI coach, and import updated routines back into the app.
 
-No private workout data, goals, health notes, Dropbox secrets, passwords, or hidden keys belong in this folder. GitHub Pages hosts these files publicly; Daniel's actual workout data and planning context stay in Dropbox behind Daniel's Dropbox login.
+No private workout data, goals, health notes, secrets, or passwords belong in this folder. GitHub Pages hosts these files publicly; each user's actual workout data and planning context stay in Firebase (Cloud Firestore), private to their own Google account and protected by the Firestore security rules in `firestore.rules`.
