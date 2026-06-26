@@ -2048,18 +2048,15 @@ body.in-workout .today-panel {
   border: 1px solid var(--line);
   border-radius: var(--radius-xs, 8px);
   background: rgba(9, 12, 11, 0.4);
-  padding: 4px 12px;
+  padding: 8px 12px;
 }
-.lw-hold-timer > summary {
-  cursor: pointer;
-  padding: 8px 2px;
+.lw-hold-timer-label {
+  margin: 0 0 4px;
+  padding: 2px;
   font-size: 13px;
   font-weight: 700;
-  color: var(--muted);
-  list-style: none;
+  color: var(--accent);
 }
-.lw-hold-timer > summary::-webkit-details-marker { display: none; }
-.lw-hold-timer[open] > summary { color: var(--accent); }
 .lw-hold-timer .lw-timer { padding-top: 4px; }
 
 /* Spinner shown on the Save button while a save is in flight (anti double-tap). */

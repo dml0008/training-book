@@ -4602,8 +4602,8 @@ function renderFocusedExercise() {
               <button class="lw-wbtn lw-wbtn-lg" type="button" data-action="set-seconds-step" data-set-index="${s}" data-delta="5" aria-label="Raise hold seconds"${lock}>+</button>
             </div>
           </div>
-          <details class="lw-hold-timer"${running || t.finished ? " open" : ""}>
-            <summary>Countdown timer (optional)</summary>
+          <div class="lw-hold-timer">
+            <p class="lw-hold-timer-label">Countdown timer</p>
             <div class="lw-timer${running ? " is-running" : ""}${t.finished ? " is-finished" : ""}">
               <div class="lw-timer-num${t.finished ? " flash" : ""}" id="lw-timer-num" aria-live="off">${formatTimer(t.remaining)}</div>
               <div class="lw-timer-controls">
@@ -4612,7 +4612,7 @@ function renderFocusedExercise() {
               </div>
               <p class="lw-note">${t.finished ? "Time&rsquo;s up! Tap Complete hold to log it." : "Counts down this hold&rsquo;s seconds — logging stays on the number above."}</p>
             </div>
-          </details>
+          </div>
           <label class="lw-live-note">
             <span>Hold note (optional)</span>
             <textarea rows="2" data-action="set-notes" data-set-index="${s}" placeholder="Form, how it felt, cut short...">${escapeHtml(hold.notes || "")}</textarea>
@@ -4781,8 +4781,8 @@ function renderFocusedExercise() {
         <button class="primary-button lw-next" type="button" data-action="lw-next">${nextLabel}</button>
       </div>`}
       <div class="lw-toolbar">
-        <button class="quiet-button small-button btn-ico" type="button" data-action="open-live-add">${getUiIcon("plus-circle")}Add exercise</button>
         <button class="quiet-button small-button btn-ico danger-text" type="button" data-action="skip-exercise">${getUiIcon("x")}Skip exercise</button>
+        <button class="quiet-button small-button btn-ico" type="button" data-action="open-live-add">${getUiIcon("plus-circle")}Add exercise</button>
       </div>
       ${renderEditTargetsSheet(ex)}
       ${renderReferenceSheet(ex)}
