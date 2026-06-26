@@ -2065,45 +2065,21 @@ function mergeLibraryV3Once() {
   localStorage.setItem(STORAGE.libraryV3Merged, "1");
 }
 
-// One-time, additive seeding so Daniel can try the new soccer flow without
-// hand-editing his data. It (1) adds the Soccer exercise to the library if it
-// is missing and (2) drops a 60-minute Soccer move onto Thursday's routine so
-// there is a real day to test. Guarded by a localStorage flag, so it never
-// re-imposes itself if Daniel later removes soccer or reschedules via his AI
-// coach. Never overwrites existing exercises or routines.
+// One-time, additive seed that adds the Soccer exercise to the shared library
+// catalog if it is missing. It is LIBRARY-ONLY (like seedPelotonOnce and
+// seedPickleballOnce): it never touches routines or the weekly plan, so it can
+// never pollute a brand-new account's blank plan with an auto-scheduled Soccer
+// day. Guarded by a localStorage flag so it runs once per device and never
+// re-imposes itself if someone later removes Soccer.
 function seedSoccerOnce() {
   if (localStorage.getItem(STORAGE.soccerSeeded)) return;
 
   const data = getLocalData();
   let changed = false;
 
-  // 1. Ensure the Soccer exercise exists in the library.
+  // Ensure the Soccer exercise exists in the library.
   if (Array.isArray(data.library) && !data.library.some((ex) => ex.id === "soccer")) {
     data.library = [...data.library, getSoccerStarterExercise()];
-    changed = true;
-  }
-
-  // 2. Put Soccer on Thursday for an easy first test (additive).
-  const routines = Array.isArray(data.routines) ? data.routines : [];
-  const thursdayId = data.weeklyPlan?.thursday;
-  const thursdayRoutine = routines.find((r) => r.id === thursdayId);
-  if (thursdayRoutine) {
-    const list = Array.isArray(thursdayRoutine.exercises) ? thursdayRoutine.exercises : [];
-    if (!list.some((ex) => ex.exerciseId === "soccer")) {
-      thursdayRoutine.exercises = [...list, { exerciseId: "soccer", targetDuration: 60 }];
-      changed = true;
-    }
-  } else {
-    // No routine on Thursday: make a dedicated Soccer day.
-    routines.push({
-      id: "soccer-day",
-      name: "Soccer",
-      location: "home",
-      exercises: [{ exerciseId: "soccer", targetDuration: 60 }],
-      notes: "Weekly soccer match"
-    });
-    data.routines = routines;
-    data.weeklyPlan = { ...(data.weeklyPlan || {}), thursday: "soccer-day" };
     changed = true;
   }
 
@@ -5983,72 +5959,23 @@ function getStarterActivePlan() {
   };
 }
 
+// A brand-new account starts with a BLANK plan: no routines and an empty weekly
+// schedule. Each person builds their own plan (or imports one from their AI
+// coach) on top of the shared starter exercise library. This keeps the app
+// genuinely multi-user - e.g. a second person signs in with their own Google
+// account and gets a clean slate, not someone else's starter routines. (The
+// shared catalog still comes from getStarterExercises / getStarterCategories.)
 function getStarterRoutines() {
-  return [
-    {
-      id: "gym-bench",
-      name: "Gym Bench",
-      location: "gym",
-      exercises: [
-        { exerciseId: "dumbbell-bench-press", targetSets: 3, targetReps: 8 },
-        { exerciseId: "one-arm-dumbbell-row", targetSets: 3, targetReps: 8 },
-        { exerciseId: "dumbbell-curl", targetSets: 3, targetReps: 10 }
-      ],
-      notes: "Barbell or dumbbell bench as anchor"
-    },
-    {
-      id: "home-strength",
-      name: "Home Strength",
-      location: "home",
-      exercises: [
-        { exerciseId: "dumbbell-shoulder-press", targetSets: 3, targetReps: 8 },
-        { exerciseId: "goblet-squat", targetSets: 3, targetReps: 10 },
-        { exerciseId: "dumbbell-curl", targetSets: 3, targetReps: 12 },
-        { exerciseId: "triceps-pushdown", targetSets: 2, targetReps: 12 }
-      ],
-      notes: "Dumbbell-focused at home"
-    },
-    {
-      id: "gym-back",
-      name: "Gym Back",
-      location: "gym",
-      exercises: [
-        { exerciseId: "lat-pulldown", targetSets: 3, targetReps: 8 },
-        { exerciseId: "one-arm-dumbbell-row", targetSets: 3, targetReps: 8 },
-        { exerciseId: "deadlift", targetSets: 3, targetReps: 5 }
-      ],
-      notes: "Pull-focused using rack and machines"
-    },
-    {
-      id: "peloton-cardio",
-      name: "Peloton Cardio",
-      location: "home",
-      exercises: [
-        { exerciseId: "treadmill-run", targetDuration: 30 }
-      ],
-      notes: "Bike or treadmill, duration-based"
-    },
-    {
-      id: "home-core",
-      name: "Home Core",
-      location: "home",
-      exercises: [
-        { exerciseId: "plank", targetSets: 3, targetReps: 45 },
-        { exerciseId: "push-up", targetSets: 3, targetReps: 10 },
-        { exerciseId: "bodyweight-squat", targetSets: 2, targetReps: 15 }
-      ],
-      notes: "Bodyweight core and mat work"
-    }
-  ];
+  return [];
 }
 
 function getStarterWeeklyPlan() {
   return {
-    monday: "gym-bench",
-    tuesday: "home-strength",
-    wednesday: "peloton-cardio",
-    thursday: "home-core",
-    friday: "gym-back",
+    monday: null,
+    tuesday: null,
+    wednesday: null,
+    thursday: null,
+    friday: null,
     saturday: null,
     sunday: null
   };
