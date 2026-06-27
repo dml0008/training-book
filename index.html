@@ -286,6 +286,19 @@
         <span>Progress</span>
       </button>
     </nav>
+
+    <!-- Signed-out gate. Shown only once Firebase has confirmed nobody is signed
+         in. While it's up, the app holds NO local data (the cache is dropped on
+         sign-out), so one person's plan/history/progress can never linger on the
+         device for the next person. Signing in loads that account fresh. -->
+    <div class="signin-gate" id="signin-gate" hidden>
+      <div class="signin-gate-card">
+        <span class="signin-gate-icon" data-icon="dumbbell" aria-hidden="true"></span>
+        <h2>You're signed out</h2>
+        <p>Your training book lives in your account. Sign in to load your plan, history and progress on this device.</p>
+        <button class="primary-button" id="gate-signin" type="button">Sign in with Google</button>
+      </div>
+    </div>
   </div>
 
   <script src="app.js?v=2026.06.22-ai-coach-section"></script>

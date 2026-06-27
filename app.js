@@ -3,7 +3,7 @@ const DROPBOX_TOKEN_URL = "https://api.dropboxapi.com/oauth2/token";
 const DROPBOX_UPLOAD_URL = "https://content.dropboxapi.com/2/files/upload";
 const DROPBOX_DOWNLOAD_URL = "https://content.dropboxapi.com/2/files/download";
 const DATA_FILE_PATH = "/04_Technical/06_Side_Projects/Workout and Nutrition App/data/workout-data.json";
-const APP_VERSION = "2026.06.27-reset-safe";
+const APP_VERSION = "2026.06.27-signed-out-gate";
 
 const STORAGE = {
   appKey: "trainingBookDropboxAppKey",
@@ -89,6 +89,7 @@ const syncStatus = document.querySelector("#sync-status");
 const cloudSignInButton = document.querySelector("#cloud-signin");
 const cloudSignOutButton = document.querySelector("#cloud-signout");
 const cloudSwitchButton = document.querySelector("#cloud-switch");
+const signinGate = document.querySelector("#signin-gate");
 
 let confirmModalResolve = null;
 
@@ -163,6 +164,8 @@ document.addEventListener("keydown", (event) => {
 // These hold the signed-in user and the live database connection. They are
 // filled in once Firebase loads (see initCloud at the bottom of this file).
 let cloudUser = null;     // { uid, email, name } when signed in, else null
+let firebaseLoaded = false; // true once the Firebase SDK has loaded this session
+let authChecked = false;    // true once Firebase has reported the initial auth state
 let _fbDoc = null;        // reference to this user's data document
 let _setDoc = null;       // Firebase's save function, captured after it loads
 let _cloudUnsub = null;   // function to stop listening for remote changes
@@ -239,6 +242,10 @@ function signedInLabel() {
 // Update the header pill and the sync panel to reflect signed-in / signed-out.
 function updateCloudUi() {
   const signedIn = Boolean(cloudUser);
+  // Signed-out gate: only once Firebase has actually reported "no user" (never
+  // during the brief load, and never when the SDK failed to load - offline mode
+  // still works locally there). While it's up, the device holds no account data.
+  if (signinGate) signinGate.hidden = !(firebaseLoaded && authChecked && !signedIn);
   if (cloudSignInButton) cloudSignInButton.hidden = signedIn;
   if (cloudSignOutButton) cloudSignOutButton.hidden = !signedIn;
   if (cloudSwitchButton) cloudSwitchButton.hidden = !signedIn;
@@ -11703,6 +11710,7 @@ async function initCloud() {
   }
 
   const fbApp = appMod.initializeApp(FIREBASE_CONFIG);
+  firebaseLoaded = true;
   const fbAuth = authMod.getAuth(fbApp);
   const fbDb = fsMod.getFirestore(fbApp);
   const provider = new authMod.GoogleAuthProvider();
@@ -11799,14 +11807,16 @@ async function initCloud() {
     } else {
       cloudUser = null;
       _fbDoc = null;
-      // Signed out: no cloud to reconcile against, so seed locally now.
-      reseedLibraryOnce();
-      mergeLibraryV3Once();
-      seedSoccerOnce();
-      seedPelotonOnce();
-      seedPickleballOnce();
-      restoreSportTypesOnce();
+      // Signed out: the local cache belongs to whoever just left, so drop it.
+      // No plan/history/progress should linger on the device while nobody is
+      // signed in - that lingering cache is what let one account's data bleed
+      // into another. The signed-out gate (updateCloudUi) covers the app until
+      // someone signs in, at which point reconcile() loads their account fresh.
+      // Library seeding intentionally does NOT run here anymore; it runs after
+      // sign-in (in the snapshot handler), on top of that account's own data.
+      clearDeviceLocalData();
     }
+    authChecked = true;
     updateCloudUi();
   });
 
@@ -11846,9 +11856,25 @@ async function initCloud() {
   }
 
   cloudSignInButton?.addEventListener("click", startSignIn);
+  document.querySelector("#gate-signin")?.addEventListener("click", startSignIn);
+
+  // Sign out cleanly. Because signing out drops this device's local cache (so no
+  // data lingers for the next person), push any unsynced edits up FIRST while we
+  // still can - after sign-out we can no longer write to this account's document.
+  async function signOutCurrentUser() {
+    try {
+      if (hasPendingData() && navigator.onLine) {
+        const pending = readJson(STORAGE.pendingData);
+        if (pending) { await uploadWorkoutData(pending); clearPendingData(); }
+      }
+    } catch (e) {
+      console.error("Pre-sign-out sync skipped:", e);
+    }
+    await authMod.signOut(fbAuth);
+  }
 
   cloudSignOutButton?.addEventListener("click", () => {
-    authMod.signOut(fbAuth).catch((error) => console.error("Sign-out failed:", error));
+    signOutCurrentUser().catch((error) => console.error("Sign-out failed:", error));
   });
 
   // Switch account: sign out of the current profile, then immediately open the
@@ -11857,8 +11883,8 @@ async function initCloud() {
   // onAuthStateChanged wipes that copy first (see clearDeviceLocalData), so each
   // profile loads cleanly from its own cloud document - no merging between people.
   // The previous profile's data stays safe in its own account; switching back
-  // reloads it from the cloud. Unsynced offline edits would be dropped on switch,
-  // so confirm first.
+  // reloads it from the cloud. signOutCurrentUser() flushes any unsynced edits
+  // up first. Confirm anyway, since it changes whose data is on screen.
   cloudSwitchButton?.addEventListener("click", async () => {
     const current = cloudUser ? (cloudUser.name || cloudUser.email || "this account") : "this account";
     const ok = await showConfirmModal({
@@ -11869,7 +11895,7 @@ async function initCloud() {
     });
     if (!ok) return;
     try {
-      await authMod.signOut(fbAuth);
+      await signOutCurrentUser();
     } catch (error) {
       console.error("Sign-out before switch failed:", error);
     }

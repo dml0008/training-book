@@ -1,3 +1,45 @@
+/* Signed-out gate: a full-screen cover shown when nobody is signed in. Opaque so
+   no previous account's data shows behind it, and above the nav + sync panel. */
+.signin-gate {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: var(--bg);
+}
+
+.signin-gate[hidden] { display: none; }
+
+.signin-gate-card {
+  width: 100%;
+  max-width: 360px;
+  display: grid;
+  gap: 14px;
+  justify-items: center;
+  text-align: center;
+  padding: 30px 24px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--panel);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.35);
+}
+
+.signin-gate-icon {
+  display: inline-flex;
+  color: var(--accent);
+}
+
+.signin-gate-icon svg { width: 34px; height: 34px; }
+
+.signin-gate h2 { margin: 0; font-size: 20px; }
+
+.signin-gate p { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.5; }
+
+.signin-gate .primary-button { width: 100%; min-height: 46px; margin-top: 4px; }
+
 /* Every screen's main container shares one look: border, surface, shadow,
    padding and minimum height all come from the tokens above. Edit the tokens
    to change all pages at once. (hero-panel / blank-panel set their own size
