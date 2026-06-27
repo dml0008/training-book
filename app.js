@@ -3,7 +3,7 @@ const DROPBOX_TOKEN_URL = "https://api.dropboxapi.com/oauth2/token";
 const DROPBOX_UPLOAD_URL = "https://content.dropboxapi.com/2/files/upload";
 const DROPBOX_DOWNLOAD_URL = "https://content.dropboxapi.com/2/files/download";
 const DATA_FILE_PATH = "/04_Technical/06_Side_Projects/Workout and Nutrition App/data/workout-data.json";
-const APP_VERSION = "2026.06.27-signed-out-gate";
+const APP_VERSION = "2026.06.27-history-order-fix";
 
 const STORAGE = {
   appKey: "trainingBookDropboxAppKey",
@@ -6153,8 +6153,25 @@ function unionBy(preferred, other, keyFn) {
   return out;
 }
 
+// completedWorkouts (the dates the calendar / streak / weekly ring count as
+// "worked out") is DERIVED data: it should be exactly the distinct dates that
+// have a saved workout. Saving adds both together, but deleting or re-dating a
+// workout used to leave a stale date behind - so a day showed as "done" with
+// nothing in History (and the reverse: a re-dated workout's new day wasn't
+// counted). Recompute it from the real workouts so it can never drift. Returns
+// true if it changed anything (so callers can decide whether to persist/sync).
+function reconcileCompletedWorkouts(data) {
+  if (!data || !Array.isArray(data.workouts)) return false;
+  const dates = Array.from(new Set(data.workouts.map((w) => w?.date).filter(Boolean))).sort();
+  const prev = (Array.isArray(data.completedWorkouts) ? data.completedWorkouts : []).slice().sort();
+  const changed = prev.length !== dates.length || prev.some((d, i) => d !== dates[i]);
+  data.completedWorkouts = dates;
+  return changed;
+}
+
 // Merge two copies of the whole data blob without ever dropping history.
-// Lists (workouts, completed dates, missed, body weights) are unioned; plan and
+// Lists (workouts, missed, body weights) are unioned; completed dates are then
+// re-derived from the merged workouts (see reconcileCompletedWorkouts); plan and
 // library follow whichever copy is newer, except a freshly-seeded starter plan
 // never overrides a customised one. The result carries the latest timestamp.
 function mergeWorkoutData(local, remote) {
@@ -6183,10 +6200,9 @@ function mergeWorkoutData(local, remote) {
   // History lists are always unioned so two devices can never delete each
   // other's sessions. Prefer the newer copy's version of a duplicate key.
   merged.workouts = unionBy(newer.workouts, older.workouts, (w) => w?.id || JSON.stringify(w));
-  merged.completedWorkouts = Array.from(new Set([
-    ...(newer.completedWorkouts || []),
-    ...(older.completedWorkouts || [])
-  ]));
+  // Completed dates are derived from the (unioned) workouts, never unioned on
+  // their own - that's what kept stale "done" days alive after a delete/re-date.
+  reconcileCompletedWorkouts(merged);
   merged.missedWorkouts = unionBy(
     newer.missedWorkouts, older.missedWorkouts,
     (m) => (typeof m === "string" ? m : (m?.id || m?.date || JSON.stringify(m)))
@@ -9850,6 +9866,9 @@ function saveWeightTarget(target) {
 
 // Save through the same local + cloud path the rest of the app uses.
 function commitProgressData(data) {
+  // Keep the derived completed-days list in step with the actual workouts, so
+  // deleting or re-dating a workout can't leave a phantom "done" day behind.
+  reconcileCompletedWorkouts(data);
   data.updatedAt = new Date().toISOString();
   data.updatedBy = getDeviceId();
   saveLocalData(data);
@@ -10043,7 +10062,14 @@ function renderHistory() {
   if (!historyContent) return;
 
   const data = getLocalData();
-  const workouts = Array.isArray(data.workouts) ? data.workouts.slice().reverse() : [];
+  // Order by the logged DATE (newest first), not insertion order - after cloud
+  // merges the stored array order isn't chronological. "YYYY-MM-DD" sorts as a
+  // plain string. Same-day workouts fall back to most-recently-saved first.
+  const workouts = (Array.isArray(data.workouts) ? data.workouts.slice() : []).sort((a, b) => {
+    const ad = String(a?.date || ""), bd = String(b?.date || "");
+    if (ad !== bd) return bd.localeCompare(ad);
+    return String(b?.savedAt || b?.startedAt || b?.id || "").localeCompare(String(a?.savedAt || a?.startedAt || a?.id || ""));
+  });
 
   if (workouts.length === 0) {
     historyContent.innerHTML = `<p class="empty-state">Past workouts will show here as you log.</p>`;
