@@ -388,6 +388,18 @@ p {
   color: var(--muted);
 }
 
+/* Destructive settings row (e.g. Clear workout history): red icon + title, with
+   a red-tinted border/hover so it reads clearly as a careful action. */
+.settings-row-danger .settings-row-icon,
+.settings-row-danger .settings-row-title {
+  color: var(--danger);
+}
+
+.settings-row-danger:hover {
+  border-color: var(--danger);
+  background: rgba(196, 57, 57, 0.08);
+}
+
 .settings-row-chev {
   display: inline-flex;
   color: var(--dim);

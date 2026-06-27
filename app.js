@@ -3,7 +3,7 @@ const DROPBOX_TOKEN_URL = "https://api.dropboxapi.com/oauth2/token";
 const DROPBOX_UPLOAD_URL = "https://content.dropboxapi.com/2/files/upload";
 const DROPBOX_DOWNLOAD_URL = "https://content.dropboxapi.com/2/files/download";
 const DATA_FILE_PATH = "/04_Technical/06_Side_Projects/Workout and Nutrition App/data/workout-data.json";
-const APP_VERSION = "2026.06.27-profile-switch";
+const APP_VERSION = "2026.06.27-account-reset";
 
 const STORAGE = {
   appKey: "trainingBookDropboxAppKey",
@@ -6262,6 +6262,44 @@ function applyRecoveredData(data, { pushToCloud = false } = {}) {
   }
 }
 
+// Delete every cloud version-history snapshot for the signed-in account. Used by
+// the "Clear workout history" reset so old (e.g. contaminating) snapshots can't
+// be restored back onto the account afterwards. Best-effort and per-uid only.
+async function deleteAllCloudBackups() {
+  if (!_fb || !cloudUser) return;
+  try {
+    const col = _fb.collection(_fb.db, "users", cloudUser.uid, "backups");
+    const snap = await _fb.getDocs(col);
+    await Promise.all(snap.docs.map((d) => _fb.deleteDoc(d.ref).catch(() => {})));
+  } catch (e) {
+    console.error("Clearing cloud version history skipped:", e);
+  }
+}
+
+// Wipe all logged history from THIS account while keeping the plan, routines and
+// library. Unlike a normal edit this is an authoritative overwrite: it clears the
+// on-device undo snapshots and the cloud version history too, and pushes the
+// emptied copy straight to the cloud doc (setDoc replaces, it is not the
+// union-merge), so the cleared history cannot creep back from a backup. Use it to
+// start a fresh account or to scrub data that was synced in by mistake. NOTE: run
+// it on the device that currently holds the data; another device still signed in
+// with the old copy could merge history back, so switch other devices away first.
+async function resetAccountHistory() {
+  const data = getLocalData();
+  data.workouts = [];
+  data.completedWorkouts = [];
+  data.missedWorkouts = [];
+  data.bodyWeights = [];
+  data.updatedAt = new Date().toISOString();
+  data.updatedBy = getDeviceId();
+  // Drop on-device undo snapshots - they still hold the old history.
+  localStorage.removeItem(STORAGE.localSnapshots);
+  // Save + re-render every screen from the cleaned copy, and push it up.
+  applyRecoveredData(data, { pushToCloud: true });
+  // Clear the cloud version history so the old snapshots can't be restored back.
+  await deleteAllCloudBackups();
+}
+
 // ---- Download / restore a backup file (works on every browser) ----
 function downloadBackup() {
   const data = getLocalData();
@@ -6510,6 +6548,15 @@ function renderSettingsModal() {
             <span class="settings-row-chev" data-icon="${settingsBackupsView ? "chevron-up" : "chevron-down"}" aria-hidden="true"></span>
           </button>
           ${settingsBackupsView ? renderBackupsView() : ""}
+
+          <button class="settings-row settings-row-danger" type="button" data-action="reset-history">
+            <span class="settings-row-icon" data-icon="trash-2" aria-hidden="true"></span>
+            <span class="settings-row-text">
+              <span class="settings-row-title">Clear workout history</span>
+              <span class="settings-row-sub">Start this account fresh — keeps your plan &amp; library</span>
+            </span>
+          </button>
+
           <p class="settings-foot-note" id="settings-data-status" role="status"></p>
         </div>
       </section>
@@ -6589,6 +6636,18 @@ async function handleSettingsDataAction(event) {
       restoreSnapshotData(data);
       const n = Array.isArray(data.workouts) ? data.workouts.length : 0;
       setSettingsDataStatus(`Restored: ${n} workout${n === 1 ? "" : "s"} are back.`, "good");
+    } else if (action === "reset-history") {
+      const who = cloudUser ? (cloudUser.name || cloudUser.email) : "this device";
+      const ok = await showConfirmModal({
+        title: "Clear all workout history?",
+        message: `This permanently removes every logged workout, completed day and body-weight entry from ${who}, and clears this account's cloud version history. Your plan, routines and exercise library are kept. Switch any other devices away from this account first so the history can't sync back.`,
+        confirmLabel: "Clear history",
+        danger: true
+      });
+      if (!ok) return;
+      setSettingsDataStatus("Clearing history…");
+      await resetAccountHistory();
+      setSettingsDataStatus("History cleared. Your plan and library were kept.", "good");
     }
   } catch (error) {
     setSettingsDataStatus(error.message || "Something went wrong.", "bad");
