@@ -3,7 +3,7 @@ const DROPBOX_TOKEN_URL = "https://api.dropboxapi.com/oauth2/token";
 const DROPBOX_UPLOAD_URL = "https://content.dropboxapi.com/2/files/upload";
 const DROPBOX_DOWNLOAD_URL = "https://content.dropboxapi.com/2/files/download";
 const DATA_FILE_PATH = "/04_Technical/06_Side_Projects/Workout and Nutrition App/data/workout-data.json";
-const APP_VERSION = "2026.06.26-icon-fix";
+const APP_VERSION = "2026.06.27-profile-switch";
 
 const STORAGE = {
   appKey: "trainingBookDropboxAppKey",
@@ -15,6 +15,11 @@ const STORAGE = {
   localData: "trainingBookWorkoutData",
   pendingData: "trainingBookPendingWorkoutData",
   localSnapshots: "trainingBookLocalSnapshots",
+  // The uid of the account whose data currently sits in localData. Used to
+  // detect a profile switch (a DIFFERENT person signing in on this device) so
+  // one account's working copy can never bleed into - or, via merge, overwrite
+  // - another account's data. See clearDeviceLocalData / onAuthStateChanged.
+  localDataOwner: "trainingBookLocalDataOwner",
   activeWorkoutDraft: "trainingBookActiveWorkoutDraft",
   workoutFlowMode: "trainingBookWorkoutFlowMode",
   deviceId: "trainingBookDeviceId",
@@ -83,6 +88,7 @@ const appKeyInput = document.querySelector("#app-key");
 const syncStatus = document.querySelector("#sync-status");
 const cloudSignInButton = document.querySelector("#cloud-signin");
 const cloudSignOutButton = document.querySelector("#cloud-signout");
+const cloudSwitchButton = document.querySelector("#cloud-switch");
 
 let confirmModalResolve = null;
 
@@ -156,7 +162,7 @@ document.addEventListener("keydown", (event) => {
 // ===== Firebase cloud sync state (replaces the old Dropbox sync) =====
 // These hold the signed-in user and the live database connection. They are
 // filled in once Firebase loads (see initCloud at the bottom of this file).
-let cloudUser = null;     // { uid, email } when signed in, else null
+let cloudUser = null;     // { uid, email, name } when signed in, else null
 let _fbDoc = null;        // reference to this user's data document
 let _setDoc = null;       // Firebase's save function, captured after it loads
 let _cloudUnsub = null;   // function to stop listening for remote changes
@@ -218,16 +224,35 @@ async function fetchCloudBackup(id) {
   return d.exists() ? d.data().data : null;
 }
 
+// The short label shown in the header pill while signed in: the account's first
+// name (from the Google display name) or, failing that, the part of the email
+// before the @. This is what tells Daniel at a glance WHICH profile is active -
+// important now the app is multi-user and he switches between his and his wife's.
+function signedInLabel() {
+  if (!cloudUser) return "";
+  const name = (cloudUser.name || "").trim();
+  if (name) return name.split(/\s+/)[0];
+  const email = (cloudUser.email || "").trim();
+  return email ? email.split("@")[0] : "Account";
+}
+
 // Update the header pill and the sync panel to reflect signed-in / signed-out.
 function updateCloudUi() {
   const signedIn = Boolean(cloudUser);
   if (cloudSignInButton) cloudSignInButton.hidden = signedIn;
   if (cloudSignOutButton) cloudSignOutButton.hidden = !signedIn;
-  if (syncPillLabel) syncPillLabel.textContent = signedIn ? "Synced" : "Sign in";
-  if (syncPill) syncPill.className = signedIn ? "sync-pill good" : "sync-pill";
+  if (cloudSwitchButton) cloudSwitchButton.hidden = !signedIn;
+  // Pill shows the signed-in person's name (not just "Synced") so it's always
+  // clear whose data is loaded; the green dot/state still signals it's syncing.
+  if (syncPillLabel) syncPillLabel.textContent = signedIn ? signedInLabel() : "Sign in";
+  if (syncPill) {
+    syncPill.className = signedIn ? "sync-pill good" : "sync-pill";
+    syncPill.title = signedIn ? `Signed in as ${cloudUser.email}` : "Open sync panel";
+  }
   if (syncStatus) {
+    const who = cloudUser ? (cloudUser.name ? `${cloudUser.name} (${cloudUser.email})` : cloudUser.email) : "";
     syncStatus.textContent = signedIn
-      ? `Signed in as ${cloudUser.email}. Your workouts sync automatically across your devices.`
+      ? `Signed in as ${who}. Your workouts sync automatically across your devices. Use "Switch account" to load a different person's plan on this device.`
       : "Sign in with Google to sync your workouts across your phone and desktop.";
     syncStatus.className = signedIn ? "sync-status good" : "sync-status";
   }
@@ -6058,6 +6083,21 @@ function hasPendingData() {
   return Boolean(localStorage.getItem(STORAGE.pendingData));
 }
 
+// Multi-user safety: the working copy in localStorage belongs to exactly ONE
+// account at a time. When a different person signs in on this device, wipe that
+// working set so the new account starts clean from its own cloud document and
+// the previous account's data can never bleed in (or, worse, be merged back and
+// pushed onto the wrong cloud doc). The previous account's real data is
+// untouched - it lives safely in its own users/{uid} document and version
+// history. Local snapshots and any in-progress workout draft belong to the
+// previous owner too, so they're cleared as well.
+function clearDeviceLocalData() {
+  localStorage.removeItem(STORAGE.localData);
+  localStorage.removeItem(STORAGE.localSnapshots);
+  localStorage.removeItem(STORAGE.pendingData);
+  localStorage.removeItem(STORAGE.activeWorkoutDraft);
+}
+
 // ===== Data safety: merge, snapshots, and backups =====
 // Background: cloud sync used to be naive last-write-wins by `updatedAt`. A
 // device that woke up with empty/seeded defaults carried a brand-new timestamp,
@@ -11589,6 +11629,10 @@ async function initCloud() {
   const fbAuth = authMod.getAuth(fbApp);
   const fbDb = fsMod.getFirestore(fbApp);
   const provider = new authMod.GoogleAuthProvider();
+  // Always show Google's account chooser instead of silently re-using the last
+  // account. Without this, "Switch account" could just sign the same person back
+  // in. With it, Daniel can pick which profile (his or his wife's) to load.
+  provider.setCustomParameters({ prompt: "select_account" });
   _setDoc = fsMod.setDoc;
   // Capture the Firestore helpers the version-history backup layer needs.
   _fb = {
@@ -11644,7 +11688,22 @@ async function initCloud() {
     if (_cloudUnsub) { _cloudUnsub(); _cloudUnsub = null; }
 
     if (user) {
-      cloudUser = { uid: user.uid, email: user.email };
+      // Profile-switch guard. The working copy in localStorage belongs to one
+      // account at a time. If the person signing in is DIFFERENT from the one
+      // who owns the device's current local copy, wipe that copy first so it
+      // cannot bleed into - or, via reconcile()'s merge, overwrite and then get
+      // pushed onto - the new account's cloud document. With local cleared,
+      // reconcile() takes the first-run path and loads the new account's own
+      // cloud data cleanly. The previous account's data stays safe in its own
+      // users/{uid} document and version history. Same person re-signing in
+      // (uid unchanged) keeps their local copy, including any unsynced edits.
+      const prevOwner = localStorage.getItem(STORAGE.localDataOwner);
+      if (prevOwner && prevOwner !== user.uid) {
+        clearDeviceLocalData();
+      }
+      localStorage.setItem(STORAGE.localDataOwner, user.uid);
+
+      cloudUser = { uid: user.uid, email: user.email, name: user.displayName || "" };
       _fbDoc = fsMod.doc(fbDb, "users", user.uid);
       // Listen for changes so the other device updates automatically.
       _cloudUnsub = fsMod.onSnapshot(_fbDoc, (snap) => {
@@ -11691,10 +11750,11 @@ async function initCloud() {
     }
   }
 
-  cloudSignInButton?.addEventListener("click", () => {
-    // Popup sign-in is the most reliable on desktop and avoids the redirect
-    // session being dropped. If a popup is blocked (some phone setups), fall
-    // back to the redirect style instead.
+  // Popup sign-in is the most reliable on desktop and avoids the redirect
+  // session being dropped. If a popup is blocked (some phone setups), fall back
+  // to the redirect style instead. Shared by both the Sign in and Switch account
+  // buttons so the account-chooser behaviour is identical.
+  function startSignIn() {
     authMod.signInWithPopup(fbAuth, provider).catch((error) => {
       const code = error?.code || "";
       if (code === "auth/popup-closed-by-user" || code === "auth/cancelled-popup-request") {
@@ -11706,10 +11766,37 @@ async function initCloud() {
       }
       showSignInError(error);
     });
-  });
+  }
+
+  cloudSignInButton?.addEventListener("click", startSignIn);
 
   cloudSignOutButton?.addEventListener("click", () => {
     authMod.signOut(fbAuth).catch((error) => console.error("Sign-out failed:", error));
+  });
+
+  // Switch account: sign out of the current profile, then immediately open the
+  // Google account chooser to sign in as someone else (e.g. Daniel -> his wife).
+  // When the new account differs from the one that owns this device's local copy,
+  // onAuthStateChanged wipes that copy first (see clearDeviceLocalData), so each
+  // profile loads cleanly from its own cloud document - no merging between people.
+  // The previous profile's data stays safe in its own account; switching back
+  // reloads it from the cloud. Unsynced offline edits would be dropped on switch,
+  // so confirm first.
+  cloudSwitchButton?.addEventListener("click", async () => {
+    const current = cloudUser ? (cloudUser.name || cloudUser.email || "this account") : "this account";
+    const ok = await showConfirmModal({
+      title: "Switch account?",
+      message: `This signs out of ${current} and loads a different person's plan on this device. ${current}'s data stays safe in their own account and reloads when you switch back.`,
+      confirmLabel: "Switch account",
+      danger: false
+    });
+    if (!ok) return;
+    try {
+      await authMod.signOut(fbAuth);
+    } catch (error) {
+      console.error("Sign-out before switch failed:", error);
+    }
+    startSignIn();
   });
 
   updateCloudUi();

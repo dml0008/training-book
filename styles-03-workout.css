@@ -1642,6 +1642,27 @@ body.in-workout .today-panel {
   overflow-y: auto;
 }
 
+/* Settings sheet can get tall (Data & backups version history lists up to ~30
+   local + 30 cloud rows). Cap the sheet height, keep the header (with its close
+   button) pinned, and scroll only the list, so the newest versions at the top
+   of the list stay reachable instead of overflowing off the top of the screen. */
+.settings-sheet {
+  display: flex;
+  flex-direction: column;
+  max-height: 86vh;
+}
+
+.settings-sheet .lw-sheet-head {
+  flex: none;
+}
+
+.settings-sheet .settings-list {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  /* a touch of inset so a scrollbar/last row isn't flush to the sheet edge */
+  padding-bottom: 4px;
+}
+
 .lw-ref-meta {
   display: flex;
   flex-wrap: wrap;
