@@ -3,7 +3,7 @@ const DROPBOX_TOKEN_URL = "https://api.dropboxapi.com/oauth2/token";
 const DROPBOX_UPLOAD_URL = "https://content.dropboxapi.com/2/files/upload";
 const DROPBOX_DOWNLOAD_URL = "https://content.dropboxapi.com/2/files/download";
 const DATA_FILE_PATH = "/04_Technical/06_Side_Projects/Workout and Nutrition App/data/workout-data.json";
-const APP_VERSION = "2026.06.27-history-order-fix";
+const APP_VERSION = "2026.06.28-coach-review-button";
 
 const STORAGE = {
   appKey: "trainingBookDropboxAppKey",
@@ -170,6 +170,17 @@ let _fbDoc = null;        // reference to this user's data document
 let _setDoc = null;       // Firebase's save function, captured after it loads
 let _cloudUnsub = null;   // function to stop listening for remote changes
 let _fb = null;           // captured Firestore module helpers (see initCloud)
+let _coachReviewCallable = null; // callable cloud helper; reads only this signed-in user's Firestore doc
+
+const coachReviewState = {
+  status: "idle",
+  action: "",
+  checkin: "",
+  importBlock: "",
+  message: "",
+  generatedAt: ""
+};
+let queuedPlanImportText = "";
 
 // How many rolling version-history copies to keep in the cloud. Each is a small
 // JSON snapshot; 30 is plenty to undo an accident and stays free-tier friendly.
@@ -262,6 +273,14 @@ function updateCloudUi() {
       ? `Signed in as ${who}. Your workouts sync automatically across your devices. Use "Switch account" to load a different person's plan on this device.`
       : "Sign in with Google to sync your workouts across your phone and desktop.";
     syncStatus.className = signedIn ? "sync-status good" : "sync-status";
+  }
+  refreshCoachCardIfVisible();
+}
+
+function refreshCoachCardIfVisible() {
+  const active = document.querySelector(".screen.is-active");
+  if (active?.dataset.screen === "progress" && typeof renderProgress === "function") {
+    renderProgress(false);
   }
 }
 
@@ -8285,7 +8304,8 @@ function renderPlan() {
   const activePlan = { ...getStarterActivePlan(), ...(data.activePlan || {}) };
   const routines = Array.isArray(data.routines) ? data.routines : [];
   const weeklyPlan = data.weeklyPlan || getStarterWeeklyPlan();
-  const importText = planContent.querySelector("#plan-import-text")?.value || "";
+  const importText = queuedPlanImportText || planContent.querySelector("#plan-import-text")?.value || "";
+  queuedPlanImportText = "";
   const importMessageHtml = planImportMessage
     ? `<p class="plan-import-message">${escapeHtml(planImportMessage)}</p>`
     : "";
@@ -9776,6 +9796,105 @@ function renderEffortCard() {
     </section>`;
 }
 
+function formatCoachReviewTime(iso) {
+  if (!iso) return "";
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+}
+
+function getCoachButtonState() {
+  if (!navigator.onLine) return { disabled: true, label: "Offline", message: "Connect to the internet to ask the coach." };
+  if (!firebaseLoaded || !authChecked) return { disabled: true, label: "Loading", message: "Loading your account." };
+  if (!cloudUser) return { disabled: true, label: "Sign in", message: "Sign in with Google so the coach can read only your own Training Book data." };
+  if (!_coachReviewCallable) return { disabled: true, label: "Not ready", message: "The coach helper has not loaded yet." };
+  return { disabled: false, label: "Coach review", message: "" };
+}
+
+function renderCoachReviewCard() {
+  const button = getCoachButtonState();
+  const busy = coachReviewState.status === "loading";
+  const isPlanBusy = busy && coachReviewState.action === "plan";
+  const isReviewBusy = busy && coachReviewState.action === "checkin";
+  const message = coachReviewState.message || button.message || "Uses your synced workouts to give a current check-in. Plan drafts still preview before saving.";
+  const generated = formatCoachReviewTime(coachReviewState.generatedAt);
+  const output = coachReviewState.checkin
+    ? `<div class="coach-output">${escapeHtml(coachReviewState.checkin)}</div>`
+    : `<p class="prog-empty">Tap Coach review after a few logged workouts to get a data-based check-in.</p>`;
+  const planButton = coachReviewState.checkin
+    ? `<button class="quiet-button small-button btn-ico" type="button" data-coach-plan ${busy ? "disabled" : ""}>${getUiIcon("clipboard-list")}Turn this into a plan</button>`
+    : "";
+  return `
+    <section class="prog-card coach-card">
+      <div class="prog-card-head coach-head">
+        <div>
+          <p class="card-kicker">Coach review</p>
+          <span class="prog-sub">${generated ? `Last run ${escapeHtml(generated)}` : "Firestore-powered check-in"}</span>
+        </div>
+        <div class="coach-actions">
+          <button class="primary-button small-button btn-ico" type="button" data-coach-review ${button.disabled || busy ? "disabled" : ""}>${getUiIcon("sparkles")}${isReviewBusy ? "Reviewing..." : button.label}</button>
+          ${planButton}
+        </div>
+      </div>
+      <p class="coach-status ${coachReviewState.status === "error" ? "bad" : ""}" aria-live="polite">${escapeHtml(isPlanBusy ? "Drafting an import block..." : message)}</p>
+      ${output}
+    </section>`;
+}
+
+async function requestCoachReview(mode = "checkin") {
+  if (!_coachReviewCallable) {
+    coachReviewState.status = "error";
+    coachReviewState.message = "The coach helper is not ready yet. Refresh the app and try again.";
+    renderProgress(false);
+    return;
+  }
+
+  coachReviewState.status = "loading";
+  coachReviewState.action = mode;
+  coachReviewState.message = mode === "plan" ? "Drafting a plan import block..." : "Reading your recent workouts...";
+  renderProgress(false);
+
+  try {
+    const result = await _coachReviewCallable({
+      mode,
+      checkin: mode === "plan" ? coachReviewState.checkin : ""
+    });
+    const payload = result?.data || {};
+    coachReviewState.status = "ready";
+    coachReviewState.action = "";
+    coachReviewState.generatedAt = payload.generatedAt || new Date().toISOString();
+
+    if (mode === "plan") {
+      if (!payload.importBlock) throw new Error("The coach did not return a plan block.");
+      coachReviewState.importBlock = payload.importBlock;
+      coachReviewState.message = "Plan draft loaded into the importer. Preview it before saving.";
+      queuedPlanImportText = payload.importBlock;
+      planImportPreview = null;
+      planImportSummary = "";
+      planImportMessage = "Coach plan draft loaded. Preview changes before saving.";
+      showScreen("plan", true);
+      previewPlanImportFromScreen();
+      return;
+    }
+
+    if (!payload.checkin) throw new Error("The coach did not return a check-in.");
+    coachReviewState.checkin = payload.checkin;
+    coachReviewState.message = "Coach review ready.";
+  } catch (error) {
+    coachReviewState.status = "error";
+    coachReviewState.action = "";
+    coachReviewState.message = error?.message || "The coach helper could not finish. Try again in a minute.";
+  }
+
+  renderProgress(false);
+}
+
+function wireCoachReviewCard() {
+  if (!progressContent) return;
+  progressContent.querySelector("[data-coach-review]")?.addEventListener("click", () => requestCoachReview("checkin"));
+  progressContent.querySelector("[data-coach-plan]")?.addEventListener("click", () => requestCoachReview("plan"));
+}
+
 function renderProgress(resetMonth = true) {
   if (!progressContent) return;
 
@@ -9793,6 +9912,7 @@ function renderProgress(resetMonth = true) {
   const streak = computeWeekStreak(target, completedSet);
 
   progressContent.innerHTML = `
+    ${renderCoachReviewCard()}
     ${renderProgressHero(data, doneThisWeek, target, streak, completedSet)}
     ${renderBodyWeightCard(data)}
     ${renderStrengthProgressCard()}
@@ -9822,6 +9942,7 @@ function renderProgress(resetMonth = true) {
     });
   }
 
+  wireCoachReviewCard();
   wireBodyWeightCard();
 }
 
@@ -11713,12 +11834,13 @@ const FIREBASE_CONFIG = {
 };
 
 async function initCloud() {
-  let appMod, authMod, fsMod;
+  let appMod, authMod, fsMod, fnMod;
   try {
-    [appMod, authMod, fsMod] = await Promise.all([
+    [appMod, authMod, fsMod, fnMod] = await Promise.all([
       import("https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js"),
       import("https://www.gstatic.com/firebasejs/12.14.0/firebase-auth.js"),
-      import("https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js")
+      import("https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js"),
+      import("https://www.gstatic.com/firebasejs/12.14.0/firebase-functions.js")
     ]);
   } catch (error) {
     // Offline or the Firebase code could not load: the app still works
@@ -11739,12 +11861,14 @@ async function initCloud() {
   firebaseLoaded = true;
   const fbAuth = authMod.getAuth(fbApp);
   const fbDb = fsMod.getFirestore(fbApp);
+  const fbFunctions = fnMod.getFunctions(fbApp, "us-central1");
   const provider = new authMod.GoogleAuthProvider();
   // Always show Google's account chooser instead of silently re-using the last
   // account. Without this, "Switch account" could just sign the same person back
   // in. With it, Daniel can pick which profile (his or his wife's) to load.
   provider.setCustomParameters({ prompt: "select_account" });
   _setDoc = fsMod.setDoc;
+  _coachReviewCallable = fnMod.httpsCallable(fbFunctions, "coachReview");
   // Capture the Firestore helpers the version-history backup layer needs.
   _fb = {
     db: fbDb,
