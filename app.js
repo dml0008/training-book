@@ -3,7 +3,7 @@ const DROPBOX_TOKEN_URL = "https://api.dropboxapi.com/oauth2/token";
 const DROPBOX_UPLOAD_URL = "https://content.dropboxapi.com/2/files/upload";
 const DROPBOX_DOWNLOAD_URL = "https://content.dropboxapi.com/2/files/download";
 const DATA_FILE_PATH = "/04_Technical/06_Side_Projects/Workout and Nutrition App/data/workout-data.json";
-const APP_VERSION = "1.0.1";
+const APP_VERSION = "1.0.2";
 
 const STORAGE = {
   appKey: "trainingBookDropboxAppKey",
@@ -47,6 +47,7 @@ const todayProgressLabel = document.querySelector("#today-progress-label");
 const saveTodayWorkoutButton = document.querySelector("#save-today-workout");
 const todayStartRow = document.querySelector("#today-start-row");
 const startTodayButton = document.querySelector("#start-today-workout");
+const startCustomButton = document.querySelector("#start-custom-workout");
 const todayBackButton = document.querySelector("#today-back-button");
 const todayPreviewSub = document.querySelector("#today-preview-sub");
 const todayDaySwitch = document.querySelector("#today-day-switch");
@@ -2377,6 +2378,10 @@ const activeWorkout = {
   started: false,
   routineId: null,
   routineName: "",
+  isCustom: false,
+  substitutionNote: "",
+  replacedRoutineId: null,
+  replacedRoutineName: "",
   flowMode: localStorage.getItem(STORAGE.workoutFlowMode) || "straight",
   roundNumber: 0,
   addExerciseOpen: false,
@@ -3948,6 +3953,10 @@ function persistActiveWorkoutDraft() {
     startedAt: activeWorkout.startedAt,
     routineId: activeWorkout.routineId,
     routineName: activeWorkout.routineName,
+    isCustom: activeWorkout.isCustom,
+    substitutionNote: activeWorkout.substitutionNote,
+    replacedRoutineId: activeWorkout.replacedRoutineId,
+    replacedRoutineName: activeWorkout.replacedRoutineName,
     exercises: activeWorkout.exercises,
     currentIndex: activeWorkout.currentIndex,
     currentSet: activeWorkout.currentSet,
@@ -3993,6 +4002,10 @@ async function offerResumeWorkoutDraft() {
   activeWorkout.startedAt = draft.startedAt || new Date().toISOString();
   activeWorkout.routineId = draft.routineId || null;
   activeWorkout.routineName = draft.routineName || "";
+  activeWorkout.isCustom = Boolean(draft.isCustom);
+  activeWorkout.substitutionNote = draft.substitutionNote || "";
+  activeWorkout.replacedRoutineId = draft.replacedRoutineId || null;
+  activeWorkout.replacedRoutineName = draft.replacedRoutineName || "";
   activeWorkout.exercises = draft.exercises;
   activeWorkout.currentIndex = Number(draft.currentIndex) || 0;
   activeWorkout.currentSet = Number(draft.currentSet) || 0;
@@ -4009,6 +4022,10 @@ function resetLiveWorkoutState() {
   activeWorkout.exercises = [];
   activeWorkout.routineId = null;
   activeWorkout.routineName = "";
+  activeWorkout.isCustom = false;
+  activeWorkout.substitutionNote = "";
+  activeWorkout.replacedRoutineId = null;
+  activeWorkout.replacedRoutineName = "";
   activeWorkout.currentIndex = 0;
   activeWorkout.currentSet = 0;
   activeWorkout.roundNumber = 0;
@@ -4067,6 +4084,10 @@ function startTodayWorkout(flowMode = activeWorkout.flowMode || "straight") {
   activeWorkout.startedAt = new Date().toISOString();
   activeWorkout.routineId = routine.id;
   activeWorkout.routineName = routine.name;
+  activeWorkout.isCustom = false;
+  activeWorkout.substitutionNote = "";
+  activeWorkout.replacedRoutineId = null;
+  activeWorkout.replacedRoutineName = "";
   activeWorkout.flowMode = flowMode === "round" ? "round" : "straight";
   localStorage.setItem(STORAGE.workoutFlowMode, activeWorkout.flowMode);
   activeWorkout.currentIndex = 0;
@@ -4082,11 +4103,16 @@ function startTodayWorkout(flowMode = activeWorkout.flowMode || "straight") {
   renderTodayRoutine();
 }
 
-function startEmptyWorkout() {
+function startCustomWorkout() {
+  const replacedRoutine = getTodayPlannedRoutine();
   activeWorkout.started = true;
   activeWorkout.startedAt = new Date().toISOString();
   activeWorkout.routineId = null;
-  activeWorkout.routineName = "Workout";
+  activeWorkout.routineName = "Custom workout";
+  activeWorkout.isCustom = true;
+  activeWorkout.substitutionNote = "";
+  activeWorkout.replacedRoutineId = replacedRoutine?.id || null;
+  activeWorkout.replacedRoutineName = replacedRoutine?.name || "";
   activeWorkout.flowMode = localStorage.getItem(STORAGE.workoutFlowMode) || "straight";
   activeWorkout.currentIndex = 0;
   activeWorkout.currentSet = 0;
@@ -4100,6 +4126,8 @@ function startEmptyWorkout() {
   setTodayMode("active");
   renderTodayWorkout();
 }
+
+const startEmptyWorkout = startCustomWorkout;
 
 function exitTodayWorkout() {
   resetLiveWorkoutState();
@@ -4127,8 +4155,8 @@ function renderTodayRoutine() {
     todayRoutineList.innerHTML = `
       <div class="empty-routine">
         <p class="eyebrow">No workout today</p>
-        <p>You have a rest day scheduled. Start from Workout when you want to add an exercise anyway.</p>
-        <button class="primary-button today-start-button" type="button" data-action="start-empty-workout">Start empty workout</button>
+        <p>You have a rest day scheduled. Start a custom workout when you want to add an exercise anyway.</p>
+        <button class="primary-button today-start-button" type="button" data-action="start-custom-workout">Start custom workout</button>
       </div>
     `;
     if (todayRoutineName) {
@@ -4982,6 +5010,11 @@ function renderFinishScreen() {
   const routineName = todayRoutineName?.textContent || "Workout";
   const loggedCount = exercises.filter(isExerciseLogged).length;
   const anyLogged = loggedCount > 0;
+  const customNote = activeWorkout.isCustom ? `
+        <label class="lw-live-note lw-custom-note">
+          <span>Why custom today? (optional)</span>
+          <textarea rows="2" data-action="custom-workout-note" placeholder="Example: swapped in a lighter session, gym was crowded, short on time...">${escapeHtml(activeWorkout.substitutionNote || "")}</textarea>
+        </label>` : "";
 
   todayRoutineList.innerHTML = `
     <div class="live-workout lw-finish-screen">
@@ -4993,6 +5026,7 @@ function renderFinishScreen() {
         <h3 class="lw-finish-title">Workout complete</h3>
         <p class="lw-finish-sub">${escapeHtml(routineName)} · ${loggedCount} of ${total} logged</p>
         ${anyLogged ? `<p class="lw-recap-hint">Here's what you logged. Effort you rated on each set is saved for your coach.</p>` : ""}
+        ${customNote}
         <div class="lw-recap">
           ${exercises.map((ex) => {
             const effort = isExerciseLogged(ex) ? formatLoggedEffort(ex) : "";
@@ -5022,11 +5056,11 @@ function renderTodayWorkout() {
       <div class="live-workout">
         <div class="lw-topbar">
           <button class="quiet-button small-button btn-ico lw-back" type="button" data-action="lw-exit">${getUiIcon("arrow-left")}Exit</button>
-          <span class="lw-count">Workout</span>
+          <span class="lw-count">${escapeHtml(activeWorkout.routineName || "Workout")}</span>
           <button class="lw-exit" type="button" data-action="lw-exit">Exit</button>
         </div>
         <div class="empty-routine">
-          <p class="eyebrow">Empty workout</p>
+          <p class="eyebrow">${activeWorkout.isCustom ? "Custom workout" : "Empty workout"}</p>
           <p>Add an exercise to start logging.</p>
           <button class="primary-button today-start-button btn-ico" type="button" data-action="open-live-add">${getUiIcon("plus-circle")}Add exercise</button>
         </div>
@@ -5057,6 +5091,11 @@ function handleTodayWorkoutChange(event) {
   const input = event.target;
   const action = input.dataset?.action;
   const exercise = getActiveExercise();
+  if (action === "custom-workout-note") {
+    activeWorkout.substitutionNote = input.value;
+    persistActiveWorkoutDraft();
+    return;
+  }
   if (!exercise) return;
 
   if (action === "set-field") {
@@ -5403,8 +5442,8 @@ async function handleTodayWorkoutClick(event) {
     return;
   }
 
-  if (action === "start-empty-workout") {
-    startEmptyWorkout();
+  if (action === "start-empty-workout" || action === "start-custom-workout") {
+    startCustomWorkout();
     return;
   }
 
@@ -5800,8 +5839,13 @@ function rollupDifficulty(units) {
 }
 
 async function saveTodayWorkout() {
-  const routine = getTodayPlannedRoutine();
-  const workoutName = routine?.name || activeWorkout.routineName || "Workout";
+  const viewedRoutine = getTodayPlannedRoutine();
+  const routine = activeWorkout.routineId && viewedRoutine?.id === activeWorkout.routineId
+    ? viewedRoutine
+    : null;
+  const workoutName = activeWorkout.isCustom
+    ? (activeWorkout.routineName || "Custom workout")
+    : (routine?.name || activeWorkout.routineName || "Workout");
 
   const loggedExercises = activeWorkout.exercises.filter((ex) => isExerciseLogged(ex) || ex.skipped);
   if (loggedExercises.length === 0) {
@@ -5966,6 +6010,17 @@ async function saveTodayWorkout() {
     flowMode: activeWorkout.flowMode,
     entries: loggedEntries
   };
+  if (activeWorkout.isCustom) {
+    savedWorkout.custom = true;
+    const note = (activeWorkout.substitutionNote || "").trim();
+    if (note) savedWorkout.substitutionNote = note;
+    if (activeWorkout.replacedRoutineId || activeWorkout.replacedRoutineName) {
+      savedWorkout.replacedRoutine = {
+        id: activeWorkout.replacedRoutineId || null,
+        name: activeWorkout.replacedRoutineName || ""
+      };
+    }
+  }
 
   data.workouts.push(savedWorkout);
   data.completedWorkouts = Array.isArray(data.completedWorkouts) ? data.completedWorkouts : [];
@@ -9303,6 +9358,11 @@ function formatWorkoutForExport(workout) {
   const lines = [];
   const flow = workout.flowMode ? ` (${workout.flowMode === "round" ? "round-by-round" : "straight sets"})` : "";
   lines.push(`Date: ${workout.date} - ${workout.name || workout.routineName || "Workout"}${flow}`);
+  if (workout.custom) {
+    const replaced = workout.replacedRoutine?.name ? `replaced planned ${workout.replacedRoutine.name}` : "custom workout";
+    const note = workout.substitutionNote ? ` | note: ${workout.substitutionNote}` : "";
+    lines.push(`  Context: ${replaced}${note}`);
+  }
 
   workout.entries?.forEach((entry) => {
     // Sets (strength) or holds (timed) carry the per-unit notes and efforts.
@@ -12121,6 +12181,7 @@ reviewReminderDismiss?.addEventListener("click", () => {
 });
 
 startTodayButton?.addEventListener("click", openWorkoutFlowChoice);
+startCustomButton?.addEventListener("click", startCustomWorkout);
 todayBackButton?.addEventListener("click", exitTodayWorkout);
 
 // Change-day control: preview/start any day's planned workout. Only active in
