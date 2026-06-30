@@ -3,7 +3,7 @@ const DROPBOX_TOKEN_URL = "https://api.dropboxapi.com/oauth2/token";
 const DROPBOX_UPLOAD_URL = "https://content.dropboxapi.com/2/files/upload";
 const DROPBOX_DOWNLOAD_URL = "https://content.dropboxapi.com/2/files/download";
 const DATA_FILE_PATH = "/04_Technical/06_Side_Projects/Workout and Nutrition App/data/workout-data.json";
-const APP_VERSION = "2026.06.30-coach-page";
+const APP_VERSION = "2026.06.30-coach-notes";
 
 const STORAGE = {
   appKey: "trainingBookDropboxAppKey",
@@ -11166,6 +11166,8 @@ function generateReviewPacket() {
   packet.push("  of this document — nothing else in that message, no commentary around it.");
   packet.push("- I paste that block straight into Training Book's \"Paste an updated plan\" importer,");
   packet.push("  so it must match the format exactly (including any rest targets).");
+  packet.push("- Include short exercise-specific coach notes when they will help me during the");
+  packet.push("  workout. Training Book shows these as live \"Coach\" callouts on that exercise.");
   packet.push("- Do not say you saved or changed my plan. You are drafting; I preview and save");
   packet.push("  changes manually inside Training Book.");
   packet.push("- Do NOT give me that plan block until we've discussed and I ask for it. Until then,");
@@ -11179,6 +11181,8 @@ function generateReviewPacket() {
   packet.push("- Held moves (e.g. plank) are timed: targets are sets x seconds (3x45 sec), optionally a rest target. I log EACH hold's actual seconds separately (e.g. 60s · 60s · 45s) plus optional per-hold effort.");
   packet.push("- Effort is rated 1-10 (1 = easy, 10 = all-out), logged per set/hold, and is optional — \"not logged\" means I didn't rate it, not that it was easy.");
   packet.push("- Rest targets (rest 90s) show during the live workout. Add \"timer\" after a rest target only when Training Book should run a countdown.");
+  packet.push("- Exercise coach notes are imported with a `note:` line under an exercise. These");
+  packet.push("  are not general plan notes; they appear during the live workout for that move.");
   packet.push("- Skipped exercises are marked skipped in History; coach around repeated skips.");
   packet.push("");
 
@@ -11262,6 +11266,7 @@ function generateReviewPacket() {
   packet.push("ROUTINE: Routine Name");
   packet.push("- Exercise Name: 3x8");
   packet.push("- Bench Press: 3x8 @ 95 lb, rest 90s");
+  packet.push("  note: One short live cue or adjustment for this exercise, if useful.");
   packet.push("- Plank: 3x45 sec, rest 45s");
   packet.push("- Peloton Tread: Incline Walk, 30 min");
   packet.push("- Peloton Bike: Just Ride, 20 min");
@@ -11270,6 +11275,8 @@ function generateReviewPacket() {
   packet.push("- Use exercise names from my library above when possible.");
   packet.push("- Keep each routine exercise on one dash line.");
   packet.push("- Add a rest target with \"rest 90s\" (seconds) on strength/timed lines where rest matters; leave it off where it doesn't.");
+  packet.push("- Add a `note:` line under exercises where I need a live cue, adjustment, caution,");
+  packet.push("  or reminder during the workout. Keep each note short and specific.");
   packet.push("- Do not include any text outside this format in that final message.");
 
   return packet.join("\n");
