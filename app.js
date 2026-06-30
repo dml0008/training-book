@@ -3,7 +3,7 @@ const DROPBOX_TOKEN_URL = "https://api.dropboxapi.com/oauth2/token";
 const DROPBOX_UPLOAD_URL = "https://content.dropboxapi.com/2/files/upload";
 const DROPBOX_DOWNLOAD_URL = "https://content.dropboxapi.com/2/files/download";
 const DATA_FILE_PATH = "/04_Technical/06_Side_Projects/Workout and Nutrition App/data/workout-data.json";
-const APP_VERSION = "1.0.3";
+const APP_VERSION = "1.0.4";
 
 const STORAGE = {
   appKey: "trainingBookDropboxAppKey",
@@ -4974,7 +4974,10 @@ function renderFocusedExercise() {
         <div class="lw-topbar">
           <button class="quiet-button small-button btn-ico lw-back" type="button" data-action="lw-back" aria-label="${i > 0 ? "Previous exercise" : "Back to plan"}">${getUiIcon("arrow-left")}</button>
           <span class="lw-count">${activeWorkout.flowMode === "round" ? `Round ${activeWorkout.roundNumber + 1} · ` : ""}${i + 1} of ${total}</span>
-          <button class="lw-exit" type="button" data-action="lw-exit">Exit</button>
+          <div class="lw-top-actions">
+            <button class="lw-top-note" type="button" data-action="open-notes" aria-label="Add a note">${getUiIcon("notebook-pen")}</button>
+            <button class="lw-exit" type="button" data-action="lw-exit">Exit</button>
+          </div>
         </div>
         <div class="lw-dots">${renderProgressDots(i, total, false)}</div>
       </div>
@@ -5076,7 +5079,10 @@ function renderTodayWorkout() {
         <div class="lw-topbar">
           <button class="quiet-button small-button btn-ico lw-back" type="button" data-action="lw-exit">${getUiIcon("arrow-left")}Exit</button>
           <span class="lw-count">${escapeHtml(activeWorkout.routineName || "Workout")}</span>
-          <button class="lw-exit" type="button" data-action="lw-exit">Exit</button>
+          <div class="lw-top-actions">
+            <button class="lw-top-note" type="button" data-action="open-notes" aria-label="Add a note">${getUiIcon("notebook-pen")}</button>
+            <button class="lw-exit" type="button" data-action="lw-exit">Exit</button>
+          </div>
         </div>
         <div class="empty-routine">
           <p class="eyebrow">${activeWorkout.isCustom ? "Custom workout" : "Empty workout"}</p>
@@ -5419,6 +5425,13 @@ async function handleTodayWorkoutClick(event) {
   if (!button) return;
   const action = button.dataset.action;
   const exercise = getActiveExercise();
+
+  // Capture an idea mid-workout. Handled before the rest-timer checks so opening
+  // notes never cancels an active rest countdown.
+  if (action === "open-notes") {
+    openNotesModal({ source: "workout" });
+    return;
+  }
 
   if (action === "start-rest" && exercise) {
     if (!canStartVisibleRest(exercise)) return;
@@ -6225,7 +6238,10 @@ function makeEmptyData() {
     testEntries: [],
     workouts: [],
     bodyWeights: [],
-    weightTarget: null
+    weightTarget: null,
+    // App/product notes (feature ideas, bugs). Deliberately separate from
+    // workout history so a quick idea can never land in a logged session.
+    appNotes: []
   };
 }
 
@@ -6312,6 +6328,12 @@ function getLocalData() {
   }
   if (typeof data.weightTarget === "undefined") {
     data.weightTarget = null;
+  }
+  // App/product notes arrived after the rest of the shape. Older saved data has
+  // no `appNotes`, so seed it once with an empty list. An empty array is valid:
+  // it just means no notes have been captured yet.
+  if (!Array.isArray(data.appNotes)) {
+    data.appNotes = [];
   }
 
   return data;
@@ -6494,6 +6516,9 @@ function mergeWorkoutData(local, remote) {
     (m) => (typeof m === "string" ? m : (m?.id || m?.date || JSON.stringify(m)))
   );
   merged.bodyWeights = unionBy(newer.bodyWeights, older.bodyWeights, (b) => b?.date || JSON.stringify(b));
+  // App notes are unioned like history so a note captured on one device can't be
+  // wiped by a sync from another. Duplicate ids prefer the newer copy's text.
+  merged.appNotes = unionBy(newer.appNotes, older.appNotes, (n) => n?.id || JSON.stringify(n));
 
   // Custom exercise photos are unusually easy to lose. The library is taken
   // wholesale from the newer copy, so any device carrying a library WITHOUT a
@@ -6552,7 +6577,8 @@ function dataChanged(a, b) {
     activePlan: d?.activePlan || {},
     library: d?.library || [],
     categories: d?.categories || [],
-    weightTarget: d?.weightTarget ?? null
+    weightTarget: d?.weightTarget ?? null,
+    appNotes: d?.appNotes || []
   });
   return pick(a) !== pick(b);
 }
@@ -6803,7 +6829,10 @@ const UI_ICONS = {
   image: '<rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>',
   camera: '<path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/>',
   tag: '<path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z"/><circle cx="7.5" cy="7.5" r=".5" fill="currentColor"/>',
-  settings: '<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>'
+  settings: '<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>',
+  // Notes (header + live-workout topbar): durable product notes, not chat.
+  "notebook-pen": '<path d="M13.4 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7.4"/><path d="M2 6h4"/><path d="M2 10h4"/><path d="M2 14h4"/><path d="M2 18h4"/><path d="M21.378 5.626a1 1 0 1 0-3.004-3.004l-5.01 5.012a2 2 0 0 0-.506.854l-.837 2.87a.5.5 0 0 0 .62.62l2.87-.837a2 2 0 0 0 .854-.506z"/>',
+  copy: '<rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>'
 };
 
 function getUiIcon(name) {
@@ -7059,6 +7088,310 @@ async function handleRestoreFileChosen(event) {
     setSettingsDataStatus(error.message || "That file could not be read.", "bad");
   } finally {
     event.target.value = "";
+  }
+}
+
+// ===== App / product notes =====
+// A small global notes surface for Daniel's feature ideas and agent notes,
+// opened from the header (and from the live-workout topbar, where the header is
+// hidden). Notes live under data.appNotes, completely separate from workout
+// history, and can be copied/exported as plain markdown so a future coding agent
+// can read them without any private Firebase credentials.
+let notesModalOpen = false;
+let editingNoteId = null;           // id of the note being edited inline (null = none)
+let pendingNoteSource = "manual";   // tags new notes with where they were captured
+
+// The lanes a note can sit in. Kept tiny on purpose: enough to triage, not a
+// whole project board. Order here is the order shown in the compose dropdown.
+const NOTE_LANES = [
+  { key: "idea", label: "Idea" },
+  { key: "bug", label: "Bug" },
+  { key: "now", label: "Priority" }
+];
+
+function noteLaneLabel(key) {
+  return NOTE_LANES.find((l) => l.key === key)?.label || "Idea";
+}
+
+function makeNoteId() {
+  return `note-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+}
+
+function getAppNotes() {
+  const data = getLocalData();
+  return Array.isArray(data.appNotes) ? data.appNotes : [];
+}
+
+// Save the notes list everywhere (local + pending queue + cloud), mirroring how
+// persistCategories handles its own slice. Real workout data is never touched.
+function persistAppNotes(notes) {
+  const data = getLocalData();
+  data.appNotes = notes;
+  data.updatedAt = new Date().toISOString();
+  data.updatedBy = getDeviceId();
+  saveLocalData(data);
+  markPendingData(data);
+  syncOrWarn(data);
+}
+
+// Short, human date for a note's meta line: "Today" / "Yesterday" / "Jun 28".
+function formatNoteWhen(iso) {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  const startOfDay = (x) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
+  const days = Math.round((startOfDay(new Date()) - startOfDay(d)) / 86400000);
+  if (days === 0) return "Today";
+  if (days === 1) return "Yesterday";
+  return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+}
+
+function setNotesStatus(message, tone = "") {
+  const el = document.querySelector("#notes-status");
+  if (!el) return;
+  el.textContent = message;
+  el.className = `settings-foot-note${tone ? " " + tone : ""}`;
+}
+
+function renderNoteCard(note) {
+  const isDone = note.status === "done";
+  const editing = editingNoteId === note.id;
+  const meta = [
+    `<span class="note-lane note-lane-${escapeHtml(note.lane || "idea")}">${escapeHtml(noteLaneLabel(note.lane))}</span>`,
+    `<span class="note-when">${escapeHtml(formatNoteWhen(note.createdAt))}</span>`,
+    note.source === "workout" ? `<span class="note-src">from a workout</span>` : ""
+  ].filter(Boolean).join("");
+
+  if (editing) {
+    return `
+      <div class="note-card is-editing" data-note-id="${escapeHtml(note.id)}">
+        <textarea class="note-edit-input" rows="3" data-note-edit="${escapeHtml(note.id)}">${escapeHtml(note.text)}</textarea>
+        <div class="note-card-actions">
+          <button class="primary-button small-button" type="button" data-action="save-note" data-note-id="${escapeHtml(note.id)}">Save</button>
+          <button class="quiet-button small-button" type="button" data-action="cancel-edit" data-note-id="${escapeHtml(note.id)}">Cancel</button>
+        </div>
+      </div>`;
+  }
+
+  return `
+    <div class="note-card${isDone ? " is-done" : ""}" data-note-id="${escapeHtml(note.id)}">
+      <p class="note-card-text">${escapeHtml(note.text)}</p>
+      <div class="note-card-foot">
+        <div class="note-card-meta">${meta}</div>
+        <div class="note-card-actions">
+          <button class="quiet-button small-button" type="button" data-action="toggle-note-status" data-note-id="${escapeHtml(note.id)}">${isDone ? "Reopen" : "Done"}</button>
+          <button class="quiet-button small-button" type="button" data-action="edit-note" data-note-id="${escapeHtml(note.id)}">Edit</button>
+          <button class="quiet-button small-button danger-text" type="button" data-action="delete-note" data-note-id="${escapeHtml(note.id)}" aria-label="Delete note">${getUiIcon("trash-2")}</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+function renderNotesModal() {
+  const root = document.querySelector("#notes-modal-root");
+  if (!root) return;
+  if (!notesModalOpen) {
+    root.innerHTML = "";
+    return;
+  }
+  const notes = getAppNotes();
+  const open = notes.filter((n) => n.status !== "done");
+  const done = notes.filter((n) => n.status === "done");
+  const laneOptions = NOTE_LANES.map((l) => `<option value="${l.key}">${l.label}</option>`).join("");
+
+  const listHtml = notes.length
+    ? `${open.map(renderNoteCard).join("")}${done.length ? `
+        <p class="notes-group-label">Done (${done.length})</p>
+        ${done.map(renderNoteCard).join("")}` : ""}`
+    : `<p class="plan-muted notes-empty">No notes yet. Jot the first idea above — it stays out of your workout history.</p>`;
+
+  root.innerHTML = `
+    <div class="lw-sheet-scrim" role="presentation" data-notes-scrim>
+      <section class="lw-sheet notes-sheet" role="dialog" aria-modal="true" aria-label="App notes">
+        <div class="lw-sheet-head">
+          <div>
+            <h3>Notes</h3>
+            <p>Capture app ideas and feature requests. Kept separate from your workout history.</p>
+          </div>
+          <button class="lw-sheet-close" type="button" data-action="close-notes" aria-label="Close notes">&times;</button>
+        </div>
+        <div class="notes-compose">
+          <textarea id="note-input" rows="3" placeholder="New idea, bug, or feature request..."></textarea>
+          <div class="notes-compose-row">
+            <select id="note-lane" aria-label="Note type">${laneOptions}</select>
+            <button class="primary-button small-button" type="button" data-action="add-note">Add note</button>
+          </div>
+        </div>
+        <div class="notes-list">${listHtml}</div>
+        <div class="notes-foot">
+          <button class="quiet-button small-button btn-ico" type="button" data-action="copy-notes">${getUiIcon("copy")}Copy all</button>
+          <button class="quiet-button small-button btn-ico" type="button" data-action="export-notes">${getUiIcon("download")}Export .md</button>
+        </div>
+        <p class="settings-foot-note" id="notes-status" role="status"></p>
+      </section>
+    </div>
+  `;
+  renderUiIcons(root);
+}
+
+function openNotesModal(opts = {}) {
+  notesModalOpen = true;
+  editingNoteId = null;
+  pendingNoteSource = opts.source === "workout" ? "workout" : "manual";
+  renderNotesModal();
+  requestAnimationFrame(() => document.querySelector("#note-input")?.focus());
+}
+
+function closeNotesModal() {
+  notesModalOpen = false;
+  editingNoteId = null;
+  renderNotesModal();
+}
+
+function addNoteFromInput() {
+  const input = document.querySelector("#note-input");
+  const laneSelect = document.querySelector("#note-lane");
+  const text = (input?.value || "").trim();
+  if (!text) {
+    setNotesStatus("Type a note first.");
+    input?.focus();
+    return;
+  }
+  const now = new Date().toISOString();
+  const note = {
+    id: makeNoteId(),
+    createdAt: now,
+    updatedAt: now,
+    text,
+    status: "open",
+    lane: laneSelect?.value || "idea",
+    source: pendingNoteSource
+  };
+  // Newest first so a fresh idea is right under the compose box.
+  persistAppNotes([note, ...getAppNotes()]);
+  renderNotesModal();
+  setNotesStatus("Note saved.", "good");
+  requestAnimationFrame(() => document.querySelector("#note-input")?.focus());
+}
+
+function toggleNoteStatus(id) {
+  const notes = getAppNotes();
+  const note = notes.find((n) => n.id === id);
+  if (!note) return;
+  note.status = note.status === "done" ? "open" : "done";
+  note.updatedAt = new Date().toISOString();
+  persistAppNotes(notes);
+  renderNotesModal();
+}
+
+function startEditNote(id) {
+  editingNoteId = id;
+  renderNotesModal();
+  requestAnimationFrame(() => {
+    const ta = document.querySelector(`[data-note-edit="${id}"]`);
+    if (ta) {
+      ta.focus();
+      ta.setSelectionRange(ta.value.length, ta.value.length);
+    }
+  });
+}
+
+function cancelEditNote() {
+  editingNoteId = null;
+  renderNotesModal();
+}
+
+function saveEditNote(id) {
+  const ta = document.querySelector(`[data-note-edit="${id}"]`);
+  const text = (ta?.value || "").trim();
+  if (!text) {
+    setNotesStatus("A note can't be empty. Use Delete if you don't need it.");
+    return;
+  }
+  const notes = getAppNotes();
+  const note = notes.find((n) => n.id === id);
+  if (!note) return;
+  note.text = text;
+  note.updatedAt = new Date().toISOString();
+  persistAppNotes(notes);
+  editingNoteId = null;
+  renderNotesModal();
+  setNotesStatus("Note updated.", "good");
+}
+
+async function deleteNote(id) {
+  const ok = await showConfirmModal({
+    title: "Delete this note?",
+    message: "This removes the note only. Your workouts and history are not affected.",
+    confirmLabel: "Delete note",
+    danger: true
+  });
+  if (!ok) return;
+  persistAppNotes(getAppNotes().filter((n) => n.id !== id));
+  if (editingNoteId === id) editingNoteId = null;
+  renderNotesModal();
+  setNotesStatus("Note deleted.");
+}
+
+// Plain markdown the way a coding agent can read it: open notes first, done
+// notes after, each with its lane, date, and capture source.
+function buildNotesMarkdown() {
+  const notes = getAppNotes();
+  const today = new Date().toISOString().slice(0, 10);
+  const lines = ["# Training Book - App Notes", `Exported ${today}`, ""];
+  if (!notes.length) {
+    lines.push("_No notes captured yet._");
+    return lines.join("\n") + "\n";
+  }
+  const fmt = (n) => {
+    const lane = n.lane ? `[${noteLaneLabel(n.lane)}] ` : "";
+    const when = (n.createdAt || "").slice(0, 10);
+    const src = n.source === "workout" ? " (from a workout)" : "";
+    const text = String(n.text || "").trim().replace(/\r?\n+/g, " ");
+    return `- ${lane}${text}${when ? ` — ${when}` : ""}${src}`;
+  };
+  const open = notes.filter((n) => n.status !== "done");
+  const done = notes.filter((n) => n.status === "done");
+  if (open.length) {
+    lines.push(`## Open (${open.length})`, ...open.map(fmt), "");
+  }
+  if (done.length) {
+    lines.push(`## Done (${done.length})`, ...done.map(fmt), "");
+  }
+  return lines.join("\n").trim() + "\n";
+}
+
+async function copyNotes() {
+  try {
+    await copyTextToClipboard(buildNotesMarkdown());
+    setNotesStatus("Notes copied - paste them into an agent session.", "good");
+  } catch {
+    setNotesStatus("Couldn't copy automatically. Use Export .md instead.", "bad");
+  }
+}
+
+async function exportNotes() {
+  const fileName = `training-book-notes-${new Date().toISOString().slice(0, 10)}.md`;
+  try {
+    const mode = await saveTextFile(buildNotesMarkdown(), fileName);
+    setNotesStatus(mode === "picked" ? `Saved as ${fileName}.` : `Downloaded as ${fileName}.`, "good");
+  } catch (error) {
+    if (error?.name === "AbortError") return;
+    setNotesStatus(`Export didn't finish: ${error.message}`, "bad");
+  }
+}
+
+function handleNotesAction(action, noteId) {
+  switch (action) {
+    case "close-notes": closeNotesModal(); break;
+    case "add-note": addNoteFromInput(); break;
+    case "toggle-note-status": toggleNoteStatus(noteId); break;
+    case "edit-note": startEditNote(noteId); break;
+    case "save-note": saveEditNote(noteId); break;
+    case "cancel-edit": cancelEditNote(); break;
+    case "delete-note": deleteNote(noteId); break;
+    case "copy-notes": copyNotes(); break;
+    case "export-notes": exportNotes(); break;
+    default: break;
   }
 }
 
@@ -12190,6 +12523,29 @@ settingsModalRoot?.addEventListener("click", (event) => {
 settingsModalRoot?.addEventListener("change", handleRestoreFileChosen);
 document.addEventListener("keydown", (event) => {
   if (event.key === "Escape" && settingsModalOpen) closeSettingsModal();
+});
+
+// App / product notes: the header button opens the sheet; the live-workout
+// topbar button (handled in handleTodayWorkoutClick) opens it tagged "workout".
+const notesButton = document.querySelector("#notes-button");
+notesButton?.addEventListener("click", () => openNotesModal({ source: "manual" }));
+
+const notesModalRoot = document.querySelector("#notes-modal-root");
+notesModalRoot?.addEventListener("click", (event) => {
+  if (event.target.hasAttribute("data-notes-scrim")) { closeNotesModal(); return; }
+  const button = event.target.closest("[data-action]");
+  if (!button) return;
+  handleNotesAction(button.dataset.action, button.dataset.noteId);
+});
+// Ctrl/Cmd+Enter in the compose box is a quick "add note" so capture stays fast.
+notesModalRoot?.addEventListener("keydown", (event) => {
+  if ((event.metaKey || event.ctrlKey) && event.key === "Enter" && event.target.id === "note-input") {
+    event.preventDefault();
+    addNoteFromInput();
+  }
+});
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && notesModalOpen) closeNotesModal();
 });
 
 // Schedule calendar modal: open from the Workout day switcher, navigate months,

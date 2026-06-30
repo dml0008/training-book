@@ -581,6 +581,44 @@ body.in-workout .today-panel {
   transform: translateY(1px);
 }
 
+/* Right-side cluster in the live-workout topbar: the notes button sits beside
+   Exit so a mid-workout idea can be captured even though the app header (with
+   its own notes button) is hidden during focused workout mode. */
+.lw-top-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.lw-top-note {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 auto;
+  border: 1px solid var(--line);
+  background: none;
+  color: var(--muted);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: border-color .14s ease, color .14s ease;
+}
+
+.lw-top-note svg {
+  width: 17px;
+  height: 17px;
+}
+
+.lw-top-note:hover {
+  border-color: var(--accent-line);
+  color: var(--text);
+}
+
+.lw-top-note:active {
+  transform: translateY(1px);
+}
+
 .lw-dots {
   display: flex;
   gap: 5px;
@@ -1703,6 +1741,206 @@ body.in-workout .today-panel {
   -webkit-overflow-scrolling: touch;
   /* a touch of inset so a scrollbar/last row isn't flush to the sheet edge */
   padding-bottom: 4px;
+}
+
+/* ===== App / product notes sheet =====
+   Reuses the .lw-sheet bottom-sheet shell. Head + compose + footer are fixed;
+   only the notes list scrolls, so the capture box and export controls stay put
+   no matter how many notes pile up. */
+.notes-sheet {
+  display: flex;
+  flex-direction: column;
+  max-height: 86vh;
+}
+
+.notes-sheet .lw-sheet-head,
+.notes-compose,
+.notes-foot {
+  flex: none;
+}
+
+.notes-compose {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.notes-compose textarea {
+  width: 100%;
+  resize: vertical;
+  min-height: 64px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--panel-2);
+  color: var(--text);
+  font: inherit;
+}
+
+.notes-compose textarea:focus {
+  outline: none;
+  border-color: var(--accent-line);
+}
+
+.notes-compose-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.notes-compose-row select {
+  flex: 1 1 auto;
+  min-height: 40px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--panel-2);
+  color: var(--text);
+  font: inherit;
+}
+
+.notes-compose-row .primary-button {
+  flex: 0 0 auto;
+  width: auto;
+  min-height: 40px;
+}
+
+.notes-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 4px;
+}
+
+.notes-empty {
+  margin: 6px 2px;
+}
+
+.notes-group-label {
+  margin: 8px 2px 0;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+
+.note-card {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--panel-2);
+  padding: 12px 14px;
+}
+
+.note-card.is-done {
+  opacity: 0.6;
+}
+
+.note-card.is-done .note-card-text {
+  text-decoration: line-through;
+}
+
+.note-card-text {
+  margin: 0 0 10px;
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--text);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.note-card-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.note-card-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.note-lane {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .02em;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  color: var(--muted);
+}
+
+.note-lane-now {
+  color: var(--accent);
+  border-color: var(--accent-line);
+  background: var(--accent-soft);
+}
+
+.note-lane-bug {
+  color: var(--danger);
+  border-color: var(--danger);
+}
+
+.note-src::before {
+  content: "· ";
+}
+
+.note-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.note-card-actions .small-button {
+  width: auto;
+  min-height: 32px;
+}
+
+.note-card-actions .danger-text svg {
+  width: 15px;
+  height: 15px;
+}
+
+.note-card.is-editing {
+  border-color: var(--accent-line);
+}
+
+.note-edit-input {
+  width: 100%;
+  resize: vertical;
+  min-height: 64px;
+  margin-bottom: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--panel);
+  color: var(--text);
+  font: inherit;
+}
+
+.note-edit-input:focus {
+  outline: none;
+  border-color: var(--accent-line);
+}
+
+.notes-foot {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.notes-foot .small-button {
+  flex: 1 1 auto;
+  min-height: 40px;
 }
 
 .lw-ref-meta {
