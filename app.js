@@ -3,7 +3,7 @@ const DROPBOX_TOKEN_URL = "https://api.dropboxapi.com/oauth2/token";
 const DROPBOX_UPLOAD_URL = "https://content.dropboxapi.com/2/files/upload";
 const DROPBOX_DOWNLOAD_URL = "https://content.dropboxapi.com/2/files/download";
 const DATA_FILE_PATH = "/04_Technical/06_Side_Projects/Workout and Nutrition App/data/workout-data.json";
-const APP_VERSION = "1.0.2";
+const APP_VERSION = "1.0.3";
 
 const STORAGE = {
   appKey: "trainingBookDropboxAppKey",
@@ -2086,7 +2086,26 @@ function reseedLibraryOnce() {
   if (localStorage.getItem(STORAGE.libraryV2Seeded)) return;
 
   const data = getLocalData();
-  data.library = getStarterExercises();
+  // Reseed the canonical starter set for clean ids/metadata, but never wipe the
+  // user's own data in the process: carry custom photos + favourites onto the
+  // matching starter records, and keep any exercise the user added that isn't
+  // part of the starter set. (Previously this was a blind full replace, which is
+  // how a single device that hadn't run the reseed could nuke every custom photo
+  // for all devices once its photoless library synced up.)
+  const prior = Array.isArray(data.library) ? data.library : [];
+  const priorById = new Map(prior.filter((ex) => ex && ex.id).map((ex) => [ex.id, ex]));
+  const starters = getStarterExercises();
+  const starterIds = new Set(starters.map((ex) => ex.id));
+  const reseeded = starters.map((ex) => {
+    const prev = priorById.get(ex.id);
+    if (!prev) return ex;
+    const next = { ...ex };
+    if (prev.customPhotos) next.customPhotos = prev.customPhotos;
+    if (prev.favorite) next.favorite = prev.favorite;
+    return next;
+  });
+  const extras = prior.filter((ex) => ex && ex.id && !starterIds.has(ex.id));
+  data.library = [...reseeded, ...extras];
   data.updatedAt = new Date().toISOString();
   data.updatedBy = getDeviceId();
   saveLocalData(data);
@@ -6476,8 +6495,48 @@ function mergeWorkoutData(local, remote) {
   );
   merged.bodyWeights = unionBy(newer.bodyWeights, older.bodyWeights, (b) => b?.date || JSON.stringify(b));
 
+  // Custom exercise photos are unusually easy to lose. The library is taken
+  // wholesale from the newer copy, so any device carrying a library WITHOUT a
+  // photo (e.g. one that hasn't run the library reseed, or a stale sync) would
+  // silently drop a photo the user added elsewhere. Union custom photos across
+  // BOTH copies onto the merged library so a photo that still exists anywhere
+  // survives. The bias is deliberately toward keeping photos: a rare intentional
+  // removal may need redoing, but an accidental wipe can never delete one.
+  merged.library = preserveCustomPhotos(merged.library, newer.library, older.library);
+
   merged.updatedAt = new Date(Math.max(lt, rt)).toISOString();
   return merged;
+}
+
+// For each exercise in `library`, fill any missing customPhotos start/finish
+// slot from the first source copy (passed newest-first) that still has it, so a
+// merge never drops a custom photo that exists in either copy.
+function preserveCustomPhotos(library, ...sources) {
+  if (!Array.isArray(library)) return library;
+  const byId = new Map();
+  for (const src of sources) {
+    if (!Array.isArray(src)) continue;
+    for (const ex of src) {
+      if (!ex || !ex.id || !ex.customPhotos) continue;
+      const acc = byId.get(ex.id) || {};
+      for (const slot of ["start", "finish"]) {
+        if (ex.customPhotos[slot] && !acc[slot]) acc[slot] = ex.customPhotos[slot];
+      }
+      byId.set(ex.id, acc);
+    }
+  }
+  if (!byId.size) return library;
+  return library.map((ex) => {
+    if (!ex || !ex.id) return ex;
+    const saved = byId.get(ex.id);
+    if (!saved) return ex;
+    const next = { ...(ex.customPhotos || {}) };
+    let changed = false;
+    for (const slot of ["start", "finish"]) {
+      if (!next[slot] && saved[slot]) { next[slot] = saved[slot]; changed = true; }
+    }
+    return changed ? { ...ex, customPhotos: next } : ex;
+  });
 }
 
 // Cheap "do these differ in anything worth syncing" check, used to decide
@@ -7611,11 +7670,27 @@ function persistLibrary(library) {
   exercises = library;
   renderExercises();
   renderExercisePicker();
-  if (navigator.onLine) {
-    uploadWorkoutData(data).then(clearPendingData).catch(() => {
-      // Not signed in or offline: the change is queued and syncs later.
-    });
-  }
+  syncOrWarn(data);
+}
+
+// Push a save to the cloud, clearing the pending queue on success. A failure
+// because nobody is signed in (or the device is offline) is expected: the edit
+// stays queued and syncs later, so we stay quiet. ANY other failure means the
+// save the user just made did not reach the cloud - surface it instead of
+// pretending it worked, and leave it queued so a later sync retries. This is the
+// difference between "looked saved" and "actually saved" for things like custom
+// exercise photos.
+function syncOrWarn(data) {
+  if (!navigator.onLine) return;
+  uploadWorkoutData(data).then(clearPendingData).catch((error) => {
+    const msg = String(error?.message || error || "");
+    const expected = /sign in/i.test(msg);
+    if (!expected) {
+      console.error("Cloud save failed:", error);
+      setSyncStatus("Saved on this device, but the last change hasn't reached the cloud yet - it will retry automatically.", "warn");
+    }
+    updateConnectionState();
+  });
 }
 
 // ===== Filter categories (editable) =====
