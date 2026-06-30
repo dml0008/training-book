@@ -3,7 +3,7 @@ const DROPBOX_TOKEN_URL = "https://api.dropboxapi.com/oauth2/token";
 const DROPBOX_UPLOAD_URL = "https://content.dropboxapi.com/2/files/upload";
 const DROPBOX_DOWNLOAD_URL = "https://content.dropboxapi.com/2/files/download";
 const DATA_FILE_PATH = "/04_Technical/06_Side_Projects/Workout and Nutrition App/data/workout-data.json";
-const APP_VERSION = "2026.06.30-coach-notes";
+const APP_VERSION = "1.0.1";
 
 const STORAGE = {
   appKey: "trainingBookDropboxAppKey",
@@ -113,17 +113,22 @@ function closeConfirmModal(result = false) {
   }
 }
 
-function showConfirmModal({ title, message, confirmLabel = "Delete", danger = true }) {
+function showConfirmModal({ title, message, confirmLabel = "Delete", danger = true, kicker = null, hideCancel = false }) {
   if (confirmModalResolve) closeConfirmModal(false);
   const root = getConfirmModalRoot();
+  // The kicker labels what kind of dialog this is. Callers can set it
+  // explicitly (e.g. status modals); otherwise fall back to confirm-action
+  // wording. Never assume "danger" means a deletion - a failed save is also
+  // "danger" but is not a deletion, which is what used to mislabel it.
+  const kickerText = kicker || (danger ? "Confirm deletion" : "Confirm change");
   root.innerHTML = `
     <div class="confirm-scrim" role="presentation" data-action="confirm-cancel">
       <section class="confirm-modal" role="dialog" aria-modal="true" aria-labelledby="confirm-title">
-        <p class="card-kicker">${danger ? "Confirm deletion" : "Confirm change"}</p>
+        <p class="card-kicker">${escapeHtml(kickerText)}</p>
         <h2 id="confirm-title">${escapeHtml(title)}</h2>
         <p>${escapeHtml(message)}</p>
         <div class="confirm-actions">
-          <button class="quiet-button small-button" type="button" data-action="confirm-cancel">Cancel</button>
+          ${hideCancel ? "" : `<button class="quiet-button small-button" type="button" data-action="confirm-cancel">Cancel</button>`}
           <button class="primary-button small-button${danger ? " danger-button" : ""}" type="button" data-action="confirm-ok">${escapeHtml(confirmLabel)}</button>
         </div>
       </section>
@@ -135,12 +140,22 @@ function showConfirmModal({ title, message, confirmLabel = "Delete", danger = tr
   });
 }
 
+// An informational dialog (success / warning / error) - not a yes/no choice.
+// It reuses the confirm modal's chrome but shows a tone-appropriate kicker and
+// a single dismiss button, so it never reads as a deletion or a real decision.
 function showStatusModal({ title, message, tone = "good", confirmLabel = "Done" }) {
+  const kicker =
+    tone === "bad" ? "Something went wrong" :
+    tone === "warn" ? "Heads up" :
+    tone === "danger" ? "Please note" :
+    "All set";
   return showConfirmModal({
     title,
     message,
     confirmLabel,
-    danger: tone === "danger" || tone === "bad"
+    danger: tone === "danger" || tone === "bad",
+    kicker,
+    hideCancel: true
   });
 }
 
@@ -288,7 +303,7 @@ function refreshCoachIfVisible() {
 }
 
 if (appVersionLabel) {
-  appVersionLabel.textContent = `Build ${APP_VERSION}`;
+  appVersionLabel.textContent = `v${APP_VERSION}`;
 }
 
 const today = new Date();
@@ -2392,9 +2407,10 @@ const activeWorkout = {
     finished: false,   // true for a moment after hitting zero (drives the flash)
     holdIndex: 0       // which hold the countdown is currently pointed at
   },
-  // Guided rest countdown shown between sets/holds, but only when the coach
-  // turned on restTimer for the exercise. Separate from the hold timer above
-  // because it's about the gap between units, not a held move. Always skippable.
+  // Guided rest countdown shown between sets/holds. It can auto-start when the
+  // coach turned on restTimer, or be opened by tapping a visible rest label.
+  // Separate from the hold timer above because it's about the gap between units,
+  // not a held move. Always skippable.
   rest: {
     active: false,     // true while the between-set rest screen is showing
     total: 0,          // chosen rest length in milliseconds
@@ -3939,7 +3955,9 @@ function persistActiveWorkoutDraft() {
     flowMode: activeWorkout.flowMode,
     roundNumber: activeWorkout.roundNumber
   };
-  localStorage.setItem(STORAGE.activeWorkoutDraft, JSON.stringify(draft));
+  // Quota-safe: the in-progress draft is how a workout survives a closed tab, so
+  // a full snapshot cache must never block it from being saved.
+  setItemSafe(STORAGE.activeWorkoutDraft, JSON.stringify(draft));
 }
 
 function clearActiveWorkoutDraft() {
@@ -4190,8 +4208,8 @@ function formatRest(seconds) {
 }
 
 // Plain target line for the focused screen, e.g. "3 × 8 · 135 lb" or "10 min".
-function formatFocusTarget(ex) {
-  const rest = Number(ex.restSeconds) > 0 ? ` · rest ${formatRest(ex.restSeconds)}` : "";
+function formatFocusTarget(ex, includeRest = true) {
+  const rest = includeRest && Number(ex.restSeconds) > 0 ? ` · rest ${formatRest(ex.restSeconds)}` : "";
   if (ex.type === "timed") return `${(ex.holds || []).length} × ${ex.holdSeconds || 0} sec${rest}`;
   if (ex.type === "cardio" || ex.type === "sport") return `${ex.targetSubtype ? `${ex.targetSubtype} · ` : ""}${ex.targetDuration || ex.actualDuration || 0} min`;
   if (ex.targetReps) {
@@ -4199,6 +4217,27 @@ function formatFocusTarget(ex) {
     return `${ex.targetSets || (ex.sets || []).length} × ${ex.targetReps}${weight}${rest}`;
   }
   return `${ex.targetSets || (ex.sets || []).length} sets${rest}`;
+}
+
+function canStartVisibleRest(ex) {
+  if (!ex || !(ex.type === "strength" || ex.type === "timed")) return false;
+  if (activeWorkout.rest.active || activeWorkout.timer.running) return false;
+  if (Number(ex.restSeconds) <= 0) return false;
+  return activeWorkout.currentSet < activeUnits(ex).length;
+}
+
+function renderVisibleRestButton(ex, className = "lw-rest-start") {
+  if (!canStartVisibleRest(ex)) return "";
+  const label = `${formatRest(ex.restSeconds)} rest`;
+  return `<button class="${className}" type="button" data-action="start-rest" aria-label="Start ${escapeHtml(label)} timer">${escapeHtml(label)}</button>`;
+}
+
+function renderFocusTarget(ex) {
+  const restSec = Number(ex.restSeconds) || 0;
+  const base = escapeHtml(formatFocusTarget(ex, false));
+  if (!(ex.type === "strength" || ex.type === "timed") || restSec <= 0) return base;
+  const button = renderVisibleRestButton(ex);
+  return button ? `${base}${button}` : `${base} · rest ${escapeHtml(formatRest(restSec))}`;
 }
 
 // The progress bar across the top: a filled dot per exercise, with done ones
@@ -4611,7 +4650,8 @@ function currentHoldSeconds(ex) {
 }
 
 // A quiet "Rest ~90s before your next set" note for the live set/hold page,
-// shown only when the plan set a rest target. No timer — just a reminder.
+// shown only when the plan set a rest target. Tapping it opens the same guided
+// rest countdown used by automatic rest timers when that makes sense.
 // Suppressed when the guided rest countdown will take over instead (restTimer
 // in straight mode); round-by-round flows still get the quiet hint.
 function renderRestHint(ex) {
@@ -4619,7 +4659,10 @@ function renderRestHint(ex) {
   const timerTakesOver = ex.restTimer && activeWorkout.flowMode !== "round";
   if (sec <= 0 || timerTakesOver) return "";
   const what = ex.type === "timed" ? "between holds" : "before your next set";
-  return `<p class="lw-rest-hint">Rest ~<strong>${escapeHtml(formatRest(sec))}</strong> ${what}</p>`;
+  if (!canStartVisibleRest(ex)) {
+    return `<p class="lw-rest-hint">Rest ~<strong>${escapeHtml(formatRest(sec))}</strong> ${what}</p>`;
+  }
+  return `<button class="lw-rest-hint" type="button" data-action="start-rest">Rest ~<strong>${escapeHtml(formatRest(sec))}</strong> ${what}</button>`;
 }
 
 // A note from the AI coach for this move (e.g. "ease off the last set — you
@@ -4899,7 +4942,7 @@ function renderFocusedExercise() {
         </div>
       </div>
       <div class="lw-target">
-        <span>Target: <strong>${escapeHtml(formatFocusTarget(ex))}</strong></span>
+        <span class="lw-target-line">Target: <strong>${renderFocusTarget(ex)}</strong></span>
         <button class="lw-edit-targets" type="button" data-action="open-targets"${activeWorkout.timer.running ? " disabled" : ""}>Edit targets</button>
       </div>
       ${renderCoachNote(ex)}
@@ -5318,6 +5361,13 @@ async function handleTodayWorkoutClick(event) {
   if (!button) return;
   const action = button.dataset.action;
   const exercise = getActiveExercise();
+
+  if (action === "start-rest" && exercise) {
+    if (!canStartVisibleRest(exercise)) return;
+    startRestTimer(exercise);
+    persistActiveWorkoutDraft();
+    return;
+  }
 
   // Extend the rest countdown without leaving the rest screen.
   if (action === "rest-add") {
@@ -6193,12 +6243,50 @@ function getLocalData() {
   return data;
 }
 
+// localStorage is capped per-site (~5MB in Safari), separate from the device's
+// own free space. The rolling undo snapshots are by far the largest tenants, so
+// when a write overflows we shed them first (then the pending-sync mirror, whose
+// data also lives in localData) and retry. The real working data must always win
+// the space fight: losing an undo cache is recoverable; losing the save the user
+// just tapped is not.
+function isQuotaError(error) {
+  return Boolean(error) && (
+    error.name === "QuotaExceededError" ||
+    error.name === "NS_ERROR_DOM_QUOTA_REACHED" ||
+    error.code === 22 || error.code === 1014
+  );
+}
+
+function setItemSafe(key, value) {
+  try {
+    localStorage.setItem(key, value);
+    return;
+  } catch (error) {
+    if (!isQuotaError(error)) throw error;
+  }
+  // Out of room: drop the most expendable keys one at a time, retrying after
+  // each, so the write that matters can still land.
+  for (const dropKey of [STORAGE.localSnapshots, STORAGE.pendingData]) {
+    if (dropKey === key) continue;
+    localStorage.removeItem(dropKey);
+    try {
+      localStorage.setItem(key, value);
+      return;
+    } catch (error) {
+      if (!isQuotaError(error)) throw error;
+    }
+  }
+  // Even after clearing the caches there is no room. Surface a clear, honest
+  // message instead of a cryptic quota exception.
+  throw new Error("This device's browser storage for the app is full. Your data is safe in the cloud - sign out and back in on this device to free space.");
+}
+
 function saveLocalData(data) {
-  localStorage.setItem(STORAGE.localData, JSON.stringify(data));
+  setItemSafe(STORAGE.localData, JSON.stringify(data));
 }
 
 function markPendingData(data) {
-  localStorage.setItem(STORAGE.pendingData, JSON.stringify(data));
+  setItemSafe(STORAGE.pendingData, JSON.stringify(data));
   // Every real edit becomes a one-tap undo point on this device (deduped, so a
   // run of identical saves doesn't flood the list).
   pushLocalSnapshot("after edit", data);
@@ -6356,7 +6444,32 @@ function dataChanged(a, b) {
 }
 
 // ---- Rolling on-device snapshots (instant in-app undo) ----
-const LOCAL_SNAPSHOT_KEEP = 12;
+// Each snapshot is a FULL copy of the data blob, so this count multiplies the
+// app's localStorage footprint directly. Keep it modest: 6 undo points is plenty
+// of safety net without crowding the per-site quota (which is what overflowed and
+// blocked saves before). persistSnapshots() also trims further under pressure.
+const LOCAL_SNAPSHOT_KEEP = 6;
+
+// Store the snapshot list, dropping the oldest entries until it fits. Snapshots
+// are the largest, most expendable thing we hold, so they yield space first
+// rather than letting an oversized undo history wedge the quota for real saves.
+function persistSnapshots(list) {
+  let trimmed = list.slice(0, LOCAL_SNAPSHOT_KEEP);
+  while (trimmed.length) {
+    try {
+      localStorage.setItem(STORAGE.localSnapshots, JSON.stringify(trimmed));
+      return;
+    } catch (error) {
+      if (!isQuotaError(error) || trimmed.length === 1) {
+        // Can't fit even a single snapshot: drop the cache entirely and move on.
+        // Saves don't depend on snapshots, so this stays silent.
+        localStorage.removeItem(STORAGE.localSnapshots);
+        return;
+      }
+      trimmed = trimmed.slice(0, Math.ceil(trimmed.length / 2));
+    }
+  }
+}
 
 function getLocalSnapshots() {
   const list = readJson(STORAGE.localSnapshots);
@@ -6381,7 +6494,7 @@ function pushLocalSnapshot(label, data) {
       planName: payload.activePlan?.name || "",
       data: payload
     });
-    localStorage.setItem(STORAGE.localSnapshots, JSON.stringify(list.slice(0, LOCAL_SNAPSHOT_KEEP)));
+    persistSnapshots(list);
   } catch (e) {
     // Snapshots are a safety net; never let one break a save (e.g. quota).
     console.error("Local snapshot skipped:", e);
