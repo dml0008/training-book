@@ -29,7 +29,8 @@ const STORAGE = {
   libraryV3Merged: "trainingBookLibraryV3Merged",
   pelotonSeeded: "trainingBookPelotonSeeded",
   pickleballSeeded: "trainingBookPickleballSeeded",
-  sportTypeFixed: "trainingBookSportTypeFixed"
+  sportTypeFixed: "trainingBookSportTypeFixed",
+  catalogDataFixed: "trainingBookCatalogDataFixed"
 };
 
 const screens = Array.from(document.querySelectorAll(".screen"));
@@ -1649,9 +1650,9 @@ function getStarterExercises() {
     area: "Core",
     group: "core",
     equipment: "body only",
-    primaryMuscle: "glutes",
+    primaryMuscle: "abdominals",
     icon: "yoga",
-    photos: { start: "assets/icons/photos/lying-leg-raise/start.jpg", finish: "assets/icons/photos/lying-leg-raise/finish.jpg" },
+    photos: null,
     tags: ["home","gym","bodyweight"]
   },
   {
@@ -1789,7 +1790,7 @@ function getStarterExercises() {
   {
     id: "stationary-bike",
     name: "Stationary Bike",
-    type: "strength",
+    type: "cardio",
     area: "Cardio",
     group: "cardio",
     equipment: "machine",
@@ -1813,7 +1814,7 @@ function getStarterExercises() {
   {
     id: "rowing-machine",
     name: "Rowing Machine",
-    type: "strength",
+    type: "cardio",
     area: "Cardio",
     group: "cardio",
     equipment: "machine",
@@ -1825,12 +1826,12 @@ function getStarterExercises() {
   {
     id: "treadmill-run",
     name: "Treadmill Run",
-    type: "strength",
+    type: "cardio",
     area: "Cardio",
     group: "cardio",
     equipment: "machine",
     primaryMuscle: "quadriceps",
-    icon: "weight",
+    icon: "run",
     photos: { start: "assets/icons/photos/treadmill-run/start.jpg", finish: "assets/icons/photos/treadmill-run/finish.jpg" },
     tags: ["gym","machine","cardio"]
   },
@@ -2273,6 +2274,59 @@ function restoreSportTypesOnce() {
   });
 
   localStorage.setItem(STORAGE.sportTypeFixed, "1");
+  if (!changed) return;
+  data.updatedAt = new Date().toISOString();
+  data.updatedBy = getDeviceId();
+  saveLocalData(data);
+  markPendingData(data);
+  refreshLibrary();
+  renderExercises();
+  renderExercisePicker();
+  renderTodayRoutine();
+  if (navigator.onLine) {
+    uploadWorkoutData(data).then(clearPendingData).catch(() => {});
+  }
+}
+
+// One-time repair for catalog metadata that was generated incorrectly in older
+// builds. It only touches the built-in exercise ids when they still look like
+// the old starter records: no workouts/history are changed, and custom/user
+// edits on unrelated exercises are left alone.
+function repairCatalogDataOnce() {
+  if (localStorage.getItem(STORAGE.catalogDataFixed) === "1") return;
+  const data = getLocalData();
+  const library = Array.isArray(data.library) ? data.library : null;
+  if (!library) { localStorage.setItem(STORAGE.catalogDataFixed, "1"); return; }
+
+  let changed = false;
+  const treadmill = library.find((ex) => ex?.id === "treadmill-run");
+  if (treadmill && treadmill.name === "Treadmill Run") {
+    if (treadmill.type !== "cardio") { treadmill.type = "cardio"; changed = true; }
+    if (treadmill.group !== "cardio") { treadmill.group = "cardio"; changed = true; }
+    if (treadmill.area !== "Cardio") { treadmill.area = "Cardio"; changed = true; }
+    if (treadmill.icon === "weight") { treadmill.icon = "run"; changed = true; }
+    if (!Array.isArray(treadmill.tags) || !treadmill.tags.includes("cardio")) {
+      treadmill.tags = Array.from(new Set([...(Array.isArray(treadmill.tags) ? treadmill.tags : []), "cardio"]));
+      changed = true;
+    }
+  }
+
+  const lyingLegRaise = library.find((ex) => ex?.id === "lying-leg-raise");
+  if (lyingLegRaise && lyingLegRaise.name === "Lying Leg Raise") {
+    if (lyingLegRaise.primaryMuscle === "glutes") {
+      lyingLegRaise.primaryMuscle = "abdominals";
+      changed = true;
+    }
+    const defaultBadPhotos = lyingLegRaise.photos
+      && lyingLegRaise.photos.start === "assets/icons/photos/lying-leg-raise/start.jpg"
+      && lyingLegRaise.photos.finish === "assets/icons/photos/lying-leg-raise/finish.jpg";
+    if (defaultBadPhotos) {
+      lyingLegRaise.photos = null;
+      changed = true;
+    }
+  }
+
+  localStorage.setItem(STORAGE.catalogDataFixed, "1");
   if (!changed) return;
   data.updatedAt = new Date().toISOString();
   data.updatedBy = getDeviceId();
@@ -3093,11 +3147,11 @@ const EXERCISE_INSTRUCTIONS = {
     "Continue alternating in this manner until all prescribed repetitions are done."
   ],
   "lying-leg-raise": [
-    "While standing up straight with both feet next to each other at around shoulder width, grab a sturdy surface such as the sides of a squat rack or the top of a chair to brace yourself and keep balance.",
-    "With or without an ankle weight, lift one leg behind you as if performing a leg curl but standing up while keeping the other leg straight. Breathe out as you perform this movement.",
-    "Slowly bring the raised leg back to the floor as you breathe in.",
-    "Repeat for the recommended amount of repetitions.",
-    "Repeat the movement with the opposite leg."
+    "Lie on your back on a mat with your legs straight and your arms by your sides or lightly under your hips for support.",
+    "Brace your abs and press your lower back gently toward the floor.",
+    "Keeping your legs mostly straight, raise them until your hips are flexed and your feet point upward.",
+    "Lower your legs slowly under control, stopping before your lower back arches off the floor.",
+    "Repeat for the prescribed reps with steady breathing and controlled movement."
   ],
   "v-up": [
     "Lie flat on the floor (or exercise mat) on your back with your arms extended straight back behind your head and your legs extended also. This will be your starting position.",
@@ -3578,7 +3632,7 @@ function makeTodayExercise(plannedEx, source = "planned") {
   const targetSets = Number(plannedEx.targetSets) || (durationLike ? 0 : 3);
   const targetReps = Number(plannedEx.targetReps) || 0;
   const targetWeight = Number(plannedEx.targetWeight) || 0;
-  const targetDuration = Number(plannedEx.targetDuration) || 0;
+  const targetDuration = Number(plannedEx.targetDuration) || (durationLike ? 20 : 0);
   const metricProfile = getMetricProfile(exerciseInfo, plannedEx);
   const targetSubtype = plannedEx.targetSubtype || defaultExerciseSubtype(exerciseInfo.id);
   // Rest target (seconds) between sets/holds. 0 = none. Usually set by the AI
@@ -8320,9 +8374,9 @@ function formatRoutineExercise(exercise) {
   const rest = Number(exercise.targetRest) > 0
     ? `, rest ${formatRest(exercise.targetRest)}${exercise.restTimer ? " timer" : ""}`
     : "";
-  if (exercise.targetDuration) {
+  if (exercise.targetDuration || exerciseInfo?.type === "cardio" || exerciseInfo?.type === "sport") {
     const subtype = exercise.targetSubtype ? `${exercise.targetSubtype}, ` : "";
-    return `- ${name}: ${subtype}${exercise.targetDuration} min`;
+    return `- ${name}: ${subtype}${exercise.targetDuration || 20} min`;
   }
   if (exerciseInfo?.type === "timed") {
     return `- ${name}: ${exercise.targetSets || 1}x${exercise.targetReps || 0} sec${rest}`;
@@ -8394,7 +8448,7 @@ function formatLocation(loc) {
 function describeRoutineExercise(ex) {
   const lib = getExerciseById(ex.exerciseId);
   const name = lib?.name || ex.exerciseId;
-  if (ex.targetDuration) return { name, detail: `${ex.targetDuration} min` };
+  if (ex.targetDuration || lib?.type === "cardio" || lib?.type === "sport") return { name, detail: `${ex.targetDuration || 20} min` };
   if ((lib?.type) === "timed") return { name, detail: `${ex.targetSets || 1} × ${ex.targetReps || 0} sec` };
   const weight = Number(ex.targetWeight) > 0 ? ` @ ${ex.targetWeight} lb` : "";
   return { name, detail: `${ex.targetSets || 1} × ${ex.targetReps || 0}${weight}` };
@@ -12167,6 +12221,7 @@ async function initCloud() {
         seedPelotonOnce();
         seedPickleballOnce();
         restoreSportTypesOnce();
+        repairCatalogDataOnce();
       }, (error) => console.error("Cloud listener error:", error));
     } else {
       cloudUser = null;

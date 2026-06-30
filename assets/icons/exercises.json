@@ -1286,6 +1286,7 @@
     {
       "name": "Soccer",
       "slug": "soccer",
+      "type": "sport",
       "group": "cardio",
       "equipment": "body only",
       "primaryMuscle": "full body",
@@ -1306,6 +1307,7 @@
     {
       "name": "Pickleball",
       "slug": "pickleball",
+      "type": "sport",
       "group": "cardio",
       "equipment": "body only",
       "primaryMuscle": "full body",
@@ -2716,25 +2718,22 @@
       "slug": "lying-leg-raise",
       "group": "core",
       "equipment": "body only",
-      "primaryMuscle": "glutes",
+      "primaryMuscle": "abdominals",
       "icon": {
         "glyph": "yoga",
         "file": "assets/icons/glyphs/yoga.svg",
         "source": "tabler"
       },
-      "dbId": "Leg_Lift",
-      "photos": {
-        "start": "assets/icons/photos/lying-leg-raise/start.jpg",
-        "finish": "assets/icons/photos/lying-leg-raise/finish.jpg"
-      },
+      "dbId": null,
+      "photos": null,
       "instructions": [
-        "While standing up straight with both feet next to each other at around shoulder width, grab a sturdy surface such as the sides of a squat rack or the top of a chair to brace yourself and keep balance.",
-        "With or without an ankle weight, lift one leg behind you as if performing a leg curl but standing up while keeping the other leg straight. Breathe out as you perform this movement.",
-        "Slowly bring the raised leg back to the floor as you breathe in.",
-        "Repeat for the recommended amount of repetitions.",
-        "Repeat the movement with the opposite leg."
+        "Lie on your back on a mat with your legs straight and your arms by your sides or lightly under your hips for support.",
+        "Brace your abs and press your lower back gently toward the floor.",
+        "Keeping your legs mostly straight, raise them until your hips are flexed and your feet point upward.",
+        "Lower your legs slowly under control, stopping before your lower back arches off the floor.",
+        "Repeat for the prescribed reps with steady breathing and controlled movement."
       ],
-      "instructionsSource": "free-exercise-db"
+      "instructionsSource": "authored"
     },
     {
       "name": "V-Up",
@@ -3017,6 +3016,7 @@
     {
       "name": "Stationary Bike",
       "slug": "stationary-bike",
+      "type": "cardio",
       "group": "cardio",
       "equipment": "machine",
       "primaryMuscle": "quadriceps",
@@ -3065,6 +3065,7 @@
     {
       "name": "Rowing Machine",
       "slug": "rowing-machine",
+      "type": "cardio",
       "group": "cardio",
       "equipment": "machine",
       "primaryMuscle": "quadriceps",
@@ -3088,12 +3089,13 @@
     {
       "name": "Treadmill Run",
       "slug": "treadmill-run",
+      "type": "cardio",
       "group": "cardio",
       "equipment": "machine",
       "primaryMuscle": "quadriceps",
       "icon": {
-        "glyph": "weight",
-        "file": "assets/icons/glyphs/weight.svg",
+        "glyph": "run",
+        "file": "assets/icons/glyphs/run.svg",
         "source": "tabler"
       },
       "dbId": "Running_Treadmill",
