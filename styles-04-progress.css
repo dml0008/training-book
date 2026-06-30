@@ -473,6 +473,159 @@ button.cal-cell:active {
   line-height: 1.55;
 }
 
+#coach-content {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.coach-heading {
+  margin-bottom: var(--space-5);
+}
+
+.coach-heading p:last-child {
+  margin: 0;
+  max-width: 720px;
+  color: var(--muted);
+}
+
+.coach-status-card,
+.coach-result,
+.coach-option {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: rgba(16, 20, 19, 0.62);
+  padding: var(--space-4);
+}
+
+.coach-status-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  border-color: rgba(182, 211, 50, 0.28);
+  background: linear-gradient(135deg, rgba(182, 211, 50, 0.12), rgba(16, 20, 19, 0.68));
+}
+
+.coach-status-card.is-error {
+  border-color: rgba(196, 57, 57, 0.58);
+  background: rgba(196, 57, 57, 0.11);
+}
+
+.coach-status-card h3,
+.coach-option h3,
+.coach-result h3 {
+  margin: 4px 0 0;
+  font-size: 20px;
+  letter-spacing: 0;
+}
+
+.coach-status-card p,
+.coach-option p,
+.coach-result p {
+  margin: var(--space-2) 0 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.coach-options {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+.coach-option {
+  display: flex;
+  min-height: 260px;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.coach-option.is-manual {
+  border-color: rgba(155, 168, 161, 0.32);
+}
+
+.coach-option-top,
+.coach-result-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.coach-option-top {
+  justify-content: flex-start;
+}
+
+.coach-option-icon {
+  display: grid;
+  flex: 0 0 auto;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  border: 1px solid rgba(182, 211, 50, 0.34);
+  border-radius: var(--radius-sm);
+  background: rgba(182, 211, 50, 0.1);
+  color: var(--accent);
+}
+
+.coach-option-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.coach-option-meta {
+  margin-top: auto !important;
+  color: var(--dim) !important;
+  font-size: 12px !important;
+  font-weight: 750;
+}
+
+.coach-option-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.coach-loading {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: 1px solid rgba(182, 211, 50, 0.28);
+  border-radius: var(--radius-md);
+  background: rgba(182, 211, 50, 0.08);
+}
+
+.coach-loading strong {
+  display: block;
+  margin-bottom: 2px;
+}
+
+.coach-loading p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.coach-spinner {
+  width: 26px;
+  height: 26px;
+  flex: 0 0 auto;
+  border: 3px solid rgba(182, 211, 50, 0.22);
+  border-top-color: var(--accent);
+  border-radius: var(--radius-full);
+  animation: coach-spin 0.8s linear infinite;
+}
+
+.coach-empty {
+  margin: 0;
+}
+
+@keyframes coach-spin {
+  to { transform: rotate(360deg); }
+}
+
 @media (max-width: 560px) {
   .coach-head,
   .coach-actions,
@@ -482,6 +635,31 @@ button.cal-cell:active {
 
   .coach-actions {
     justify-content: stretch;
+  }
+}
+
+@media (max-width: 900px) {
+  .coach-options {
+    grid-template-columns: 1fr;
+  }
+
+  .coach-option {
+    min-height: 0;
+  }
+}
+
+@media (max-width: 640px) {
+  .coach-status-card,
+  .coach-result-head,
+  .coach-option-actions,
+  .coach-option-actions button {
+    width: 100%;
+  }
+
+  .coach-status-card,
+  .coach-result-head {
+    flex-direction: column;
+    align-items: stretch;
   }
 }
 

@@ -3,7 +3,7 @@ const DROPBOX_TOKEN_URL = "https://api.dropboxapi.com/oauth2/token";
 const DROPBOX_UPLOAD_URL = "https://content.dropboxapi.com/2/files/upload";
 const DROPBOX_DOWNLOAD_URL = "https://content.dropboxapi.com/2/files/download";
 const DATA_FILE_PATH = "/04_Technical/06_Side_Projects/Workout and Nutrition App/data/workout-data.json";
-const APP_VERSION = "2026.06.28-coach-review-button";
+const APP_VERSION = "2026.06.30-coach-page";
 
 const STORAGE = {
   appKey: "trainingBookDropboxAppKey",
@@ -24,7 +24,6 @@ const STORAGE = {
   workoutFlowMode: "trainingBookWorkoutFlowMode",
   deviceId: "trainingBookDeviceId",
   activeTab: "trainingBookActiveTab",
-  reviewReminderDismissed: "trainingBookReviewReminderDismissed",
   soccerSeeded: "trainingBookSoccerSeeded",
   libraryV2Seeded: "trainingBookLibraryV2Seeded",
   libraryV3Merged: "trainingBookLibraryV3Merged",
@@ -72,6 +71,7 @@ const refreshAppButton = document.querySelector("#refresh-app");
 const historyContent = document.querySelector("#history-content");
 const progressContent = document.querySelector("#progress-content");
 const planContent = document.querySelector("#plan-content");
+const coachContent = document.querySelector("#coach-content");
 const exerciseList = document.querySelector("#exercise-list");
 const libraryCount = document.querySelector("#library-count");
 const filterStrip = document.querySelector("#filter-strip");
@@ -175,10 +175,12 @@ let _coachReviewCallable = null; // callable cloud helper; reads only this signe
 const coachReviewState = {
   status: "idle",
   action: "",
+  reviewType: "",
   checkin: "",
   importBlock: "",
   message: "",
-  generatedAt: ""
+  generatedAt: "",
+  packetMeta: null
 };
 let queuedPlanImportText = "";
 
@@ -274,13 +276,13 @@ function updateCloudUi() {
       : "Sign in with Google to sync your workouts across your phone and desktop.";
     syncStatus.className = signedIn ? "sync-status good" : "sync-status";
   }
-  refreshCoachCardIfVisible();
+  refreshCoachIfVisible();
 }
 
-function refreshCoachCardIfVisible() {
+function refreshCoachIfVisible() {
   const active = document.querySelector(".screen.is-active");
-  if (active?.dataset.screen === "progress" && typeof renderProgress === "function") {
-    renderProgress(false);
+  if (active?.dataset.screen === "coach" && typeof renderCoach === "function") {
+    renderCoach();
   }
 }
 
@@ -3729,30 +3731,75 @@ function updateTodayProgress() {
   }
 }
 
+function getCoachMeta(data = getLocalData()) {
+  const coach = data.coach && typeof data.coach === "object" ? data.coach : {};
+  return {
+    lastReviewAt: coach.lastReviewAt || "",
+    lastReviewType: coach.lastReviewType || "",
+    lastReviewDueDate: coach.lastReviewDueDate || "",
+    lastCheckin: coach.lastCheckin || "",
+    lastCheckinMeta: coach.lastCheckinMeta || null,
+    reminderSnoozedUntil: coach.reminderSnoozedUntil || ""
+  };
+}
+
+function getActiveReviewDate(data = getLocalData()) {
+  const activePlan = { ...getStarterActivePlan(), ...(data.activePlan || {}) };
+  const reviewDate = (activePlan.nextReviewDate || "").trim();
+  return /^\d{4}-\d{2}-\d{2}$/.test(reviewDate) ? reviewDate : "";
+}
+
+function addDaysToDateKey(dateKey, days) {
+  const base = toDateKeyDate(dateKey) || new Date();
+  base.setUTCDate(base.getUTCDate() + days);
+  return base.toISOString().slice(0, 10);
+}
+
+function toDateKeyDate(dateKey) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(String(dateKey || ""))) return null;
+  const date = new Date(`${dateKey}T00:00:00Z`);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function isReviewCycleHandled(coach, reviewDate) {
+  return Boolean(reviewDate && coach.lastReviewAt && coach.lastReviewDueDate === reviewDate);
+}
+
 function renderReviewReminder() {
   if (!reviewReminder) return;
 
   const data = getLocalData();
-  const activePlan = { ...getStarterActivePlan(), ...(data.activePlan || {}) };
-  const reviewDate = (activePlan.nextReviewDate || "").trim();
+  const coach = getCoachMeta(data);
+  const reviewDate = getActiveReviewDate(data);
   const today = getTodayDateString();
 
   // Only show when a valid review date is set and today is on or past it.
-  const isDue = /^\d{4}-\d{2}-\d{2}$/.test(reviewDate) && today >= reviewDate;
-  const dismissedToday = localStorage.getItem(STORAGE.reviewReminderDismissed) === today;
+  const isDue = Boolean(reviewDate && today >= reviewDate);
+  const snoozed = coach.reminderSnoozedUntil && today <= coach.reminderSnoozedUntil;
+  const handled = isReviewCycleHandled(coach, reviewDate);
 
-  if (!isDue || dismissedToday) {
+  if (!isDue || snoozed || handled) {
     reviewReminder.hidden = true;
     return;
   }
 
+  const title = reviewReminder.querySelector("#review-reminder-title");
+  if (title) title.textContent = "Review window is open";
   if (reviewReminderSub) {
     const overdue = today > reviewDate;
     reviewReminderSub.textContent = overdue
-      ? `Your review was due ${formatWorkoutDate(reviewDate)}. Copy your coach prompt, talk it through, and load next week's plan.`
-      : "Copy your coach prompt, talk it through, and load next week's plan.";
+      ? `Your review was due ${formatWorkoutDate(reviewDate)}. Open Coach for a check-in, or snooze this for a week.`
+      : "Open Coach for a check-in, or snooze this for a week.";
   }
   reviewReminder.hidden = false;
+}
+
+function snoozeCoachReminder(days = 7) {
+  const data = getLocalData();
+  data.coach = { ...getCoachMeta(data), reminderSnoozedUntil: addDaysToDateKey(getTodayDateString(), days) };
+  commitProgressData(data);
+  renderReviewReminder();
+  renderCoach();
 }
 
 // Switches the Today tab between its three states and shows/hides the
@@ -5879,6 +5926,10 @@ function showScreen(name, remember = false) {
 
   if (validName === "plan") {
     renderPlan();
+  }
+
+  if (validName === "coach") {
+    renderCoach();
   }
 
   if (validName === "progress") {
@@ -8317,7 +8368,7 @@ function renderPlan() {
     ${renderPlanSchedule(weeklyPlan, routines)}
     ${renderPlanRoutines(routines)}
     ${renderPlanOverview(activePlan)}
-    ${renderPlanAiPanel(importMessageHtml, importPreviewHtml, importText)}
+    ${renderPlanImportPanel(importMessageHtml, importPreviewHtml, importText)}
     ${renderPlanPickerSheet(routines)}
   `;
 
@@ -8403,7 +8454,7 @@ function renderPlanRoutines(routines) {
           ? routines.map((routine) => routine.id === editingRoutineId
               ? renderRoutineEditCard(routine)
               : renderRoutineViewCard(routine)).join("")
-          : `<p class="empty-state">No routines yet. Tap “Add routine” to build one, or import a plan from your AI coach below.</p>`}
+          : `<p class="empty-state">No routines yet. Tap “Add routine” to build one, or paste a returned plan block into the importer below.</p>`}
       </div>
     </section>
   `;
@@ -8644,13 +8695,13 @@ function renderPlanOverview(activePlan) {
   `;
 }
 
-function renderPlanAiPanel(importMessageHtml, importPreviewHtml, importText) {
+function renderPlanImportPanel(importMessageHtml, importPreviewHtml, importText) {
   return `
-    <section class="plan-section plan-ai">
+    <section class="plan-section plan-import">
       <div class="plan-section-head">
         <div>
-          <p class="card-kicker">AI coach</p>
-          <p class="plan-muted">The way Training Book is meant to run. Copy your prompt into any AI chat — ChatGPT, Claude, or similar — and it becomes your coach: it reviews your week, talks through what to change, and writes next week's plan for you to paste back below.</p>
+          <p class="card-kicker">Plan importer</p>
+          <p class="plan-muted">Paste a plan draft from Coach or from your manual AI chat. Preview what Training Book reads, then save only when it looks right.</p>
         </div>
       </div>
       <div class="ai-steps">
@@ -8658,21 +8709,8 @@ function renderPlanAiPanel(importMessageHtml, importPreviewHtml, importText) {
           <div class="ai-step-text">
             <span class="ai-step-num">1</span>
             <div>
-              <h3 class="ai-step-title">Copy your prompt</h3>
-              <p class="plan-muted">Bundles your goals, current plan, and full workout history — ready to paste into any AI chat.</p>
-            </div>
-          </div>
-          <div class="ai-step-actions">
-            <button class="primary-button small-button btn-ico" type="button" data-action="copy-packet">${getUiIcon("clipboard-list")}Copy prompt</button>
-            <button class="quiet-button small-button btn-ico" type="button" data-action="save-packet">${getUiIcon("download")}Save as file</button>
-          </div>
-        </div>
-        <div class="ai-step">
-          <div class="ai-step-text">
-            <span class="ai-step-num">2</span>
-            <div>
-              <h3 class="ai-step-title">Paste the new plan</h3>
-              <p class="plan-muted">When your coach hands back next week's plan, drop it in here, preview what Training Book reads, then save.</p>
+              <h3 class="ai-step-title">Paste the returned plan</h3>
+              <p class="plan-muted">Coach will load API plan drafts here automatically. For manual chat, paste the final block your outside AI gives you.</p>
             </div>
           </div>
           <textarea id="plan-import-text" class="plan-import-text" spellcheck="false" placeholder="Paste your coach's plan here…">${escapeHtml(importText)}</textarea>
@@ -9808,66 +9846,208 @@ function getCoachButtonState() {
   if (!firebaseLoaded || !authChecked) return { disabled: true, label: "Loading", message: "Loading your account." };
   if (!cloudUser) return { disabled: true, label: "Sign in", message: "Sign in with Google so the coach can read only your own Training Book data." };
   if (!_coachReviewCallable) return { disabled: true, label: "Not ready", message: "The coach helper has not loaded yet." };
-  return { disabled: false, label: "Coach review", message: "" };
+  return { disabled: false, label: "", message: "" };
 }
 
-function renderCoachReviewCard() {
-  const button = getCoachButtonState();
-  const busy = coachReviewState.status === "loading";
-  const isPlanBusy = busy && coachReviewState.action === "plan";
-  const isReviewBusy = busy && coachReviewState.action === "checkin";
-  const message = coachReviewState.message || button.message || "Uses your synced workouts to give a current check-in. Plan drafts still preview before saving.";
-  const generated = formatCoachReviewTime(coachReviewState.generatedAt);
-  const output = coachReviewState.checkin
-    ? `<div class="coach-output">${escapeHtml(coachReviewState.checkin)}</div>`
-    : `<p class="prog-empty">Tap Coach review after a few logged workouts to get a data-based check-in.</p>`;
-  const planButton = coachReviewState.checkin
-    ? `<button class="quiet-button small-button btn-ico" type="button" data-coach-plan ${busy ? "disabled" : ""}>${getUiIcon("clipboard-list")}Turn this into a plan</button>`
-    : "";
+function getCoachReviewLabel(type) {
+  if (type === "deep") return "Deep Review";
+  if (type === "quick") return "Quick Check-In";
+  if (type === "plan") return "Plan Draft";
+  return "Coach Review";
+}
+
+function getCoachDisplayState() {
+  const data = getLocalData();
+  const coach = getCoachMeta(data);
+  return {
+    data,
+    coach,
+    reviewDate: getActiveReviewDate(data),
+    checkin: coachReviewState.checkin || coach.lastCheckin || "",
+    generatedAt: coachReviewState.generatedAt || coach.lastReviewAt || "",
+    reviewType: coachReviewState.reviewType || coach.lastReviewType || "",
+    packetMeta: coachReviewState.packetMeta || coach.lastCheckinMeta || null
+  };
+}
+
+function renderCoachStatusLine({ coach, reviewDate }) {
+  const today = getTodayDateString();
+  if (!reviewDate) return "No review date is set on your plan yet.";
+  if (isReviewCycleHandled(coach, reviewDate)) return `Review handled for ${formatWorkoutDate(reviewDate)}.`;
+  if (coach.reminderSnoozedUntil && today <= coach.reminderSnoozedUntil) return `Reminder snoozed until ${formatWorkoutDate(coach.reminderSnoozedUntil)}.`;
+  if (today > reviewDate) return `Review was due ${formatWorkoutDate(reviewDate)}.`;
+  if (today === reviewDate) return "Review is due today.";
+  return `Next review window opens ${formatWorkoutDate(reviewDate)}.`;
+}
+
+function renderCoachOption({ mode, title, kicker, body, primary, meta, disabled, busy }) {
   return `
-    <section class="prog-card coach-card">
-      <div class="prog-card-head coach-head">
+    <article class="coach-option ${mode === "manual" ? "is-manual" : ""}">
+      <div class="coach-option-top">
+        <span class="coach-option-icon">${getUiIcon(mode === "manual" ? "clipboard-list" : "sparkles")}</span>
         <div>
-          <p class="card-kicker">Coach review</p>
-          <span class="prog-sub">${generated ? `Last run ${escapeHtml(generated)}` : "Firestore-powered check-in"}</span>
-        </div>
-        <div class="coach-actions">
-          <button class="primary-button small-button btn-ico" type="button" data-coach-review ${button.disabled || busy ? "disabled" : ""}>${getUiIcon("sparkles")}${isReviewBusy ? "Reviewing..." : button.label}</button>
-          ${planButton}
+          <p class="card-kicker">${escapeHtml(kicker)}</p>
+          <h3>${escapeHtml(title)}</h3>
         </div>
       </div>
-      <p class="coach-status ${coachReviewState.status === "error" ? "bad" : ""}" aria-live="polite">${escapeHtml(isPlanBusy ? "Drafting an import block..." : message)}</p>
-      ${output}
-    </section>`;
+      <p>${escapeHtml(body)}</p>
+      <p class="coach-option-meta">${escapeHtml(meta)}</p>
+      <div class="coach-option-actions">
+        ${mode === "manual"
+          ? `<button class="primary-button small-button btn-ico" type="button" data-coach-copy>${getUiIcon("clipboard-list")}Copy prompt</button>
+             <button class="quiet-button small-button btn-ico" type="button" data-coach-save>${getUiIcon("download")}Save file</button>`
+          : `<button class="${mode === "quick" ? "primary-button" : "quiet-button"} small-button btn-ico" type="button" data-coach-run="${mode}" ${disabled || busy ? "disabled" : ""}>${getUiIcon("sparkles")}${busy ? "Reviewing..." : escapeHtml(primary)}</button>`}
+      </div>
+    </article>
+  `;
 }
 
-async function requestCoachReview(mode = "checkin") {
+function renderCoachLoading(action) {
+  const isPlan = action === "plan";
+  const title = isPlan ? "Drafting your plan block" : "Coach is reading your training data";
+  const detail = isPlan
+    ? "Using the latest check-in to produce an import block you will preview on Plan."
+    : "Pulling your signed-in Firestore data, summarizing the right window, and asking for one focused response.";
+  return `
+    <div class="coach-loading" role="status" aria-live="polite">
+      <span class="coach-spinner" aria-hidden="true"></span>
+      <div>
+        <strong>${escapeHtml(title)}</strong>
+        <p>${escapeHtml(detail)}</p>
+      </div>
+    </div>
+  `;
+}
+
+function renderCoachResult(display) {
+  const busy = coachReviewState.status === "loading";
+  if (!display.checkin && !busy) {
+    return `
+      <section class="coach-result">
+        <p class="card-kicker">Latest response</p>
+        <p class="coach-empty">Run a Quick Check-In or Deep Review after you have logged a few workouts. Manual Chat Prompt is always available when you want a conversation outside the app.</p>
+      </section>
+    `;
+  }
+  const generated = formatCoachReviewTime(display.generatedAt);
+  const label = getCoachReviewLabel(display.reviewType);
+  return `
+    <section class="coach-result">
+      <div class="coach-result-head">
+        <div>
+          <p class="card-kicker">Latest response</p>
+          <h3>${escapeHtml(label)}</h3>
+          <p class="coach-option-meta">${generated ? `Generated ${escapeHtml(generated)}` : "Not generated yet"}</p>
+        </div>
+        <button class="quiet-button small-button btn-ico" type="button" data-coach-plan ${display.checkin && !busy ? "" : "disabled"}>${getUiIcon("clipboard-list")}Turn this into a plan draft</button>
+      </div>
+      ${display.checkin ? `<div class="coach-output">${escapeHtml(display.checkin)}</div>` : ""}
+    </section>
+  `;
+}
+
+function renderCoach() {
+  if (!coachContent) return;
+  const button = getCoachButtonState();
+  const busy = coachReviewState.status === "loading";
+  const display = getCoachDisplayState();
+  const status = coachReviewState.message || button.message || renderCoachStatusLine(display);
+  coachContent.innerHTML = `
+    <section class="coach-status-card ${coachReviewState.status === "error" ? "is-error" : ""}">
+      <div>
+        <p class="card-kicker">Review status</p>
+        <h3>${escapeHtml(status)}</h3>
+        <p>Quick is for regular plan adjustments. Deep is for periodic pattern-finding. Manual gives you a no-token prompt for a real chat.</p>
+      </div>
+      <button class="quiet-button small-button" type="button" data-coach-snooze>Snooze reminder 1 week</button>
+    </section>
+    <div class="coach-options">
+      ${renderCoachOption({
+        mode: "quick",
+        title: "Quick Check-In",
+        kicker: "Default",
+        body: "Fast in-app coaching for weekly adjustments without overloading the prompt.",
+        primary: "Run Quick",
+        meta: "Uses current plan, exercise library, and about 14 days of workouts, notes, skips, effort, and body-weight trend.",
+        disabled: button.disabled,
+        busy
+      })}
+      ${renderCoachOption({
+        mode: "deep",
+        title: "Deep Review",
+        kicker: "Periodic",
+        body: "A broader read when you want patterns, stalled lifts, repeated skips, and older notes considered.",
+        primary: "Run Deep",
+        meta: "Uses current plan, exercise library, about 90 days of history, and longer-term summaries.",
+        disabled: button.disabled,
+        busy
+      })}
+      ${renderCoachOption({
+        mode: "manual",
+        title: "Manual Chat Prompt",
+        kicker: "No API tokens",
+        body: "Copies a full prompt for ChatGPT, Claude, or Codex so the coach can ask follow-up questions before writing a final plan.",
+        primary: "",
+        meta: "Includes app rules, exercise library, workout history, and exact Training Book import format.",
+        disabled: false,
+        busy: false
+      })}
+    </div>
+    ${busy ? renderCoachLoading(coachReviewState.action) : ""}
+    ${renderCoachResult(display)}
+  `;
+}
+
+function saveCoachReviewToData({ type, checkin, generatedAt, packetMeta }) {
+  const data = getLocalData();
+  const reviewDate = getActiveReviewDate(data);
+  data.coach = {
+    ...getCoachMeta(data),
+    lastReviewAt: generatedAt,
+    lastReviewType: type,
+    lastReviewDueDate: reviewDate,
+    lastCheckin: checkin,
+    lastCheckinMeta: packetMeta || null,
+    reminderSnoozedUntil: ""
+  };
+  commitProgressData(data);
+}
+
+async function requestCoachReview(mode = "quick") {
   if (!_coachReviewCallable) {
     coachReviewState.status = "error";
     coachReviewState.message = "The coach helper is not ready yet. Refresh the app and try again.";
-    renderProgress(false);
+    renderCoach();
     return;
   }
 
+  const reviewMode = mode === "deep" ? "deep" : mode === "plan" ? "plan" : "quick";
+  const display = getCoachDisplayState();
   coachReviewState.status = "loading";
-  coachReviewState.action = mode;
-  coachReviewState.message = mode === "plan" ? "Drafting a plan import block..." : "Reading your recent workouts...";
-  renderProgress(false);
+  coachReviewState.action = reviewMode;
+  coachReviewState.reviewType = reviewMode === "plan" ? display.reviewType : reviewMode;
+  coachReviewState.message = reviewMode === "plan"
+    ? "Drafting a plan import block..."
+    : `${getCoachReviewLabel(reviewMode)} is running.`;
+  renderCoach();
 
   try {
     const result = await _coachReviewCallable({
-      mode,
-      checkin: mode === "plan" ? coachReviewState.checkin : ""
+      mode: reviewMode,
+      reviewType: display.reviewType || "quick",
+      checkin: reviewMode === "plan" ? display.checkin : ""
     });
     const payload = result?.data || {};
+    const generatedAt = payload.generatedAt || new Date().toISOString();
     coachReviewState.status = "ready";
     coachReviewState.action = "";
-    coachReviewState.generatedAt = payload.generatedAt || new Date().toISOString();
+    coachReviewState.generatedAt = generatedAt;
+    coachReviewState.packetMeta = payload.packetMeta || null;
 
-    if (mode === "plan") {
+    if (reviewMode === "plan") {
       if (!payload.importBlock) throw new Error("The coach did not return a plan block.");
       coachReviewState.importBlock = payload.importBlock;
-      coachReviewState.message = "Plan draft loaded into the importer. Preview it before saving.";
+      coachReviewState.message = "Plan draft loaded into Plan. Preview it before saving.";
       queuedPlanImportText = payload.importBlock;
       planImportPreview = null;
       planImportSummary = "";
@@ -9878,21 +10058,46 @@ async function requestCoachReview(mode = "checkin") {
     }
 
     if (!payload.checkin) throw new Error("The coach did not return a check-in.");
+    coachReviewState.reviewType = reviewMode;
     coachReviewState.checkin = payload.checkin;
-    coachReviewState.message = "Coach review ready.";
+    coachReviewState.message = `${getCoachReviewLabel(reviewMode)} ready.`;
+    saveCoachReviewToData({
+      type: reviewMode,
+      checkin: payload.checkin,
+      generatedAt,
+      packetMeta: payload.packetMeta || null
+    });
+    renderReviewReminder();
   } catch (error) {
     coachReviewState.status = "error";
     coachReviewState.action = "";
     coachReviewState.message = error?.message || "The coach helper could not finish. Try again in a minute.";
   }
 
-  renderProgress(false);
+  renderCoach();
 }
 
-function wireCoachReviewCard() {
-  if (!progressContent) return;
-  progressContent.querySelector("[data-coach-review]")?.addEventListener("click", () => requestCoachReview("checkin"));
-  progressContent.querySelector("[data-coach-plan]")?.addEventListener("click", () => requestCoachReview("plan"));
+function handleCoachClick(event) {
+  const runButton = event.target.closest("[data-coach-run]");
+  if (runButton) {
+    requestCoachReview(runButton.dataset.coachRun);
+    return;
+  }
+  if (event.target.closest("[data-coach-plan]")) {
+    requestCoachReview("plan");
+    return;
+  }
+  if (event.target.closest("[data-coach-copy]")) {
+    copyReviewPacket();
+    return;
+  }
+  if (event.target.closest("[data-coach-save]")) {
+    saveReviewPacket();
+    return;
+  }
+  if (event.target.closest("[data-coach-snooze]")) {
+    snoozeCoachReminder(7);
+  }
 }
 
 function renderProgress(resetMonth = true) {
@@ -9912,7 +10117,6 @@ function renderProgress(resetMonth = true) {
   const streak = computeWeekStreak(target, completedSet);
 
   progressContent.innerHTML = `
-    ${renderCoachReviewCard()}
     ${renderProgressHero(data, doneThisWeek, target, streak, completedSet)}
     ${renderBodyWeightCard(data)}
     ${renderStrengthProgressCard()}
@@ -9942,7 +10146,6 @@ function renderProgress(resetMonth = true) {
     });
   }
 
-  wireCoachReviewCard();
   wireBodyWeightCard();
 }
 
@@ -10950,6 +11153,8 @@ function generateReviewPacket() {
   packet.push("- Give me options with a clear recommendation and the reasoning behind it. This is a");
   packet.push("  back-and-forth conversation — react to my answers, push back when useful, and help");
   packet.push("  me decide. Don't rush to a final plan.");
+  packet.push("- Use plain language and avoid emojis. Keep the tone practical, specific, and easy");
+  packet.push("  to read on a phone.");
   packet.push("- Use my effort ratings, notes, skipped exercises, rest, and trends to progress me");
   packet.push("  sensibly: add reps/weight where sets felt easy, hold or back off where something");
   packet.push("  was painful, repeatedly skipped, or consistently maxed out.");
@@ -10961,6 +11166,8 @@ function generateReviewPacket() {
   packet.push("  of this document — nothing else in that message, no commentary around it.");
   packet.push("- I paste that block straight into Training Book's \"Paste an updated plan\" importer,");
   packet.push("  so it must match the format exactly (including any rest targets).");
+  packet.push("- Do not say you saved or changed my plan. You are drafting; I preview and save");
+  packet.push("  changes manually inside Training Book.");
   packet.push("- Do NOT give me that plan block until we've discussed and I ask for it. Until then,");
   packet.push("  just coach me.");
   packet.push("");
@@ -10971,7 +11178,7 @@ function generateReviewPacket() {
   packet.push("- Cardio/Peloton targets are a subtype plus minutes (Peloton Tread: Incline Walk, 30 min). I log output, average power, distance, notes, and effort.");
   packet.push("- Held moves (e.g. plank) are timed: targets are sets x seconds (3x45 sec), optionally a rest target. I log EACH hold's actual seconds separately (e.g. 60s · 60s · 45s) plus optional per-hold effort.");
   packet.push("- Effort is rated 1-10 (1 = easy, 10 = all-out), logged per set/hold, and is optional — \"not logged\" means I didn't rate it, not that it was easy.");
-  packet.push("- Rest targets (rest 90s) show as a reminder note on the live screen; there's no timer. Add them to lines where rest matters.");
+  packet.push("- Rest targets (rest 90s) show during the live workout. Add \"timer\" after a rest target only when Training Book should run a countdown.");
   packet.push("- Skipped exercises are marked skipped in History; coach around repeated skips.");
   packet.push("");
 
@@ -11734,10 +11941,9 @@ todayRoutineList?.addEventListener("keydown", (event) => {
   openTodayReference(card.dataset.id);
 });
 
-reviewReminderGo?.addEventListener("click", () => showScreen("plan", true));
+reviewReminderGo?.addEventListener("click", () => showScreen("coach", true));
 reviewReminderDismiss?.addEventListener("click", () => {
-  localStorage.setItem(STORAGE.reviewReminderDismissed, getTodayDateString());
-  renderReviewReminder();
+  snoozeCoachReminder(7);
 });
 
 startTodayButton?.addEventListener("click", openWorkoutFlowChoice);
@@ -11779,6 +11985,7 @@ planContent?.addEventListener("dragstart", handlePlanDragStart);
 planContent?.addEventListener("dragover", handlePlanDragOver);
 planContent?.addEventListener("drop", handlePlanDrop);
 planContent?.addEventListener("dragend", handlePlanDragEnd);
+coachContent?.addEventListener("click", handleCoachClick);
 
 syncPill?.addEventListener("click", () => {
   handleSyncPillClick().catch((error) => {

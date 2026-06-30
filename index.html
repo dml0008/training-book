@@ -18,9 +18,9 @@
        sequence. Concatenating them in this order reproduces the old styles.css
        byte-for-byte. -->
   <link rel="stylesheet" href="styles-01-base.css?v=2026.06.19-css-split">
-  <link rel="stylesheet" href="styles-02-layout.css?v=2026.06.19-cardio-fields">
+  <link rel="stylesheet" href="styles-02-layout.css?v=2026.06.30-coach-page">
   <link rel="stylesheet" href="styles-03-workout.css?v=2026.06.22-coach-notes-timers">
-  <link rel="stylesheet" href="styles-04-progress.css?v=2026.06.19-css-split">
+  <link rel="stylesheet" href="styles-04-progress.css?v=2026.06.30-coach-page">
   <link rel="stylesheet" href="styles-05-interactions.css?v=2026.06.19-css-split">
   <link rel="stylesheet" href="styles-06-plan.css?v=2026.06.22-ai-coach-section">
   <link rel="stylesheet" href="styles-07-library.css?v=2026.06.19-css-split">
@@ -77,12 +77,12 @@
 
     <div class="review-reminder" id="review-reminder" hidden>
       <div class="review-reminder-text">
-        <p class="review-reminder-title">Time for your weekly review</p>
-        <p class="review-reminder-sub" id="review-reminder-sub">Export a packet for your coach and load the updated plan.</p>
+        <p class="review-reminder-title" id="review-reminder-title">Review window is open</p>
+        <p class="review-reminder-sub" id="review-reminder-sub">Open Coach for a check-in, or snooze this reminder for a week.</p>
       </div>
       <div class="review-reminder-actions">
-        <button class="primary-button small-button" id="review-reminder-go" type="button">Go to Plan</button>
-        <button class="quiet-button small-button" id="review-reminder-dismiss" type="button">Dismiss</button>
+        <button class="primary-button small-button" id="review-reminder-go" type="button">Open Coach</button>
+        <button class="quiet-button small-button" id="review-reminder-dismiss" type="button">Snooze 1 week</button>
       </div>
     </div>
 
@@ -222,11 +222,24 @@
             <div>
               <p class="eyebrow">Current program</p>
               <h2 id="plan-title">Plan</h2>
-              <p>Review the program loaded in Training Book, update the big-picture notes, and trade clean plan packets with your AI coach.</p>
+              <p>Review the program loaded in Training Book, update the big-picture notes, and paste returned plan drafts for preview.</p>
             </div>
           </div>
 
           <div id="plan-content" aria-live="polite"></div>
+        </div>
+      </section>
+
+      <section class="screen" data-screen="coach" aria-labelledby="coach-title">
+        <div class="coach-panel">
+          <div class="coach-heading">
+            <div>
+              <p class="eyebrow">AI review</p>
+              <h2 id="coach-title">Coach</h2>
+              <p>Choose the right level of coaching: quick in-app feedback, a deeper review, or a manual prompt for a true back-and-forth chat.</p>
+            </div>
+          </div>
+          <div id="coach-content" aria-live="polite"></div>
         </div>
       </section>
 
@@ -277,6 +290,10 @@
         <span class="tab-icon" data-icon="clipboard-list" aria-hidden="true"></span>
         <span>Plan</span>
       </button>
+      <button class="tab" type="button" data-target="coach">
+        <span class="tab-icon" data-icon="sparkles" aria-hidden="true"></span>
+        <span>Coach</span>
+      </button>
       <button class="tab" type="button" data-target="history">
         <span class="tab-icon" data-icon="history" aria-hidden="true"></span>
         <span>History</span>
@@ -301,6 +318,6 @@
     </div>
   </div>
 
-  <script src="app.js?v=2026.06.22-ai-coach-section"></script>
+  <script src="app.js?v=2026.06.30-coach-page"></script>
 </body>
 </html>
