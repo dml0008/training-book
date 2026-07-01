@@ -3,7 +3,7 @@ const DROPBOX_TOKEN_URL = "https://api.dropboxapi.com/oauth2/token";
 const DROPBOX_UPLOAD_URL = "https://content.dropboxapi.com/2/files/upload";
 const DROPBOX_DOWNLOAD_URL = "https://content.dropboxapi.com/2/files/download";
 const DATA_FILE_PATH = "/04_Technical/06_Side_Projects/Workout and Nutrition App/data/workout-data.json";
-const APP_VERSION = "1.0.12";
+const APP_VERSION = "1.0.13";
 const SOCCER_DURATION_MINUTES = 60;
 
 const STORAGE = {
@@ -6997,7 +6997,9 @@ const UI_ICONS = {
   settings: '<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>',
   // Notes (header + live-workout topbar): durable product notes, not chat.
   "notebook-pen": '<path d="M13.4 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7.4"/><path d="M2 6h4"/><path d="M2 10h4"/><path d="M2 14h4"/><path d="M2 18h4"/><path d="M21.378 5.626a1 1 0 1 0-3.004-3.004l-5.01 5.012a2 2 0 0 0-.506.854l-.837 2.87a.5.5 0 0 0 .62.62l2.87-.837a2 2 0 0 0 .854-.506z"/>',
-  copy: '<rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>'
+  copy: '<rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>',
+  // Per-set "more" toggle in the History editor (reveals effort + note).
+  "more-horizontal": '<circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/>'
 };
 
 function getUiIcon(name) {
@@ -11680,8 +11682,15 @@ function openHistoryDetail(workoutId) {
   historyEdit = {
     workoutId,
     workout: working,
+    // Open on a clean read-only summary; the user taps "Edit workout" to turn on
+    // the input fields. This gives History an obvious Edit affordance instead of
+    // always-on nested inputs.
+    mode: "view",
     dirty: false,
     effortOpenKey: null,
+    // Which set row has its optional effort + note panel expanded (one at a time),
+    // so a set stays a single scannable line until you ask for the extras.
+    setMoreKey: null,
     addOpen: false,
     addQuery: ""
   };
@@ -11789,39 +11798,136 @@ function renderHistoryDetail() {
   const detailFoot = document.querySelector("#history-detail-foot");
   const detailTitle = document.querySelector("#history-detail-title");
   const entries = Array.isArray(workout.entries) ? workout.entries : [];
+  const editing = historyEdit.mode === "edit";
+  const name = workout.name || workout.routineName || "Workout";
 
   if (detailTitle) {
-    detailTitle.textContent = `${workout.name || workout.routineName || "Workout"} • ${formatWorkoutDate(workout.date)}`;
+    detailTitle.textContent = editing ? `Editing · ${name}` : `${name} · ${formatWorkoutDate(workout.date)}`;
+  }
+
+  // The add-exercise page takes over the body entirely (edit mode only).
+  if (historyEdit.addOpen) {
+    if (detailBody) detailBody.innerHTML = renderHistoryAddView();
+    if (detailFoot) detailFoot.innerHTML = "";
+    renderUiIcons();
+    return;
   }
 
   if (detailBody) {
-    detailBody.innerHTML = historyEdit.addOpen ? renderHistoryAddView() : `
-      <div class="detail-section">
-        <div class="detail-field">
-          <label for="detail-workout-date">Date</label>
-          <input id="detail-workout-date" type="date" value="${escapeHtml(workout.date)}" data-hfield="date">
-        </div>
-      </div>
-
-      <div class="detail-section">
-        <h4 class="section-label">Exercises</h4>
-        <div id="detail-exercises-list">
-          ${entries.length
-            ? entries.map((entry, index) => renderDetailExercise(entry, index)).join("")
-            : `<p class="empty-state">No exercises in this workout. Add one below.</p>`}
-        </div>
-        <button class="quiet-button btn-ico add-exercise-button" type="button" data-haction="add-exercise">${getUiIcon("plus")}Add exercise</button>
-      </div>
-    `;
+    detailBody.innerHTML = editing
+      ? renderHistoryEditBody(workout, entries)
+      : renderHistoryViewBody(workout, entries);
   }
 
   if (detailFoot) {
-    detailFoot.innerHTML = historyEdit.addOpen
-      ? ""
-      : `<button class="primary-button" type="button" data-haction="save">Save changes</button>`;
+    detailFoot.innerHTML = editing
+      ? `<button class="primary-button" type="button" data-haction="save">Save changes</button>`
+      : `<div class="hist-view-actions">
+          <button class="primary-button btn-ico" type="button" data-haction="edit">${getUiIcon("pencil")}Edit workout</button>
+          <button class="quiet-button btn-ico danger-text" type="button" data-haction="delete-workout">${getUiIcon("trash-2")}Delete</button>
+        </div>`;
   }
 
   renderUiIcons();
+}
+
+// Editable body: the workout date plus one input-driven card per exercise.
+function renderHistoryEditBody(workout, entries) {
+  return `
+    <div class="detail-section">
+      <div class="detail-field">
+        <label for="detail-workout-date">Date</label>
+        <input id="detail-workout-date" type="date" value="${escapeHtml(workout.date)}" data-hfield="date">
+      </div>
+    </div>
+
+    <div class="detail-section">
+      <h4 class="section-label">Exercises</h4>
+      <div id="detail-exercises-list">
+        ${entries.length
+          ? entries.map((entry, index) => renderDetailExercise(entry, index)).join("")
+          : `<p class="empty-state">No exercises in this workout. Add one below.</p>`}
+      </div>
+      <button class="quiet-button btn-ico add-exercise-button" type="button" data-haction="add-exercise">${getUiIcon("plus")}Add exercise</button>
+    </div>
+  `;
+}
+
+// Read-only summary: a clean, scannable recap so review needs no input fields.
+function renderHistoryViewBody(workout, entries) {
+  const count = entries.length;
+  return `
+    <div class="detail-section">
+      <p class="hist-view-meta">${escapeHtml(formatWorkoutDate(workout.date))} · ${count} exercise${count === 1 ? "" : "s"}</p>
+    </div>
+    <div class="detail-section">
+      ${count
+        ? entries.map((entry, index) => renderDetailExerciseView(entry, index)).join("")
+        : `<p class="empty-state">No exercises logged in this workout.</p>`}
+    </div>
+  `;
+}
+
+// A single exercise in the read-only view: name, planned target, and a flat
+// one-line-per-set recap. Effort and notes show only when they were logged.
+function renderDetailExerciseView(entry, index) {
+  const head = `<div class="detail-exercise-head"><h5>${escapeHtml(entry.exerciseName || "Exercise")}</h5></div>`;
+
+  if (entry.skipped) {
+    return `<div class="detail-exercise detail-exercise-view">${head}<p class="empty-state">Skipped in this workout.</p></div>`;
+  }
+
+  const effortBadge = (val) => Number(val) > 0 ? `<span class="hist-view-effort">${Number(val)}/10</span>` : "";
+  const noteLine = (note) => (note || "").trim() ? `<p class="hist-view-note">${escapeHtml(note.trim())}</p>` : "";
+
+  if (entry.type === "cardio" || entry.type === "sport") {
+    const parts = [`${Number(entry.durationMinutes) || 0} min`];
+    if (entry.type === "cardio") {
+      const subtype = entry.subtype || entry.planned?.subtype;
+      if (subtype) parts.unshift(escapeHtml(subtype));
+      const stats = formatCardioStats(entry.stats).replace(/^ · /, "");
+      if (stats) parts.push(escapeHtml(stats));
+    }
+    return `
+      <div class="detail-exercise detail-exercise-view">
+        ${head}
+        <div class="hist-view-set"><span class="hist-view-val">${parts.join(" · ")}</span>${effortBadge(entry.difficulty)}</div>
+        ${noteLine(entry.notes)}
+      </div>`;
+  }
+
+  const isTimed = entry.type === "timed";
+  const units = isTimed
+    ? (Array.isArray(entry.holds) ? entry.holds : [])
+    : (Array.isArray(entry.sets) ? entry.sets : []);
+  const showWeight = entry.metricProfile !== "strength-bodyweight";
+  const planned = isTimed
+    ? (entry.planned?.sets ? `${entry.planned.sets} × ${entry.planned.seconds || 0} sec` : "")
+    : (entry.planned?.sets ? `${entry.planned.sets}×${entry.planned.reps || 0}${Number(entry.planned.weight) > 0 ? ` @ ${entry.planned.weight} lb` : ""}` : "");
+
+  const rows = units.map((unit, i) => {
+    const label = isTimed ? `Hold ${i + 1}` : `Set ${i + 1}`;
+    const val = isTimed
+      ? `${Number(unit.seconds) || 0}s`
+      : (showWeight
+          ? `${Number(unit.reps) || 0} × ${Number(unit.weight) || 0} lb`
+          : `${Number(unit.reps) || 0} reps`);
+    return `
+      <div class="hist-view-set">
+        <span class="hist-set-num">${label}</span>
+        <span class="hist-view-val">${val}</span>
+        ${effortBadge(unit.difficulty)}
+        ${(unit.notes || "").trim() ? `<span class="hist-view-setnote">${escapeHtml(unit.notes.trim())}</span>` : ""}
+      </div>`;
+  }).join("");
+
+  return `
+    <div class="detail-exercise detail-exercise-view">
+      ${head}
+      ${planned ? `<p class="hist-planned-line">Planned ${escapeHtml(planned)}</p>` : ""}
+      <div class="hist-view-sets">${rows || `<p class="empty-state">No ${isTimed ? "holds" : "sets"} logged.</p>`}</div>
+      ${noteLine(entry.notes)}
+    </div>`;
 }
 
 // A full in-editor "page" for adding an exercise (NOT a floating popup). The
@@ -11902,6 +12008,28 @@ function renderHistoryEffort(entryIndex, setIndex, value) {
     </div>`;
 }
 
+// The compact per-set "…" button. Effort + note are the optional extras, so they
+// stay tucked away to keep each set a single scannable line; the button lights up
+// (is-active) when a set already carries an effort rating or a note, so nothing
+// logged is ever hidden without a hint. `unit` is the set or hold object.
+function renderSetMoreToggle(entryIndex, setIndex, unit) {
+  const open = historyEdit?.setMoreKey === `${entryIndex}:${setIndex}`;
+  const hasExtra = Number(unit?.difficulty) > 0 || Boolean((unit?.notes || "").trim());
+  return `<button type="button" class="hist-set-more btn-ico${hasExtra ? " is-active" : ""}${open ? " is-open" : ""}" data-haction="toggle-more" data-entry-index="${entryIndex}" data-set-index="${setIndex}" aria-expanded="${open}" aria-label="Effort and note for set ${setIndex + 1}">${getUiIcon("more-horizontal")}</button>`;
+}
+
+// The expandable panel under a set row holding the optional effort rating and a
+// note field. Only rendered when that row's "…" toggle is open, so collapsed
+// rows are a single clean line.
+function renderSetExtra(entryIndex, setIndex, unit, notePlaceholder) {
+  if (historyEdit?.setMoreKey !== `${entryIndex}:${setIndex}`) return "";
+  return `
+    <div class="hist-set-extra">
+      ${renderHistoryEffort(entryIndex, setIndex, unit?.difficulty)}
+      <input type="text" class="hist-set-note" data-hfield="setnote" value="${escapeHtml(unit?.notes || "")}" placeholder="${escapeHtml(notePlaceholder)}">
+    </div>`;
+}
+
 async function removeHistoryEntry(entryIndex) {
   if (!historyEdit) return;
   const entry = historyEdit.workout.entries?.[entryIndex];
@@ -11966,6 +12094,24 @@ function handleHistoryDetailClick(event) {
   const entryIndex = btn.dataset.entryIndex != null ? Number(btn.dataset.entryIndex) : null;
 
   if (action === "save") { saveWorkoutChanges(); return; }
+
+  if (action === "edit") {
+    historyEdit.mode = "edit";
+    historyEdit.setMoreKey = null;
+    renderHistoryDetail();
+    window.scrollTo(0, 0);
+    return;
+  }
+
+  if (action === "delete-workout") { deleteHistoryWorkout(historyEdit.workoutId); return; }
+
+  if (action === "toggle-more") {
+    const key = `${btn.dataset.entryIndex}:${btn.dataset.setIndex}`;
+    historyEdit.setMoreKey = historyEdit.setMoreKey === key ? null : key;
+    historyEdit.effortOpenKey = null;
+    renderHistoryDetail();
+    return;
+  }
 
   if (action === "add-exercise") {
     historyEdit.addOpen = true;
@@ -12185,9 +12331,9 @@ function renderDetailExercise(entry, index) {
       <div class="hist-set-row" data-set-index="${si}">
         <span class="hist-set-num">Hold ${si + 1}</span>
         <label class="hist-set-field"><span>sec</span><input type="number" min="0" step="1" value="${escapeHtml(hold.seconds ?? 0)}" data-hfield="seconds"></label>
+        ${renderSetMoreToggle(index, si, hold)}
         <button class="hist-set-remove btn-ico" type="button" data-haction="remove-set" data-entry-index="${index}" data-set-index="${si}" aria-label="Remove hold ${si + 1}">${getUiIcon("x")}</button>
-        ${renderHistoryEffort(index, si, hold.difficulty)}
-        <input type="text" class="hist-set-note" data-hfield="setnote" value="${escapeHtml(hold.notes || "")}" placeholder="Hold note (optional)">
+        ${renderSetExtra(index, si, hold, "Hold note (optional)")}
       </div>
     `).join("");
     return `
@@ -12213,9 +12359,9 @@ function renderDetailExercise(entry, index) {
       <span class="hist-set-num">Set ${si + 1}</span>
       <label class="hist-set-field"><span>reps</span><input type="number" min="0" step="1" value="${escapeHtml(set.reps ?? 0)}" data-hfield="reps"></label>
       ${showWeight ? `<label class="hist-set-field"><span>lb</span><input type="number" min="0" step="0.5" value="${escapeHtml(set.weight ?? 0)}" data-hfield="weight"></label>` : ""}
+      ${renderSetMoreToggle(index, si, set)}
       <button class="hist-set-remove btn-ico" type="button" data-haction="remove-set" data-entry-index="${index}" data-set-index="${si}" aria-label="Remove set ${si + 1}">${getUiIcon("x")}</button>
-      ${renderHistoryEffort(index, si, set.difficulty)}
-      <input type="text" class="hist-set-note" data-hfield="setnote" value="${escapeHtml(set.notes || "")}" placeholder="Set note (optional)">
+      ${renderSetExtra(index, si, set, "Set note (optional)")}
     </div>
   `).join("");
   return `
@@ -12336,18 +12482,55 @@ function saveWorkoutChanges() {
 }
 
 const historyDetailCloseButton = document.querySelector("#history-detail-close");
-// Back goes up one level: from the add-exercise page back to the workout, or
-// from the workout back to the History list.
-historyDetailCloseButton?.addEventListener("click", () => {
-  if (historyEdit?.addOpen) {
+// Back steps up one level through the editor's hierarchy:
+// add-exercise page → edit mode → read-only view → History list.
+historyDetailCloseButton?.addEventListener("click", async () => {
+  if (!historyEdit) { closeHistoryDetail(); return; }
+
+  if (historyEdit.addOpen) {
     historyEdit.addOpen = false;
     historyEdit.addQuery = "";
     renderHistoryDetail();
     window.scrollTo(0, 0);
     return;
   }
+
+  // Leaving edit mode drops back to the read-only view (not all the way out),
+  // discarding uncommitted edits after a confirm so a stray change can't stick.
+  if (historyEdit.mode === "edit") {
+    if (historyEdit.dirty) {
+      const ok = await showConfirmModal({
+        title: "Discard changes?",
+        message: "You have unsaved edits to this workout. Go back without saving them?",
+        confirmLabel: "Discard changes"
+      });
+      if (!ok) return;
+    }
+    reloadHistoryWorkingCopy();
+    historyEdit.mode = "view";
+    historyEdit.setMoreKey = null;
+    historyEdit.effortOpenKey = null;
+    renderHistoryDetail();
+    window.scrollTo(0, 0);
+    return;
+  }
+
   closeHistoryDetail();
 });
+
+// Reset the working copy to the last-saved state (used when discarding edits and
+// dropping back to the read-only view). Reads from the committed data by id so it
+// always reflects exactly what's stored, then re-hydrates old-shape entries.
+function reloadHistoryWorkingCopy() {
+  if (!historyEdit) return;
+  const data = getLocalData();
+  const saved = data.workouts?.find((w) => w.id === historyEdit.workoutId);
+  if (!saved) { closeHistoryDetail(true); return; }
+  const working = JSON.parse(JSON.stringify(saved));
+  hydrateHistoryEntries(working);
+  historyEdit.workout = working;
+  historyEdit.dirty = false;
+}
 
 // One delegated listener pair for the whole History editor (it re-renders often,
 // so per-element listeners would leak; delegation survives re-renders).

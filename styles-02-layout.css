@@ -1081,22 +1081,91 @@ body.history-detail-open .app-shell {
 
 .hist-set-field input { width: 66px; }
 
-.hist-set-remove {
+/* The "…" and remove buttons sit together at the right end of the set row. */
+.hist-set-more {
   flex: 0 0 auto;
   margin-left: auto;
   color: var(--dim);
 }
+.hist-set-more.is-active { color: var(--accent); }
+.hist-set-more.is-open { color: var(--text); }
 
-/* The effort control and the per-set note each take their own line in a row. */
-.hist-set-row .lw-effort { flex: 1 1 100%; }
+.hist-set-remove {
+  flex: 0 0 auto;
+  color: var(--dim);
+}
+
+/* The optional effort + note, revealed only when a set's "…" toggle is open.
+   Flex-basis 100% drops it onto its own line below the reps/weight inputs. */
+.hist-set-extra {
+  flex: 1 1 100%;
+  display: grid;
+  gap: 8px;
+  margin-top: 2px;
+}
 
 .hist-set-note {
-  flex: 1 1 100%;
   min-height: 40px;
   font-size: 13px;
 }
 
 .hist-effort-wrap { margin-top: 10px; }
+
+/* ---- Read-only History view (the default when a workout is opened) ---- */
+.hist-view-meta {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 750;
+}
+
+.hist-view-sets {
+  display: grid;
+  gap: 6px;
+}
+
+.hist-view-set {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+  padding: 7px 10px;
+  border: 1px solid rgba(155, 168, 161, 0.16);
+  border-radius: var(--radius-sm);
+  background: rgba(16, 20, 19, 0.5);
+}
+
+.hist-view-val {
+  font-weight: 850;
+  font-size: 15px;
+  color: var(--text);
+}
+
+.hist-view-effort {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--accent);
+}
+
+.hist-view-setnote {
+  flex: 1 1 100%;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.hist-view-note {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.hist-view-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.hist-view-actions .primary-button { flex: 1 1 auto; }
 
 .hist-inline-field {
   display: flex;
