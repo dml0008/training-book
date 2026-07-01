@@ -777,53 +777,48 @@ button.cal-cell:active {
   accent-color: var(--accent);
 }
 
-.plan-import-coach-step {
-  margin-bottom: var(--space-3);
-  padding: var(--space-3);
-  border: 1px solid rgba(182, 211, 50, 0.34);
-  border-radius: var(--radius-sm);
-  background: rgba(182, 211, 50, 0.1);
+/* Confirm face of the coach-apply wizard: the selected changes, scrollable if
+   there are a lot of them, sitting between the sheet head and the actions. */
+.coach-apply-review {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
-.plan-import-coach-step h3 {
-  margin: 2px 0 0;
-  font-size: 17px;
-}
-
-.plan-import-coach-step p:last-child {
-  margin: var(--space-2) 0 0;
-  color: var(--muted);
-  font-size: 13px;
-  line-height: 1.45;
-}
-
-.plan-import-coach-step ~ .plan-import-text {
-  min-height: 92px;
-  max-height: 120px;
-  color: var(--muted);
-}
-
-.coach-plan-preview {
+/* Applied confirmation face: a centred check + short reassurance. */
+.coach-apply-done-body {
   display: grid;
-  gap: var(--space-3);
+  justify-items: center;
+  gap: 8px;
+  padding: var(--space-3) var(--space-2) var(--space-2);
+  text-align: center;
+}
+
+.coach-apply-done-icon {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-full);
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+.coach-apply-done-icon svg {
+  width: 26px;
+  height: 26px;
+}
+
+.coach-apply-done-body h3 {
+  margin: 4px 0 0;
+  font-size: 19px;
+}
+
+.coach-apply-done-body p {
   margin: 0;
-  padding: var(--space-3);
-  border: 1px solid rgba(182, 211, 50, 0.34);
-  border-radius: var(--radius-md);
-  background: rgba(9, 12, 11, 0.42);
-}
-
-.coach-plan-preview-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
-}
-
-.coach-plan-preview-head span {
-  color: var(--dim);
-  font-size: 12px;
-  font-weight: 750;
+  max-width: 34ch;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.5;
 }
 
 .coach-plan-highlight-list {

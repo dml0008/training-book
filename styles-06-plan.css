@@ -564,6 +564,50 @@
   font-size: 11px;
 }
 
+/* ----- Advanced (collapsed) plan importer ----- */
+/* The raw paste-in importer is tucked into a details panel so the Plan page
+   leads with the real schedule and routines. The summary reads like a section
+   header; the chevron flips when open. */
+.plan-advanced > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  list-style: none;
+  cursor: pointer;
+}
+
+.plan-advanced > summary::-webkit-details-marker {
+  display: none;
+}
+
+.plan-advanced-summary .card-kicker {
+  display: block;
+}
+
+.plan-advanced-summary .plan-muted {
+  display: block;
+  margin: 2px 0 0;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.plan-advanced-chevron {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  color: var(--muted);
+  transition: transform 0.18s ease;
+}
+
+.plan-advanced[open] .plan-advanced-chevron {
+  transform: rotate(180deg);
+}
+
+.plan-advanced-body {
+  margin-top: 16px;
+}
+
 @media (max-width: 640px) {
   /* Stack each section's heading above its action buttons so the title/blurb
      gets the full width instead of being crushed into a thin column beside

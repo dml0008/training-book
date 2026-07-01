@@ -3,7 +3,7 @@ const DROPBOX_TOKEN_URL = "https://api.dropboxapi.com/oauth2/token";
 const DROPBOX_UPLOAD_URL = "https://content.dropboxapi.com/2/files/upload";
 const DROPBOX_DOWNLOAD_URL = "https://content.dropboxapi.com/2/files/download";
 const DATA_FILE_PATH = "/04_Technical/06_Side_Projects/Workout and Nutrition App/data/workout-data.json";
-const APP_VERSION = "1.0.11";
+const APP_VERSION = "1.0.12";
 const SOCCER_DURATION_MINUTES = 60;
 
 const STORAGE = {
@@ -207,7 +207,12 @@ let coachSessionCostConfirmed = false;
 let coachModalReviewId = "";
 let coachModalMode = "";
 let coachChangeReview = null;
-let queuedPlanImportText = "";
+// Coach-apply wizard: "select" (pick changes) -> "confirm" (final review) ->
+// "done" (applied confirmation). The whole flow now lives in the Coach modal
+// instead of handing off to the Plan importer.
+let coachChangeStep = "select";
+let coachChangeSelection = [];
+let coachChangeAppliedCount = 0;
 
 // How many rolling version-history copies to keep in the cloud. Each is a small
 // JSON snapshot; 30 is plenty to undo an accident and stays free-tier friendly.
@@ -3468,7 +3473,6 @@ function isTimedHoldExercise(exerciseInfo, plannedEx) {
 let planImportPreview = null;
 let planImportSummary = "";
 let planImportMessage = "";
-let pendingCoachPlanApply = null;
 
 // Plan editing state: which routine (if any) is expanded into its edit form,
 // and a snapshot of the routine taken when edit mode opened so Cancel can revert
@@ -9146,14 +9150,11 @@ function renderPlan() {
   const activePlan = { ...getStarterActivePlan(), ...(data.activePlan || {}) };
   const routines = Array.isArray(data.routines) ? data.routines : [];
   const weeklyPlan = data.weeklyPlan || getStarterWeeklyPlan();
-  const importText = queuedPlanImportText || planContent.querySelector("#plan-import-text")?.value || "";
-  queuedPlanImportText = "";
+  const importText = planContent.querySelector("#plan-import-text")?.value || "";
   const importMessageHtml = planImportMessage
     ? `<p class="plan-import-message">${escapeHtml(planImportMessage)}</p>`
     : "";
-  const importPreviewHtml = pendingCoachPlanApply && planImportPreview
-    ? renderCoachPlanChangePreview()
-    : planImportSummary
+  const importPreviewHtml = planImportSummary
     ? `<pre class="plan-import-preview">${escapeHtml(planImportSummary)}</pre>`
     : `<p class="plan-muted">Preview the pasted plan before saving. Nothing changes until you press Save imported plan.</p>`;
 
@@ -9247,7 +9248,7 @@ function renderPlanRoutines(routines) {
           ? routines.map((routine) => routine.id === editingRoutineId
               ? renderRoutineEditCard(routine)
               : renderRoutineViewCard(routine)).join("")
-          : `<p class="empty-state">No routines yet. Tap “Add routine” to build one, or paste a returned plan block into the importer below.</p>`}
+          : `<p class="empty-state">No routines yet. Tap “Add routine” to build one, or open “Import or replace plan” below to paste a full plan block.</p>`}
       </div>
     </section>
   `;
@@ -9488,74 +9489,43 @@ function renderPlanOverview(activePlan) {
   `;
 }
 
+// The raw paste-in importer is an advanced/occasional tool: keep it collapsed
+// behind a details panel so the everyday Plan page leads with the actual
+// schedule, routines, and details. It auto-expands while an import is in
+// progress (text typed, a preview, or a status message) so re-renders don't
+// snap it shut mid-edit.
 function renderPlanImportPanel(importMessageHtml, importPreviewHtml, importText) {
-  const fullPlanInput = pendingCoachPlanApply
-    ? `<details class="plan-import-full-block">
-        <summary>Full generated plan block</summary>
-        <textarea id="plan-import-text" class="plan-import-text" spellcheck="false" placeholder="Paste your coach's plan here...">${escapeHtml(importText)}</textarea>
-        <p class="plan-muted ai-format-hint">This complete plan block is what keeps unmentioned routines safe. You usually do not need to read it unless something looks off in the highlighted preview.</p>
-      </details>`
-    : `<textarea id="plan-import-text" class="plan-import-text" spellcheck="false" placeholder="Paste your coach's plan here...">${escapeHtml(importText)}</textarea>
-       <p class="plan-muted ai-format-hint">Optional extras you can include: a starting weight with <code>@</code> (<code>Bench Press: 3x8 @ 135</code>), <code>timer</code> after a rest (<code>rest 90s timer</code>), or a <code>note:</code> line under a move for in-workout coaching.</p>`;
-  const coachApplyHtml = pendingCoachPlanApply
-    ? `<div class="plan-import-coach-step">
-        <p class="card-kicker">Step 3 of 3</p>
-        <h3>Preview and save selected coach changes</h3>
-        <p>${escapeHtml(pendingCoachPlanApply.count)} selected ${pendingCoachPlanApply.count === 1 ? "change has" : "changes have"} been folded into a complete copy of your current plan. Nothing is saved yet.</p>
-      </div>`
-    : "";
+  const importActive = Boolean(importText || planImportSummary || planImportMessage);
   return `
     <section class="plan-section plan-import" id="plan-importer">
-      <div class="plan-section-head">
-        <div>
-          <p class="card-kicker">Plan importer</p>
-          <p class="plan-muted">Paste a plan draft from Coach or from your manual AI chat. Preview what Training Book reads, then save only when it looks right.</p>
-        </div>
-      </div>
-      <div class="ai-steps">
-        <div class="ai-step">
-          ${coachApplyHtml}
+      <details class="plan-advanced"${importActive ? " open" : ""}>
+        <summary class="plan-advanced-summary">
+          <span>
+            <span class="card-kicker">Import or replace plan</span>
+            <span class="plan-muted">Advanced — paste a full plan block from a manual AI chat.</span>
+          </span>
+          <span class="plan-advanced-chevron" aria-hidden="true">${getUiIcon("chevron-down")}</span>
+        </summary>
+        <div class="ai-step plan-advanced-body">
           <div class="ai-step-text">
             <span class="ai-step-num">1</span>
             <div>
               <h3 class="ai-step-title">Paste the returned plan</h3>
-              <p class="plan-muted">Coach will load API plan drafts here automatically. For manual chat, paste the final block your outside AI gives you.</p>
+              <p class="plan-muted">Paste the final block your outside AI gives you, then preview what Training Book reads before saving.</p>
             </div>
           </div>
           <textarea id="plan-import-text" class="plan-import-text" spellcheck="false" placeholder="Paste your coach's plan here…">${escapeHtml(importText)}</textarea>
           <p class="plan-muted ai-format-hint">Optional extras you can include: a starting weight with <code>@</code> (<code>Bench Press: 3x8 @ 135</code>), <code>timer</code> after a rest (<code>rest 90s timer</code>), or a <code>note:</code> line under a move for in-workout coaching.</p>
           <div class="plan-import-actions">
             <button class="quiet-button small-button" type="button" data-action="import-example">Use example</button>
-            <button class="${pendingCoachPlanApply ? "quiet-button" : "primary-button"}" type="button" data-action="import-preview">Preview changes</button>
-            <button class="${pendingCoachPlanApply ? "primary-button" : "quiet-button"}" type="button" data-action="import-save" ${planImportPreview ? "" : "disabled"}>${pendingCoachPlanApply ? "Save selected coach changes" : "Save imported plan"}</button>
+            <button class="primary-button" type="button" data-action="import-preview">Preview changes</button>
+            <button class="quiet-button" type="button" data-action="import-save" ${planImportPreview ? "" : "disabled"}>Save imported plan</button>
           </div>
           ${importMessageHtml}
           ${importPreviewHtml}
         </div>
-      </div>
+      </details>
     </section>
-  `;
-}
-
-function renderCoachPlanChangePreview() {
-  const changes = Array.isArray(pendingCoachPlanApply?.changes) ? pendingCoachPlanApply.changes : [];
-  return `
-    <div class="coach-plan-preview">
-      <div class="coach-plan-preview-head">
-        <p class="card-kicker">Highlighted changes</p>
-        <span>${changes.length} selected</span>
-      </div>
-      <div class="coach-plan-highlight-list">
-        ${changes.map((change) => `
-          <article class="coach-plan-highlight">
-            <mark>${escapeHtml(change.summary)}</mark>
-            ${change.detail ? `<p>${escapeHtml(change.detail)}</p>` : ""}
-            <small>${escapeHtml([change.type, change.routines].filter(Boolean).join(" - "))}</small>
-          </article>
-        `).join("")}
-      </div>
-      <p class="plan-muted">These are the selected coach changes. The full plan block above is kept only so the importer can preview safely without dropping routines.</p>
-    </div>
   `;
 }
 
@@ -10874,35 +10844,112 @@ function renderCoachReviewModal(display) {
   `;
 }
 
+// Turn a raw change type ("swap", "weight", …) into a short human label for the
+// review cards. Falls back to empty so the meta line just hides an odd type.
+function formatCoachChangeType(type) {
+  const labels = {
+    add: "Add exercise",
+    remove: "Remove exercise",
+    swap: "Swap exercise",
+    weight: "Weight change",
+    target: "Target update",
+    note: "Coaching note"
+  };
+  return labels[String(type || "").toLowerCase()] || "";
+}
+
+// The coach-apply wizard is a single modal with three faces: pick the changes,
+// confirm them, then a short applied confirmation. It never leaves the Coach
+// screen or drops you into the raw Plan importer.
 function renderCoachChangeModal() {
   if (!coachChangeReview) return "";
+  if (coachChangeStep === "done") return renderCoachApplyDoneModal();
+  if (coachChangeStep === "confirm") return renderCoachApplyConfirmModal();
+  return renderCoachApplySelectModal();
+}
+
+function renderCoachApplySelectModal() {
   const changes = normalizeCoachChanges(coachChangeReview.changes);
+  // On first open nothing is remembered, so everything starts checked. Coming
+  // back from the confirm step, keep whatever the user had selected.
+  const remembered = coachChangeSelection.length ? new Set(coachChangeSelection.map((change) => change.id)) : null;
   return `
     <div class="lw-sheet-scrim coach-modal-scrim" role="presentation" data-coach-close-changes>
-      <section class="lw-sheet coach-review-sheet coach-change-sheet" role="dialog" aria-modal="true" aria-label="Review coach changes">
+      <section class="lw-sheet coach-review-sheet coach-change-sheet" role="dialog" aria-modal="true" aria-label="Choose coach changes">
         <div class="lw-sheet-head">
           <div>
-            <p class="card-kicker">Step 2 of 3</p>
+            <p class="card-kicker">Step 1 of 2 · Coach changes</p>
             <h3>Choose plan changes</h3>
-            <p>Check the suggestions you want. Next, Training Book will show the full updated plan for one final preview.</p>
+            <p>Check the suggestions you want. Nothing is saved until you confirm on the next step.</p>
           </div>
           <button class="lw-sheet-close" type="button" data-coach-close-changes aria-label="Close">&times;</button>
         </div>
         <div class="coach-change-list">
           ${changes.map((change) => `
             <label class="coach-change-item">
-              <input type="checkbox" data-coach-change-id="${escapeHtml(change.id)}" checked>
+              <input type="checkbox" data-coach-change-id="${escapeHtml(change.id)}"${!remembered || remembered.has(change.id) ? " checked" : ""}>
               <span>
                 <strong>${escapeHtml(change.summary)}</strong>
                 ${change.detail ? `<small>${escapeHtml(change.detail)}</small>` : ""}
-                <em>${escapeHtml([change.type, change.routines.join(", ")].filter(Boolean).join(" - "))}</em>
+                <em>${escapeHtml([formatCoachChangeType(change.type), change.routines.join(", ")].filter(Boolean).join(" · "))}</em>
               </span>
             </label>
           `).join("")}
         </div>
         <div class="coach-modal-actions">
           <button class="quiet-button small-button" type="button" data-coach-close-changes>Cancel</button>
-          <button class="primary-button small-button" type="button" data-coach-confirm-changes>Continue to Plan preview</button>
+          <button class="primary-button small-button" type="button" data-coach-confirm-changes>Review selected</button>
+        </div>
+      </section>
+    </div>
+  `;
+}
+
+function renderCoachApplyConfirmModal() {
+  const changes = Array.isArray(coachChangeSelection) ? coachChangeSelection : [];
+  const count = changes.length;
+  return `
+    <div class="lw-sheet-scrim coach-modal-scrim" role="presentation" data-coach-close-changes>
+      <section class="lw-sheet coach-review-sheet coach-change-sheet" role="dialog" aria-modal="true" aria-label="Confirm coach changes">
+        <div class="lw-sheet-head">
+          <div>
+            <p class="card-kicker">Step 2 of 2 · Coach changes</p>
+            <h3>Apply ${count} ${count === 1 ? "change" : "changes"} to your plan?</h3>
+            <p>These are saved straight to your active plan and today's workout. Routines you didn't touch stay exactly as they are.</p>
+          </div>
+          <button class="lw-sheet-close" type="button" data-coach-close-changes aria-label="Close">&times;</button>
+        </div>
+        <div class="coach-plan-highlight-list coach-apply-review">
+          ${changes.map((change) => `
+            <article class="coach-plan-highlight">
+              <mark>${escapeHtml(change.summary)}</mark>
+              ${change.detail ? `<p>${escapeHtml(change.detail)}</p>` : ""}
+              <small>${escapeHtml([formatCoachChangeType(change.type), change.routines.join(", ")].filter(Boolean).join(" · "))}</small>
+            </article>
+          `).join("")}
+        </div>
+        <div class="coach-modal-actions">
+          <button class="quiet-button small-button" type="button" data-coach-back-changes>Back</button>
+          <button class="primary-button small-button btn-ico" type="button" data-coach-apply-changes>${getUiIcon("check")}Apply to plan</button>
+        </div>
+      </section>
+    </div>
+  `;
+}
+
+function renderCoachApplyDoneModal() {
+  const count = coachChangeAppliedCount;
+  return `
+    <div class="lw-sheet-scrim coach-modal-scrim" role="presentation" data-coach-close-changes>
+      <section class="lw-sheet coach-review-sheet coach-change-sheet coach-apply-done" role="dialog" aria-modal="true" aria-label="Coach changes applied">
+        <div class="coach-apply-done-body">
+          <span class="coach-apply-done-icon" aria-hidden="true">${getUiIcon("check")}</span>
+          <h3>${count} ${count === 1 ? "change" : "changes"} applied</h3>
+          <p>Your active plan and today's workout are updated. Open the Plan tab any time to see or fine-tune the full plan.</p>
+        </div>
+        <div class="coach-modal-actions">
+          <button class="quiet-button small-button" type="button" data-coach-view-plan>View plan</button>
+          <button class="primary-button small-button" type="button" data-coach-close-changes>Done</button>
         </div>
       </section>
     </div>
@@ -11015,11 +11062,27 @@ function openCoachChanges(reviewId) {
   const review = reviewId && reviewId !== "latest" ? getCoachReviewById(reviewId) : getActiveCoachReview(display);
   if (!review || !normalizeCoachChanges(review.changes).length) return;
   coachChangeReview = review;
+  coachChangeStep = "select";
+  coachChangeSelection = [];
+  coachChangeAppliedCount = 0;
+  // The wizard is the only modal that should show; dismiss the notes modal so we
+  // don't stack sheets (and don't pop it back up when the wizard closes). The
+  // notes stay visible inline on the Coach screen behind it.
+  coachModalMode = "";
+  coachModalReviewId = "";
   renderCoach();
 }
 
 function closeCoachChanges() {
   coachChangeReview = null;
+  coachChangeStep = "select";
+  coachChangeSelection = [];
+  coachChangeAppliedCount = 0;
+  renderCoach();
+}
+
+function backToCoachChangeSelect() {
+  coachChangeStep = "select";
   renderCoach();
 }
 
@@ -11033,33 +11096,6 @@ function closeCoachReviewModal() {
   coachModalReviewId = "";
   coachModalMode = "";
   renderCoach();
-}
-
-function buildPlanImportBlockFromData(data) {
-  const activePlan = { ...getStarterActivePlan(), ...(data.activePlan || {}) };
-  const routines = Array.isArray(data.routines) ? data.routines : [];
-  const weeklyPlan = data.weeklyPlan || getStarterWeeklyPlan();
-  const lines = [
-    "ACTIVE PLAN:",
-    `name: ${activePlan.name || "Current Training Plan"}`,
-    `main goal: ${activePlan.mainGoal || ""}`,
-    `review cadence: ${activePlan.reviewCadence || ""}`,
-    `next review date: ${activePlan.nextReviewDate || ""}`,
-    `notes: ${activePlan.notes || ""}`,
-    "",
-    "WEEKLY PLAN:"
-  ];
-  PLAN_WEEK_ORDER.forEach((day) => {
-    lines.push(`${day}: ${weeklyPlan[day] ? getRoutineNameById(weeklyPlan[day], routines) : "rest"}`);
-  });
-  routines.forEach((routine) => {
-    lines.push("", `ROUTINE: ${routine.name}`);
-    (routine.exercises || []).forEach((exercise) => {
-      lines.push(formatRoutineExercise(exercise));
-      if (exercise.coachNote) lines.push(`  note: ${exercise.coachNote}`);
-    });
-  });
-  return lines.join("\n");
 }
 
 function applyCoachChangesToData(data, changes) {
@@ -11116,12 +11152,8 @@ function applyCoachChangesToData(data, changes) {
   return next;
 }
 
-function getPendingCoachApplyMessage() {
-  if (!pendingCoachPlanApply?.count) return "";
-  const count = pendingCoachPlanApply.count;
-  return `${count} selected coach ${count === 1 ? "change is" : "changes are"} ready. Step 3: review the full plan preview below, then press ${count === 1 ? "Save selected coach change" : "Save selected coach changes"} to update your active plan.`;
-}
-
+// Step 1 -> 2: capture which suggestions are checked and move to the confirm
+// face. Nothing is written to the plan yet.
 function confirmCoachChanges() {
   if (!coachChangeReview) return;
   const checked = Array.from(coachContent.querySelectorAll("[data-coach-change-id]:checked")).map((box) => box.dataset.coachChangeId);
@@ -11130,31 +11162,26 @@ function confirmCoachChanges() {
     closeCoachChanges();
     return;
   }
-  const nextData = applyCoachChangesToData(getLocalData(), accepted);
-  queuedPlanImportText = buildPlanImportBlockFromData(nextData);
-  planImportPreview = null;
-  planImportSummary = "";
-  pendingCoachPlanApply = {
-    reviewId: coachChangeReview.id,
-    changeIds: accepted.map((change) => change.id),
-    count: accepted.length,
-    changes: accepted.map((change) => ({
-      summary: change.summary,
-      detail: change.detail || "",
-      type: change.type,
-      routines: change.routines.join(", ")
-    }))
-  };
-  planImportMessage = getPendingCoachApplyMessage();
-  coachChangeReview = null;
-  coachModalMode = "";
-  coachModalReviewId = "";
-  showScreen("plan", true);
-  previewPlanImportFromScreen();
-  setTimeout(() => {
-    planContent?.querySelector("#plan-importer")?.scrollIntoView({ behavior: "smooth", block: "start" });
-    planContent?.querySelector("[data-action='import-save']")?.focus();
-  }, 80);
+  coachChangeSelection = accepted;
+  coachChangeStep = "confirm";
+  renderCoach();
+}
+
+// Step 2 -> done: apply the selected coach changes straight to the active plan,
+// mark them applied in history, refresh the plan-driven screens, and show the
+// applied confirmation. No importer round-trip.
+function applyCoachChanges() {
+  if (!coachChangeReview || !coachChangeSelection.length) return;
+  const nextData = applyCoachChangesToData(getLocalData(), coachChangeSelection);
+  commitProgressData(nextData);
+  markCoachChangesApplied(coachChangeReview.id, coachChangeSelection.map((change) => change.id));
+  coachChangeAppliedCount = coachChangeSelection.length;
+  coachChangeSelection = [];
+  coachChangeStep = "done";
+  renderPlan();
+  renderTodayRoutine();
+  renderReviewReminder();
+  renderCoach();
 }
 
 async function requestCoachReview(mode = "quick") {
@@ -11268,6 +11295,19 @@ function handleCoachClick(event) {
   }
   if (event.target.closest("[data-coach-confirm-changes]")) {
     confirmCoachChanges();
+    return;
+  }
+  if (event.target.closest("[data-coach-back-changes]")) {
+    backToCoachChangeSelect();
+    return;
+  }
+  if (event.target.closest("[data-coach-apply-changes]")) {
+    applyCoachChanges();
+    return;
+  }
+  if (event.target.closest("[data-coach-view-plan]")) {
+    closeCoachChanges();
+    showScreen("plan", true);
     return;
   }
   if (event.target.closest("[data-coach-close-review]")) {
@@ -12881,7 +12921,7 @@ function previewPlanImportFromScreen() {
     const nextData = buildImportedPlanData(data, parsed);
     planImportPreview = { parsed, nextData };
     planImportSummary = summarizePlanImport(parsed, nextData).replace(/\nLoad this updated plan into Training Book\?$/, "");
-    planImportMessage = getPendingCoachApplyMessage() || "Preview ready. If this looks right, save the imported plan.";
+    planImportMessage = "Preview ready. If this looks right, save the imported plan.";
   } catch (error) {
     planImportPreview = null;
     planImportSummary = "";
@@ -12901,18 +12941,11 @@ function savePlanImportFromScreen() {
   nextData.updatedAt = new Date().toISOString();
   nextData.updatedBy = getDeviceId();
   commitProgressData(nextData);
-  if (pendingCoachPlanApply?.reviewId && pendingCoachPlanApply?.changeIds?.length) {
-    markCoachChangesApplied(pendingCoachPlanApply.reviewId, pendingCoachPlanApply.changeIds);
-  }
-  const savedCoachCount = pendingCoachPlanApply?.count || 0;
-  pendingCoachPlanApply = null;
   renderTodayRoutine();
 
   planImportPreview = null;
   planImportSummary = "";
-  planImportMessage = savedCoachCount
-    ? `${savedCoachCount} coach ${savedCoachCount === 1 ? "change has" : "changes have"} been saved to your active plan. Today has been refreshed.`
-    : "Imported plan saved. Today has been refreshed from the latest weekly plan.";
+  planImportMessage = "Imported plan saved. Today has been refreshed from the latest weekly plan.";
   renderPlan();
 }
 
