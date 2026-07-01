@@ -1201,3 +1201,32 @@ button.cal-cell:active {
 .effort-unit { font-size: 13px; font-weight: 700; color: var(--muted); }
 .effort-label { margin: 4px 0 0; font-size: 12px; color: var(--dim); }
 
+/* ---- Cardio card: weekly-minutes trend + bike-vs-run breakdown ---- */
+.cardio-trend { margin-top: var(--space-3); }
+
+.cardio-split {
+  margin-top: var(--space-3);
+  border-top: 1px solid var(--line);
+  padding-top: var(--space-3);
+}
+
+.cardio-split-head {
+  margin: 0 0 var(--space-1);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--dim);
+}
+
+.cardio-split-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: 6px 0;
+  font-size: 13px;
+}
+
+.cardio-split-row + .cardio-split-row { border-top: 1px solid var(--line); }
+.cardio-split-name { font-weight: 700; color: var(--text); }
+.cardio-split-meta { color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; }
+

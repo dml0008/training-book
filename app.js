@@ -3,7 +3,7 @@ const DROPBOX_TOKEN_URL = "https://api.dropboxapi.com/oauth2/token";
 const DROPBOX_UPLOAD_URL = "https://content.dropboxapi.com/2/files/upload";
 const DROPBOX_DOWNLOAD_URL = "https://content.dropboxapi.com/2/files/download";
 const DATA_FILE_PATH = "/04_Technical/06_Side_Projects/Workout and Nutrition App/data/workout-data.json";
-const APP_VERSION = "1.0.13";
+const APP_VERSION = "1.0.16";
 const SOCCER_DURATION_MINUTES = 60;
 
 const STORAGE = {
@@ -3697,6 +3697,12 @@ function cardioStatField(metric) {
   return "stat" + metric.charAt(0).toUpperCase() + metric.slice(1);
 }
 
+// Live-workout field name for a metric (output -> cardioOutput, etc.). These
+// are the keys collectCardioStats() reads back off the exercise at save time.
+function liveCardioField(metric) {
+  return "cardio" + metric.charAt(0).toUpperCase() + metric.slice(1);
+}
+
 function clampNumber(value, min, max) {
   return Math.min(max, Math.max(min, Number(value) || 0));
 }
@@ -3787,11 +3793,14 @@ function makeTodayExercise(plannedEx, source = "planned") {
     holdSeconds,
     actualDuration: targetDuration || 30,
     cardioDone: false,
-    // Optional Peloton/cardio summary numbers, typed by hand off the
-    // machine's summary screen. Blank by default; never required.
+    // Optional cardio summary numbers, typed by hand off the machine's summary
+    // screen. Which of these actually show is decided by getCardioMetrics().
+    // Blank by default; never required.
     cardioOutput: "",
     cardioAvgPower: "",
     cardioDistance: "",
+    cardioElevation: "",
+    cardioCalories: "",
     notes: "",
     skipped: false,
     // Sport moves (e.g. soccer): a "done" flag and a free-text note, alongside
@@ -4590,6 +4599,7 @@ function buildReferenceSheetMarkup(ex, closeAction) {
           Watch video tutorial
         </a>
         ${ref.photos ? `<p class="lw-ref-source">Reference photos from the public-domain Free Exercise DB</p>` : ""}
+        <button class="lw-ref-report btn-ico" type="button" data-action="report-exercise-issue" data-id="${escapeHtml(ex.exerciseId)}" data-name="${escapeHtml(ex.name)}">${getUiIcon("flag")}Report an issue with this exercise</button>
         <button class="primary-button lw-sheet-done" type="button" data-action="${closeAction}">Done</button>
       </section>
     </div>
@@ -4599,6 +4609,21 @@ function buildReferenceSheetMarkup(ex, closeAction) {
 function renderReferenceSheet(ex) {
   if (!activeWorkout.referenceOpen) return "";
   return buildReferenceSheetMarkup(ex, "close-reference");
+}
+
+// "Report an issue" from any how-to sheet: close the sheet, then open Notes
+// pre-filled as a Bug tagged with the exercise, so catalog mistakes land in the
+// same appNotes list as the rest of Daniel's ideas (nothing private required).
+function reportExerciseIssue(exerciseId, name) {
+  if (activeWorkout.referenceOpen) {
+    activeWorkout.referenceOpen = false;
+    renderTodayWorkout();
+  }
+  if (libraryReferenceId) closeLibraryReference();
+  if (todayReferenceId) closeTodayReference();
+  const label = name || getExerciseById(exerciseId)?.name || "this exercise";
+  const idPart = exerciseId ? ` (${exerciseId})` : "";
+  openNotesModal({ source: "catalog", lane: "bug", prefill: `Exercise issue — ${label}${idPart}: ` });
 }
 
 function renderLiveExerciseArt(ex) {
@@ -5020,24 +5045,29 @@ function renderFocusedExercise() {
         </label>
         <button class="lw-bigcheck${ex.cardioDone ? " is-done" : ""}" type="button" data-action="toggle-cardio">${ex.cardioDone ? "Done &#10003;" : "Mark done"}</button>
       </div>
-      <details class="lw-cardio-stats"${(ex.cardioOutput || ex.cardioAvgPower || ex.cardioDistance) ? " open" : ""}>
-        <summary>Peloton stats (optional)</summary>
-        <div class="lw-cardio-stat-grid">
+      ${(() => {
+        // Show exactly the stat fields this machine reports (bike gets power,
+        // tread gets elevation, etc.), driven off the same config the History
+        // editor uses so live and edit stay in lockstep.
+        const metrics = getCardioMetrics(ex.exerciseId);
+        if (!metrics.length) return "";
+        const anyFilled = metrics.some((m) => Number(ex[liveCardioField(m)]) > 0);
+        const inputs = metrics.map((m) => {
+          const meta = CARDIO_METRIC_META[m];
+          const field = liveCardioField(m);
+          return `
           <label class="lw-field">
-            <input type="number" inputmode="decimal" min="0" step="1" value="${escapeHtml(ex.cardioOutput)}" data-action="cardio-stat" data-field="cardioOutput" aria-label="Total output in kilojoules" placeholder="0">
-            <span>kJ</span>
-          </label>
-          <label class="lw-field">
-            <input type="number" inputmode="decimal" min="0" step="1" value="${escapeHtml(ex.cardioAvgPower)}" data-action="cardio-stat" data-field="cardioAvgPower" aria-label="Average power in watts" placeholder="0">
-            <span>watts</span>
-          </label>
-          <label class="lw-field">
-            <input type="number" inputmode="decimal" min="0" step="0.1" value="${escapeHtml(ex.cardioDistance)}" data-action="cardio-stat" data-field="cardioDistance" aria-label="Distance in miles" placeholder="0">
-            <span>mi</span>
-          </label>
-        </div>
-        <p class="lw-cardio-stat-hint">Total output, average power, and distance from your Peloton summary. Leave any blank.</p>
-      </details>
+            <input type="number" inputmode="decimal" min="0" step="${meta.step}" value="${escapeHtml(ex[field] || "")}" data-action="cardio-stat" data-field="${field}" aria-label="${escapeHtml(`${meta.label} in ${meta.unit}`)}" placeholder="0">
+            <span>${escapeHtml(meta.unit)}</span>
+          </label>`;
+        }).join("");
+        return `
+      <details class="lw-cardio-stats"${anyFilled ? " open" : ""}>
+        <summary>Cardio stats (optional)</summary>
+        <div class="lw-cardio-stat-grid">${inputs}</div>
+        <p class="lw-cardio-stat-hint">Numbers from your machine&rsquo;s summary screen. Leave any blank &mdash; blank calories get a rough <span aria-hidden="true">~</span>estimate from your effort.</p>
+      </details>`;
+      })()}
       <label class="lw-live-note">
         <span>Notes (optional)</span>
         <textarea rows="2" data-action="exercise-notes" placeholder="Anything to remember about this session">${escapeHtml(ex.notes || "")}</textarea>
@@ -5342,7 +5372,8 @@ function handleTodayWorkoutChange(event) {
 
   if (action === "cardio-stat") {
     const field = input.dataset.field;
-    if (field === "cardioOutput" || field === "cardioAvgPower" || field === "cardioDistance") {
+    const allowed = Object.keys(CARDIO_METRIC_META).map(liveCardioField);
+    if (allowed.includes(field)) {
       // Keep as a string so an empty box stays empty rather than becoming 0.
       exercise[field] = input.value;
       persistActiveWorkoutDraft();
@@ -5350,8 +5381,37 @@ function handleTodayWorkoutChange(event) {
   }
 }
 
-// Pull the filled-in Peloton numbers off a live cardio exercise into a small
-// object (only the ones actually entered). Returns null if none were filled.
+// MET value for a cardio activity, used only for the blank-calorie estimate.
+// Deliberately coarse — it's a "roughly this many" fallback, not a lab figure.
+function cardioMet(exerciseId, subtype) {
+  const id = String(exerciseId || "");
+  const sub = String(subtype || "").toLowerCase();
+  if (sub.includes("walk")) return 3.8;
+  if (id === "peloton-bike") return 8.5;
+  if (id === "peloton-tread" || sub.includes("run")) return 9.8;
+  return 7; // generic cardio default
+}
+
+// A rough calorie estimate for when the calories field is left blank. Peloton
+// reports mechanical work in kJ and human efficiency makes burned kcal ~= that
+// output, so output is the best signal; otherwise fall back to METs x body
+// weight x time. Returns null when there isn't enough to estimate — a typed
+// value always wins over this.
+function estimateCardioCalories(ex) {
+  const output = Number(ex.cardioOutput);
+  if (output > 0) return Math.round(output);
+  const minutes = Number(ex.actualDuration) || 0;
+  if (minutes <= 0) return null;
+  const weights = getBodyWeights();
+  const latestLb = weights.length ? Number(weights[weights.length - 1].weight) : 0;
+  if (!(latestLb > 0)) return null; // no body weight logged -> can't estimate
+  const kg = latestLb / 2.20462;
+  return Math.round(cardioMet(ex.exerciseId, ex.targetSubtype) * kg * (minutes / 60));
+}
+
+// Pull the filled-in cardio numbers off a live cardio exercise into a small
+// object (only the ones actually entered). Calories fall back to a marked
+// estimate when left blank. Returns null if there's nothing to save.
 function collectCardioStats(ex) {
   const stats = {};
   const output = Number(ex.cardioOutput);
@@ -5363,7 +5423,12 @@ function collectCardioStats(ex) {
   if (avgPower > 0) stats.avgPower = avgPower;
   if (distance > 0) stats.distance = distance;
   if (elevation > 0) stats.elevation = elevation;
-  if (calories > 0) stats.calories = calories;
+  if (calories > 0) {
+    stats.calories = calories; // a typed number always wins
+  } else {
+    const est = estimateCardioCalories(ex);
+    if (est > 0) { stats.calories = est; stats.caloriesEstimated = true; }
+  }
   return Object.keys(stats).length ? stats : null;
 }
 
@@ -5376,7 +5441,7 @@ function formatCardioStats(stats) {
   if (Number(stats.avgPower) > 0) parts.push(`${stats.avgPower} w`);
   if (Number(stats.distance) > 0) parts.push(`${stats.distance} mi`);
   if (Number(stats.elevation) > 0) parts.push(`${stats.elevation} ft`);
-  if (Number(stats.calories) > 0) parts.push(`${stats.calories} kcal`);
+  if (Number(stats.calories) > 0) parts.push(`${stats.caloriesEstimated ? "~" : ""}${stats.calories} kcal`);
   return parts.length ? ` · ${parts.join(" · ")}` : "";
 }
 
@@ -6999,7 +7064,9 @@ const UI_ICONS = {
   "notebook-pen": '<path d="M13.4 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7.4"/><path d="M2 6h4"/><path d="M2 10h4"/><path d="M2 14h4"/><path d="M2 18h4"/><path d="M21.378 5.626a1 1 0 1 0-3.004-3.004l-5.01 5.012a2 2 0 0 0-.506.854l-.837 2.87a.5.5 0 0 0 .62.62l2.87-.837a2 2 0 0 0 .854-.506z"/>',
   copy: '<rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>',
   // Per-set "more" toggle in the History editor (reveals effort + note).
-  "more-horizontal": '<circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/>'
+  "more-horizontal": '<circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/>',
+  // "Report an issue" on the exercise how-to sheet.
+  flag: '<path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" x2="4" y1="22" y2="15"/>'
 };
 
 function getUiIcon(name) {
@@ -7325,7 +7392,8 @@ function renderNoteCard(note) {
   const meta = [
     `<span class="note-lane note-lane-${escapeHtml(note.lane || "idea")}">${escapeHtml(noteLaneLabel(note.lane))}</span>`,
     `<span class="note-when">${escapeHtml(formatNoteWhen(note.createdAt))}</span>`,
-    note.source === "workout" ? `<span class="note-src">from a workout</span>` : ""
+    note.source === "workout" ? `<span class="note-src">from a workout</span>`
+      : note.source === "catalog" ? `<span class="note-src">exercise report</span>` : ""
   ].filter(Boolean).join("");
 
   if (editing) {
@@ -7403,9 +7471,22 @@ function renderNotesModal() {
 function openNotesModal(opts = {}) {
   notesModalOpen = true;
   editingNoteId = null;
-  pendingNoteSource = opts.source === "workout" ? "workout" : "manual";
+  pendingNoteSource = opts.source || "manual";
   renderNotesModal();
-  requestAnimationFrame(() => document.querySelector("#note-input")?.focus());
+  requestAnimationFrame(() => {
+    const input = document.querySelector("#note-input");
+    if (input) {
+      if (opts.prefill) input.value = opts.prefill;
+      input.focus();
+      // Drop the cursor at the end so a pre-filled template reads as a prompt.
+      const end = input.value.length;
+      try { input.setSelectionRange(end, end); } catch (_) {}
+    }
+    if (opts.lane) {
+      const laneSelect = document.querySelector("#note-lane");
+      if (laneSelect) laneSelect.value = opts.lane;
+    }
+  });
 }
 
 function closeNotesModal() {
@@ -7512,7 +7593,7 @@ function buildNotesMarkdown() {
   const fmt = (n) => {
     const lane = n.lane ? `[${noteLaneLabel(n.lane)}] ` : "";
     const when = (n.createdAt || "").slice(0, 10);
-    const src = n.source === "workout" ? " (from a workout)" : "";
+    const src = n.source === "workout" ? " (from a workout)" : (n.source === "catalog" ? " (exercise report)" : "");
     const text = String(n.text || "").trim().replace(/\r?\n+/g, " ");
     return `- ${lane}${text}${when ? ` — ${when}` : ""}${src}`;
   };
@@ -10475,6 +10556,78 @@ function getRecentWeeks(weeks, completedSet) {
   return out;
 }
 
+// ===== Cardio reporting (Slice 2 of the Cardio + Progress upgrade) =====
+
+// Sum the cardio (not sport) work inside one Monday-anchored week: session
+// count, minutes, and the optional distance / elevation / calories stats.
+function getCardioWeekStats(mondayDate) {
+  const data = getLocalData();
+  const start = dateKeyUTC(mondayDate);
+  const end = dateKeyUTC(addDaysUTC(mondayDate, 6));
+  let sessions = 0, minutes = 0, miles = 0, elevation = 0, calories = 0, caloriesEstimated = false;
+  (data.workouts || []).forEach((w) => {
+    if (String(w.date) < start || String(w.date) > end) return;
+    (w.entries || []).forEach((e) => {
+      if (e.type !== "cardio") return;
+      sessions++;
+      minutes += Number(e.durationMinutes) || 0;
+      const s = e.stats || {};
+      miles += Number(s.distance) || 0;
+      elevation += Number(s.elevation) || 0;
+      calories += Number(s.calories) || 0;
+      if (s.caloriesEstimated && Number(s.calories) > 0) caloriesEstimated = true;
+    });
+  });
+  return {
+    sessions,
+    minutes: Math.round(minutes),
+    miles: Math.round(miles * 10) / 10,
+    elevation: Math.round(elevation),
+    calories: Math.round(calories),
+    caloriesEstimated
+  };
+}
+
+// The last N Monday-weeks of cardio totals (oldest -> newest), for the trend.
+function getRecentCardioWeeks(weeks) {
+  const out = [];
+  let monday = mondayOfWeek(new Date());
+  for (let i = 0; i < weeks; i++) {
+    out.unshift(Object.assign({ monday: new Date(monday) }, getCardioWeekStats(monday)));
+    monday = addDaysUTC(monday, -7);
+  }
+  return out;
+}
+
+// Per-activity cardio totals since a date key, most minutes first, so the card
+// can show a bike-vs-run/tread breakdown.
+function getCardioBreakdown(sinceKey) {
+  const data = getLocalData();
+  const map = new Map();
+  (data.workouts || []).forEach((w) => {
+    if (String(w.date) < sinceKey) return;
+    (w.entries || []).forEach((e) => {
+      if (e.type !== "cardio") return;
+      const key = e.exerciseId || e.exerciseName || "cardio";
+      const cur = map.get(key) || { name: e.exerciseName || "Cardio", sessions: 0, minutes: 0, miles: 0 };
+      cur.sessions += 1;
+      cur.minutes += Number(e.durationMinutes) || 0;
+      cur.miles += Number(e.stats?.distance) || 0;
+      cur.name = e.exerciseName || cur.name;
+      map.set(key, cur);
+    });
+  });
+  return Array.from(map.values())
+    .map((r) => ({ name: r.name, sessions: r.sessions, minutes: Math.round(r.minutes), miles: Math.round(r.miles * 10) / 10 }))
+    .sort((a, b) => b.minutes - a.minutes);
+}
+
+// Any cardio ever logged? Decides data vs empty state on the cardio card.
+function hasAnyCardioLogged() {
+  return (getLocalData().workouts || []).some((w) =>
+    (w.entries || []).some((e) => e.type === "cardio"));
+}
+
 function renderProgressHero(data, doneThisWeek, target, streak, completedSet) {
   const totalWorkouts = Array.isArray(data.workouts) ? data.workouts.length : 0;
   const monthStart = (() => {
@@ -10640,6 +10793,92 @@ function renderEffortCard() {
           <p class="effort-label">Avg effort</p>
         </div>
       </div>
+    </section>`;
+}
+
+// Cardio dashboard card: this week's totals, a weekly-minutes trend, and a
+// bike-vs-run/tread breakdown. Reuses the shared inline-SVG chart + effort-grid
+// styling — no chart library.
+function renderCardioProgressCard() {
+  const head = `
+    <div class="prog-card-head">
+      <p class="card-kicker">Cardio</p>
+      <span class="prog-sub">this week</span>
+    </div>`;
+
+  if (!hasAnyCardioLogged()) {
+    return `
+      <section class="prog-card">
+        ${head}
+        <p class="prog-empty">Log a bike, run, or tread session and your weekly cardio totals and breakdown will chart here automatically.</p>
+      </section>`;
+  }
+
+  const week = getCardioWeekStats(mondayOfWeek(new Date()));
+  const weeks = getRecentCardioWeeks(12);
+  const showElevation = week.elevation > 0 || weeks.some((w) => w.elevation > 0);
+
+  // Distance / calories are always shown; the 4th tile is elevation when any is
+  // logged (tread work), otherwise the session count, so the grid stays 2x2.
+  const tiles = [
+    { num: week.minutes, unit: " min", label: "Time" },
+    { num: week.miles, unit: " mi", label: "Distance" },
+    { num: week.caloriesEstimated && week.calories > 0 ? `~${week.calories}` : week.calories, unit: " kcal", label: "Calories" },
+    showElevation
+      ? { num: week.elevation, unit: " ft", label: "Elevation" }
+      : { num: week.sessions, unit: "", label: week.sessions === 1 ? "Session" : "Sessions" }
+  ];
+  const tileHtml = tiles.map((t) => `
+    <div class="effort-cell">
+      <p class="effort-num">${t.num || 0}<span class="effort-unit">${t.unit}</span></p>
+      <p class="effort-label">${escapeHtml(t.label)}</p>
+    </div>`).join("");
+
+  // Weekly-minutes trend, drawn only once two weeks actually have cardio so a
+  // single session doesn't spike a line out of nothing.
+  let trend = "";
+  if (weeks.filter((w) => w.minutes > 0).length >= 2) {
+    const points = weeks.map((w, i) => ({ x: i, y: w.minutes }));
+    const change = week.minutes - weeks[weeks.length - 2].minutes;
+    const dir = change > 0 ? "up" : (change < 0 ? "down" : "flat");
+    const changeText = change === 0
+      ? "Same as last week"
+      : `${change > 0 ? "+" : ""}${change} min vs last week`;
+    trend = `
+      <div class="cardio-trend">
+        ${buildLineChart(points, { ariaLabel: "Weekly cardio minutes" })}
+        <div class="prog-chart-foot">
+          <div class="prog-chart-now">
+            <p class="mini-num">${week.minutes}<span class="mini-unit"> min</span></p>
+            <p class="mini-note">this week</p>
+          </div>
+          <span class="prog-change is-${dir}">${getUiIcon("trending-up")}${escapeHtml(changeText)}</span>
+        </div>
+      </div>`;
+  }
+
+  // Bike-vs-run/tread breakdown over the same 12-week window as the trend.
+  const breakdown = getCardioBreakdown(dateKeyUTC(weeks[0].monday));
+  let split = "";
+  if (breakdown.length) {
+    const rows = breakdown.map((r) => `
+      <div class="cardio-split-row">
+        <span class="cardio-split-name">${escapeHtml(r.name)}</span>
+        <span class="cardio-split-meta">${r.sessions}&times; · ${r.minutes} min${r.miles > 0 ? ` · ${r.miles} mi` : ""}</span>
+      </div>`).join("");
+    split = `
+      <div class="cardio-split">
+        <p class="cardio-split-head">By activity · last 12 weeks</p>
+        ${rows}
+      </div>`;
+  }
+
+  return `
+    <section class="prog-card">
+      ${head}
+      <div class="effort-grid">${tileHtml}</div>
+      ${trend}
+      ${split}
     </section>`;
 }
 
@@ -11353,6 +11592,7 @@ function renderProgress(resetMonth = true) {
     ${renderProgressHero(data, doneThisWeek, target, streak, completedSet)}
     ${renderBodyWeightCard(data)}
     ${renderStrengthProgressCard()}
+    ${renderCardioProgressCard()}
     ${renderPersonalRecords()}
     ${renderEffortCard()}
     ${renderConsistencyStrip(target, completedSet)}
@@ -13238,6 +13478,14 @@ todayHowToRoot?.addEventListener("click", (event) => {
   const onCloseButton = event.target.closest('[data-action="close-today-how-to"]');
   const onScrim = event.target.classList.contains("lw-sheet-scrim");
   if (onCloseButton || onScrim) closeTodayReference();
+});
+
+// "Report an issue" lives on the shared how-to sheet, which renders in three
+// different roots (live workout, Library, Today), so route it once at the top.
+document.addEventListener("click", (event) => {
+  const btn = event.target.closest('[data-action="report-exercise-issue"]');
+  if (!btn) return;
+  reportExerciseIssue(btn.dataset.id, btn.dataset.name);
 });
 
 document.addEventListener("keydown", (event) => {
