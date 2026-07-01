@@ -777,6 +777,26 @@ button.cal-cell:active {
   accent-color: var(--accent);
 }
 
+.plan-import-coach-step {
+  margin-bottom: var(--space-3);
+  padding: var(--space-3);
+  border: 1px solid rgba(182, 211, 50, 0.34);
+  border-radius: var(--radius-sm);
+  background: rgba(182, 211, 50, 0.1);
+}
+
+.plan-import-coach-step h3 {
+  margin: 2px 0 0;
+  font-size: 17px;
+}
+
+.plan-import-coach-step p:last-child {
+  margin: var(--space-2) 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
 @media (max-width: 560px) {
   .coach-head,
   .coach-actions,

@@ -3,7 +3,7 @@ const DROPBOX_TOKEN_URL = "https://api.dropboxapi.com/oauth2/token";
 const DROPBOX_UPLOAD_URL = "https://content.dropboxapi.com/2/files/upload";
 const DROPBOX_DOWNLOAD_URL = "https://content.dropboxapi.com/2/files/download";
 const DATA_FILE_PATH = "/04_Technical/06_Side_Projects/Workout and Nutrition App/data/workout-data.json";
-const APP_VERSION = "1.0.6";
+const APP_VERSION = "1.0.7";
 
 const STORAGE = {
   appKey: "trainingBookDropboxAppKey",
@@ -3432,6 +3432,7 @@ function isTimedHoldExercise(exerciseInfo, plannedEx) {
 let planImportPreview = null;
 let planImportSummary = "";
 let planImportMessage = "";
+let pendingCoachPlanApply = null;
 
 // Plan editing state: which routine (if any) is expanded into its edit form,
 // and a snapshot of the routine taken when edit mode opened so Cancel can revert
@@ -9450,8 +9451,15 @@ function renderPlanOverview(activePlan) {
 }
 
 function renderPlanImportPanel(importMessageHtml, importPreviewHtml, importText) {
+  const coachApplyHtml = pendingCoachPlanApply
+    ? `<div class="plan-import-coach-step">
+        <p class="card-kicker">Step 3 of 3</p>
+        <h3>Preview and save selected coach changes</h3>
+        <p>${escapeHtml(pendingCoachPlanApply.count)} selected ${pendingCoachPlanApply.count === 1 ? "change has" : "changes have"} been folded into a complete copy of your current plan. Nothing is saved yet.</p>
+      </div>`
+    : "";
   return `
-    <section class="plan-section plan-import">
+    <section class="plan-section plan-import" id="plan-importer">
       <div class="plan-section-head">
         <div>
           <p class="card-kicker">Plan importer</p>
@@ -9460,6 +9468,7 @@ function renderPlanImportPanel(importMessageHtml, importPreviewHtml, importText)
       </div>
       <div class="ai-steps">
         <div class="ai-step">
+          ${coachApplyHtml}
           <div class="ai-step-text">
             <span class="ai-step-num">1</span>
             <div>
@@ -10804,8 +10813,9 @@ function renderCoachChangeModal() {
       <section class="lw-sheet coach-review-sheet coach-change-sheet" role="dialog" aria-modal="true" aria-label="Review coach changes">
         <div class="lw-sheet-head">
           <div>
-            <h3>Review changes</h3>
-            <p>Keep the changes you want, then preview the full updated plan before saving.</p>
+            <p class="card-kicker">Step 2 of 3</p>
+            <h3>Choose plan changes</h3>
+            <p>Check the suggestions you want. Next, Training Book will show the full updated plan for one final preview.</p>
           </div>
           <button class="lw-sheet-close" type="button" data-coach-close-changes aria-label="Close">&times;</button>
         </div>
@@ -10823,7 +10833,7 @@ function renderCoachChangeModal() {
         </div>
         <div class="coach-modal-actions">
           <button class="quiet-button small-button" type="button" data-coach-close-changes>Cancel</button>
-          <button class="primary-button small-button" type="button" data-coach-confirm-changes>Preview selected changes</button>
+          <button class="primary-button small-button" type="button" data-coach-confirm-changes>Continue to Plan preview</button>
         </div>
       </section>
     </div>
@@ -11048,13 +11058,21 @@ function confirmCoachChanges() {
   queuedPlanImportText = buildPlanImportBlockFromData(nextData);
   planImportPreview = null;
   planImportSummary = "";
-  planImportMessage = "Coach changes loaded from the full current plan. Preview before saving.";
-  markCoachChangesApplied(coachChangeReview.id, accepted.map((change) => change.id));
+  planImportMessage = `${accepted.length} selected coach ${accepted.length === 1 ? "change is" : "changes are"} ready. Step 3: review the full plan preview below, then press Save imported plan to update your active plan.`;
+  pendingCoachPlanApply = {
+    reviewId: coachChangeReview.id,
+    changeIds: accepted.map((change) => change.id),
+    count: accepted.length
+  };
   coachChangeReview = null;
   coachModalMode = "";
   coachModalReviewId = "";
   showScreen("plan", true);
   previewPlanImportFromScreen();
+  setTimeout(() => {
+    planContent?.querySelector("#plan-importer")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    planContent?.querySelector("[data-action='import-save']")?.focus();
+  }, 80);
 }
 
 async function requestCoachReview(mode = "quick") {
@@ -12799,11 +12817,18 @@ function savePlanImportFromScreen() {
   nextData.updatedAt = new Date().toISOString();
   nextData.updatedBy = getDeviceId();
   commitProgressData(nextData);
+  if (pendingCoachPlanApply?.reviewId && pendingCoachPlanApply?.changeIds?.length) {
+    markCoachChangesApplied(pendingCoachPlanApply.reviewId, pendingCoachPlanApply.changeIds);
+  }
+  const savedCoachCount = pendingCoachPlanApply?.count || 0;
+  pendingCoachPlanApply = null;
   renderTodayRoutine();
 
   planImportPreview = null;
   planImportSummary = "";
-  planImportMessage = "Imported plan saved. Today has been refreshed from the latest weekly plan.";
+  planImportMessage = savedCoachCount
+    ? `${savedCoachCount} coach ${savedCoachCount === 1 ? "change has" : "changes have"} been saved to your active plan. Today has been refreshed.`
+    : "Imported plan saved. Today has been refreshed from the latest weekly plan.";
   renderPlan();
 }
 
