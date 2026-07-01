@@ -3,7 +3,7 @@ const DROPBOX_TOKEN_URL = "https://api.dropboxapi.com/oauth2/token";
 const DROPBOX_UPLOAD_URL = "https://content.dropboxapi.com/2/files/upload";
 const DROPBOX_DOWNLOAD_URL = "https://content.dropboxapi.com/2/files/download";
 const DATA_FILE_PATH = "/04_Technical/06_Side_Projects/Workout and Nutrition App/data/workout-data.json";
-const APP_VERSION = "1.0.4";
+const APP_VERSION = "1.0.5";
 
 const STORAGE = {
   appKey: "trainingBookDropboxAppKey",
@@ -175,6 +175,8 @@ document.addEventListener("keydown", (event) => {
   if (event.key === "Escape" && document.querySelector("#confirm-modal-root .confirm-modal")) {
     closeConfirmModal(false);
   }
+  if (event.key === "Escape" && coachChangeReview) closeCoachChanges();
+  else if (event.key === "Escape" && coachModalMode) closeCoachReviewModal();
 });
 
 // ===== Firebase cloud sync state (replaces the old Dropbox sync) =====
@@ -194,11 +196,16 @@ const coachReviewState = {
   action: "",
   reviewType: "",
   checkin: "",
+  changes: [],
   importBlock: "",
   message: "",
   generatedAt: "",
   packetMeta: null
 };
+let coachSessionCostConfirmed = false;
+let coachModalReviewId = "";
+let coachModalMode = "";
+let coachChangeReview = null;
 let queuedPlanImportText = "";
 
 // How many rolling version-history copies to keep in the cloud. Each is a small
@@ -3827,13 +3834,61 @@ function updateTodayProgress() {
 
 function getCoachMeta(data = getLocalData()) {
   const coach = data.coach && typeof data.coach === "object" ? data.coach : {};
+  const history = Array.isArray(coach.history)
+    ? coach.history.map(normalizeCoachHistoryEntry).filter(Boolean).slice(0, 20)
+    : [];
   return {
     lastReviewAt: coach.lastReviewAt || "",
     lastReviewType: coach.lastReviewType || "",
     lastReviewDueDate: coach.lastReviewDueDate || "",
     lastCheckin: coach.lastCheckin || "",
     lastCheckinMeta: coach.lastCheckinMeta || null,
+    lastChanges: normalizeCoachChanges(coach.lastChanges),
+    history,
     reminderSnoozedUntil: coach.reminderSnoozedUntil || ""
+  };
+}
+
+function normalizeCoachChanges(changes) {
+  if (!Array.isArray(changes)) return [];
+  const allowed = new Set(["weight", "swap", "note", "target", "add", "remove"]);
+  return changes.map((change, index) => {
+    if (!change || typeof change !== "object") return null;
+    const type = String(change.type || "").toLowerCase().trim();
+    if (!allowed.has(type)) return null;
+    const summary = String(change.summary || "").trim();
+    if (!summary) return null;
+    const out = {
+      id: String(change.id || `c${index + 1}`).trim() || `c${index + 1}`,
+      type,
+      routines: Array.isArray(change.routines) ? change.routines.map((item) => String(item || "").trim()).filter(Boolean) : [],
+      exercise: String(change.exercise || "").trim(),
+      summary,
+      detail: String(change.detail || "").trim()
+    };
+    ["targetWeight", "targetReps", "targetSets", "targetDuration"].forEach((key) => {
+      const value = Number(change[key]);
+      if (Number.isFinite(value) && value > 0) out[key] = value;
+    });
+    if (change.swapTo) out.swapTo = String(change.swapTo).trim();
+    if (change.note) out.note = String(change.note).trim();
+    return out;
+  }).filter(Boolean).slice(0, 20);
+}
+
+function normalizeCoachHistoryEntry(entry) {
+  if (!entry || typeof entry !== "object") return null;
+  const checkin = String(entry.checkin || "").trim();
+  const generatedAt = String(entry.generatedAt || "").trim();
+  if (!checkin || !generatedAt) return null;
+  return {
+    id: String(entry.id || `coach-${generatedAt}`).trim(),
+    generatedAt,
+    type: entry.type === "deep" ? "deep" : "quick",
+    checkin,
+    changes: normalizeCoachChanges(entry.changes),
+    appliedChangeIds: Array.isArray(entry.appliedChangeIds) ? entry.appliedChangeIds.map(String) : [],
+    packetMeta: entry.packetMeta || null
   };
 }
 
@@ -6519,6 +6574,13 @@ function mergeWorkoutData(local, remote) {
   // App notes are unioned like history so a note captured on one device can't be
   // wiped by a sync from another. Duplicate ids prefer the newer copy's text.
   merged.appNotes = unionBy(newer.appNotes, older.appNotes, (n) => n?.id || JSON.stringify(n));
+  const newerCoach = getCoachMeta(newer);
+  const olderCoach = getCoachMeta(older);
+  merged.coach = {
+    ...olderCoach,
+    ...newerCoach,
+    history: unionBy(newerCoach.history, olderCoach.history, (entry) => entry?.id || JSON.stringify(entry)).slice(0, 20)
+  };
 
   // Custom exercise photos are unusually easy to lose. The library is taken
   // wholesale from the newer copy, so any device carrying a library WITHOUT a
@@ -10501,7 +10563,28 @@ function getCoachDisplayState() {
     checkin: coachReviewState.checkin || coach.lastCheckin || "",
     generatedAt: coachReviewState.generatedAt || coach.lastReviewAt || "",
     reviewType: coachReviewState.reviewType || coach.lastReviewType || "",
-    packetMeta: coachReviewState.packetMeta || coach.lastCheckinMeta || null
+    packetMeta: coachReviewState.packetMeta || coach.lastCheckinMeta || null,
+    changes: normalizeCoachChanges(coachReviewState.changes?.length ? coachReviewState.changes : coach.lastChanges),
+    history: coach.history
+  };
+}
+
+function getCoachReviewById(id) {
+  const history = getCoachMeta(getLocalData()).history;
+  return history.find((item) => item.id === id) || null;
+}
+
+function getActiveCoachReview(display = getCoachDisplayState()) {
+  if (coachModalReviewId) return getCoachReviewById(coachModalReviewId);
+  if (!display.checkin) return null;
+  return {
+    id: "latest",
+    generatedAt: display.generatedAt,
+    type: display.reviewType === "deep" ? "deep" : "quick",
+    checkin: display.checkin,
+    changes: normalizeCoachChanges(display.changes),
+    appliedChangeIds: [],
+    packetMeta: display.packetMeta || null
   };
 }
 
@@ -10538,14 +10621,13 @@ function renderCoachOption({ mode, title, kicker, body, primary, meta, disabled,
 }
 
 function renderCoachLoading(action) {
-  const isPlan = action === "plan";
-  const title = isPlan ? "Drafting your plan block" : "Coach is reading your training data";
-  const detail = isPlan
-    ? "Using the latest check-in to produce an import block you will preview on Plan."
-    : "Pulling your signed-in Firestore data, summarizing the right window, and asking for one focused response.";
+  const title = "Coach is thinking";
+  const detail = action === "deep"
+    ? "Reading the broader window and shaping a focused review."
+    : "Reading recent training and shaping a focused review.";
   return `
     <div class="coach-loading" role="status" aria-live="polite">
-      <span class="coach-spinner" aria-hidden="true"></span>
+      <span class="coach-thinking-glyph" aria-hidden="true">${getUiIcon("sparkles")}</span>
       <div>
         <strong>${escapeHtml(title)}</strong>
         <p>${escapeHtml(detail)}</p>
@@ -10556,6 +10638,8 @@ function renderCoachLoading(action) {
 
 function renderCoachResult(display) {
   const busy = coachReviewState.status === "loading";
+  const changes = normalizeCoachChanges(display.changes);
+  const canReviewChanges = display.checkin && !busy && changes.length > 0;
   if (!display.checkin && !busy) {
     return `
       <section class="coach-result">
@@ -10574,10 +10658,113 @@ function renderCoachResult(display) {
           <h3>${escapeHtml(label)}</h3>
           <p class="coach-option-meta">${generated ? `Generated ${escapeHtml(generated)}` : "Not generated yet"}</p>
         </div>
-        <button class="quiet-button small-button btn-ico" type="button" data-coach-plan ${display.checkin && !busy ? "" : "disabled"}>${getUiIcon("clipboard-list")}Turn this into a plan draft</button>
+        ${canReviewChanges ? `<button class="quiet-button small-button btn-ico" type="button" data-coach-review-changes="latest">${getUiIcon("clipboard-list")}Review changes</button>` : ""}
       </div>
       ${display.checkin ? `<div class="coach-output">${escapeHtml(display.checkin)}</div>` : ""}
     </section>
+  `;
+}
+
+function renderCoachHistory(history) {
+  const entries = (Array.isArray(history) ? history : []).slice(0, 20);
+  return `
+    <section class="coach-history">
+      <div class="coach-history-head">
+        <p class="card-kicker">Past reviews</p>
+        <span>${entries.length ? `${entries.length} saved` : "None yet"}</span>
+      </div>
+      ${entries.length ? `<div class="coach-history-list">
+        ${entries.map((entry) => {
+          const applied = Array.isArray(entry.appliedChangeIds) && entry.appliedChangeIds.length > 0;
+          const changes = normalizeCoachChanges(entry.changes);
+          const status = applied ? `${entry.appliedChangeIds.length} applied` : changes.length ? `${changes.length} proposed` : "No changes";
+          return `
+            <button class="coach-history-row" type="button" data-coach-open-review="${escapeHtml(entry.id)}">
+              <span>
+                <strong>${escapeHtml(formatCoachReviewTime(entry.generatedAt) || "Saved review")}</strong>
+                <small>${escapeHtml(getCoachReviewLabel(entry.type))}</small>
+              </span>
+              <em>${escapeHtml(status)}</em>
+            </button>
+          `;
+        }).join("")}
+      </div>` : `<p class="coach-empty">Reviews you run here will stay available, newest first.</p>`}
+    </section>
+  `;
+}
+
+function renderCoachReviewModal(display) {
+  if (coachReviewState.status === "loading" && coachModalMode === "loading") {
+    return `
+      <div class="lw-sheet-scrim coach-modal-scrim" role="presentation" data-coach-close-review>
+        <section class="lw-sheet coach-review-sheet" role="dialog" aria-modal="true" aria-label="Coach review loading">
+          <div class="lw-sheet-head">
+            <div>
+              <h3>${escapeHtml(getCoachReviewLabel(coachReviewState.reviewType || coachReviewState.action))}</h3>
+              <p>Training Book is waiting on the coach.</p>
+            </div>
+            <button class="lw-sheet-close" type="button" data-coach-close-review aria-label="Close">&times;</button>
+          </div>
+          ${renderCoachLoading(coachReviewState.action)}
+        </section>
+      </div>
+    `;
+  }
+  if (coachModalMode !== "result") return "";
+  const review = getActiveCoachReview(display);
+  if (!review) return "";
+  const changes = normalizeCoachChanges(review.changes);
+  return `
+    <div class="lw-sheet-scrim coach-modal-scrim" role="presentation" data-coach-close-review>
+      <section class="lw-sheet coach-review-sheet" role="dialog" aria-modal="true" aria-label="Coach review result">
+        <div class="lw-sheet-head">
+          <div>
+            <h3>${escapeHtml(getCoachReviewLabel(review.type))}</h3>
+            <p>${escapeHtml(formatCoachReviewTime(review.generatedAt) || "Saved review")}</p>
+          </div>
+          <button class="lw-sheet-close" type="button" data-coach-close-review aria-label="Close">&times;</button>
+        </div>
+        <div class="coach-output coach-modal-output">${escapeHtml(review.checkin)}</div>
+        <div class="coach-modal-actions">
+          ${changes.length ? `<button class="primary-button small-button btn-ico" type="button" data-coach-review-changes="${escapeHtml(review.id)}">${getUiIcon("clipboard-list")}Review changes</button>` : ""}
+          <button class="quiet-button small-button" type="button" data-coach-close-review>Done</button>
+        </div>
+      </section>
+    </div>
+  `;
+}
+
+function renderCoachChangeModal() {
+  if (!coachChangeReview) return "";
+  const changes = normalizeCoachChanges(coachChangeReview.changes);
+  return `
+    <div class="lw-sheet-scrim coach-modal-scrim" role="presentation" data-coach-close-changes>
+      <section class="lw-sheet coach-review-sheet coach-change-sheet" role="dialog" aria-modal="true" aria-label="Review coach changes">
+        <div class="lw-sheet-head">
+          <div>
+            <h3>Review changes</h3>
+            <p>Keep the changes you want, then preview the full updated plan before saving.</p>
+          </div>
+          <button class="lw-sheet-close" type="button" data-coach-close-changes aria-label="Close">&times;</button>
+        </div>
+        <div class="coach-change-list">
+          ${changes.map((change) => `
+            <label class="coach-change-item">
+              <input type="checkbox" data-coach-change-id="${escapeHtml(change.id)}" checked>
+              <span>
+                <strong>${escapeHtml(change.summary)}</strong>
+                ${change.detail ? `<small>${escapeHtml(change.detail)}</small>` : ""}
+                <em>${escapeHtml([change.type, change.routines.join(", ")].filter(Boolean).join(" - "))}</em>
+              </span>
+            </label>
+          `).join("")}
+        </div>
+        <div class="coach-modal-actions">
+          <button class="quiet-button small-button" type="button" data-coach-close-changes>Cancel</button>
+          <button class="primary-button small-button" type="button" data-coach-confirm-changes>Preview selected changes</button>
+        </div>
+      </section>
+    </div>
   `;
 }
 
@@ -10628,24 +10815,184 @@ function renderCoach() {
         busy: false
       })}
     </div>
+    ${renderCoachHistory(display.history)}
     ${busy ? renderCoachLoading(coachReviewState.action) : ""}
     ${renderCoachResult(display)}
+    ${renderCoachReviewModal(display)}
+    ${renderCoachChangeModal()}
   `;
 }
 
-function saveCoachReviewToData({ type, checkin, generatedAt, packetMeta }) {
+function saveCoachReviewToData({ type, checkin, generatedAt, packetMeta, changes }) {
   const data = getLocalData();
   const reviewDate = getActiveReviewDate(data);
+  const normalizedChanges = normalizeCoachChanges(changes);
+  const coach = getCoachMeta(data);
+  const entry = {
+    id: `coach-${generatedAt}-${type}`,
+    generatedAt,
+    type,
+    checkin,
+    changes: normalizedChanges,
+    appliedChangeIds: [],
+    packetMeta: packetMeta || null
+  };
+  const history = unionBy([entry], coach.history, (item) => item?.id || JSON.stringify(item)).slice(0, 20);
   data.coach = {
-    ...getCoachMeta(data),
+    ...coach,
     lastReviewAt: generatedAt,
     lastReviewType: type,
     lastReviewDueDate: reviewDate,
     lastCheckin: checkin,
     lastCheckinMeta: packetMeta || null,
+    lastChanges: normalizedChanges,
+    history,
     reminderSnoozedUntil: ""
   };
   commitProgressData(data);
+  return entry;
+}
+
+function markCoachChangesApplied(reviewId, appliedChangeIds) {
+  const ids = Array.isArray(appliedChangeIds) ? appliedChangeIds.map(String) : [];
+  if (!ids.length) return;
+  const data = getLocalData();
+  const coach = getCoachMeta(data);
+  const matchesReview = (entry) => entry.id === reviewId || (reviewId === "latest" && entry.generatedAt === coach.lastReviewAt);
+  const history = coach.history.map((entry) => matchesReview(entry)
+    ? { ...entry, appliedChangeIds: Array.from(new Set([...(entry.appliedChangeIds || []), ...ids])) }
+    : entry);
+  data.coach = {
+    ...coach,
+    history
+  };
+  commitProgressData(data);
+}
+
+function openCoachChanges(reviewId) {
+  const display = getCoachDisplayState();
+  const review = reviewId && reviewId !== "latest" ? getCoachReviewById(reviewId) : getActiveCoachReview(display);
+  if (!review || !normalizeCoachChanges(review.changes).length) return;
+  coachChangeReview = review;
+  renderCoach();
+}
+
+function closeCoachChanges() {
+  coachChangeReview = null;
+  renderCoach();
+}
+
+function openCoachReviewModal(reviewId = "") {
+  coachModalReviewId = reviewId === "latest" ? "" : reviewId;
+  coachModalMode = "result";
+  renderCoach();
+}
+
+function closeCoachReviewModal() {
+  coachModalReviewId = "";
+  coachModalMode = "";
+  renderCoach();
+}
+
+function buildPlanImportBlockFromData(data) {
+  const activePlan = { ...getStarterActivePlan(), ...(data.activePlan || {}) };
+  const routines = Array.isArray(data.routines) ? data.routines : [];
+  const weeklyPlan = data.weeklyPlan || getStarterWeeklyPlan();
+  const lines = [
+    "ACTIVE PLAN:",
+    `name: ${activePlan.name || "Current Training Plan"}`,
+    `main goal: ${activePlan.mainGoal || ""}`,
+    `review cadence: ${activePlan.reviewCadence || ""}`,
+    `next review date: ${activePlan.nextReviewDate || ""}`,
+    `notes: ${activePlan.notes || ""}`,
+    "",
+    "WEEKLY PLAN:"
+  ];
+  PLAN_WEEK_ORDER.forEach((day) => {
+    lines.push(`${day}: ${weeklyPlan[day] ? getRoutineNameById(weeklyPlan[day], routines) : "rest"}`);
+  });
+  routines.forEach((routine) => {
+    lines.push("", `ROUTINE: ${routine.name}`);
+    (routine.exercises || []).forEach((exercise) => {
+      lines.push(formatRoutineExercise(exercise));
+      if (exercise.coachNote) lines.push(`  note: ${exercise.coachNote}`);
+    });
+  });
+  return lines.join("\n");
+}
+
+function applyCoachChangesToData(data, changes) {
+  const next = structuredClone(data);
+  next.routines = Array.isArray(next.routines) ? next.routines : [];
+  const routineMatches = (routine, change) => {
+    const names = Array.isArray(change.routines) ? change.routines.map((name) => name.toLowerCase()) : [];
+    return !names.length || names.includes(String(routine.name || "").toLowerCase());
+  };
+  const findExerciseId = (name) => findExerciseIdByName(name) || makeSlug(name);
+  const applyTargets = (exercise, change) => {
+    if (Number(change.targetWeight) > 0) exercise.targetWeight = Number(change.targetWeight);
+    if (Number(change.targetReps) > 0) exercise.targetReps = Number(change.targetReps);
+    if (Number(change.targetSets) > 0) exercise.targetSets = Number(change.targetSets);
+    if (Number(change.targetDuration) > 0) exercise.targetDuration = Number(change.targetDuration);
+    if (change.note) exercise.coachNote = change.note;
+  };
+
+  normalizeCoachChanges(changes).forEach((change) => {
+    next.routines.forEach((routine) => {
+      if (!routineMatches(routine, change)) return;
+      routine.exercises = Array.isArray(routine.exercises) ? routine.exercises : [];
+      const matchIndex = routine.exercises.findIndex((exercise) => {
+        const lib = getExerciseById(exercise.exerciseId);
+        return String(lib?.name || exercise.exerciseId || "").toLowerCase() === String(change.exercise || "").toLowerCase();
+      });
+
+      if (change.type === "remove") {
+        if (matchIndex >= 0) routine.exercises.splice(matchIndex, 1);
+        return;
+      }
+
+      if (change.type === "swap") {
+        if (matchIndex >= 0 && change.swapTo) {
+          const current = routine.exercises[matchIndex] || {};
+          routine.exercises[matchIndex] = { ...current, exerciseId: findExerciseId(change.swapTo) };
+        }
+        return;
+      }
+
+      if (change.type === "add") {
+        const exerciseId = findExerciseId(change.exercise || change.swapTo);
+        const added = defaultRoutineExercise(exerciseId);
+        applyTargets(added, change);
+        routine.exercises.push(added);
+        return;
+      }
+
+      if (matchIndex >= 0) applyTargets(routine.exercises[matchIndex], change);
+    });
+  });
+
+  return next;
+}
+
+function confirmCoachChanges() {
+  if (!coachChangeReview) return;
+  const checked = Array.from(coachContent.querySelectorAll("[data-coach-change-id]:checked")).map((box) => box.dataset.coachChangeId);
+  const accepted = normalizeCoachChanges(coachChangeReview.changes).filter((change) => checked.includes(change.id));
+  if (!accepted.length) {
+    closeCoachChanges();
+    return;
+  }
+  const nextData = applyCoachChangesToData(getLocalData(), accepted);
+  queuedPlanImportText = buildPlanImportBlockFromData(nextData);
+  planImportPreview = null;
+  planImportSummary = "";
+  planImportMessage = "Coach changes loaded from the full current plan. Preview before saving.";
+  markCoachChangesApplied(coachChangeReview.id, accepted.map((change) => change.id));
+  coachChangeReview = null;
+  coachModalMode = "";
+  coachModalReviewId = "";
+  showScreen("plan", true);
+  previewPlanImportFromScreen();
 }
 
 async function requestCoachReview(mode = "quick") {
@@ -10657,13 +11004,15 @@ async function requestCoachReview(mode = "quick") {
   }
 
   const reviewMode = mode === "deep" ? "deep" : mode === "plan" ? "plan" : "quick";
+  if (reviewMode === "plan") return;
   const display = getCoachDisplayState();
   coachReviewState.status = "loading";
   coachReviewState.action = reviewMode;
-  coachReviewState.reviewType = reviewMode === "plan" ? display.reviewType : reviewMode;
-  coachReviewState.message = reviewMode === "plan"
-    ? "Drafting a plan import block..."
-    : `${getCoachReviewLabel(reviewMode)} is running.`;
+  coachReviewState.reviewType = reviewMode;
+  coachReviewState.changes = [];
+  coachReviewState.message = `${getCoachReviewLabel(reviewMode)} is running.`;
+  coachModalMode = "loading";
+  coachModalReviewId = "";
   renderCoach();
 
   try {
@@ -10679,47 +11028,92 @@ async function requestCoachReview(mode = "quick") {
     coachReviewState.generatedAt = generatedAt;
     coachReviewState.packetMeta = payload.packetMeta || null;
 
-    if (reviewMode === "plan") {
-      if (!payload.importBlock) throw new Error("The coach did not return a plan block.");
-      coachReviewState.importBlock = payload.importBlock;
-      coachReviewState.message = "Plan draft loaded into Plan. Preview it before saving.";
-      queuedPlanImportText = payload.importBlock;
-      planImportPreview = null;
-      planImportSummary = "";
-      planImportMessage = "Coach plan draft loaded. Preview changes before saving.";
-      showScreen("plan", true);
-      previewPlanImportFromScreen();
-      return;
-    }
-
     if (!payload.checkin) throw new Error("The coach did not return a check-in.");
     coachReviewState.reviewType = reviewMode;
     coachReviewState.checkin = payload.checkin;
+    coachReviewState.changes = normalizeCoachChanges(payload.changes);
     coachReviewState.message = `${getCoachReviewLabel(reviewMode)} ready.`;
-    saveCoachReviewToData({
+    const entry = saveCoachReviewToData({
       type: reviewMode,
       checkin: payload.checkin,
       generatedAt,
-      packetMeta: payload.packetMeta || null
+      packetMeta: payload.packetMeta || null,
+      changes: payload.changes
     });
+    coachModalMode = "result";
+    coachModalReviewId = entry.id;
     renderReviewReminder();
   } catch (error) {
     coachReviewState.status = "error";
     coachReviewState.action = "";
     coachReviewState.message = error?.message || "The coach helper could not finish. Try again in a minute.";
+    coachModalMode = "";
+    coachModalReviewId = "";
   }
 
   renderCoach();
 }
 
+async function confirmCoachReviewCost(mode) {
+  if (coachSessionCostConfirmed) return true;
+  const root = getConfirmModalRoot();
+  if (confirmModalResolve) closeConfirmModal(false);
+  root.innerHTML = `
+    <div class="confirm-scrim" role="presentation" data-action="confirm-cancel">
+      <section class="confirm-modal coach-cost-modal" role="dialog" aria-modal="true" aria-labelledby="confirm-title">
+        <p class="card-kicker">Paid review</p>
+        <h2 id="confirm-title">${escapeHtml(getCoachReviewLabel(mode))}</h2>
+        <p>This sends your recent training to the coach and uses a small amount of paid credit, usually just a few cents.</p>
+        <label class="coach-cost-check"><input type="checkbox" id="coach-cost-session"> Don't ask again this session</label>
+        <div class="confirm-actions">
+          <button class="quiet-button small-button" type="button" data-action="confirm-cancel">Cancel</button>
+          <button class="primary-button small-button" type="button" data-action="confirm-ok">Run review</button>
+        </div>
+      </section>
+    </div>
+  `;
+  let rememberForSession = false;
+  root.querySelector("#coach-cost-session")?.addEventListener("change", (event) => {
+    rememberForSession = Boolean(event.target.checked);
+  });
+  return new Promise((resolve) => {
+    confirmModalResolve = (result) => {
+      if (result && rememberForSession) coachSessionCostConfirmed = true;
+      resolve(result);
+    };
+    root.querySelector("[data-action='confirm-ok']")?.focus();
+  });
+}
+
 function handleCoachClick(event) {
   const runButton = event.target.closest("[data-coach-run]");
   if (runButton) {
-    requestCoachReview(runButton.dataset.coachRun);
+    const mode = runButton.dataset.coachRun;
+    confirmCoachReviewCost(mode).then((ok) => {
+      if (ok) requestCoachReview(mode);
+    });
     return;
   }
-  if (event.target.closest("[data-coach-plan]")) {
-    requestCoachReview("plan");
+  const openReview = event.target.closest("[data-coach-open-review]");
+  if (openReview) {
+    openCoachReviewModal(openReview.dataset.coachOpenReview);
+    return;
+  }
+  const reviewChanges = event.target.closest("[data-coach-review-changes]");
+  if (reviewChanges) {
+    openCoachChanges(reviewChanges.dataset.coachReviewChanges);
+    return;
+  }
+  if (event.target.closest("[data-coach-close-review]")) {
+    if (!event.target.closest(".coach-review-sheet") || event.target.closest("button")) closeCoachReviewModal();
+    return;
+  }
+  if (event.target.closest("[data-coach-close-changes]")) {
+    if (!event.target.closest(".coach-change-sheet") || event.target.closest("button")) closeCoachChanges();
+    return;
+  }
+  if (event.target.closest("[data-coach-confirm-changes]")) {
+    confirmCoachChanges();
     return;
   }
   if (event.target.closest("[data-coach-copy]")) {
