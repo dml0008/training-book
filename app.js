@@ -3,7 +3,7 @@ const DROPBOX_TOKEN_URL = "https://api.dropboxapi.com/oauth2/token";
 const DROPBOX_UPLOAD_URL = "https://content.dropboxapi.com/2/files/upload";
 const DROPBOX_DOWNLOAD_URL = "https://content.dropboxapi.com/2/files/download";
 const DATA_FILE_PATH = "/04_Technical/06_Side_Projects/Workout and Nutrition App/data/workout-data.json";
-const APP_VERSION = "1.0.9";
+const APP_VERSION = "1.0.10";
 
 const STORAGE = {
   appKey: "trainingBookDropboxAppKey",
@@ -9490,8 +9490,8 @@ function renderPlanImportPanel(importMessageHtml, importPreviewHtml, importText)
           <p class="plan-muted ai-format-hint">Optional extras you can include: a starting weight with <code>@</code> (<code>Bench Press: 3x8 @ 135</code>), <code>timer</code> after a rest (<code>rest 90s timer</code>), or a <code>note:</code> line under a move for in-workout coaching.</p>
           <div class="plan-import-actions">
             <button class="quiet-button small-button" type="button" data-action="import-example">Use example</button>
-            <button class="primary-button" type="button" data-action="import-preview">Preview changes</button>
-            <button class="quiet-button" type="button" data-action="import-save" ${planImportPreview ? "" : "disabled"}>${pendingCoachPlanApply ? "Save selected coach changes" : "Save imported plan"}</button>
+            <button class="${pendingCoachPlanApply ? "quiet-button" : "primary-button"}" type="button" data-action="import-preview">Preview changes</button>
+            <button class="${pendingCoachPlanApply ? "primary-button" : "quiet-button"}" type="button" data-action="import-save" ${planImportPreview ? "" : "disabled"}>${pendingCoachPlanApply ? "Save selected coach changes" : "Save imported plan"}</button>
           </div>
           ${importMessageHtml}
           ${importPreviewHtml}
