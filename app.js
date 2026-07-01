@@ -3,7 +3,7 @@ const DROPBOX_TOKEN_URL = "https://api.dropboxapi.com/oauth2/token";
 const DROPBOX_UPLOAD_URL = "https://content.dropboxapi.com/2/files/upload";
 const DROPBOX_DOWNLOAD_URL = "https://content.dropboxapi.com/2/files/download";
 const DATA_FILE_PATH = "/04_Technical/06_Side_Projects/Workout and Nutrition App/data/workout-data.json";
-const APP_VERSION = "1.0.7";
+const APP_VERSION = "1.0.8";
 
 const STORAGE = {
   appKey: "trainingBookDropboxAppKey",
@@ -9481,7 +9481,7 @@ function renderPlanImportPanel(importMessageHtml, importPreviewHtml, importText)
           <div class="plan-import-actions">
             <button class="quiet-button small-button" type="button" data-action="import-example">Use example</button>
             <button class="primary-button" type="button" data-action="import-preview">Preview changes</button>
-            <button class="quiet-button" type="button" data-action="import-save" ${planImportPreview ? "" : "disabled"}>Save imported plan</button>
+            <button class="quiet-button" type="button" data-action="import-save" ${planImportPreview ? "" : "disabled"}>${pendingCoachPlanApply ? "Save selected coach changes" : "Save imported plan"}</button>
           </div>
           ${importMessageHtml}
           ${importPreviewHtml}
@@ -11046,6 +11046,12 @@ function applyCoachChangesToData(data, changes) {
   return next;
 }
 
+function getPendingCoachApplyMessage() {
+  if (!pendingCoachPlanApply?.count) return "";
+  const count = pendingCoachPlanApply.count;
+  return `${count} selected coach ${count === 1 ? "change is" : "changes are"} ready. Step 3: review the full plan preview below, then press ${count === 1 ? "Save selected coach change" : "Save selected coach changes"} to update your active plan.`;
+}
+
 function confirmCoachChanges() {
   if (!coachChangeReview) return;
   const checked = Array.from(coachContent.querySelectorAll("[data-coach-change-id]:checked")).map((box) => box.dataset.coachChangeId);
@@ -11058,12 +11064,12 @@ function confirmCoachChanges() {
   queuedPlanImportText = buildPlanImportBlockFromData(nextData);
   planImportPreview = null;
   planImportSummary = "";
-  planImportMessage = `${accepted.length} selected coach ${accepted.length === 1 ? "change is" : "changes are"} ready. Step 3: review the full plan preview below, then press Save imported plan to update your active plan.`;
   pendingCoachPlanApply = {
     reviewId: coachChangeReview.id,
     changeIds: accepted.map((change) => change.id),
     count: accepted.length
   };
+  planImportMessage = getPendingCoachApplyMessage();
   coachChangeReview = null;
   coachModalMode = "";
   coachModalReviewId = "";
@@ -11184,16 +11190,16 @@ function handleCoachClick(event) {
     openCoachChanges(reviewChanges.dataset.coachReviewChanges);
     return;
   }
+  if (event.target.closest("[data-coach-confirm-changes]")) {
+    confirmCoachChanges();
+    return;
+  }
   if (event.target.closest("[data-coach-close-review]")) {
     if (!event.target.closest(".coach-review-sheet") || event.target.closest("button")) closeCoachReviewModal();
     return;
   }
-  if (event.target.closest("[data-coach-close-changes]")) {
-    if (!event.target.closest(".coach-change-sheet") || event.target.closest("button")) closeCoachChanges();
-    return;
-  }
-  if (event.target.closest("[data-coach-confirm-changes]")) {
-    confirmCoachChanges();
+  if (event.target.hasAttribute("data-coach-close-changes") || event.target.closest("button[data-coach-close-changes]")) {
+    closeCoachChanges();
     return;
   }
   if (event.target.closest("[data-coach-copy]")) {
@@ -12797,7 +12803,7 @@ function previewPlanImportFromScreen() {
     const nextData = buildImportedPlanData(data, parsed);
     planImportPreview = { parsed, nextData };
     planImportSummary = summarizePlanImport(parsed, nextData).replace(/\nLoad this updated plan into Training Book\?$/, "");
-    planImportMessage = "Preview ready. If this looks right, save the imported plan.";
+    planImportMessage = getPendingCoachApplyMessage() || "Preview ready. If this looks right, save the imported plan.";
   } catch (error) {
     planImportPreview = null;
     planImportSummary = "";
