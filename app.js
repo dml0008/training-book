@@ -3,7 +3,7 @@ const DROPBOX_TOKEN_URL = "https://api.dropboxapi.com/oauth2/token";
 const DROPBOX_UPLOAD_URL = "https://content.dropboxapi.com/2/files/upload";
 const DROPBOX_DOWNLOAD_URL = "https://content.dropboxapi.com/2/files/download";
 const DATA_FILE_PATH = "/04_Technical/06_Side_Projects/Workout and Nutrition App/data/workout-data.json";
-const APP_VERSION = "1.0.5";
+const APP_VERSION = "1.0.6";
 
 const STORAGE = {
   appKey: "trainingBookDropboxAppKey",
@@ -3834,6 +3834,8 @@ function updateTodayProgress() {
 
 function getCoachMeta(data = getLocalData()) {
   const coach = data.coach && typeof data.coach === "object" ? data.coach : {};
+  const parsedLastCheckin = parseCoachCheckinChanges(coach.lastCheckin);
+  const savedLastChanges = normalizeCoachChanges(coach.lastChanges);
   const history = Array.isArray(coach.history)
     ? coach.history.map(normalizeCoachHistoryEntry).filter(Boolean).slice(0, 20)
     : [];
@@ -3841,9 +3843,9 @@ function getCoachMeta(data = getLocalData()) {
     lastReviewAt: coach.lastReviewAt || "",
     lastReviewType: coach.lastReviewType || "",
     lastReviewDueDate: coach.lastReviewDueDate || "",
-    lastCheckin: coach.lastCheckin || "",
+    lastCheckin: parsedLastCheckin.checkin || "",
     lastCheckinMeta: coach.lastCheckinMeta || null,
-    lastChanges: normalizeCoachChanges(coach.lastChanges),
+    lastChanges: savedLastChanges.length ? savedLastChanges : parsedLastCheckin.changes,
     history,
     reminderSnoozedUntil: coach.reminderSnoozedUntil || ""
   };
@@ -3878,18 +3880,78 @@ function normalizeCoachChanges(changes) {
 
 function normalizeCoachHistoryEntry(entry) {
   if (!entry || typeof entry !== "object") return null;
-  const checkin = String(entry.checkin || "").trim();
+  const parsed = parseCoachCheckinChanges(entry.checkin);
+  const checkin = parsed.checkin;
   const generatedAt = String(entry.generatedAt || "").trim();
   if (!checkin || !generatedAt) return null;
+  const savedChanges = normalizeCoachChanges(entry.changes);
   return {
     id: String(entry.id || `coach-${generatedAt}`).trim(),
     generatedAt,
     type: entry.type === "deep" ? "deep" : "quick",
     checkin,
-    changes: normalizeCoachChanges(entry.changes),
+    changes: savedChanges.length ? savedChanges : parsed.changes,
     appliedChangeIds: Array.isArray(entry.appliedChangeIds) ? entry.appliedChangeIds.map(String) : [],
     packetMeta: entry.packetMeta || null
   };
+}
+
+function parseCoachCheckinChanges(text) {
+  const source = String(text || "").trim();
+  const fallback = { checkin: source, changes: [] };
+  const fenced = source.match(/```json\s*([\s\S]*?)\s*```\s*$/i);
+  const openFence = fenced || source.match(/```json\s*([\s\S]*)$/i);
+  if (!openFence) return fallback;
+  try {
+    const parsed = JSON.parse(openFence[1]);
+    return {
+      checkin: source.slice(0, openFence.index).trim(),
+      changes: normalizeCoachChanges(parsed?.changes)
+    };
+  } catch (_) {
+    const recovered = recoverCoachChangeObjects(openFence[1]);
+    return {
+      checkin: source.slice(0, openFence.index).trim() || source,
+      changes: normalizeCoachChanges(recovered)
+    };
+  }
+}
+
+function recoverCoachChangeObjects(jsonText) {
+  const start = String(jsonText || "").indexOf("[");
+  if (start < 0) return [];
+  const objects = [];
+  let depth = 0;
+  let objectStart = -1;
+  let inString = false;
+  let escaped = false;
+  for (let i = start + 1; i < jsonText.length; i += 1) {
+    const char = jsonText[i];
+    if (inString) {
+      if (escaped) escaped = false;
+      else if (char === "\\") escaped = true;
+      else if (char === "\"") inString = false;
+      continue;
+    }
+    if (char === "\"") {
+      inString = true;
+      continue;
+    }
+    if (char === "{") {
+      if (depth === 0) objectStart = i;
+      depth += 1;
+      continue;
+    }
+    if (char === "}") {
+      depth -= 1;
+      if (depth === 0 && objectStart >= 0) {
+        try { objects.push(JSON.parse(jsonText.slice(objectStart, i + 1))); }
+        catch (_) {}
+        objectStart = -1;
+      }
+    }
+  }
+  return objects;
 }
 
 function getActiveReviewDate(data = getLocalData()) {
