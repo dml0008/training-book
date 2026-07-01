@@ -3,7 +3,8 @@ const DROPBOX_TOKEN_URL = "https://api.dropboxapi.com/oauth2/token";
 const DROPBOX_UPLOAD_URL = "https://content.dropboxapi.com/2/files/upload";
 const DROPBOX_DOWNLOAD_URL = "https://content.dropboxapi.com/2/files/download";
 const DATA_FILE_PATH = "/04_Technical/06_Side_Projects/Workout and Nutrition App/data/workout-data.json";
-const APP_VERSION = "1.0.10";
+const APP_VERSION = "1.0.11";
+const SOCCER_DURATION_MINUTES = 60;
 
 const STORAGE = {
   appKey: "trainingBookDropboxAppKey",
@@ -218,6 +219,7 @@ const CLOUD_BACKUP_KEEP = 30;
 // write never blocks or fails the main save.
 async function cloudSave(data) {
   if (!_fbDoc || !_setDoc) throw new Error("Sign in to sync across your devices.");
+  normalizeSoccerDurationInData(data);
   await _setDoc(_fbDoc, data);
   saveCloudBackup(data).catch((e) => console.error("Cloud backup write skipped:", e));
 }
@@ -2077,6 +2079,40 @@ function getSoccerStarterExercise() {
     icon: "soccer",
     tags: ["sport"]
   };
+}
+
+function isSoccerExerciseReference(plannedExercise, library = exercises) {
+  const exerciseId = String(plannedExercise?.exerciseId || "").toLowerCase();
+  if (exerciseId === "soccer") return true;
+  const exercise = (Array.isArray(library) ? library : []).find((item) => item?.id === plannedExercise?.exerciseId);
+  return String(exercise?.name || "").trim().toLowerCase() === "soccer";
+}
+
+function normalizeSoccerDurationInData(data) {
+  if (!data || !Array.isArray(data.routines)) return false;
+  const library = Array.isArray(data.library) ? data.library : exercises;
+  let changed = false;
+  data.routines.forEach((routine) => {
+    if (!Array.isArray(routine.exercises)) return;
+    routine.exercises.forEach((plannedExercise) => {
+      if (!isSoccerExerciseReference(plannedExercise, library)) return;
+      if (Number(plannedExercise.targetDuration) === SOCCER_DURATION_MINUTES) return;
+      plannedExercise.targetDuration = SOCCER_DURATION_MINUTES;
+      changed = true;
+    });
+  });
+  return changed;
+}
+
+function repairSoccerDurationInvariant({ rerender = false } = {}) {
+  const data = getLocalData();
+  if (!normalizeSoccerDurationInData(data)) return false;
+  commitProgressData(data);
+  if (rerender) {
+    renderPlan();
+    renderTodayRoutine();
+  }
+  return true;
 }
 
 // One-time migration to the photo/glyph exercise library (the 53-exercise set
@@ -9581,7 +9617,8 @@ function defaultRoutineExercise(exerciseId) {
   const type = getExerciseById(exerciseId)?.type || "strength";
   if (type === "cardio" || type === "sport") {
     const targetSubtype = defaultExerciseSubtype(exerciseId);
-    return { exerciseId, targetDuration: 20, ...(targetSubtype ? { targetSubtype } : {}) };
+    const targetDuration = String(exerciseId).toLowerCase() === "soccer" ? SOCCER_DURATION_MINUTES : 20;
+    return { exerciseId, targetDuration, ...(targetSubtype ? { targetSubtype } : {}) };
   }
   if (type === "timed") return { exerciseId, targetSets: 3, targetReps: 30, targetRest: 0 };
   return { exerciseId, targetSets: 3, targetReps: 8, targetRest: 0 };
@@ -11075,6 +11112,7 @@ function applyCoachChangesToData(data, changes) {
     });
   });
 
+  normalizeSoccerDurationInData(next);
   return next;
 }
 
@@ -11346,6 +11384,7 @@ function commitProgressData(data) {
   // Keep the derived completed-days list in step with the actual workouts, so
   // deleting or re-dating a workout can't leave a phantom "done" day behind.
   reconcileCompletedWorkouts(data);
+  normalizeSoccerDurationInData(data);
   data.updatedAt = new Date().toISOString();
   data.updatedBy = getDeviceId();
   saveLocalData(data);
@@ -12782,6 +12821,7 @@ function buildImportedPlanData(currentData, parsed) {
     data.weeklyPlan = nextWeeklyPlan;
   }
 
+  normalizeSoccerDurationInData(data);
   return data;
 }
 
@@ -13209,6 +13249,7 @@ window.addEventListener("beforeunload", (event) => {
 });
 
 refreshLibrary();
+repairSoccerDurationInvariant();
 renderFilterStrip();
 renderExercises();
 renderExercisePicker();
@@ -13251,6 +13292,7 @@ async function initCloud() {
     seedPelotonOnce();
     seedPickleballOnce();
     restoreSportTypesOnce();
+    repairSoccerDurationInvariant({ rerender: true });
     updateCloudUi();
     return;
   }
@@ -13292,6 +13334,9 @@ async function initCloud() {
     if (!remote) {
       // Nothing in the cloud yet: seed it from this device, but never write a
       // blank/starter doc as the canonical copy.
+      if (local && normalizeSoccerDurationInData(local)) {
+        applyRecoveredData(local);
+      }
       if (local && hasRealHistory(local)) {
         cloudSave(local).catch((e) => console.error("Initial cloud push failed:", e));
       }
@@ -13300,11 +13345,17 @@ async function initCloud() {
 
     if (!local) {
       // First run on this device: take the cloud copy as-is.
-      applyRecoveredData(remote);
+      const firstRun = structuredClone(remote);
+      const soccerFixed = normalizeSoccerDurationInData(firstRun);
+      applyRecoveredData(firstRun);
+      if (soccerFixed) {
+        cloudSave(firstRun).catch((e) => console.error("Soccer duration cloud repair failed:", e));
+      }
       return;
     }
 
     const merged = mergeWorkoutData(local, remote);
+    const soccerFixed = normalizeSoccerDurationInData(merged);
 
     // Keep a one-tap undo point whenever an incoming sync changes this device.
     if (dataChanged(local, merged)) pushLocalSnapshot("before sync", local);
@@ -13312,7 +13363,7 @@ async function initCloud() {
     applyRecoveredData(merged);
 
     // Heal the cloud if our merge holds data the remote copy was missing.
-    if (dataChanged(merged, remote)) {
+    if (soccerFixed || dataChanged(merged, remote)) {
       cloudSave(merged).catch((e) => console.error("Cloud heal push failed:", e));
     }
   }
@@ -13352,6 +13403,7 @@ async function initCloud() {
         seedPickleballOnce();
         restoreSportTypesOnce();
         repairCatalogDataOnce();
+        repairSoccerDurationInvariant({ rerender: true });
       }, (error) => console.error("Cloud listener error:", error));
     } else {
       cloudUser = null;
