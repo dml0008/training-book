@@ -3,7 +3,7 @@ const DROPBOX_TOKEN_URL = "https://api.dropboxapi.com/oauth2/token";
 const DROPBOX_UPLOAD_URL = "https://content.dropboxapi.com/2/files/upload";
 const DROPBOX_DOWNLOAD_URL = "https://content.dropboxapi.com/2/files/download";
 const DATA_FILE_PATH = "/04_Technical/06_Side_Projects/Workout and Nutrition App/data/workout-data.json";
-const APP_VERSION = "1.0.8";
+const APP_VERSION = "1.0.9";
 
 const STORAGE = {
   appKey: "trainingBookDropboxAppKey",
@@ -9115,7 +9115,9 @@ function renderPlan() {
   const importMessageHtml = planImportMessage
     ? `<p class="plan-import-message">${escapeHtml(planImportMessage)}</p>`
     : "";
-  const importPreviewHtml = planImportSummary
+  const importPreviewHtml = pendingCoachPlanApply && planImportPreview
+    ? renderCoachPlanChangePreview()
+    : planImportSummary
     ? `<pre class="plan-import-preview">${escapeHtml(planImportSummary)}</pre>`
     : `<p class="plan-muted">Preview the pasted plan before saving. Nothing changes until you press Save imported plan.</p>`;
 
@@ -9451,6 +9453,14 @@ function renderPlanOverview(activePlan) {
 }
 
 function renderPlanImportPanel(importMessageHtml, importPreviewHtml, importText) {
+  const fullPlanInput = pendingCoachPlanApply
+    ? `<details class="plan-import-full-block">
+        <summary>Full generated plan block</summary>
+        <textarea id="plan-import-text" class="plan-import-text" spellcheck="false" placeholder="Paste your coach's plan here...">${escapeHtml(importText)}</textarea>
+        <p class="plan-muted ai-format-hint">This complete plan block is what keeps unmentioned routines safe. You usually do not need to read it unless something looks off in the highlighted preview.</p>
+      </details>`
+    : `<textarea id="plan-import-text" class="plan-import-text" spellcheck="false" placeholder="Paste your coach's plan here...">${escapeHtml(importText)}</textarea>
+       <p class="plan-muted ai-format-hint">Optional extras you can include: a starting weight with <code>@</code> (<code>Bench Press: 3x8 @ 135</code>), <code>timer</code> after a rest (<code>rest 90s timer</code>), or a <code>note:</code> line under a move for in-workout coaching.</p>`;
   const coachApplyHtml = pendingCoachPlanApply
     ? `<div class="plan-import-coach-step">
         <p class="card-kicker">Step 3 of 3</p>
@@ -9488,6 +9498,28 @@ function renderPlanImportPanel(importMessageHtml, importPreviewHtml, importText)
         </div>
       </div>
     </section>
+  `;
+}
+
+function renderCoachPlanChangePreview() {
+  const changes = Array.isArray(pendingCoachPlanApply?.changes) ? pendingCoachPlanApply.changes : [];
+  return `
+    <div class="coach-plan-preview">
+      <div class="coach-plan-preview-head">
+        <p class="card-kicker">Highlighted changes</p>
+        <span>${changes.length} selected</span>
+      </div>
+      <div class="coach-plan-highlight-list">
+        ${changes.map((change) => `
+          <article class="coach-plan-highlight">
+            <mark>${escapeHtml(change.summary)}</mark>
+            ${change.detail ? `<p>${escapeHtml(change.detail)}</p>` : ""}
+            <small>${escapeHtml([change.type, change.routines].filter(Boolean).join(" - "))}</small>
+          </article>
+        `).join("")}
+      </div>
+      <p class="plan-muted">These are the selected coach changes. The full plan block above is kept only so the importer can preview safely without dropping routines.</p>
+    </div>
   `;
 }
 
@@ -11067,7 +11099,13 @@ function confirmCoachChanges() {
   pendingCoachPlanApply = {
     reviewId: coachChangeReview.id,
     changeIds: accepted.map((change) => change.id),
-    count: accepted.length
+    count: accepted.length,
+    changes: accepted.map((change) => ({
+      summary: change.summary,
+      detail: change.detail || "",
+      type: change.type,
+      routines: change.routines.join(", ")
+    }))
   };
   planImportMessage = getPendingCoachApplyMessage();
   coachChangeReview = null;
