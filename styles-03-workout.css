@@ -1676,8 +1676,16 @@ body.in-workout .today-panel {
 }
 
 .lw-ref-muscle-badge {
-  width: 64px;
+  width: 128px;
   flex: none;
+}
+
+/* Live workout: the same badge, bigger and right-aligned in the hero row so
+   it's prominent while actually training, not just tucked in the how-to sheet. */
+.lw-hero-muscle-badge {
+  width: 100px;
+  flex: none;
+  margin-left: auto;
 }
 
 /* Shared muscle-figure SVG: the fill layers use the app's lime accent (the
@@ -1691,7 +1699,7 @@ body.in-workout .today-panel {
 }
 
 .muscle-figure .st0 { fill: var(--accent); }
-.muscle-figure .st1 { fill: none; stroke: var(--muted); stroke-linecap: round; stroke-linejoin: round; }
+.muscle-figure .st1 { fill: none; stroke: var(--muted); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
 
 .lw-stepper {
   display: flex;
@@ -2012,7 +2020,8 @@ body.in-workout .today-panel {
 .lw-ref-photos {
   display: flex;
   gap: 8px;
-  margin-bottom: 14px;
+  max-width: 85%;
+  margin: 0 auto 14px;
 }
 
 .lw-ref-photo {

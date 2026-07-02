@@ -3,7 +3,7 @@ const DROPBOX_TOKEN_URL = "https://api.dropboxapi.com/oauth2/token";
 const DROPBOX_UPLOAD_URL = "https://content.dropboxapi.com/2/files/upload";
 const DROPBOX_DOWNLOAD_URL = "https://content.dropboxapi.com/2/files/download";
 const DATA_FILE_PATH = "/04_Technical/06_Side_Projects/Workout and Nutrition App/data/workout-data.json";
-const APP_VERSION = "1.0.21";
+const APP_VERSION = "1.0.22";
 const SOCCER_DURATION_MINUTES = 60;
 
 const STORAGE = {
@@ -3891,6 +3891,14 @@ function buildMuscleFigure(weights, opts = {}) {
     </svg>`;
 }
 
+// Shared badge markup for both the how-to sheet and the live-workout hero -
+// same figure, sized/positioned differently by the wrapper class.
+function renderMuscleBadge(exerciseId, wrapperClass, ariaLabel) {
+  const weights = getExerciseMuscleWeights(getExerciseById(exerciseId));
+  if (!Object.keys(weights).length) return "";
+  return `<div class="${wrapperClass}">${buildMuscleFigure(weights, { className: "muscle-figure-badge", ariaLabel })}</div>`;
+}
+
 function getMetricProfile(exerciseInfo, plannedEx = {}) {
   if (plannedEx.metricProfile) return plannedEx.metricProfile;
   if (!exerciseInfo) return "strength-weighted";
@@ -4922,10 +4930,7 @@ function getEffectivePhotos(lib) {
 // here, so this sheet is read-only.)
 function buildReferenceSheetMarkup(ex, closeAction) {
   const ref = getExerciseReference(ex);
-  const muscleWeights = getExerciseMuscleWeights(getExerciseById(ex.exerciseId));
-  const muscleBadge = Object.keys(muscleWeights).length
-    ? `<div class="lw-ref-muscle-badge">${buildMuscleFigure(muscleWeights, { className: "muscle-figure-badge", ariaLabel: `Muscles worked: ${ref.muscles}` })}</div>`
-    : "";
+  const muscleBadge = renderMuscleBadge(ex.exerciseId, "lw-ref-muscle-badge", `Muscles worked: ${ref.muscles}`);
 
   // Generic tutorial link: a per-exercise `video` URL from the library if one
   // is set, otherwise a YouTube search for the move (placeholder for now).
@@ -5309,6 +5314,13 @@ function renderEffortControl(ex, index) {
     </div>`;
 }
 
+// F3: the same muscle badge as the how-to sheet, bigger and right-aligned in
+// the live hero row - Daniel wanted it prominent while actually training, not
+// just tucked behind the how-to sheet.
+function renderLiveMuscleBadge(ex) {
+  return renderMuscleBadge(ex.exerciseId, "lw-hero-muscle-badge", `Muscles worked: ${ex.area || ex.name}`);
+}
+
 function renderFocusedExercise() {
   const exercises = activeWorkout.exercises;
   const i = activeWorkout.currentIndex;
@@ -5550,6 +5562,7 @@ function renderFocusedExercise() {
           </div>
           <p class="lw-area">${escapeHtml(ex.area || "")}${ex.source === "added" ? " · added today" : ""}${ex.skipped ? " · skipped" : ""}</p>
         </div>
+        ${renderLiveMuscleBadge(ex)}
       </div>
       <div class="lw-target">
         <span class="lw-target-line">Target: <strong>${renderFocusTarget(ex)}</strong></span>
