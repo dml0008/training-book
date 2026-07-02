@@ -3,7 +3,7 @@ const DROPBOX_TOKEN_URL = "https://api.dropboxapi.com/oauth2/token";
 const DROPBOX_UPLOAD_URL = "https://content.dropboxapi.com/2/files/upload";
 const DROPBOX_DOWNLOAD_URL = "https://content.dropboxapi.com/2/files/download";
 const DATA_FILE_PATH = "/04_Technical/06_Side_Projects/Workout and Nutrition App/data/workout-data.json";
-const APP_VERSION = "1.0.16";
+const APP_VERSION = "1.0.17";
 const SOCCER_DURATION_MINUTES = 60;
 
 const STORAGE = {
@@ -31,7 +31,8 @@ const STORAGE = {
   pelotonSeeded: "trainingBookPelotonSeeded",
   pickleballSeeded: "trainingBookPickleballSeeded",
   sportTypeFixed: "trainingBookSportTypeFixed",
-  catalogDataFixed: "trainingBookCatalogDataFixed"
+  catalogDataFixed: "trainingBookCatalogDataFixed",
+  pelotonBikeHistoryFixed: "trainingBookPelotonBikeHistoryFixed"
 };
 
 const screens = Array.from(document.querySelectorAll(".screen"));
@@ -899,11 +900,11 @@ function getStarterExercises() {
     type: "strength",
     area: "Core",
     group: "core",
-    equipment: "body only",
+    equipment: "dumbbell",
     primaryMuscle: "abdominals",
     icon: "stretching-2",
     photos: { start: "assets/icons/photos/russian-twist/start.jpg", finish: "assets/icons/photos/russian-twist/finish.jpg" },
-    tags: ["home","gym","bodyweight"]
+    tags: ["home","gym","dumbbells"]
   },
   {
     id: "cable-crunch",
@@ -2424,6 +2425,74 @@ function repairCatalogDataOnce() {
   }
 }
 
+function isPelotonBikeLikeEntry(entry) {
+  if (!entry || entry.exerciseId !== "stationary-bike") return false;
+  const stats = entry.stats || {};
+  const note = String(entry.notes || "").toLowerCase();
+  return note.includes("peloton") || Number(stats.output) > 0 || Number(stats.avgPower) > 0;
+}
+
+function readNumberNearLabel(text, patterns) {
+  const source = String(text || "");
+  for (const pattern of patterns) {
+    const match = source.match(pattern);
+    if (!match) continue;
+    const value = Number(match[1]);
+    if (value > 0) return value;
+  }
+  return 0;
+}
+
+function extractPelotonBikeStatsFromNote(note) {
+  return {
+    output: readNumberNearLabel(note, [/\boutput\b\s*[:=]?\s*(\d+(?:\.\d+)?)/i, /(\d+(?:\.\d+)?)\s*(?:kj|kJ)\b/]),
+    avgPower: readNumberNearLabel(note, [/\bavg(?:erage)?\s*power\b\s*[:=]?\s*(\d+(?:\.\d+)?)/i, /(\d+(?:\.\d+)?)\s*(?:w|watts?)\b/i]),
+    distance: readNumberNearLabel(note, [/\bdistance\b\s*[:=]?\s*(\d+(?:\.\d+)?)/i, /(\d+(?:\.\d+)?)\s*(?:mi|miles?)\b/i]),
+    calories: readNumberNearLabel(note, [/\b(?:calories|cals?|kcal)\b\s*[:=]?\s*(\d+(?:\.\d+)?)/i, /(\d+(?:\.\d+)?)\s*(?:kcal|calories|cals?)\b/i])
+  };
+}
+
+function repairPelotonBikeHistoryOnce() {
+  if (localStorage.getItem(STORAGE.pelotonBikeHistoryFixed) === "1") return;
+  const data = getLocalData();
+  const workouts = Array.isArray(data.workouts) ? data.workouts : [];
+  let changed = false;
+
+  workouts.forEach((workout) => {
+    (Array.isArray(workout.entries) ? workout.entries : []).forEach((entry) => {
+      if (!isPelotonBikeLikeEntry(entry)) return;
+      entry.exerciseId = "peloton-bike";
+      entry.exerciseName = "Peloton Bike";
+      entry.metricProfile = "peloton";
+      const parsedStats = extractPelotonBikeStatsFromNote(entry.notes);
+      entry.stats = { ...(entry.stats || {}) };
+      ["output", "avgPower", "distance", "calories"].forEach((key) => {
+        if (!(Number(entry.stats[key]) > 0) && Number(parsedStats[key]) > 0) {
+          entry.stats[key] = parsedStats[key];
+        }
+      });
+      if (!Object.keys(entry.stats).some((key) => Number(entry.stats[key]) > 0)) delete entry.stats;
+      if (entry.planned && entry.planned.exerciseId === "stationary-bike") {
+        entry.planned.exerciseId = "peloton-bike";
+      }
+      changed = true;
+    });
+  });
+
+  localStorage.setItem(STORAGE.pelotonBikeHistoryFixed, "1");
+  if (!changed) return;
+  data.updatedAt = new Date().toISOString();
+  data.updatedBy = getDeviceId();
+  saveLocalData(data);
+  markPendingData(data);
+  renderHistory();
+  renderProgress();
+  renderCoach();
+  if (navigator.onLine) {
+    uploadWorkoutData(data).then(clearPendingData).catch(() => {});
+  }
+}
+
 // Reload the live exercise list from saved data (after an edit or a cloud sync).
 function refreshLibrary() {
   const data = getLocalData();
@@ -2803,10 +2872,10 @@ const EXERCISE_INSTRUCTIONS = {
   ],
   "russian-twist": [
     "Lie down on the floor placing your feet either under something that will not move or by having a partner hold them. Your legs should be bent at the knees.",
-    "Elevate your upper body so that it creates an imaginary V-shape with your thighs. Your arms should be fully extended in front of you perpendicular to your torso and with the hands clasped. This is the starting position.",
+    "Elevate your upper body so that it creates an imaginary V-shape with your thighs. Hold a light dumbbell or plate at your chest, or keep your hands clasped when practicing bodyweight. This is the starting position.",
     "Twist your torso to the right side until your arms are parallel with the floor while breathing out.",
-    "Hold the contraction for a second and move back to the starting position while breathing out. Now move to the opposite side performing the same techniques you applied to the right side.",
-    "Repeat for the recommended amount of repetitions."
+    "Hold the contraction for a second and move back to the starting position. Now move to the opposite side using the same control.",
+    "Count one rep as a right-side touch plus a left-side touch, then repeat for the prescribed reps."
   ],
   "cable-crunch": [
     "Kneel below a high pulley that contains a rope attachment.",
@@ -3283,7 +3352,7 @@ const EXERCISE_INSTRUCTIONS = {
     "Initiate the exercise by extending one leg, straightening the knee and hip to bring the leg just above the ground.",
     "Maintain the position of your lumbar and pelvis as you perform the movement, as your back is going to want to arch.",
     "Stay tight and return the working leg to the starting position.",
-    "Repeat on the opposite side, alternating until the set is complete."
+    "Repeat on the opposite side. Count one rep as right leg plus left leg, then continue alternating until the set is complete."
   ],
   "hip-raise": [
     "Lay flat on the floor with your arms next to your sides.",
@@ -9158,6 +9227,10 @@ function makeSlug(value) {
 
 function findExerciseIdByName(name) {
   const normalized = String(name || "").trim().toLowerCase();
+  if (["bike", "peloton", "peloton ride", "peloton bike ride", "bike ride"].includes(normalized)) {
+    const pelotonBike = exercises.find((exercise) => exercise.id === "peloton-bike");
+    if (pelotonBike) return pelotonBike.id;
+  }
   return exercises.find((exercise) => exercise.name.toLowerCase() === normalized)?.id || makeSlug(name);
 }
 
@@ -12832,7 +12905,9 @@ function generateReviewPacket() {
   packet.push("HOW TRAINING BOOK WORKS (so the plan you give me imports cleanly):");
   packet.push("- My workout follows the weekly plan and its routines, but I can add ad-hoc exercises mid-session.");
   packet.push("- Strength targets are sets x reps, optionally a starting weight (3x8 @ 95 lb) and a rest target (rest 90s). I log actual sets, reps, weight, per-set notes, and an optional per-set effort 1-10.");
-  packet.push("- Cardio/Peloton targets are a subtype plus minutes (Peloton Tread: Incline Walk, 30 min). I log output, average power, distance, notes, and effort.");
+  packet.push("- Cardio/Peloton targets are a subtype plus minutes (Peloton Tread: Incline Walk, 30 min; Peloton Bike: Just Ride, 20 min). I log output, average power, distance, notes, and effort.");
+  packet.push("- For bike work, default to Peloton Bike instead of Stationary Bike unless I explicitly say it is a non-Peloton stationary bike.");
+  packet.push("- Russian Twist should usually include a light starting weight when programming it for me, and one rep means right side plus left side. Dead Bug reps also count right plus left as one full rep.");
   packet.push("- Held moves (e.g. plank) are timed: targets are sets x seconds (3x45 sec), optionally a rest target. I log EACH hold's actual seconds separately (e.g. 60s · 60s · 45s) plus optional per-hold effort.");
   packet.push("- Effort is rated 1-10 (1 = easy, 10 = all-out), logged per set/hold, and is optional — \"not logged\" means I didn't rate it, not that it was easy.");
   packet.push("- Rest targets (rest 90s) show during the live workout. Add \"timer\" after a rest target only when Training Book should run a countdown.");
@@ -13756,6 +13831,8 @@ async function initCloud() {
     seedPelotonOnce();
     seedPickleballOnce();
     restoreSportTypesOnce();
+    repairCatalogDataOnce();
+    repairPelotonBikeHistoryOnce();
     repairSoccerDurationInvariant({ rerender: true });
     updateCloudUi();
     return;
@@ -13867,6 +13944,7 @@ async function initCloud() {
         seedPickleballOnce();
         restoreSportTypesOnce();
         repairCatalogDataOnce();
+        repairPelotonBikeHistoryOnce();
         repairSoccerDurationInvariant({ rerender: true });
       }, (error) => console.error("Cloud listener error:", error));
     } else {

@@ -1121,7 +1121,7 @@
       "name": "Russian Twist",
       "slug": "russian-twist",
       "group": "core",
-      "equipment": "body only",
+      "equipment": "dumbbell",
       "primaryMuscle": "abdominals",
       "icon": {
         "glyph": "stretching-2",
@@ -1135,10 +1135,10 @@
       },
       "instructions": [
         "Lie down on the floor placing your feet either under something that will not move or by having a partner hold them. Your legs should be bent at the knees.",
-        "Elevate your upper body so that it creates an imaginary V-shape with your thighs. Your arms should be fully extended in front of you perpendicular to your torso and with the hands clasped. This is the starting position.",
+        "Elevate your upper body so that it creates an imaginary V-shape with your thighs. Hold a light dumbbell or plate at your chest, or keep your hands clasped when practicing bodyweight. This is the starting position.",
         "Twist your torso to the right side until your arms are parallel with the floor while breathing out.",
-        "Hold the contraction for a second and move back to the starting position while breathing out. Now move to the opposite side performing the same techniques you applied to the right side.",
-        "Repeat for the recommended amount of repetitions."
+        "Hold the contraction for a second and move back to the starting position. Now move to the opposite side using the same control.",
+        "Count one rep as a right-side touch plus a left-side touch, then repeat for the prescribed reps."
       ],
       "instructionsSource": "free-exercise-db"
     },
@@ -2883,7 +2883,7 @@
         "Initiate the exercise by extending one leg, straightening the knee and hip to bring the leg just above the ground.",
         "Maintain the position of your lumbar and pelvis as you perform the movement, as your back is going to want to arch.",
         "Stay tight and return the working leg to the starting position.",
-        "Repeat on the opposite side, alternating until the set is complete."
+        "Repeat on the opposite side. Count one rep as right leg plus left leg, then continue alternating until the set is complete."
       ],
       "instructionsSource": "free-exercise-db"
     },
