@@ -3,7 +3,7 @@ const DROPBOX_TOKEN_URL = "https://api.dropboxapi.com/oauth2/token";
 const DROPBOX_UPLOAD_URL = "https://content.dropboxapi.com/2/files/upload";
 const DROPBOX_DOWNLOAD_URL = "https://content.dropboxapi.com/2/files/download";
 const DATA_FILE_PATH = "/04_Technical/06_Side_Projects/Workout and Nutrition App/data/workout-data.json";
-const APP_VERSION = "1.0.17";
+const APP_VERSION = "1.0.18";
 const SOCCER_DURATION_MINUTES = 60;
 
 const STORAGE = {
@@ -3744,6 +3744,63 @@ function defaultExerciseSubtype(exerciseId) {
   return getExerciseSubtypeOptions(exerciseId)[0] || "";
 }
 
+function latestLoggedEntryForExercise(exerciseId) {
+  const data = getLocalData();
+  const workouts = Array.isArray(data.workouts) ? data.workouts.slice() : [];
+  workouts.sort((a, b) => {
+    const ad = Date.parse(a.savedAt || a.startedAt || a.date || 0) || 0;
+    const bd = Date.parse(b.savedAt || b.startedAt || b.date || 0) || 0;
+    return bd - ad;
+  });
+
+  for (const workout of workouts) {
+    const entries = Array.isArray(workout.entries) ? workout.entries : [];
+    const entry = entries.find((item) => item?.exerciseId === exerciseId && !item.skipped);
+    if (entry) return entry;
+  }
+  return null;
+}
+
+function defaultRoutineExerciseFromHistory(exerciseId) {
+  const entry = latestLoggedEntryForExercise(exerciseId);
+  if (!entry) return null;
+
+  if (entry.type === "cardio" || entry.type === "sport") {
+    const targetDuration = Math.round(Number(entry.durationMinutes) || Number(entry.planned?.durationMinutes) || 0);
+    if (!(targetDuration > 0)) return null;
+    return {
+      exerciseId,
+      targetDuration,
+      ...(entry.subtype || entry.planned?.subtype ? { targetSubtype: entry.subtype || entry.planned?.subtype } : {})
+    };
+  }
+
+  if (entry.type === "timed") {
+    const holds = Array.isArray(entry.holds) ? entry.holds.filter((hold) => hold?.done !== false) : [];
+    const seconds = Number(holds[0]?.seconds) || Number(entry.actualSummary?.seconds) || Number(entry.planned?.seconds) || 0;
+    const sets = holds.length || Number(entry.actualSummary?.sets) || Number(entry.planned?.sets) || 0;
+    if (!(sets > 0 && seconds > 0)) return null;
+    return { exerciseId, targetSets: Math.round(sets), targetReps: Math.round(seconds), targetRest: 0 };
+  }
+
+  const sets = Array.isArray(entry.sets) ? entry.sets.filter((set) => set?.done !== false) : [];
+  const summarySets = Number(entry.actualSummary?.sets) || Number(entry.planned?.sets) || 0;
+  const setCount = sets.length || summarySets;
+  const topWeight = sets.reduce((max, set) => Math.max(max, Number(set.weight) || 0), 0);
+  const summaryWeight = Number(entry.actualSummary?.weight) || Number(entry.planned?.weight) || 0;
+  const targetWeight = topWeight || summaryWeight;
+  const repsAtTop = sets.find((set) => (Number(set.weight) || 0) === topWeight)?.reps;
+  const targetReps = Number(repsAtTop) || Number(entry.actualSummary?.reps) || Number(entry.planned?.reps) || 0;
+  if (!(setCount > 0 && targetReps > 0)) return null;
+  return {
+    exerciseId,
+    targetSets: Math.round(setCount),
+    targetReps: Math.round(targetReps),
+    ...(targetWeight > 0 ? { targetWeight } : {}),
+    targetRest: 0
+  };
+}
+
 // Cardio stat fields, each with a clear label + unit. Average power (watts) is a
 // Peloton BIKE metric only — the tread has no power meter, so it gets elevation
 // instead. Which fields a given exercise shows is decided by getCardioMetrics().
@@ -4722,7 +4779,7 @@ function closeLiveAddExercise() {
 function addExerciseToLiveWorkout(exerciseId) {
   const exercise = getExerciseById(exerciseId);
   if (!exercise) return;
-  activeWorkout.exercises.push(makeTodayExercise(defaultRoutineExercise(exerciseId), "added"));
+  activeWorkout.exercises.push(makeTodayExercise(defaultRoutineExercise(exerciseId, { preferHistory: true }), "added"));
   activeWorkout.currentIndex = activeWorkout.exercises.length - 1;
   activeWorkout.currentSet = activeWorkout.flowMode === "round" ? activeWorkout.roundNumber : 0;
   activeWorkout.addExerciseOpen = false;
@@ -8515,13 +8572,14 @@ function setWorkoutStatus(message, tone = "") {
 }
 
 function makeWorkoutExercise(exercise) {
+  const defaults = defaultRoutineExercise(exercise.id, { preferHistory: true });
   if (exercise.type === "cardio" || exercise.type === "timed" || exercise.type === "sport") {
     return {
       id: `workout-exercise-${Date.now()}-${randomString(5)}`,
       exerciseId: exercise.id,
       name: exercise.name,
       type: "cardio",
-      durationMinutes: "",
+      durationMinutes: defaults.targetDuration || "",
       difficulty: 5
     };
   }
@@ -8534,8 +8592,8 @@ function makeWorkoutExercise(exercise) {
     sets: [
       {
         id: `set-${Date.now()}-${randomString(5)}`,
-        reps: "",
-        weight: "",
+        reps: defaults.targetReps || "",
+        weight: defaults.targetWeight || "",
         done: false
       }
     ],
@@ -9739,7 +9797,11 @@ function makeRoutineId(name) {
 }
 
 // Sensible starting targets for a freshly-added routine exercise, based on type.
-function defaultRoutineExercise(exerciseId) {
+function defaultRoutineExercise(exerciseId, { preferHistory = false } = {}) {
+  if (preferHistory) {
+    const fromHistory = defaultRoutineExerciseFromHistory(exerciseId);
+    if (fromHistory) return fromHistory;
+  }
   const type = getExerciseById(exerciseId)?.type || "strength";
   if (type === "cardio" || type === "sport") {
     const targetSubtype = defaultExerciseSubtype(exerciseId);
