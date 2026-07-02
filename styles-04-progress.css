@@ -1004,6 +1004,12 @@ button.cal-cell:active {
   color: var(--text);
 }
 
+/* F3: the This Week card's ring is the left column's anchor, sized up to
+   match the now full-card-height figure on the right. */
+.ring-wrap-lg, .ring-wrap-lg .ring { width: 130px; height: 130px; }
+.ring-wrap-lg .ring-label { font-size: 38px; }
+.ring-wrap-lg .ring-label i { font-size: 19px; }
+
 .ring-label i { font-size: 15px; font-style: normal; font-weight: 700; color: var(--muted); }
 
 .ring-label i {
@@ -1359,21 +1365,41 @@ button.cal-cell:active {
   box-shadow: inset 0 0 0 1px rgba(182, 211, 50, 0.25);
 }
 
-.muscle-heatmap-body {
+/* Two columns: left is the ring + numbers, right is the figure at full card
+   height (align-items: stretch means the right column matches whatever
+   height the left column's content ends up needing). */
+.muscle-heatmap-columns {
   display: flex;
-  align-items: center;
+  align-items: stretch;
   gap: var(--space-4);
   margin-top: var(--space-3);
   padding-top: var(--space-3);
   border-top: 1px solid var(--line);
 }
 
-.muscle-figure-heatmap {
-  width: 150px;
-  flex: none;
+.muscle-heatmap-left {
+  flex: 1 1 44%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--space-3);
 }
 
-.muscle-legend { flex: 1; min-width: 0; }
+.muscle-heatmap-right {
+  flex: 1 1 56%;
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  min-width: 0;
+}
+
+.muscle-figure-heatmap {
+  width: auto;
+  height: 100%;
+  max-width: 100%;
+  min-height: 220px;
+}
 
 .muscle-legend-head {
   margin: 0 0 var(--space-1);
@@ -1396,7 +1422,8 @@ button.cal-cell:active {
 .muscle-legend-meta { color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; }
 
 @media (max-width: 480px) {
-  .muscle-heatmap-body { flex-direction: column; align-items: stretch; }
-  .muscle-figure-heatmap { width: 130px; margin: 0 auto; }
+  .muscle-heatmap-columns { flex-direction: column; align-items: center; }
+  .muscle-heatmap-left { width: 100%; }
+  .muscle-figure-heatmap { height: auto; width: 60%; min-height: 0; }
 }
 

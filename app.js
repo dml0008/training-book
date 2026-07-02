@@ -3,7 +3,7 @@ const DROPBOX_TOKEN_URL = "https://api.dropboxapi.com/oauth2/token";
 const DROPBOX_UPLOAD_URL = "https://content.dropboxapi.com/2/files/upload";
 const DROPBOX_DOWNLOAD_URL = "https://content.dropboxapi.com/2/files/download";
 const DATA_FILE_PATH = "/04_Technical/06_Side_Projects/Workout and Nutrition App/data/workout-data.json";
-const APP_VERSION = "1.0.22";
+const APP_VERSION = "1.0.23";
 const SOCCER_DURATION_MINUTES = 60;
 
 const STORAGE = {
@@ -11368,7 +11368,7 @@ function renderWeeklyMuscleHeatMapCard(doneThisWeek, target) {
 
   const ringBlock = `
     <div class="hero-ring-row">
-      <div class="ring-wrap">
+      <div class="ring-wrap ring-wrap-lg">
         ${buildProgressRing(doneThisWeek, target)}
         <span class="ring-label">${doneThisWeek}<i>/${target}</i></span>
       </div>
@@ -11377,11 +11377,15 @@ function renderWeeklyMuscleHeatMapCard(doneThisWeek, target) {
 
   const { normalized, hasData } = computeWeeklyMuscleScores(data, mondayOfWeek(new Date()));
 
-  let body;
+  // The figure always renders, full card height on the right - highlighted
+  // when there's data this week, a bare outline (buildMuscleFigure({})) when
+  // there isn't, so the two-column layout stays consistent either way.
+  const figure = buildMuscleFigure(hasData ? normalized : {}, { className: "muscle-figure-heatmap", ariaLabel: hasData ? "This week's worked muscles" : "No muscles worked yet this week" });
+
+  let leftExtra;
   if (!hasData) {
-    body = `<p class="prog-empty">Log a workout this week and a muscle heat map will build here automatically.</p>`;
+    leftExtra = `<p class="prog-empty">Log a workout this week and a muscle heat map will build here automatically.</p>`;
   } else {
-    const figure = buildMuscleFigure(normalized, { className: "muscle-figure-heatmap", ariaLabel: "This week's worked muscles" });
     const legendRows = MUSCLE_FIGURE_GROUP_ORDER
       .map((g) => ({ g, v: normalized[g] || 0 }))
       .filter((r) => r.v > 0)
@@ -11392,20 +11396,25 @@ function renderWeeklyMuscleHeatMapCard(doneThisWeek, target) {
           <span class="muscle-legend-meta">${Math.round(r.v * 100)}%</span>
         </div>`)
       .join("");
-    body = `
-      <div class="muscle-heatmap-body">
-        ${figure}
-        <div class="muscle-legend">
-          <p class="muscle-legend-head">Worked this week &middot; relative to your hardest-hit group</p>
-          ${legendRows}
-        </div>
+    leftExtra = `
+      <div class="muscle-legend">
+        <p class="muscle-legend-head">Worked this week &middot; relative to your hardest-hit group</p>
+        ${legendRows}
       </div>`;
   }
+
+  const body = `
+    <div class="muscle-heatmap-columns">
+      <div class="muscle-heatmap-left">
+        ${ringBlock}
+        ${leftExtra}
+      </div>
+      <div class="muscle-heatmap-right">${figure}</div>
+    </div>`;
 
   return `
     <section class="prog-card muscle-heatmap-card${hit ? " is-hit" : ""}">
       <p class="card-kicker">This week</p>
-      ${ringBlock}
       ${body}
     </section>`;
 }
