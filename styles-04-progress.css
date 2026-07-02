@@ -1132,6 +1132,48 @@ button.cal-cell:active {
   color: var(--dim);
 }
 
+.goal-item-head-right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.goal-edit-btn {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  flex: 0 0 auto;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-xs);
+  background: var(--panel-2);
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.goal-edit-btn svg { width: 14px; height: 14px; }
+
+.goal-edit-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* ---- Milestone goals (Plan tab) ---- */
+.goal-item-plan .goal-item-head {
+  align-items: flex-start;
+}
+
+.goal-note {
+  margin: var(--space-2) 0 0;
+  font-size: 13px;
+}
+
+.goal-item-actions {
+  display: flex;
+  margin-top: var(--space-2);
+}
+
 .goal-item .prog-chart-foot {
   margin-top: var(--space-2);
   align-items: center;

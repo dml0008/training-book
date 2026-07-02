@@ -3,7 +3,7 @@ const DROPBOX_TOKEN_URL = "https://api.dropboxapi.com/oauth2/token";
 const DROPBOX_UPLOAD_URL = "https://content.dropboxapi.com/2/files/upload";
 const DROPBOX_DOWNLOAD_URL = "https://content.dropboxapi.com/2/files/download";
 const DATA_FILE_PATH = "/04_Technical/06_Side_Projects/Workout and Nutrition App/data/workout-data.json";
-const APP_VERSION = "1.0.19";
+const APP_VERSION = "1.0.20";
 const SOCCER_DURATION_MINUTES = 60;
 
 const STORAGE = {
@@ -3554,6 +3554,11 @@ let routineEditIsNew = false;
 // the old long <select>. routineId is the routine being added to (null = closed);
 // query is the live search text. Mirrors the live-workout add-exercise sheet.
 let planPicker = { routineId: null, query: "" };
+
+// Shared milestone-goal editor (Plan tab "Add goal"/"Edit" and the Progress
+// focus-goal card's edit icon all open this same modal). step "pick" is the
+// exercise-choice sheet (new goals only); "edit" is the target-fields form.
+let goalEditor = { step: "closed", goalId: null, exerciseId: null, exerciseName: "", targetWeight: "", targetReps: "", targetSets: "", note: "", query: "" };
 
 function getTodayDateString() {
   const today = new Date();
@@ -9379,7 +9384,7 @@ function renderPlan() {
   planContent.innerHTML = `
     ${renderPlanSchedule(weeklyPlan, routines)}
     ${renderPlanRoutines(routines)}
-    ${renderPlanOverview(activePlan)}
+    ${renderMilestoneGoalsCard(activePlan)}
     ${renderPlanImportPanel(importMessageHtml, importPreviewHtml, importText)}
     ${renderPlanPickerSheet(routines)}
   `;
@@ -9668,43 +9673,298 @@ function renderPlanPickerSheet(routines) {
   `;
 }
 
-function renderPlanOverview(activePlan) {
+// Plan Details (name/main goal/notes/review rhythm) is mostly context for the
+// AI coach, not something worth reading every visit, so it lives in a modal
+// behind the small icon button on the Plan heading rather than inline.
+let planDetailsModalOpen = false;
+
+function openPlanDetailsModal() {
+  planDetailsModalOpen = true;
+  renderPlanDetailsModal();
+}
+
+function closePlanDetailsModal() {
+  planDetailsModalOpen = false;
+  renderPlanDetailsModal();
+}
+
+function renderPlanDetailsModal() {
+  const root = document.querySelector("#plan-details-modal-root");
+  if (!root) return;
+  if (!planDetailsModalOpen) {
+    root.innerHTML = "";
+    return;
+  }
+  const data = getLocalData();
+  const activePlan = { ...getStarterActivePlan(), ...(data.activePlan || {}) };
+  root.innerHTML = `
+    <div class="lw-sheet-scrim" role="presentation" data-plan-details-scrim>
+      <section class="lw-sheet plan-details-sheet" role="dialog" aria-modal="true" aria-label="Plan details">
+        <div class="lw-sheet-head">
+          <div>
+            <h3>Plan details</h3>
+            <p>The big picture — handy for you and for your AI coach.</p>
+          </div>
+          <button class="lw-sheet-close" type="button" data-action="close-plan-details" aria-label="Close plan details">&times;</button>
+        </div>
+        <div class="plan-form">
+          <label>
+            <span>Plan name</span>
+            <input id="plan-name-input" value="${escapeHtml(activePlan.name)}" autocomplete="off" placeholder="Current Training Plan">
+          </label>
+          <label>
+            <span>Main goal</span>
+            <input id="plan-goal-input" value="${escapeHtml(activePlan.mainGoal)}" autocomplete="off" placeholder="Example: build strength while staying consistent">
+          </label>
+          <label>
+            <span>Review rhythm</span>
+            <input id="plan-review-input" value="${escapeHtml(activePlan.reviewCadence)}" autocomplete="off" placeholder="Weekly AI review">
+          </label>
+          <label>
+            <span>Next review date</span>
+            <input id="plan-next-review-input" type="date" value="${escapeHtml(activePlan.nextReviewDate)}">
+          </label>
+          <label>
+            <span>Plan notes</span>
+            <textarea id="plan-notes-input" placeholder="Constraints, preferences, injuries, focus notes, or anything the AI coach should remember.">${escapeHtml(activePlan.notes)}</textarea>
+          </label>
+        </div>
+        <div class="plan-save-row plan-details-save-row">
+          <span class="plan-save-status" id="plan-save-status" aria-live="polite"></span>
+          <button class="primary-button small-button" type="button" data-action="save-plan-notes">Save details</button>
+        </div>
+      </section>
+    </div>
+  `;
+  renderUiIcons(root);
+}
+
+// ===== Milestone goals (Plan tab) =====
+// Same activePlan.focusGoals list the Progress "Focus goal" card reads —
+// editable here directly, or by the coach through the confirmed apply flow.
+function renderMilestoneGoalsCard(activePlan) {
+  const goals = Array.isArray(activePlan.focusGoals) ? activePlan.focusGoals : [];
   return `
     <section class="plan-section">
       <div class="plan-section-head">
         <div>
-          <p class="card-kicker">Plan details</p>
-          <p class="plan-muted">The big picture — handy for you and for your AI coach.</p>
+          <p class="card-kicker">Milestone goals</p>
+          <p class="plan-muted">Personal lift targets — set one yourself, or let your coach propose one during a review. Up to 3.</p>
         </div>
-        <div class="plan-save-row">
-          <span class="plan-save-status" id="plan-save-status" aria-live="polite"></span>
-          <button class="primary-button small-button" type="button" data-action="save-plan-notes">Save details</button>
+        <div class="plan-head-actions">
+          <button class="primary-button small-button btn-ico" type="button" data-action="add-goal"${goals.length >= 3 ? " disabled" : ""}>${getUiIcon("plus")}Add goal</button>
         </div>
       </div>
-      <div class="plan-form">
-        <label>
-          <span>Plan name</span>
-          <input id="plan-name-input" value="${escapeHtml(activePlan.name)}" autocomplete="off" placeholder="Current Training Plan">
-        </label>
-        <label>
-          <span>Main goal</span>
-          <input id="plan-goal-input" value="${escapeHtml(activePlan.mainGoal)}" autocomplete="off" placeholder="Example: build strength while staying consistent">
-        </label>
-        <label>
-          <span>Review rhythm</span>
-          <input id="plan-review-input" value="${escapeHtml(activePlan.reviewCadence)}" autocomplete="off" placeholder="Weekly AI review">
-        </label>
-        <label>
-          <span>Next review date</span>
-          <input id="plan-next-review-input" type="date" value="${escapeHtml(activePlan.nextReviewDate)}">
-        </label>
-        <label>
-          <span>Plan notes</span>
-          <textarea id="plan-notes-input" placeholder="Constraints, preferences, injuries, focus notes, or anything the AI coach should remember.">${escapeHtml(activePlan.notes)}</textarea>
-        </label>
-      </div>
+      ${goals.length
+        ? `<div class="goal-list">${goals.map((goal) => renderMilestoneGoalRow(goal)).join("")}</div>`
+        : `<p class="empty-state">No milestone goals yet. Tap "Add goal" to set a personal target, like a Bench Press weight to work toward.</p>`}
     </section>
   `;
+}
+
+function renderMilestoneGoalRow(goal) {
+  const name = goal.exerciseName || getExerciseById(goal.exerciseId)?.name || "Exercise";
+  const targetParts = [];
+  if (Number(goal.targetWeight) > 0) targetParts.push(`${goal.targetWeight} lb`);
+  if (Number(goal.targetReps) > 0) targetParts.push(`${goal.targetReps} reps`);
+  if (Number(goal.targetSets) > 0) targetParts.push(`${goal.targetSets} sets`);
+  const targetText = targetParts.length ? targetParts.join(" × ") : "Target not set yet";
+  return `
+    <article class="goal-item goal-item-plan">
+      <div class="goal-item-head">
+        <p class="goal-name">${escapeHtml(name)}</p>
+        <span class="goal-target-tag">${escapeHtml(targetText)}</span>
+      </div>
+      ${goal.note ? `<p class="plan-muted goal-note">${escapeHtml(goal.note)}</p>` : ""}
+      <div class="goal-item-actions">
+        <button class="quiet-button small-button btn-ico" type="button" data-action="edit-goal" data-id="${escapeHtml(goal.id)}">${getUiIcon("pencil")}Edit</button>
+      </div>
+    </article>
+  `;
+}
+
+// ===== Milestone goal editor (shared modal: Plan "Add goal"/"Edit" + the
+// Progress focus-goal card's edit icon) =====
+
+function closeGoalEditor() {
+  goalEditor = { step: "closed", goalId: null, exerciseId: null, exerciseName: "", targetWeight: "", targetReps: "", targetSets: "", note: "", query: "" };
+  renderGoalEditorModal();
+}
+
+// New goal: start on the exercise-choice sheet.
+function openGoalPicker() {
+  goalEditor = { step: "pick", goalId: null, exerciseId: null, exerciseName: "", targetWeight: "", targetReps: "", targetSets: "", note: "", query: "" };
+  renderGoalEditorModal();
+}
+
+// Existing goal: go straight to the target-fields form, prefilled.
+function openGoalEditor(goalId) {
+  const goals = getLocalData().activePlan?.focusGoals || [];
+  const goal = goals.find((g) => g.id === goalId);
+  if (!goal) return;
+  goalEditor = {
+    step: "edit",
+    goalId: goal.id,
+    exerciseId: goal.exerciseId,
+    exerciseName: goal.exerciseName || getExerciseById(goal.exerciseId)?.name || "Exercise",
+    targetWeight: goal.targetWeight != null ? String(goal.targetWeight) : "",
+    targetReps: goal.targetReps != null ? String(goal.targetReps) : "",
+    targetSets: goal.targetSets != null ? String(goal.targetSets) : "",
+    note: goal.note || "",
+    query: ""
+  };
+  renderGoalEditorModal();
+}
+
+// Picking an exercise moves straight into the (blank) target form for it.
+function pickGoalExercise(exerciseId) {
+  const lib = getExerciseById(exerciseId);
+  if (!lib) return;
+  goalEditor = { step: "edit", goalId: null, exerciseId, exerciseName: lib.name, targetWeight: "", targetReps: "", targetSets: "", note: "", query: "" };
+  renderGoalEditorModal();
+}
+
+// Only strength lifts have the weight/rep evidence (getStrengthSeries) a goal
+// needs to mean anything - cardio/timed/sport moves are excluded from the
+// picker rather than offered and silently never showing progress.
+function renderGoalPickerResults() {
+  const query = (goalEditor.query || "").trim().toLowerCase();
+  const matches = exercises
+    .filter((exercise) => (exercise.type || "strength") === "strength")
+    .filter((exercise) => !query || `${exercise.name} ${exercise.area || ""} ${(exercise.tags || []).join(" ")}`.toLowerCase().includes(query))
+    .slice()
+    .sort((a, b) => a.name.localeCompare(b.name));
+
+  return matches.map((exercise) => {
+    const photo = getExerciseStartImage(exercise);
+    const thumb = photo
+      ? `<span class="live-add-result-icon" style="background-image:url('${escapeHtml(photo)}')"></span>`
+      : `<span class="live-add-result-icon">${getExerciseIcon(exercise.icon)}</span>`;
+    const sub = `${formatExerciseType(exercise.type || "strength")}${exercise.area ? ` · ${exercise.area}` : ""}`;
+    return `
+      <button class="live-add-result" type="button" data-action="pick-goal-exercise" data-id="${escapeHtml(exercise.id)}">
+        ${thumb}
+        <span class="live-add-result-text"><strong>${escapeHtml(exercise.name)}</strong><small>${escapeHtml(sub)}</small></span>
+      </button>
+    `;
+  }).join("") || `<p class="empty-state">No matching exercises.</p>`;
+}
+
+function renderGoalEditorModal() {
+  const root = document.querySelector("#goal-editor-modal-root");
+  if (!root) return;
+  if (goalEditor.step === "closed") {
+    root.innerHTML = "";
+    return;
+  }
+
+  if (goalEditor.step === "pick") {
+    root.innerHTML = `
+      <div class="lw-sheet-scrim" role="presentation" data-goal-editor-scrim>
+        <section class="lw-sheet live-add-sheet" role="dialog" aria-modal="true" aria-label="Choose an exercise for your goal">
+          <div class="lw-sheet-head">
+            <div>
+              <h3>Add a milestone goal</h3>
+              <p>Pick the exercise you want to set a target for.</p>
+            </div>
+            <button class="lw-sheet-close" type="button" data-action="close-goal-editor" aria-label="Cancel">&times;</button>
+          </div>
+          <div class="library-search live-add-search">
+            <span class="library-search-icon" data-icon="search" aria-hidden="true"></span>
+            <input type="search" id="goal-picker-search" value="${escapeHtml(goalEditor.query)}" data-action="goal-picker-search" placeholder="Search exercises" autocomplete="off" aria-label="Search exercises" />
+          </div>
+          <div class="live-add-results goal-picker-results">
+            ${renderGoalPickerResults()}
+          </div>
+        </section>
+      </div>
+    `;
+    renderUiIcons(root);
+    return;
+  }
+
+  // step === "edit"
+  const isNew = !goalEditor.goalId;
+  root.innerHTML = `
+    <div class="lw-sheet-scrim" role="presentation" data-goal-editor-scrim>
+      <section class="lw-sheet goal-editor-sheet" role="dialog" aria-modal="true" aria-label="${isNew ? "Set" : "Edit"} milestone goal">
+        <div class="lw-sheet-head">
+          <div>
+            <h3>${isNew ? "Set" : "Edit"} milestone goal</h3>
+            <p>${escapeHtml(goalEditor.exerciseName)}</p>
+          </div>
+          <button class="lw-sheet-close" type="button" data-action="close-goal-editor" aria-label="Cancel">&times;</button>
+        </div>
+        <div class="plan-form goal-editor-form">
+          <div class="goal-editor-targets">
+            <label><span>Weight (lb)</span><input type="number" inputmode="decimal" min="0" id="goal-target-weight" value="${escapeHtml(goalEditor.targetWeight)}" placeholder="e.g. 185"></label>
+            <label><span>Reps</span><input type="number" inputmode="numeric" min="0" id="goal-target-reps" value="${escapeHtml(goalEditor.targetReps)}" placeholder="e.g. 5"></label>
+            <label><span>Sets</span><input type="number" inputmode="numeric" min="0" id="goal-target-sets" value="${escapeHtml(goalEditor.targetSets)}" placeholder="e.g. 3"></label>
+          </div>
+          <label>
+            <span>Note (optional)</span>
+            <input type="text" id="goal-note" maxlength="140" value="${escapeHtml(goalEditor.note)}" placeholder="e.g. touch-and-go, no bounce">
+          </label>
+        </div>
+        <div class="plan-save-row goal-editor-actions">
+          ${isNew ? "<span></span>" : `<button class="quiet-button small-button btn-ico danger-text" type="button" data-action="delete-goal" data-id="${escapeHtml(goalEditor.goalId)}">${getUiIcon("trash-2")}Remove goal</button>`}
+          <button class="primary-button small-button" type="button" data-action="save-goal">Save goal</button>
+        </div>
+      </section>
+    </div>
+  `;
+}
+
+// Full-form semantics: whatever is in the fields becomes the goal's state, so
+// clearing a field and saving removes that part of the target (unlike the
+// coach-apply "goal" change, which only patches the fields it names).
+function saveGoalFromEditor() {
+  const exerciseId = goalEditor.exerciseId;
+  if (!exerciseId) return;
+  const weight = document.querySelector("#goal-target-weight")?.value.trim() || "";
+  const reps = document.querySelector("#goal-target-reps")?.value.trim() || "";
+  const sets = document.querySelector("#goal-target-sets")?.value.trim() || "";
+  const note = document.querySelector("#goal-note")?.value.trim() || "";
+
+  const data = getLocalData();
+  data.activePlan = data.activePlan && typeof data.activePlan === "object" ? data.activePlan : getStarterActivePlan();
+  data.activePlan.focusGoals = Array.isArray(data.activePlan.focusGoals) ? data.activePlan.focusGoals : [];
+  const goals = data.activePlan.focusGoals;
+  const now = new Date().toISOString();
+  const index = goals.findIndex((g) => g.exerciseId === exerciseId);
+  const base = index >= 0 ? goals[index] : { id: `goal-${exerciseId}`, exerciseId, createdAt: now };
+  const updated = { id: base.id, exerciseId, createdAt: base.createdAt, exerciseName: getExerciseById(exerciseId)?.name || goalEditor.exerciseName, updatedAt: now };
+  if (weight) updated.targetWeight = Number(weight);
+  if (reps) updated.targetReps = Number(reps);
+  if (sets) updated.targetSets = Number(sets);
+  if (note) updated.note = note;
+
+  if (index >= 0) goals[index] = updated;
+  else goals.push(updated);
+  if (goals.length > 3) goals.splice(0, goals.length - 3);
+
+  commitProgressData(data);
+  closeGoalEditor();
+  renderPlan();
+  renderProgress(false);
+}
+
+async function deleteGoal(goalId) {
+  const goals = getLocalData().activePlan?.focusGoals || [];
+  const goal = goals.find((g) => g.id === goalId);
+  const ok = await showConfirmModal({
+    title: `Remove ${goal?.exerciseName || "this"} goal?`,
+    message: "This only removes the goal — your logged workouts and history are not affected.",
+    confirmLabel: "Remove goal"
+  });
+  if (!ok) return;
+  const data = getLocalData();
+  data.activePlan = data.activePlan && typeof data.activePlan === "object" ? data.activePlan : getStarterActivePlan();
+  data.activePlan.focusGoals = (Array.isArray(data.activePlan.focusGoals) ? data.activePlan.focusGoals : []).filter((g) => g.id !== goalId);
+  commitProgressData(data);
+  closeGoalEditor();
+  renderPlan();
+  renderProgress(false);
 }
 
 // The raw paste-in importer is an advanced/occasional tool: keep it collapsed
@@ -9762,7 +10022,8 @@ function saveActivePlanFromScreen() {
   renderReviewReminder();
 
   // Confirm the save in place rather than re-rendering (which looked like nothing happened).
-  const status = planContent?.querySelector("#plan-save-status");
+  // Lives in the Plan details modal now, not planContent.
+  const status = document.querySelector("#plan-save-status");
   if (status) {
     status.textContent = "Saved";
     status.classList.add("is-shown");
@@ -10103,6 +10364,8 @@ function handlePlanClick(event) {
     case "done-routine": finishRoutineEdit(); break;
     case "cancel-routine": cancelRoutineEdit(id); break;
     case "delete-routine": deleteRoutine(id); break;
+    case "add-goal": openGoalPicker(); break;
+    case "edit-goal": openGoalEditor(id); break;
     case "remove-ex": removeRoutineExercise(id, Number(button.dataset.index)); break;
     case "move-ex": moveRoutineExercise(id, Number(button.dataset.index), Number(button.dataset.dir)); break;
     case "copy-packet": copyReviewPacket(); break;
@@ -10860,10 +11123,11 @@ function renderStrengthProgressCard() {
     </section>`;
 }
 
-// F2 slice: a small plan-aware focus goal (Bench Press first). The goal itself
-// is only ever added/revised through the user-confirmed coach apply flow, so
-// this card simply reflects whatever is on the active plan - it stays hidden
-// until one exists rather than inventing a placeholder target.
+// F2 slice: a small plan-aware focus goal (Bench Press first, Milestone Goals
+// on Plan can hold up to 3). Edited either by you (Plan tab / the edit icon
+// here) or by the coach through the confirmed apply flow — both write the
+// same activePlan.focusGoals list, so this card just reflects whatever is
+// there and stays hidden until at least one goal exists.
 function renderFocusGoalCard() {
   const data = getLocalData();
   const goals = Array.isArray(data.activePlan?.focusGoals) ? data.activePlan.focusGoals : [];
@@ -10872,7 +11136,7 @@ function renderFocusGoalCard() {
     <section class="prog-card">
       <div class="prog-card-head">
         <p class="card-kicker">Focus goal</p>
-        <span class="prog-sub">set through coach apply</span>
+        <span class="prog-sub">tap to edit</span>
       </div>
       <div class="goal-list">${goals.map((goal) => renderFocusGoalItem(goal)).join("")}</div>
     </section>`;
@@ -10907,7 +11171,10 @@ function renderFocusGoalItem(goal) {
     <article class="goal-item">
       <div class="goal-item-head">
         <p class="goal-name">${escapeHtml(name)}</p>
-        <span class="goal-target-tag">${escapeHtml(targetText)}</span>
+        <span class="goal-item-head-right">
+          <span class="goal-target-tag">${escapeHtml(targetText)}</span>
+          <button class="goal-edit-btn btn-ico" type="button" data-action="edit-goal" data-id="${escapeHtml(goal.id)}" aria-label="Edit ${escapeHtml(name)} goal">${getUiIcon("pencil")}</button>
+        </span>
       </div>
       <div class="prog-chart-foot">
         <div class="goal-stat">
@@ -11842,6 +12109,10 @@ function renderProgress(resetMonth = true) {
       renderProgress(false);
     });
   }
+
+  progressContent.querySelectorAll('[data-action="edit-goal"]').forEach((button) => {
+    button.addEventListener("click", () => openGoalEditor(button.dataset.id));
+  });
 
   wireBodyWeightCard();
 }
@@ -13794,6 +14065,48 @@ settingsModalRoot?.addEventListener("click", (event) => {
 settingsModalRoot?.addEventListener("change", handleRestoreFileChosen);
 document.addEventListener("keydown", (event) => {
   if (event.key === "Escape" && settingsModalOpen) closeSettingsModal();
+});
+
+// Plan details modal: small icon button on the Plan heading opens it.
+const planDetailsButton = document.querySelector("#plan-details-button");
+planDetailsButton?.addEventListener("click", openPlanDetailsModal);
+
+const planDetailsModalRoot = document.querySelector("#plan-details-modal-root");
+planDetailsModalRoot?.addEventListener("click", (event) => {
+  if (event.target.hasAttribute("data-plan-details-scrim")) { closePlanDetailsModal(); return; }
+  const button = event.target.closest("[data-action]");
+  if (!button) return;
+  if (button.dataset.action === "close-plan-details") { closePlanDetailsModal(); return; }
+  if (button.dataset.action === "save-plan-notes") saveActivePlanFromScreen();
+});
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && planDetailsModalOpen) closePlanDetailsModal();
+});
+
+// Milestone goal editor: shared by the Plan tab's "Add goal"/"Edit" buttons
+// and the edit icon on the Progress focus-goal card (handlePlanClick and the
+// Progress wiring in renderProgress() both just call openGoalPicker/openGoalEditor).
+const goalEditorModalRoot = document.querySelector("#goal-editor-modal-root");
+goalEditorModalRoot?.addEventListener("click", (event) => {
+  if (event.target.hasAttribute("data-goal-editor-scrim")) { closeGoalEditor(); return; }
+  const button = event.target.closest("[data-action]");
+  if (!button) return;
+  switch (button.dataset.action) {
+    case "close-goal-editor": closeGoalEditor(); break;
+    case "pick-goal-exercise": pickGoalExercise(button.dataset.id); break;
+    case "save-goal": saveGoalFromEditor(); break;
+    case "delete-goal": deleteGoal(button.dataset.id); break;
+    default: break;
+  }
+});
+goalEditorModalRoot?.addEventListener("input", (event) => {
+  if (event.target.id !== "goal-picker-search") return;
+  goalEditor.query = event.target.value;
+  const resultsEl = goalEditorModalRoot.querySelector(".goal-picker-results");
+  if (resultsEl) resultsEl.innerHTML = renderGoalPickerResults();
+});
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && goalEditor.step !== "closed") closeGoalEditor();
 });
 
 // App / product notes: the header button opens the sheet; the live-workout

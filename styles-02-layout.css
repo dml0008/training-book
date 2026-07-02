@@ -676,6 +676,13 @@
   min-width: 180px;
 }
 
+.plan-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
 .plan-heading p:last-child,
 .plan-muted {
   margin: 0;
@@ -726,6 +733,22 @@
 
 .plan-save-status.is-shown {
   opacity: 1;
+}
+
+/* Modal footers (Plan details, Goal editor): push the primary action to the
+   right edge of the sheet instead of packing left like the old inline row. */
+.plan-details-save-row {
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+
+.goal-editor-actions {
+  justify-content: space-between;
+  margin-top: 16px;
+}
+
+.goal-editor-actions span:empty {
+  flex: 1;
 }
 
 .plan-form {

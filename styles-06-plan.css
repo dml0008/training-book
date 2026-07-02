@@ -497,6 +497,21 @@
   margin-top: 18px;
 }
 
+/* ----- Milestone goal editor (shared Plan + Progress modal) ----- */
+.goal-editor-targets {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+/* The Sets label is also its own parent's last child, so the general
+   ".plan-form label:last-child" full-width rule (meant for the outer form)
+   would otherwise catch it too and knock it onto its own row. */
+.goal-editor-targets label:last-child {
+  grid-column: auto;
+}
+
 /* ----- AI coach: the copy-out / paste-back round trip, shown as two steps ----- */
 .ai-steps {
   display: flex;
