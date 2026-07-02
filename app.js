@@ -3,7 +3,7 @@ const DROPBOX_TOKEN_URL = "https://api.dropboxapi.com/oauth2/token";
 const DROPBOX_UPLOAD_URL = "https://content.dropboxapi.com/2/files/upload";
 const DROPBOX_DOWNLOAD_URL = "https://content.dropboxapi.com/2/files/download";
 const DATA_FILE_PATH = "/04_Technical/06_Side_Projects/Workout and Nutrition App/data/workout-data.json";
-const APP_VERSION = "1.0.20";
+const APP_VERSION = "1.0.21";
 const SOCCER_DURATION_MINUTES = 60;
 
 const STORAGE = {
@@ -362,6 +362,7 @@ function getStarterExercises() {
     group: "chest",
     equipment: "barbell",
     primaryMuscle: "chest",
+    secondaryMuscles: [{"muscle":"shoulders","weight":0.4},{"muscle":"triceps","weight":0.3}],
     icon: "barbell",
     photos: { start: "assets/icons/photos/barbell-bench-press/start.jpg", finish: "assets/icons/photos/barbell-bench-press/finish.jpg" },
     tags: ["gym"]
@@ -374,6 +375,7 @@ function getStarterExercises() {
     group: "chest",
     equipment: "barbell",
     primaryMuscle: "chest",
+    secondaryMuscles: [{"muscle":"shoulders","weight":0.5},{"muscle":"triceps","weight":0.3}],
     icon: "barbell",
     photos: { start: "assets/icons/photos/incline-bench-press/start.jpg", finish: "assets/icons/photos/incline-bench-press/finish.jpg" },
     tags: ["gym"]
@@ -386,6 +388,7 @@ function getStarterExercises() {
     group: "chest",
     equipment: "dumbbell",
     primaryMuscle: "chest",
+    secondaryMuscles: [{"muscle":"shoulders","weight":0.4},{"muscle":"triceps","weight":0.3}],
     icon: "dumbbell",
     photos: { start: "assets/icons/photos/dumbbell-bench-press/start.jpg", finish: "assets/icons/photos/dumbbell-bench-press/finish.jpg" },
     tags: ["home","gym","dumbbells"]
@@ -398,6 +401,7 @@ function getStarterExercises() {
     group: "chest",
     equipment: "dumbbell",
     primaryMuscle: "chest",
+    secondaryMuscles: [],
     icon: "dumbbell",
     photos: { start: "assets/icons/photos/dumbbell-fly/start.jpg", finish: "assets/icons/photos/dumbbell-fly/finish.jpg" },
     tags: ["home","gym","dumbbells"]
@@ -410,6 +414,7 @@ function getStarterExercises() {
     group: "chest",
     equipment: "body only",
     primaryMuscle: "chest",
+    secondaryMuscles: [{"muscle":"shoulders","weight":0.3},{"muscle":"triceps","weight":0.3},{"muscle":"abdominals","weight":0.2}],
     icon: "gymnastics",
     photos: { start: "assets/icons/photos/push-up/start.jpg", finish: "assets/icons/photos/push-up/finish.jpg" },
     tags: ["home","gym","bodyweight"]
@@ -422,6 +427,7 @@ function getStarterExercises() {
     group: "chest",
     equipment: "body only",
     primaryMuscle: "chest",
+    secondaryMuscles: [{"muscle":"triceps","weight":0.5},{"muscle":"shoulders","weight":0.3}],
     icon: "gymnastics",
     photos: { start: "assets/icons/photos/chest-dip/start.jpg", finish: "assets/icons/photos/chest-dip/finish.jpg" },
     tags: ["home","gym","bodyweight"]
@@ -434,6 +440,7 @@ function getStarterExercises() {
     group: "chest",
     equipment: "cable",
     primaryMuscle: "chest",
+    secondaryMuscles: [],
     icon: "weight",
     photos: { start: "assets/icons/photos/cable-crossover/start.jpg", finish: "assets/icons/photos/cable-crossover/finish.jpg" },
     tags: ["gym","machine"]
@@ -446,6 +453,7 @@ function getStarterExercises() {
     group: "back",
     equipment: "barbell",
     primaryMuscle: "lower back",
+    secondaryMuscles: [{"muscle":"hamstrings","weight":0.7},{"muscle":"glutes","weight":0.6},{"muscle":"forearms","weight":0.3}],
     icon: "barbell",
     photos: { start: "assets/icons/photos/deadlift/start.jpg", finish: "assets/icons/photos/deadlift/finish.jpg" },
     tags: ["gym"]
@@ -458,6 +466,7 @@ function getStarterExercises() {
     group: "back",
     equipment: "barbell",
     primaryMuscle: "hamstrings",
+    secondaryMuscles: [{"muscle":"glutes","weight":0.6},{"muscle":"lower back","weight":0.4}],
     icon: "barbell",
     photos: { start: "assets/icons/photos/romanian-deadlift/start.jpg", finish: "assets/icons/photos/romanian-deadlift/finish.jpg" },
     tags: ["gym"]
@@ -470,6 +479,7 @@ function getStarterExercises() {
     group: "back",
     equipment: "body only",
     primaryMuscle: "lats",
+    secondaryMuscles: [{"muscle":"biceps","weight":0.5},{"muscle":"shoulders","weight":0.2}],
     icon: "gymnastics",
     photos: { start: "assets/icons/photos/pull-up/start.jpg", finish: "assets/icons/photos/pull-up/finish.jpg" },
     tags: ["home","gym","bodyweight"]
@@ -482,6 +492,7 @@ function getStarterExercises() {
     group: "back",
     equipment: "body only",
     primaryMuscle: "lats",
+    secondaryMuscles: [{"muscle":"biceps","weight":0.6},{"muscle":"shoulders","weight":0.2}],
     icon: "gymnastics",
     photos: { start: "assets/icons/photos/chin-up/start.jpg", finish: "assets/icons/photos/chin-up/finish.jpg" },
     tags: ["home","gym","bodyweight"]
@@ -494,6 +505,7 @@ function getStarterExercises() {
     group: "back",
     equipment: "cable",
     primaryMuscle: "lats",
+    secondaryMuscles: [{"muscle":"biceps","weight":0.4}],
     icon: "weight",
     photos: { start: "assets/icons/photos/lat-pulldown/start.jpg", finish: "assets/icons/photos/lat-pulldown/finish.jpg" },
     tags: ["gym","machine"]
@@ -506,6 +518,7 @@ function getStarterExercises() {
     group: "back",
     equipment: "barbell",
     primaryMuscle: "middle back",
+    secondaryMuscles: [{"muscle":"biceps","weight":0.4},{"muscle":"lats","weight":0.3}],
     icon: "barbell",
     photos: { start: "assets/icons/photos/bent-over-row/start.jpg", finish: "assets/icons/photos/bent-over-row/finish.jpg" },
     tags: ["gym"]
@@ -518,6 +531,7 @@ function getStarterExercises() {
     group: "back",
     equipment: "cable",
     primaryMuscle: "middle back",
+    secondaryMuscles: [{"muscle":"biceps","weight":0.4},{"muscle":"lats","weight":0.2}],
     icon: "weight",
     photos: { start: "assets/icons/photos/seated-cable-row/start.jpg", finish: "assets/icons/photos/seated-cable-row/finish.jpg" },
     tags: ["gym","machine"]
@@ -530,6 +544,7 @@ function getStarterExercises() {
     group: "back",
     equipment: "dumbbell",
     primaryMuscle: "middle back",
+    secondaryMuscles: [{"muscle":"biceps","weight":0.4},{"muscle":"lats","weight":0.3}],
     icon: "dumbbell",
     photos: { start: "assets/icons/photos/one-arm-dumbbell-row/start.jpg", finish: "assets/icons/photos/one-arm-dumbbell-row/finish.jpg" },
     tags: ["home","gym","dumbbells"]
@@ -542,6 +557,7 @@ function getStarterExercises() {
     group: "back",
     equipment: "cable",
     primaryMuscle: "shoulders",
+    secondaryMuscles: [{"muscle":"middle back","weight":0.3}],
     icon: "weight",
     photos: { start: "assets/icons/photos/face-pull/start.jpg", finish: "assets/icons/photos/face-pull/finish.jpg" },
     tags: ["gym","machine"]
@@ -554,6 +570,7 @@ function getStarterExercises() {
     group: "shoulders",
     equipment: "barbell",
     primaryMuscle: "shoulders",
+    secondaryMuscles: [{"muscle":"triceps","weight":0.4},{"muscle":"abdominals","weight":0.2}],
     icon: "barbell",
     photos: { start: "assets/icons/photos/overhead-press/start.jpg", finish: "assets/icons/photos/overhead-press/finish.jpg" },
     tags: ["gym"]
@@ -566,6 +583,7 @@ function getStarterExercises() {
     group: "shoulders",
     equipment: "dumbbell",
     primaryMuscle: "shoulders",
+    secondaryMuscles: [{"muscle":"triceps","weight":0.3}],
     icon: "dumbbell",
     photos: { start: "assets/icons/photos/dumbbell-shoulder-press/start.jpg", finish: "assets/icons/photos/dumbbell-shoulder-press/finish.jpg" },
     tags: ["home","gym","dumbbells"]
@@ -578,6 +596,7 @@ function getStarterExercises() {
     group: "shoulders",
     equipment: "dumbbell",
     primaryMuscle: "shoulders",
+    secondaryMuscles: [],
     icon: "dumbbell",
     photos: { start: "assets/icons/photos/lateral-raise/start.jpg", finish: "assets/icons/photos/lateral-raise/finish.jpg" },
     tags: ["home","gym","dumbbells"]
@@ -590,6 +609,7 @@ function getStarterExercises() {
     group: "shoulders",
     equipment: "dumbbell",
     primaryMuscle: "shoulders",
+    secondaryMuscles: [],
     icon: "dumbbell",
     photos: { start: "assets/icons/photos/front-raise/start.jpg", finish: "assets/icons/photos/front-raise/finish.jpg" },
     tags: ["home","gym","dumbbells"]
@@ -602,6 +622,7 @@ function getStarterExercises() {
     group: "shoulders",
     equipment: "dumbbell",
     primaryMuscle: "shoulders",
+    secondaryMuscles: [],
     icon: "dumbbell",
     photos: { start: "assets/icons/photos/rear-delt-fly/start.jpg", finish: "assets/icons/photos/rear-delt-fly/finish.jpg" },
     tags: ["home","gym","dumbbells"]
@@ -614,6 +635,7 @@ function getStarterExercises() {
     group: "shoulders",
     equipment: "dumbbell",
     primaryMuscle: "shoulders",
+    secondaryMuscles: [{"muscle":"triceps","weight":0.3}],
     icon: "dumbbell",
     photos: { start: "assets/icons/photos/arnold-press/start.jpg", finish: "assets/icons/photos/arnold-press/finish.jpg" },
     tags: ["home","gym","dumbbells"]
@@ -626,6 +648,7 @@ function getStarterExercises() {
     group: "shoulders",
     equipment: "barbell",
     primaryMuscle: "traps",
+    secondaryMuscles: [],
     icon: "barbell",
     photos: { start: "assets/icons/photos/shrug/start.jpg", finish: "assets/icons/photos/shrug/finish.jpg" },
     tags: ["gym"]
@@ -638,6 +661,7 @@ function getStarterExercises() {
     group: "legs",
     equipment: "barbell",
     primaryMuscle: "quadriceps",
+    secondaryMuscles: [{"muscle":"glutes","weight":0.5},{"muscle":"hamstrings","weight":0.3}],
     icon: "barbell",
     photos: { start: "assets/icons/photos/back-squat/start.jpg", finish: "assets/icons/photos/back-squat/finish.jpg" },
     tags: ["gym"]
@@ -650,6 +674,7 @@ function getStarterExercises() {
     group: "legs",
     equipment: "barbell",
     primaryMuscle: "quadriceps",
+    secondaryMuscles: [{"muscle":"glutes","weight":0.4},{"muscle":"hamstrings","weight":0.2}],
     icon: "barbell",
     photos: { start: "assets/icons/photos/front-squat/start.jpg", finish: "assets/icons/photos/front-squat/finish.jpg" },
     tags: ["gym"]
@@ -662,6 +687,7 @@ function getStarterExercises() {
     group: "legs",
     equipment: "dumbbell",
     primaryMuscle: "quadriceps",
+    secondaryMuscles: [{"muscle":"glutes","weight":0.4},{"muscle":"hamstrings","weight":0.2}],
     icon: "dumbbell",
     photos: { start: "assets/icons/photos/goblet-squat/start.jpg", finish: "assets/icons/photos/goblet-squat/finish.jpg" },
     tags: ["home","gym","dumbbells"]
@@ -674,6 +700,7 @@ function getStarterExercises() {
     group: "legs",
     equipment: "machine",
     primaryMuscle: "quadriceps",
+    secondaryMuscles: [{"muscle":"glutes","weight":0.4},{"muscle":"hamstrings","weight":0.2}],
     icon: "weight",
     photos: { start: "assets/icons/photos/leg-press/start.jpg", finish: "assets/icons/photos/leg-press/finish.jpg" },
     tags: ["gym","machine"]
@@ -686,6 +713,7 @@ function getStarterExercises() {
     group: "legs",
     equipment: "dumbbell",
     primaryMuscle: "quadriceps",
+    secondaryMuscles: [{"muscle":"glutes","weight":0.4},{"muscle":"hamstrings","weight":0.2}],
     icon: "walk",
     photos: { start: "assets/icons/photos/lunge/start.jpg", finish: "assets/icons/photos/lunge/finish.jpg" },
     tags: ["home","gym","dumbbells"]
@@ -698,6 +726,7 @@ function getStarterExercises() {
     group: "legs",
     equipment: "dumbbell",
     primaryMuscle: "quadriceps",
+    secondaryMuscles: [{"muscle":"glutes","weight":0.5},{"muscle":"hamstrings","weight":0.2}],
     icon: "walk",
     photos: { start: "assets/icons/photos/bulgarian-split-squat/start.jpg", finish: "assets/icons/photos/bulgarian-split-squat/finish.jpg" },
     tags: ["home","gym","dumbbells"]
@@ -710,6 +739,7 @@ function getStarterExercises() {
     group: "legs",
     equipment: "machine",
     primaryMuscle: "quadriceps",
+    secondaryMuscles: [],
     icon: "weight",
     photos: { start: "assets/icons/photos/leg-extension/start.jpg", finish: "assets/icons/photos/leg-extension/finish.jpg" },
     tags: ["gym","machine"]
@@ -722,6 +752,7 @@ function getStarterExercises() {
     group: "legs",
     equipment: "machine",
     primaryMuscle: "hamstrings",
+    secondaryMuscles: [],
     icon: "weight",
     photos: { start: "assets/icons/photos/leg-curl/start.jpg", finish: "assets/icons/photos/leg-curl/finish.jpg" },
     tags: ["gym","machine"]
@@ -734,6 +765,7 @@ function getStarterExercises() {
     group: "legs",
     equipment: "machine",
     primaryMuscle: "calves",
+    secondaryMuscles: [],
     icon: "weight",
     photos: { start: "assets/icons/photos/calf-raise/start.jpg", finish: "assets/icons/photos/calf-raise/finish.jpg" },
     tags: ["gym","machine"]
@@ -746,6 +778,7 @@ function getStarterExercises() {
     group: "legs",
     equipment: "barbell",
     primaryMuscle: "glutes",
+    secondaryMuscles: [{"muscle":"hamstrings","weight":0.4}],
     icon: "barbell",
     photos: { start: "assets/icons/photos/hip-thrust/start.jpg", finish: "assets/icons/photos/hip-thrust/finish.jpg" },
     tags: ["gym"]
@@ -758,6 +791,7 @@ function getStarterExercises() {
     group: "arms",
     equipment: "barbell",
     primaryMuscle: "biceps",
+    secondaryMuscles: [],
     icon: "biceps-flexed",
     photos: { start: "assets/icons/photos/barbell-curl/start.jpg", finish: "assets/icons/photos/barbell-curl/finish.jpg" },
     tags: ["gym"]
@@ -770,6 +804,7 @@ function getStarterExercises() {
     group: "arms",
     equipment: "dumbbell",
     primaryMuscle: "biceps",
+    secondaryMuscles: [],
     icon: "biceps-flexed",
     photos: { start: "assets/icons/photos/dumbbell-curl/start.jpg", finish: "assets/icons/photos/dumbbell-curl/finish.jpg" },
     tags: ["home","gym","dumbbells"]
@@ -782,6 +817,7 @@ function getStarterExercises() {
     group: "arms",
     equipment: "dumbbell",
     primaryMuscle: "biceps",
+    secondaryMuscles: [],
     icon: "biceps-flexed",
     photos: { start: "assets/icons/photos/hammer-curl/start.jpg", finish: "assets/icons/photos/hammer-curl/finish.jpg" },
     tags: ["home","gym","dumbbells"]
@@ -794,6 +830,7 @@ function getStarterExercises() {
     group: "arms",
     equipment: "barbell",
     primaryMuscle: "biceps",
+    secondaryMuscles: [],
     icon: "biceps-flexed",
     photos: { start: "assets/icons/photos/preacher-curl/start.jpg", finish: "assets/icons/photos/preacher-curl/finish.jpg" },
     tags: ["gym"]
@@ -806,6 +843,7 @@ function getStarterExercises() {
     group: "arms",
     equipment: "cable",
     primaryMuscle: "triceps",
+    secondaryMuscles: [],
     icon: "weight",
     photos: { start: "assets/icons/photos/triceps-pushdown/start.jpg", finish: "assets/icons/photos/triceps-pushdown/finish.jpg" },
     tags: ["gym","machine"]
@@ -818,6 +856,7 @@ function getStarterExercises() {
     group: "arms",
     equipment: "barbell",
     primaryMuscle: "triceps",
+    secondaryMuscles: [],
     icon: "barbell",
     photos: { start: "assets/icons/photos/skullcrusher/start.jpg", finish: "assets/icons/photos/skullcrusher/finish.jpg" },
     tags: ["gym"]
@@ -830,6 +869,7 @@ function getStarterExercises() {
     group: "arms",
     equipment: "dumbbell",
     primaryMuscle: "triceps",
+    secondaryMuscles: [],
     icon: "dumbbell",
     photos: { start: "assets/icons/photos/overhead-triceps-extension/start.jpg", finish: "assets/icons/photos/overhead-triceps-extension/finish.jpg" },
     tags: ["home","gym","dumbbells"]
@@ -842,6 +882,7 @@ function getStarterExercises() {
     group: "arms",
     equipment: "barbell",
     primaryMuscle: "triceps",
+    secondaryMuscles: [{"muscle":"chest","weight":0.4},{"muscle":"shoulders","weight":0.3}],
     icon: "barbell",
     photos: { start: "assets/icons/photos/close-grip-bench-press/start.jpg", finish: "assets/icons/photos/close-grip-bench-press/finish.jpg" },
     tags: ["gym"]
@@ -854,6 +895,7 @@ function getStarterExercises() {
     group: "core",
     equipment: "body only",
     primaryMuscle: "abdominals",
+    secondaryMuscles: [],
     icon: "yoga",
     photos: { start: "assets/icons/photos/plank/start.jpg", finish: "assets/icons/photos/plank/finish.jpg" },
     tags: ["home","gym","bodyweight"]
@@ -866,6 +908,7 @@ function getStarterExercises() {
     group: "core",
     equipment: "body only",
     primaryMuscle: "abdominals",
+    secondaryMuscles: [],
     icon: "stretching",
     photos: { start: "assets/icons/photos/crunch/start.jpg", finish: "assets/icons/photos/crunch/finish.jpg" },
     tags: ["home","gym","bodyweight"]
@@ -878,6 +921,7 @@ function getStarterExercises() {
     group: "core",
     equipment: "body only",
     primaryMuscle: "abdominals",
+    secondaryMuscles: [],
     icon: "stretching",
     photos: { start: "assets/icons/photos/sit-up/start.jpg", finish: "assets/icons/photos/sit-up/finish.jpg" },
     tags: ["home","gym","bodyweight"]
@@ -890,6 +934,7 @@ function getStarterExercises() {
     group: "core",
     equipment: "body only",
     primaryMuscle: "abdominals",
+    secondaryMuscles: [],
     icon: "gymnastics",
     photos: { start: "assets/icons/photos/hanging-leg-raise/start.jpg", finish: "assets/icons/photos/hanging-leg-raise/finish.jpg" },
     tags: ["home","gym","bodyweight"]
@@ -902,6 +947,7 @@ function getStarterExercises() {
     group: "core",
     equipment: "dumbbell",
     primaryMuscle: "abdominals",
+    secondaryMuscles: [],
     icon: "stretching-2",
     photos: { start: "assets/icons/photos/russian-twist/start.jpg", finish: "assets/icons/photos/russian-twist/finish.jpg" },
     tags: ["home","gym","dumbbells"]
@@ -914,6 +960,7 @@ function getStarterExercises() {
     group: "core",
     equipment: "cable",
     primaryMuscle: "abdominals",
+    secondaryMuscles: [],
     icon: "weight",
     photos: { start: "assets/icons/photos/cable-crunch/start.jpg", finish: "assets/icons/photos/cable-crunch/finish.jpg" },
     tags: ["gym","machine"]
@@ -926,6 +973,7 @@ function getStarterExercises() {
     group: "core",
     equipment: "body only",
     primaryMuscle: "abdominals",
+    secondaryMuscles: [],
     icon: "run",
     photos: { start: "assets/icons/photos/mountain-climber/start.jpg", finish: "assets/icons/photos/mountain-climber/finish.jpg" },
     tags: ["home","gym","bodyweight"]
@@ -938,6 +986,7 @@ function getStarterExercises() {
     group: "cardio",
     equipment: "body only",
     primaryMuscle: "full body",
+    secondaryMuscles: [],
     icon: "run",
     photos: null,
     tags: ["home","gym","bodyweight","cardio"]
@@ -950,6 +999,7 @@ function getStarterExercises() {
     group: "cardio",
     equipment: "kettlebell",
     primaryMuscle: "glutes",
+    secondaryMuscles: [{"muscle":"hamstrings","weight":0.5},{"muscle":"lower back","weight":0.3},{"muscle":"shoulders","weight":0.2}],
     icon: "dumbbell",
     photos: { start: "assets/icons/photos/kettlebell-swing/start.jpg", finish: "assets/icons/photos/kettlebell-swing/finish.jpg" },
     tags: ["home","gym","cardio"]
@@ -962,6 +1012,7 @@ function getStarterExercises() {
     group: "cardio",
     equipment: "body only",
     primaryMuscle: "full body",
+    secondaryMuscles: [],
     icon: "jump-rope",
     photos: { start: "assets/icons/photos/jumping-jack/start.jpg", finish: "assets/icons/photos/jumping-jack/finish.jpg" },
     tags: ["home","gym","bodyweight","cardio"]
@@ -974,6 +1025,7 @@ function getStarterExercises() {
     group: "cardio",
     equipment: "body only",
     primaryMuscle: "quadriceps",
+    secondaryMuscles: [],
     icon: "jump-rope",
     photos: { start: "assets/icons/photos/box-jump/start.jpg", finish: "assets/icons/photos/box-jump/finish.jpg" },
     tags: ["home","gym","bodyweight","cardio"]
@@ -986,6 +1038,7 @@ function getStarterExercises() {
     group: "cardio",
     equipment: "body only",
     primaryMuscle: "full body",
+    secondaryMuscles: [],
     icon: "soccer",
     photos: null,
     tags: ["sport"]
@@ -998,6 +1051,7 @@ function getStarterExercises() {
     group: "cardio",
     equipment: "body only",
     primaryMuscle: "full body",
+    secondaryMuscles: [],
     icon: "soccer",
     photos: null,
     tags: ["sport"]
@@ -1010,6 +1064,7 @@ function getStarterExercises() {
     group: "chest",
     equipment: "dumbbell",
     primaryMuscle: "chest",
+    secondaryMuscles: [{"muscle":"lats","weight":0.4},{"muscle":"triceps","weight":0.2}],
     icon: "dumbbell",
     photos: { start: "assets/icons/photos/dumbbell-pullover/start.jpg", finish: "assets/icons/photos/dumbbell-pullover/finish.jpg" },
     tags: ["home","gym","dumbbells"]
@@ -1022,6 +1077,7 @@ function getStarterExercises() {
     group: "chest",
     equipment: "machine",
     primaryMuscle: "chest",
+    secondaryMuscles: [],
     icon: "weight",
     photos: { start: "assets/icons/photos/machine-chest-press/start.jpg", finish: "assets/icons/photos/machine-chest-press/finish.jpg" },
     tags: ["gym","machine"]
@@ -1034,6 +1090,7 @@ function getStarterExercises() {
     group: "chest",
     equipment: "machine",
     primaryMuscle: "chest",
+    secondaryMuscles: [],
     icon: "weight",
     photos: { start: "assets/icons/photos/pec-deck-fly/start.jpg", finish: "assets/icons/photos/pec-deck-fly/finish.jpg" },
     tags: ["gym","machine"]
@@ -1046,6 +1103,7 @@ function getStarterExercises() {
     group: "chest",
     equipment: "dumbbell",
     primaryMuscle: "chest",
+    secondaryMuscles: [{"muscle":"shoulders","weight":0.5},{"muscle":"triceps","weight":0.3}],
     icon: "dumbbell",
     photos: { start: "assets/icons/photos/incline-dumbbell-press/start.jpg", finish: "assets/icons/photos/incline-dumbbell-press/finish.jpg" },
     tags: ["home","gym","dumbbells"]
@@ -1058,6 +1116,7 @@ function getStarterExercises() {
     group: "chest",
     equipment: "barbell",
     primaryMuscle: "chest",
+    secondaryMuscles: [{"muscle":"triceps","weight":0.3}],
     icon: "barbell",
     photos: { start: "assets/icons/photos/decline-bench-press/start.jpg", finish: "assets/icons/photos/decline-bench-press/finish.jpg" },
     tags: ["gym"]
@@ -1070,6 +1129,7 @@ function getStarterExercises() {
     group: "chest",
     equipment: "dumbbell",
     primaryMuscle: "chest",
+    secondaryMuscles: [],
     icon: "dumbbell",
     photos: { start: "assets/icons/photos/incline-dumbbell-fly/start.jpg", finish: "assets/icons/photos/incline-dumbbell-fly/finish.jpg" },
     tags: ["home","gym","dumbbells"]
@@ -1082,6 +1142,7 @@ function getStarterExercises() {
     group: "arms",
     equipment: "body only",
     primaryMuscle: "triceps",
+    secondaryMuscles: [{"muscle":"chest","weight":0.4},{"muscle":"shoulders","weight":0.3}],
     icon: "gymnastics",
     photos: { start: "assets/icons/photos/diamond-push-up/start.jpg", finish: "assets/icons/photos/diamond-push-up/finish.jpg" },
     tags: ["home","gym","bodyweight"]
@@ -1094,6 +1155,7 @@ function getStarterExercises() {
     group: "back",
     equipment: "body only",
     primaryMuscle: "middle back",
+    secondaryMuscles: [{"muscle":"biceps","weight":0.4}],
     icon: "gymnastics",
     photos: { start: "assets/icons/photos/inverted-row/start.jpg", finish: "assets/icons/photos/inverted-row/finish.jpg" },
     tags: ["home","gym","bodyweight"]
@@ -1106,6 +1168,7 @@ function getStarterExercises() {
     group: "chest",
     equipment: "dumbbell",
     primaryMuscle: "chest",
+    secondaryMuscles: [{"muscle":"triceps","weight":0.3}],
     icon: "dumbbell",
     photos: { start: "assets/icons/photos/decline-dumbbell-press/start.jpg", finish: "assets/icons/photos/decline-dumbbell-press/finish.jpg" },
     tags: ["home","gym","dumbbells"]
@@ -1118,6 +1181,7 @@ function getStarterExercises() {
     group: "back",
     equipment: "barbell",
     primaryMuscle: "middle back",
+    secondaryMuscles: [{"muscle":"biceps","weight":0.4},{"muscle":"lats","weight":0.3}],
     icon: "barbell",
     photos: { start: "assets/icons/photos/t-bar-row/start.jpg", finish: "assets/icons/photos/t-bar-row/finish.jpg" },
     tags: ["gym"]
@@ -1130,6 +1194,7 @@ function getStarterExercises() {
     group: "back",
     equipment: "barbell",
     primaryMuscle: "lower back",
+    secondaryMuscles: [{"muscle":"hamstrings","weight":0.6},{"muscle":"glutes","weight":0.4}],
     icon: "barbell",
     photos: { start: "assets/icons/photos/good-morning/start.jpg", finish: "assets/icons/photos/good-morning/finish.jpg" },
     tags: ["gym"]
@@ -1142,6 +1207,7 @@ function getStarterExercises() {
     group: "back",
     equipment: "barbell",
     primaryMuscle: "lower back",
+    secondaryMuscles: [{"muscle":"hamstrings","weight":0.5},{"muscle":"glutes","weight":0.4},{"muscle":"forearms","weight":0.3}],
     icon: "barbell",
     photos: { start: "assets/icons/photos/rack-pull/start.jpg", finish: "assets/icons/photos/rack-pull/finish.jpg" },
     tags: ["gym"]
@@ -1154,6 +1220,7 @@ function getStarterExercises() {
     group: "back",
     equipment: "cable",
     primaryMuscle: "lats",
+    secondaryMuscles: [{"muscle":"chest","weight":0.2}],
     icon: "weight",
     photos: { start: "assets/icons/photos/straight-arm-pulldown/start.jpg", finish: "assets/icons/photos/straight-arm-pulldown/finish.jpg" },
     tags: ["gym","machine"]
@@ -1166,6 +1233,7 @@ function getStarterExercises() {
     group: "back",
     equipment: "body only",
     primaryMuscle: "lower back",
+    secondaryMuscles: [{"muscle":"hamstrings","weight":0.3},{"muscle":"glutes","weight":0.3}],
     icon: "gymnastics",
     photos: { start: "assets/icons/photos/back-extension/start.jpg", finish: "assets/icons/photos/back-extension/finish.jpg" },
     tags: ["home","gym","bodyweight"]
@@ -1178,6 +1246,7 @@ function getStarterExercises() {
     group: "back",
     equipment: "dumbbell",
     primaryMuscle: "traps",
+    secondaryMuscles: [],
     icon: "dumbbell",
     photos: { start: "assets/icons/photos/dumbbell-shrug/start.jpg", finish: "assets/icons/photos/dumbbell-shrug/finish.jpg" },
     tags: ["home","gym","dumbbells"]
@@ -1190,6 +1259,7 @@ function getStarterExercises() {
     group: "back",
     equipment: "cable",
     primaryMuscle: "lats",
+    secondaryMuscles: [{"muscle":"biceps","weight":0.5}],
     icon: "weight",
     photos: { start: "assets/icons/photos/cable-pulldown-underhand/start.jpg", finish: "assets/icons/photos/cable-pulldown-underhand/finish.jpg" },
     tags: ["gym","machine"]
@@ -1202,6 +1272,7 @@ function getStarterExercises() {
     group: "back",
     equipment: "body only",
     primaryMuscle: "lats",
+    secondaryMuscles: [{"muscle":"biceps","weight":0.4},{"muscle":"shoulders","weight":0.2}],
     icon: "gymnastics",
     photos: { start: "assets/icons/photos/wide-grip-pull-up/start.jpg", finish: "assets/icons/photos/wide-grip-pull-up/finish.jpg" },
     tags: ["home","gym","bodyweight"]
@@ -1214,6 +1285,7 @@ function getStarterExercises() {
     group: "shoulders",
     equipment: "barbell",
     primaryMuscle: "shoulders",
+    secondaryMuscles: [{"muscle":"traps","weight":0.3}],
     icon: "barbell",
     photos: { start: "assets/icons/photos/upright-row/start.jpg", finish: "assets/icons/photos/upright-row/finish.jpg" },
     tags: ["gym"]
@@ -1226,6 +1298,7 @@ function getStarterExercises() {
     group: "shoulders",
     equipment: "cable",
     primaryMuscle: "shoulders",
+    secondaryMuscles: [],
     icon: "weight",
     photos: { start: "assets/icons/photos/cable-lateral-raise/start.jpg", finish: "assets/icons/photos/cable-lateral-raise/finish.jpg" },
     tags: ["gym","machine"]
@@ -1238,6 +1311,7 @@ function getStarterExercises() {
     group: "shoulders",
     equipment: "dumbbell",
     primaryMuscle: "shoulders",
+    secondaryMuscles: [],
     icon: "dumbbell",
     photos: { start: "assets/icons/photos/reverse-dumbbell-fly/start.jpg", finish: "assets/icons/photos/reverse-dumbbell-fly/finish.jpg" },
     tags: ["home","gym","dumbbells"]
@@ -1250,6 +1324,7 @@ function getStarterExercises() {
     group: "shoulders",
     equipment: "dumbbell",
     primaryMuscle: "shoulders",
+    secondaryMuscles: [{"muscle":"triceps","weight":0.3}],
     icon: "dumbbell",
     photos: { start: "assets/icons/photos/seated-dumbbell-press/start.jpg", finish: "assets/icons/photos/seated-dumbbell-press/finish.jpg" },
     tags: ["home","gym","dumbbells"]
@@ -1262,6 +1337,7 @@ function getStarterExercises() {
     group: "shoulders",
     equipment: "machine",
     primaryMuscle: "shoulders",
+    secondaryMuscles: [],
     icon: "weight",
     photos: { start: "assets/icons/photos/reverse-pec-deck/start.jpg", finish: "assets/icons/photos/reverse-pec-deck/finish.jpg" },
     tags: ["gym","machine"]
@@ -1274,6 +1350,7 @@ function getStarterExercises() {
     group: "shoulders",
     equipment: "dumbbell",
     primaryMuscle: "shoulders",
+    secondaryMuscles: [],
     icon: "dumbbell",
     photos: { start: "assets/icons/photos/external-rotation/start.jpg", finish: "assets/icons/photos/external-rotation/finish.jpg" },
     tags: ["home","gym","dumbbells"]
@@ -1286,6 +1363,7 @@ function getStarterExercises() {
     group: "shoulders",
     equipment: "barbell",
     primaryMuscle: "shoulders",
+    secondaryMuscles: [{"muscle":"triceps","weight":0.4},{"muscle":"quadriceps","weight":0.3}],
     icon: "barbell",
     photos: { start: "assets/icons/photos/push-press/start.jpg", finish: "assets/icons/photos/push-press/finish.jpg" },
     tags: ["gym"]
@@ -1298,6 +1376,7 @@ function getStarterExercises() {
     group: "legs",
     equipment: "machine",
     primaryMuscle: "quadriceps",
+    secondaryMuscles: [{"muscle":"glutes","weight":0.3}],
     icon: "weight",
     photos: { start: "assets/icons/photos/hack-squat/start.jpg", finish: "assets/icons/photos/hack-squat/finish.jpg" },
     tags: ["gym","machine"]
@@ -1310,6 +1389,7 @@ function getStarterExercises() {
     group: "legs",
     equipment: "barbell",
     primaryMuscle: "quadriceps",
+    secondaryMuscles: [{"muscle":"glutes","weight":0.4},{"muscle":"hamstrings","weight":0.2}],
     icon: "barbell",
     photos: { start: "assets/icons/photos/barbell-lunge/start.jpg", finish: "assets/icons/photos/barbell-lunge/finish.jpg" },
     tags: ["gym"]
@@ -1322,6 +1402,7 @@ function getStarterExercises() {
     group: "legs",
     equipment: "barbell",
     primaryMuscle: "quadriceps",
+    secondaryMuscles: [{"muscle":"glutes","weight":0.4},{"muscle":"hamstrings","weight":0.2}],
     icon: "barbell",
     photos: { start: "assets/icons/photos/walking-lunge/start.jpg", finish: "assets/icons/photos/walking-lunge/finish.jpg" },
     tags: ["gym"]
@@ -1334,6 +1415,7 @@ function getStarterExercises() {
     group: "legs",
     equipment: "dumbbell",
     primaryMuscle: "quadriceps",
+    secondaryMuscles: [{"muscle":"glutes","weight":0.4}],
     icon: "dumbbell",
     photos: { start: "assets/icons/photos/dumbbell-step-up/start.jpg", finish: "assets/icons/photos/dumbbell-step-up/finish.jpg" },
     tags: ["home","gym","dumbbells"]
@@ -1346,6 +1428,7 @@ function getStarterExercises() {
     group: "legs",
     equipment: "barbell",
     primaryMuscle: "hamstrings",
+    secondaryMuscles: [{"muscle":"glutes","weight":0.6},{"muscle":"lower back","weight":0.4},{"muscle":"quadriceps","weight":0.3}],
     icon: "barbell",
     photos: { start: "assets/icons/photos/sumo-deadlift/start.jpg", finish: "assets/icons/photos/sumo-deadlift/finish.jpg" },
     tags: ["gym"]
@@ -1358,6 +1441,7 @@ function getStarterExercises() {
     group: "legs",
     equipment: "barbell",
     primaryMuscle: "glutes",
+    secondaryMuscles: [{"muscle":"hamstrings","weight":0.3}],
     icon: "barbell",
     photos: { start: "assets/icons/photos/glute-bridge/start.jpg", finish: "assets/icons/photos/glute-bridge/finish.jpg" },
     tags: ["gym"]
@@ -1370,6 +1454,7 @@ function getStarterExercises() {
     group: "legs",
     equipment: "cable",
     primaryMuscle: "glutes",
+    secondaryMuscles: [{"muscle":"hamstrings","weight":0.4},{"muscle":"lower back","weight":0.2}],
     icon: "weight",
     photos: { start: "assets/icons/photos/cable-pull-through/start.jpg", finish: "assets/icons/photos/cable-pull-through/finish.jpg" },
     tags: ["gym","machine"]
@@ -1382,6 +1467,7 @@ function getStarterExercises() {
     group: "legs",
     equipment: "dumbbell",
     primaryMuscle: "quadriceps",
+    secondaryMuscles: [{"muscle":"glutes","weight":0.4},{"muscle":"hamstrings","weight":0.2}],
     icon: "dumbbell",
     photos: { start: "assets/icons/photos/reverse-lunge/start.jpg", finish: "assets/icons/photos/reverse-lunge/finish.jpg" },
     tags: ["home","gym","dumbbells"]
@@ -1394,6 +1480,7 @@ function getStarterExercises() {
     group: "legs",
     equipment: "dumbbell",
     primaryMuscle: "quadriceps",
+    secondaryMuscles: [{"muscle":"glutes","weight":0.4},{"muscle":"adductors","weight":0.3}],
     icon: "dumbbell",
     photos: { start: "assets/icons/photos/pli-dumbbell-squat/start.jpg", finish: "assets/icons/photos/pli-dumbbell-squat/finish.jpg" },
     tags: ["home","gym","dumbbells"]
@@ -1406,6 +1493,7 @@ function getStarterExercises() {
     group: "legs",
     equipment: "body only",
     primaryMuscle: "glutes",
+    secondaryMuscles: [],
     icon: "walk",
     photos: { start: "assets/icons/photos/glute-kickback/start.jpg", finish: "assets/icons/photos/glute-kickback/finish.jpg" },
     tags: ["home","gym","bodyweight"]
@@ -1418,6 +1506,7 @@ function getStarterExercises() {
     group: "legs",
     equipment: "machine",
     primaryMuscle: "hamstrings",
+    secondaryMuscles: [],
     icon: "weight",
     photos: { start: "assets/icons/photos/seated-leg-curl/start.jpg", finish: "assets/icons/photos/seated-leg-curl/finish.jpg" },
     tags: ["gym","machine"]
@@ -1430,6 +1519,7 @@ function getStarterExercises() {
     group: "legs",
     equipment: "barbell",
     primaryMuscle: "quadriceps",
+    secondaryMuscles: [{"muscle":"glutes","weight":0.4},{"muscle":"hamstrings","weight":0.2}],
     icon: "barbell",
     photos: { start: "assets/icons/photos/box-squat/start.jpg", finish: "assets/icons/photos/box-squat/finish.jpg" },
     tags: ["gym"]
@@ -1442,6 +1532,7 @@ function getStarterExercises() {
     group: "legs",
     equipment: "machine",
     primaryMuscle: "adductors",
+    secondaryMuscles: [],
     icon: "weight",
     photos: { start: "assets/icons/photos/hip-adduction-machine/start.jpg", finish: "assets/icons/photos/hip-adduction-machine/finish.jpg" },
     tags: ["gym","machine"]
@@ -1454,6 +1545,7 @@ function getStarterExercises() {
     group: "legs",
     equipment: "body only",
     primaryMuscle: "glutes",
+    secondaryMuscles: [],
     icon: "walk",
     photos: { start: "assets/icons/photos/step-up-with-knee-raise/start.jpg", finish: "assets/icons/photos/step-up-with-knee-raise/finish.jpg" },
     tags: ["home","gym","bodyweight"]
@@ -1466,6 +1558,7 @@ function getStarterExercises() {
     group: "arms",
     equipment: "barbell",
     primaryMuscle: "biceps",
+    secondaryMuscles: [],
     icon: "biceps-flexed",
     photos: { start: "assets/icons/photos/ez-bar-curl/start.jpg", finish: "assets/icons/photos/ez-bar-curl/finish.jpg" },
     tags: ["gym"]
@@ -1478,6 +1571,7 @@ function getStarterExercises() {
     group: "legs",
     equipment: "body only",
     primaryMuscle: "quadriceps",
+    secondaryMuscles: [{"muscle":"glutes","weight":0.3}],
     icon: "walk",
     photos: { start: "assets/icons/photos/bodyweight-squat/start.jpg", finish: "assets/icons/photos/bodyweight-squat/finish.jpg" },
     tags: ["home","gym","bodyweight"]
@@ -1490,6 +1584,7 @@ function getStarterExercises() {
     group: "legs",
     equipment: "dumbbell",
     primaryMuscle: "hamstrings",
+    secondaryMuscles: [{"muscle":"glutes","weight":0.5},{"muscle":"lower back","weight":0.3}],
     icon: "dumbbell",
     photos: { start: "assets/icons/photos/stiff-legged-deadlift/start.jpg", finish: "assets/icons/photos/stiff-legged-deadlift/finish.jpg" },
     tags: ["home","gym","dumbbells"]
@@ -1502,6 +1597,7 @@ function getStarterExercises() {
     group: "legs",
     equipment: "machine",
     primaryMuscle: "abductors",
+    secondaryMuscles: [],
     icon: "weight",
     photos: { start: "assets/icons/photos/hip-abduction-machine/start.jpg", finish: "assets/icons/photos/hip-abduction-machine/finish.jpg" },
     tags: ["gym","machine"]
@@ -1514,6 +1610,7 @@ function getStarterExercises() {
     group: "arms",
     equipment: "dumbbell",
     primaryMuscle: "biceps",
+    secondaryMuscles: [],
     icon: "biceps-flexed",
     photos: { start: "assets/icons/photos/concentration-curl/start.jpg", finish: "assets/icons/photos/concentration-curl/finish.jpg" },
     tags: ["home","gym","dumbbells"]
@@ -1526,6 +1623,7 @@ function getStarterExercises() {
     group: "arms",
     equipment: "cable",
     primaryMuscle: "biceps",
+    secondaryMuscles: [],
     icon: "biceps-flexed",
     photos: { start: "assets/icons/photos/cable-hammer-curl/start.jpg", finish: "assets/icons/photos/cable-hammer-curl/finish.jpg" },
     tags: ["gym","machine"]
@@ -1538,6 +1636,7 @@ function getStarterExercises() {
     group: "arms",
     equipment: "dumbbell",
     primaryMuscle: "biceps",
+    secondaryMuscles: [],
     icon: "biceps-flexed",
     photos: { start: "assets/icons/photos/incline-dumbbell-curl/start.jpg", finish: "assets/icons/photos/incline-dumbbell-curl/finish.jpg" },
     tags: ["home","gym","dumbbells"]
@@ -1550,6 +1649,7 @@ function getStarterExercises() {
     group: "arms",
     equipment: "cable",
     primaryMuscle: "biceps",
+    secondaryMuscles: [],
     icon: "biceps-flexed",
     photos: { start: "assets/icons/photos/cable-curl/start.jpg", finish: "assets/icons/photos/cable-curl/finish.jpg" },
     tags: ["gym","machine"]
@@ -1562,6 +1662,7 @@ function getStarterExercises() {
     group: "arms",
     equipment: "barbell",
     primaryMuscle: "biceps",
+    secondaryMuscles: [],
     icon: "biceps-flexed",
     photos: { start: "assets/icons/photos/reverse-curl/start.jpg", finish: "assets/icons/photos/reverse-curl/finish.jpg" },
     tags: ["gym"]
@@ -1574,6 +1675,7 @@ function getStarterExercises() {
     group: "arms",
     equipment: "cable",
     primaryMuscle: "forearms",
+    secondaryMuscles: [],
     icon: "weight",
     photos: { start: "assets/icons/photos/wrist-curl/start.jpg", finish: "assets/icons/photos/wrist-curl/finish.jpg" },
     tags: ["gym","machine"]
@@ -1586,6 +1688,7 @@ function getStarterExercises() {
     group: "arms",
     equipment: "body only",
     primaryMuscle: "triceps",
+    secondaryMuscles: [{"muscle":"shoulders","weight":0.2}],
     icon: "gymnastics",
     photos: { start: "assets/icons/photos/bench-dip/start.jpg", finish: "assets/icons/photos/bench-dip/finish.jpg" },
     tags: ["home","gym","bodyweight"]
@@ -1598,6 +1701,7 @@ function getStarterExercises() {
     group: "arms",
     equipment: "barbell",
     primaryMuscle: "triceps",
+    secondaryMuscles: [{"muscle":"chest","weight":0.4},{"muscle":"shoulders","weight":0.3}],
     icon: "barbell",
     photos: { start: "assets/icons/photos/floor-press/start.jpg", finish: "assets/icons/photos/floor-press/finish.jpg" },
     tags: ["gym"]
@@ -1610,6 +1714,7 @@ function getStarterExercises() {
     group: "core",
     equipment: "body only",
     primaryMuscle: "abdominals",
+    secondaryMuscles: [],
     icon: "yoga",
     photos: { start: "assets/icons/photos/reverse-crunch/start.jpg", finish: "assets/icons/photos/reverse-crunch/finish.jpg" },
     tags: ["home","gym","bodyweight"]
@@ -1622,6 +1727,7 @@ function getStarterExercises() {
     group: "arms",
     equipment: "dumbbell",
     primaryMuscle: "triceps",
+    secondaryMuscles: [],
     icon: "dumbbell",
     photos: { start: "assets/icons/photos/seated-triceps-press/start.jpg", finish: "assets/icons/photos/seated-triceps-press/finish.jpg" },
     tags: ["home","gym","dumbbells"]
@@ -1634,6 +1740,7 @@ function getStarterExercises() {
     group: "arms",
     equipment: "body only",
     primaryMuscle: "triceps",
+    secondaryMuscles: [{"muscle":"chest","weight":0.3},{"muscle":"shoulders","weight":0.3}],
     icon: "gymnastics",
     photos: { start: "assets/icons/photos/dips-triceps/start.jpg", finish: "assets/icons/photos/dips-triceps/finish.jpg" },
     tags: ["home","gym","bodyweight"]
@@ -1646,6 +1753,7 @@ function getStarterExercises() {
     group: "arms",
     equipment: "dumbbell",
     primaryMuscle: "triceps",
+    secondaryMuscles: [],
     icon: "dumbbell",
     photos: { start: "assets/icons/photos/triceps-kickback/start.jpg", finish: "assets/icons/photos/triceps-kickback/finish.jpg" },
     tags: ["home","gym","dumbbells"]
@@ -1658,6 +1766,7 @@ function getStarterExercises() {
     group: "core",
     equipment: "body only",
     primaryMuscle: "abdominals",
+    secondaryMuscles: [],
     icon: "yoga",
     photos: { start: "assets/icons/photos/side-plank/start.jpg", finish: "assets/icons/photos/side-plank/finish.jpg" },
     tags: ["home","gym","bodyweight"]
@@ -1670,6 +1779,7 @@ function getStarterExercises() {
     group: "core",
     equipment: "body only",
     primaryMuscle: "abdominals",
+    secondaryMuscles: [],
     icon: "yoga",
     photos: { start: "assets/icons/photos/cross-body-crunch/start.jpg", finish: "assets/icons/photos/cross-body-crunch/finish.jpg" },
     tags: ["home","gym","bodyweight"]
@@ -1682,6 +1792,7 @@ function getStarterExercises() {
     group: "core",
     equipment: "body only",
     primaryMuscle: "abdominals",
+    secondaryMuscles: [],
     icon: "yoga",
     photos: null,
     tags: ["home","gym","bodyweight"]
@@ -1694,6 +1805,7 @@ function getStarterExercises() {
     group: "core",
     equipment: "body only",
     primaryMuscle: "abdominals",
+    secondaryMuscles: [],
     icon: "yoga",
     photos: { start: "assets/icons/photos/v-up/start.jpg", finish: "assets/icons/photos/v-up/finish.jpg" },
     tags: ["home","gym","bodyweight"]
@@ -1706,6 +1818,7 @@ function getStarterExercises() {
     group: "core",
     equipment: "body only",
     primaryMuscle: "glutes",
+    secondaryMuscles: [],
     icon: "yoga",
     photos: { start: "assets/icons/photos/flutter-kicks/start.jpg", finish: "assets/icons/photos/flutter-kicks/finish.jpg" },
     tags: ["home","gym","bodyweight"]
@@ -1718,6 +1831,7 @@ function getStarterExercises() {
     group: "core",
     equipment: "body only",
     primaryMuscle: "abdominals",
+    secondaryMuscles: [],
     icon: "yoga",
     photos: { start: "assets/icons/photos/bicycle-crunch/start.jpg", finish: "assets/icons/photos/bicycle-crunch/finish.jpg" },
     tags: ["home","gym","bodyweight"]
@@ -1730,6 +1844,7 @@ function getStarterExercises() {
     group: "core",
     equipment: "body only",
     primaryMuscle: "abdominals",
+    secondaryMuscles: [{"muscle":"shoulders","weight":0.3},{"muscle":"lower back","weight":0.2}],
     icon: "yoga",
     photos: { start: "assets/icons/photos/ab-rollout/start.jpg", finish: "assets/icons/photos/ab-rollout/finish.jpg" },
     tags: ["home","gym","bodyweight"]
@@ -1742,6 +1857,7 @@ function getStarterExercises() {
     group: "core",
     equipment: "body only",
     primaryMuscle: "abdominals",
+    secondaryMuscles: [],
     icon: "yoga",
     photos: { start: "assets/icons/photos/decline-crunch/start.jpg", finish: "assets/icons/photos/decline-crunch/finish.jpg" },
     tags: ["home","gym","bodyweight"]
@@ -1754,6 +1870,7 @@ function getStarterExercises() {
     group: "core",
     equipment: "body only",
     primaryMuscle: "abdominals",
+    secondaryMuscles: [],
     icon: "yoga",
     photos: { start: "assets/icons/photos/dead-bug/start.jpg", finish: "assets/icons/photos/dead-bug/finish.jpg" },
     tags: ["home","gym","bodyweight"]
@@ -1766,6 +1883,7 @@ function getStarterExercises() {
     group: "core",
     equipment: "body only",
     primaryMuscle: "abdominals",
+    secondaryMuscles: [],
     icon: "yoga",
     photos: { start: "assets/icons/photos/hip-raise/start.jpg", finish: "assets/icons/photos/hip-raise/finish.jpg" },
     tags: ["home","gym","bodyweight"]
@@ -1778,6 +1896,7 @@ function getStarterExercises() {
     group: "core",
     equipment: "body only",
     primaryMuscle: "abdominals",
+    secondaryMuscles: [],
     icon: "yoga",
     photos: { start: "assets/icons/photos/oblique-crunch/start.jpg", finish: "assets/icons/photos/oblique-crunch/finish.jpg" },
     tags: ["home","gym","bodyweight"]
@@ -1790,6 +1909,7 @@ function getStarterExercises() {
     group: "core",
     equipment: "cable",
     primaryMuscle: "abdominals",
+    secondaryMuscles: [],
     icon: "weight",
     photos: { start: "assets/icons/photos/cable-woodchopper/start.jpg", finish: "assets/icons/photos/cable-woodchopper/finish.jpg" },
     tags: ["gym","machine"]
@@ -1802,6 +1922,7 @@ function getStarterExercises() {
     group: "cardio",
     equipment: "body only",
     primaryMuscle: "quadriceps",
+    secondaryMuscles: [],
     icon: "run",
     photos: { start: "assets/icons/photos/jump-rope/start.jpg", finish: "assets/icons/photos/jump-rope/finish.jpg" },
     tags: ["home","gym","bodyweight","cardio"]
@@ -1814,6 +1935,7 @@ function getStarterExercises() {
     group: "cardio",
     equipment: "body only",
     primaryMuscle: "quadriceps",
+    secondaryMuscles: [],
     icon: "run",
     photos: { start: "assets/icons/photos/broad-jump/start.jpg", finish: "assets/icons/photos/broad-jump/finish.jpg" },
     tags: ["home","gym","bodyweight","cardio"]
@@ -1826,6 +1948,7 @@ function getStarterExercises() {
     group: "cardio",
     equipment: "machine",
     primaryMuscle: "quadriceps",
+    secondaryMuscles: [],
     icon: "weight",
     photos: { start: "assets/icons/photos/stationary-bike/start.jpg", finish: "assets/icons/photos/stationary-bike/finish.jpg" },
     tags: ["gym","machine","cardio"]
@@ -1838,6 +1961,7 @@ function getStarterExercises() {
     group: "cardio",
     equipment: "body only",
     primaryMuscle: "quadriceps",
+    secondaryMuscles: [],
     icon: "run",
     photos: { start: "assets/icons/photos/squat-jump/start.jpg", finish: "assets/icons/photos/squat-jump/finish.jpg" },
     tags: ["home","gym","bodyweight","cardio"]
@@ -1850,6 +1974,7 @@ function getStarterExercises() {
     group: "cardio",
     equipment: "machine",
     primaryMuscle: "quadriceps",
+    secondaryMuscles: [],
     icon: "weight",
     photos: { start: "assets/icons/photos/rowing-machine/start.jpg", finish: "assets/icons/photos/rowing-machine/finish.jpg" },
     tags: ["gym","machine","cardio"]
@@ -1862,6 +1987,7 @@ function getStarterExercises() {
     group: "cardio",
     equipment: "machine",
     primaryMuscle: "quadriceps",
+    secondaryMuscles: [],
     icon: "run",
     photos: { start: "assets/icons/photos/treadmill-run/start.jpg", finish: "assets/icons/photos/treadmill-run/finish.jpg" },
     tags: ["gym","machine","cardio"]
@@ -1874,6 +2000,7 @@ function getStarterExercises() {
     group: "cardio",
     equipment: "body only",
     primaryMuscle: "adductors",
+    secondaryMuscles: [],
     icon: "run",
     photos: { start: "assets/icons/photos/skater-jump/start.jpg", finish: "assets/icons/photos/skater-jump/finish.jpg" },
     tags: ["home","gym","bodyweight","cardio"]
@@ -1886,6 +2013,7 @@ function getStarterExercises() {
     group: "back",
     equipment: "dumbbell",
     primaryMuscle: "middle back",
+    secondaryMuscles: [{"muscle":"biceps","weight":0.3},{"muscle":"lats","weight":0.2}],
     icon: "dumbbell",
     photos: { start: "assets/icons/photos/chest-supported-row/start.jpg", finish: "assets/icons/photos/chest-supported-row/finish.jpg" },
     tags: ["home","gym","dumbbells"]
@@ -1898,6 +2026,7 @@ function getStarterExercises() {
     group: "back",
     equipment: "kettlebell",
     primaryMuscle: "middle back",
+    secondaryMuscles: [{"muscle":"biceps","weight":0.3},{"muscle":"abdominals","weight":0.3}],
     icon: "dumbbell",
     photos: { start: "assets/icons/photos/renegade-row/start.jpg", finish: "assets/icons/photos/renegade-row/finish.jpg" },
     tags: ["home","gym"]
@@ -1910,6 +2039,7 @@ function getStarterExercises() {
     group: "arms",
     equipment: "dumbbell",
     primaryMuscle: "biceps",
+    secondaryMuscles: [],
     icon: "biceps-flexed",
     photos: { start: "assets/icons/photos/zottman-curl/start.jpg", finish: "assets/icons/photos/zottman-curl/finish.jpg" },
     tags: ["home","gym","dumbbells"]
@@ -1922,6 +2052,7 @@ function getStarterExercises() {
     group: "cardio",
     equipment: "body only",
     primaryMuscle: "hamstrings",
+    secondaryMuscles: [],
     icon: "run",
     photos: { start: "assets/icons/photos/tuck-jump/start.jpg", finish: "assets/icons/photos/tuck-jump/finish.jpg" },
     tags: ["home","gym","bodyweight","cardio"]
@@ -1934,6 +2065,7 @@ function getStarterExercises() {
     group: "cardio",
     equipment: "body only",
     primaryMuscle: "chest",
+    secondaryMuscles: [],
     icon: "run",
     photos: { start: "assets/icons/photos/plyo-push-up/start.jpg", finish: "assets/icons/photos/plyo-push-up/finish.jpg" },
     tags: ["home","gym","bodyweight","cardio"]
@@ -1946,6 +2078,7 @@ function getStarterExercises() {
     group: "legs",
     equipment: "barbell",
     primaryMuscle: "quadriceps",
+    secondaryMuscles: [],
     icon: "barbell",
     photos: { start: "assets/icons/photos/sissy-squat/start.jpg", finish: "assets/icons/photos/sissy-squat/finish.jpg" },
     tags: ["gym"]
@@ -1958,6 +2091,7 @@ function getStarterExercises() {
     group: "legs",
     equipment: "machine",
     primaryMuscle: "calves",
+    secondaryMuscles: [],
     icon: "weight",
     photos: { start: "assets/icons/photos/seated-calf-raise/start.jpg", finish: "assets/icons/photos/seated-calf-raise/finish.jpg" },
     tags: ["gym","machine"]
@@ -1970,6 +2104,7 @@ function getStarterExercises() {
     group: "arms",
     equipment: "cable",
     primaryMuscle: "biceps",
+    secondaryMuscles: [],
     icon: "biceps-flexed",
     photos: { start: "assets/icons/photos/standing-cable-curl/start.jpg", finish: "assets/icons/photos/standing-cable-curl/finish.jpg" },
     tags: ["gym","machine"]
@@ -1982,6 +2117,7 @@ function getStarterExercises() {
     group: "arms",
     equipment: "barbell",
     primaryMuscle: "biceps",
+    secondaryMuscles: [],
     icon: "biceps-flexed",
     photos: { start: "assets/icons/photos/spider-curl/start.jpg", finish: "assets/icons/photos/spider-curl/finish.jpg" },
     tags: ["gym"]
@@ -1994,6 +2130,7 @@ function getStarterExercises() {
     group: "legs",
     equipment: "body only",
     primaryMuscle: "calves",
+    secondaryMuscles: [],
     icon: "walk",
     photos: { start: "assets/icons/photos/donkey-calf-raise/start.jpg", finish: "assets/icons/photos/donkey-calf-raise/finish.jpg" },
     tags: ["home","gym","bodyweight"]
@@ -2006,6 +2143,7 @@ function getStarterExercises() {
     group: "shoulders",
     equipment: "barbell",
     primaryMuscle: "shoulders",
+    secondaryMuscles: [],
     icon: "barbell",
     photos: { start: "assets/icons/photos/barbell-front-raise/start.jpg", finish: "assets/icons/photos/barbell-front-raise/finish.jpg" },
     tags: ["gym"]
@@ -2018,6 +2156,7 @@ function getStarterExercises() {
     group: "core",
     equipment: "body only",
     primaryMuscle: "lower back",
+    secondaryMuscles: [{"muscle":"glutes","weight":0.3},{"muscle":"hamstrings","weight":0.2}],
     icon: "yoga",
     photos: { start: "assets/icons/photos/superman/start.jpg", finish: "assets/icons/photos/superman/finish.jpg" },
     tags: ["home","gym","bodyweight"]
@@ -2030,6 +2169,7 @@ function getStarterExercises() {
     group: "chest",
     equipment: "body only",
     primaryMuscle: "chest",
+    secondaryMuscles: [{"muscle":"shoulders","weight":0.3},{"muscle":"triceps","weight":0.2}],
     icon: "gymnastics",
     photos: { start: "assets/icons/photos/wide-grip-push-up/start.jpg", finish: "assets/icons/photos/wide-grip-push-up/finish.jpg" },
     tags: ["home","gym","bodyweight"]
@@ -2042,6 +2182,7 @@ function getStarterExercises() {
     group: "chest",
     equipment: "body only",
     primaryMuscle: "chest",
+    secondaryMuscles: [{"muscle":"shoulders","weight":0.4},{"muscle":"triceps","weight":0.3}],
     icon: "gymnastics",
     photos: { start: "assets/icons/photos/decline-push-up/start.jpg", finish: "assets/icons/photos/decline-push-up/finish.jpg" },
     tags: ["home","gym","bodyweight"]
@@ -2054,6 +2195,7 @@ function getStarterExercises() {
     group: "core",
     equipment: "body only",
     primaryMuscle: "abdominals",
+    secondaryMuscles: [],
     icon: "yoga",
     photos: { start: "assets/icons/photos/seated-leg-tuck/start.jpg", finish: "assets/icons/photos/seated-leg-tuck/finish.jpg" },
     tags: ["home","gym","bodyweight"]
@@ -2066,6 +2208,7 @@ function getStarterExercises() {
     group: "chest",
     equipment: "cable",
     primaryMuscle: "chest",
+    secondaryMuscles: [],
     icon: "weight",
     photos: { start: "assets/icons/photos/incline-cable-fly/start.jpg", finish: "assets/icons/photos/incline-cable-fly/finish.jpg" },
     tags: ["gym","machine"]
@@ -3529,6 +3672,27 @@ const EXERCISE_INSTRUCTIONS = {
 };
 // <<< EXERCISE_INSTRUCTIONS <<<
 
+// >>> MUSCLE_FIGURES (generated by mockups/MuscleGroups/sync-muscle-figures.mjs) >>>
+// Shared front+back body outline (identical across all 10 source SVGs, so one
+// canonical copy is kept) plus one independently-togglable lime fill-path
+// group per figure group. See buildMuscleFigure() for how these compose into
+// the per-exercise badge and the weekly heat-map card.
+const MUSCLE_FIGURE_VIEWBOX = "0 0 579.9 528";
+const MUSCLE_FIGURE_OUTLINE = "<g>\n      <g>\n        <path class=\"st1\" d=\"M133,110.9c-1.9-1.9-3.7-4-5.2-6.1-8.8-12.3-11.1-26.2-11.1-26.2.2-2.5,0-9.8-.3-14.9,1.5,1.7,3.5,3.4,5.4,4.9h0c3.4,7.5,9.2,22.8,11.2,42.3Z\"/>\n        <path class=\"st1\" d=\"M127.8,104.8h-34.5c-.1-2.4-.6-4.9-1.5-7.4,4-1.5,25-18.8,25-18.8,0,0,2.3,13.9,11.1,26.2Z\"/>\n        <path class=\"st1\" d=\"M78.3,134.2c-7,6.3-14.8,10.7-19.6,12.3,0,0-3.6-15.5,3.1-31.3,6.7-15.8,26-16.3,30-17.8.9,2.5,1.4,5,1.5,7.4.7,11.5-6.6,21.9-15.1,29.5Z\"/>\n        <path class=\"st1\" d=\"M54,196.8c-1.8,3.6-3.1,7.6-4.2,11.8-1.1,1.1-2,2.2-2.6,3.2-4,7.3-10.2,22.6-17.5,34-1.5-.4-3-.6-4.6-.5,8.7-19.2,9.3-26.9,12.1-37.8,4.6-18,15.4-25.3,15.4-25.3,1.3,8.4,1.5,14.7,1.5,14.7Z\"/>\n        <path class=\"st1\" d=\"M78.3,134.2s-.9,19.5-2.1,27.3c-.3,2.3-1.2,4.9-2.4,7.6h0c-2.8,6.2-7.6,12.8-12.6,17.6-1.4,1.3-2.6,2.7-3.7,4.3-1.3,1.8-2.4,3.7-3.4,5.8,0,0-.2-6.3-1.5-14.7l-.7-14.7c-1.4-14.3,6.9-20.9,6.9-20.9,4.8-1.6,12.6-6,19.6-12.3Z\"/>\n        <path class=\"st1\" d=\"M109.4,389.8c-8.4,11.7-16.6,20.1-15.5,43,.9,19,2.5,35,6.2,47.6.3,3.5.7,6.8,1.2,9.4,2.1,11.1.8,14.4-5.9,20.6-6.7,6.3-2.5,9.5-7.7,13.3s-11.3,3.6-14.2,2.6c-2.9-1-9.3,1-12.1-2-2.9-3,3.5-8.2,6.4-11.9,2.9-3.7,11.5-17,11.5-17,.7-3.4.9-9.3.9-15.3,8.4-24,6.6-67.9,5.7-96.9,4.5,4.9,14.9,1.1,14.9,1.1,7-6.1,1-19.8,1-19.8,6-1.1,9.3-9,10.7-13.5.4,8.1,1,15.8,2,22.1-1.7,10.8-5.1,16.5-5.1,16.5Z\"/>\n        <path class=\"st1\" d=\"M130.5,281.3c-.1,28.3-4,39.6-9,52.6-1.4,3.6-2.5,7.2-3.3,10.5-.5-7.8-.8-16.8-.5-23.9.8-16.3-3.3-29.2-5.3-35.2,0,0,0-.2-.2-.6-1.2-4.8,2.4-10.7,6.8-15.1.1,0,.2.2.3.3,6.4,6.3,11.3,11.3,11.3,11.6Z\"/>\n        <path class=\"st1\" d=\"M118.2,344.3h0c-2.2,8.5-2.7,14.9-2.7,14.9,0,5.4-.3,10.1-1,14.1-1-6.3-1.6-14-2-22.1-.9-17.9-.9-37.6-3.1-47.2-.2-.7-.3-1.3-.5-2.1-2.9-13.4-6.2-34.6-5.3-47.7,1.1,1.1,2.3,2.3,3.5,3.5.1.1.3.3.4.4-.2,11.2,3.7,23.6,4.6,26.4.1.4.2.6.2.6,2.1,6,6.1,18.9,5.3,35.2-.3,7.1,0,16.1.5,23.9Z\"/>\n        <path class=\"st1\" d=\"M133.1,111.1s0,0-.1-.1c-2-19.5-7.8-34.8-11.2-42.3,1.7,1.4,3.4,2.6,4.5,3.4,1,.7,2.3,1.1,3.5,1.1h3.3c0,11.9,0,24.8,0,37.9Z\"/>\n        <path class=\"st1\" d=\"M133.2,174h0v-27.5c0,0-15.3,9.7-15.3,9.7,0,0-6.1.1-14.7,0-2.3,0-4.2-.2-5.9-.7-4.4-1.2-7.4-5.6-11.9-14.1,0,0,0,0,0,0-1.4-4.5-7-7.1-7-7.1,8.4-7.6,15.7-18,15.1-29.5h34.5c1.5,2.1,3.2,4.2,5.2,6.1,0,0,0,0,.1.1,0,20.7,0,42.3,0,62.9Z\"/>\n        <path class=\"st1\" d=\"M113,196.7c-8-.8-16.7-10.6-19.4-13.6-2.5-2.9-2.1-9.4-6.7-13.5h0c-.9-6.9-1.4-12-1.4-12,0,0,0-3.1,0-6.8.9,9,6.5,14,6.5,14,1.5,7.9,9.5,15.9,15.9,18.8h0c0,7.3.3,12.6,5,13.2Z\"/>\n        <path class=\"st1\" d=\"M101.3,449.4c-2.1,5.8-2.2,19.8-1.2,31-3.6-12.6-5.2-28.6-6.2-47.6-1.1-23,7.1-31.3,15.5-43,4.2,33.7-5.4,52-8.1,59.6Z\"/>\n        <path class=\"st1\" d=\"M80.2,480.3c0-9.7-.7-19.6-.7-19.6-7.7-49.2-2.6-65.9.6-76,.7-2.1,1.1-4.6,1.4-7.3l3.4,4.7c.3.5.6,1,1,1.4.9,28.9,2.7,72.9-5.7,96.9Z\"/>\n        <path class=\"st1\" d=\"M100.8,384.6s-10.4,3.8-14.9-1.1c-.4-.4-.7-.8-1-1.4l-3.4-4.7c1.2-10,0-21.9,0-21.9-12.9-75,9.6-113.6,9.6-113.6,0,0,3,3,7.4,7.3-13.4,20.1-20.2,33.6-20.2,46.9s7.1,41.1,11,57.2c.6,2.7,1.2,5,1.6,6.7.4,1.6,2.5,2.1,3.6.9,2.1-2.3,4.7-6.3,5.9-12.8-.4,4.3-.2,10.2,1.5,16.7,0,0,6,13.7-1,19.8Z\"/>\n        <path class=\"st1\" d=\"M85.6,150.6h0c0,3.8,0,6.9,0,6.9,0,0-1.4,10.7-4.9,14.8-2.9,3.4-5.5,11.2-6.3,13.8,0,0-.6-7.7-.6-17h0c1.2-2.7,2.1-5.3,2.4-7.6,1.2-7.8,2.1-27.3,2.1-27.3,0,0,5.6,2.6,7,7.1,0,0,0,0,0,0,.2.6.3,1.2.3,1.9,0,2.2,0,4.9,0,7.3Z\"/>\n        <path class=\"st1\" d=\"M40.9,251.5s-.3,10.9-1.7,14.5c-1.4,3.6-4,4.4-5.3,10.1-1.1,4.6-3.8,12.2-4.9,15-.2.7-.9,1.1-1.6,1.1-1,0-1.8-.9-1.7-1.9l2.5-16.9-6.7,19.5c-.3.9-1.1,1.4-1.9,1.4s-.3,0-.5,0c-1.1-.3-1.8-1.4-1.4-2.5l5.5-19.8-11.1,17.9c-.5.8-1.3,1.2-2.2,1.2s-1-.1-1.4-.4c-1.1-.7-1.4-2.1-.8-3.3l9.1-17.3-11.2,15.8c-.5.7-1.2,1-2,1s-1.1-.2-1.6-.6c-.9-.8-1.1-2.1-.5-3.1l13.9-22.3c-1.6.8-3.2,2-5.7,3.1-3,1.4-5,.4-6.2-.6-.7-.6-.8-1.6-.3-2.3,1.4-1.9,4.5-5.9,8.9-9.8,6-5.2,13-6.1,13-6.1,1.6,0,3.2.2,4.6.5,1.6.4,3.2,1,4.6,1.6,4,1.8,6.6,4.2,6.6,4.2Z\"/>\n        <path class=\"st1\" d=\"M72.8,195.2c-1.3,6.6-3,12-4.9,16.5-7.1,5.1-14.6,11.4-17,24.9t0,0c-4.9,6.8-10,14.9-10,14.9,0,0-2.7-2.3-6.6-4.2,2-2.3,5.6-6.9,11.5-15.9,8.1-12.4,19.1-28.5,27-36.2Z\"/>\n        <path class=\"st1\" d=\"M73,193.7c0,.5-.2,1-.3,1.5h0c-7.9,7.7-18.9,23.8-27,36.2-5.9,9-9.5,13.6-11.5,15.9-1.4-.6-2.9-1.2-4.6-1.6,7.3-11.4,13.5-26.7,17.5-34,.6-1,1.5-2.1,2.6-3.2,5.6-5.4,17-11.6,23.2-14.8Z\"/>\n        <path class=\"st1\" d=\"M74.3,186.1c-.2.5-.3.9-.3.9-.3,2.4-.6,4.6-1,6.7-6.3,3.2-17.7,9.4-23.2,14.8,1.1-4.2,2.4-8.2,4.2-11.8,1-2.1,2.1-4,3.4-5.8,5.4-.9,16.9-4.9,16.9-4.9Z\"/>\n        <path class=\"st1\" d=\"M67.9,211.7c-3.9,9.3-8.6,14.8-12,18.5-1.5,1.7-3.2,3.9-5,6.4,2.4-13.4,9.9-19.8,17-24.9Z\"/>\n        <path class=\"st1\" d=\"M108,208.2c0,1.6,0,3,.2,4.2-4.2-3.7-6.9-10.6-10.5-16.2-3.2-5.1-4-6.8-7.8-6.1-1.1-6.6-2.1-14.3-2.9-20.6,4.6,4.1,4.1,10.6,6.7,13.5,2.6,3,11.3,12.8,19.4,13.6.3,0,.5,0,.8,0-1.3,0-5.8.8-5.8,11.5Z\"/>\n        <path class=\"st1\" d=\"M109.3,225.4c0,2.1,1.8,7.5,4.3,13.7-6.5-2.4-14.9-14.2-21.5-37.4-.7-2.8-1.5-7-2.3-11.7,3.8-.7,4.6,1.1,7.8,6.1,3.6,5.7,6.3,12.6,10.5,16.2.8,6.8,3.7,7.1,6.1,7-1.8.2-5,1.2-5,6Z\"/>\n        <path class=\"st1\" d=\"M74.3,186.1s-11.5,4-16.9,4.9c1.1-1.6,2.4-3,3.7-4.3,5-4.8,9.8-11.4,12.6-17.6,0,9.3.6,17,.6,17Z\"/>\n        <path class=\"st1\" d=\"M133.1,196.8h-19c-.1,0-.2,0-.4,0-.3,0-.5,0-.8,0-4.7-.7-5-5.9-5-13.2v-.7c0-8.2,4.4-8.8,4.4-8.8h20.7v22.8Z\"/>\n        <path class=\"st1\" d=\"M133.2,219.4h-17.7s-.5,0-1.1,0c0,0,0,0,0,0-2.4,0-5.3-.3-6.1-7-.1-1.2-.2-2.6-.2-4.2,0-10.7,4.4-11.5,5.8-11.5.1,0,.2,0,.4,0h19v22.7Z\"/>\n        <path class=\"st1\" d=\"M133.3,269.3h-3.7c-1.6,0-3.1-.9-3.8-2.4-2.4-5.1-8.1-17.6-12.1-27.7-2.5-6.2-4.3-11.6-4.3-13.7,0-4.8,3.2-5.8,5-6,0,0,0,0,0,0,.4,0,.8,0,1.1,0h17.7v17.9s0,12.6,0,12.6c0,7.7,0,14.3,0,19.4Z\"/>\n        <path class=\"st1\" d=\"M109,301.9c-1.6,7.8-6.1,29.7-8,41.3-.3,1.2-.5,2.8-.7,4.7,0,0,0,0,0,0-1.2,6.4-3.8,10.5-5.9,12.8-1.1,1.3-3.2.8-3.6-.9-.4-1.7-1-4-1.6-6.7-3.9-16.2-11-47.1-11-57.2s6.9-26.8,20.2-46.9c1.6,1.5,3.3,3.3,5.2,5.1-.8,13.1,2.4,34.3,5.3,47.7Z\"/>\n        <path class=\"st1\" d=\"M112.2,284.6c-1-2.9-4.9-15.3-4.6-26.4,3.8,3.8,7.8,7.7,11.4,11.3-4.4,4.4-7.9,10.4-6.8,15.1Z\"/>\n        <path class=\"st1\" d=\"M112.6,351.2c-1.4,4.6-4.8,12.4-10.7,13.5-1.8-6.5-1.9-12.4-1.5-16.7,0,0,0,0,0,0,0-.5.2-1,.2-1.5.1-1,.3-2,.5-3.2,1.9-11.7,6.3-33.5,8-41.3.2.7.3,1.4.5,2.1,2.2,9.6,2.2,29.3,3.1,47.2Z\"/>\n        <path class=\"st1\" d=\"M99.3,167c-.4,0-.7,0-1.1,0-.9,0-2.6-.3-6.1-2.2,0,0-5.6-5-6.5-14h0c0-2.5,0-5.2,0-7.4,0-.7-.1-1.3-.3-1.9,4.5,8.5,7.5,12.8,11.9,14.1.2,3.9,1.4,8.8,2.2,11.5Z\"/>\n        <path class=\"st1\" d=\"M133.1,174h-20.7c-2.1,0-3.2-1.6-3.8-3.2-.6-1.7-.6-3.4-.6-3.4,0-6.9,9.8-11.2,9.8-11.2l15.2-9.7v27.5Z\"/>\n        <path class=\"st1\" d=\"M112.4,174s-4.4.6-4.4,8.8v.7c-6.4-2.9-14.3-10.8-15.9-18.8,3.5,2,5.3,2.3,6.1,2.2.4,0,.7,0,1.1,0,.5,0,.9.3,1.3.5,1.8.9,4.9,2.4,7.9,3.3.6,1.6,1.7,3.2,3.8,3.2Z\"/>\n        <path class=\"st1\" d=\"M108,167.4s0,1.7.6,3.4c-3.1-.9-6.1-2.4-7.9-3.3-.4-.2-.9-.4-1.3-.5-.8-2.7-2-7.6-2.2-11.5,1.6.5,3.5.7,5.9.7,8.6.1,14.7,0,14.7,0,0,0-9.8,4.3-9.8,11.2Z\"/>\n      </g>\n      <g>\n        <path class=\"st1\" d=\"M149.9,78.6s-2.3,13.9-11.1,26.2c-1.5,2.1-3.2,4.2-5.2,6.1,2-19.5,7.8-34.8,11.2-42.3h0c1.9-1.5,3.8-3.2,5.4-4.9-.3,5.1-.6,12.4-.3,14.9Z\"/>\n        <path class=\"st1\" d=\"M138.8,104.8h34.5c.1-2.4.6-4.9,1.5-7.4-4-1.5-25-18.8-25-18.8,0,0-2.3,13.9-11.1,26.2Z\"/>\n        <path class=\"st1\" d=\"M188.4,134.2c7,6.3,14.8,10.7,19.6,12.3,0,0,3.6-15.5-3.1-31.3-6.7-15.8-26-16.3-30-17.8-.9,2.5-1.4,5-1.5,7.4-.7,11.5,6.6,21.9,15.1,29.5Z\"/>\n        <path class=\"st1\" d=\"M212.6,196.8c1.8,3.6,3.1,7.6,4.2,11.8,1.1,1.1,2,2.2,2.6,3.2,4,7.3,10.2,22.6,17.5,34,1.5-.4,3-.6,4.6-.5-8.7-19.2-9.3-26.9-12.1-37.8-4.6-18-15.4-25.3-15.4-25.3-1.3,8.4-1.5,14.7-1.5,14.7Z\"/>\n        <path class=\"st1\" d=\"M188.4,134.2s.9,19.5,2.1,27.3c.3,2.3,1.2,4.9,2.4,7.6h0c2.8,6.2,7.6,12.8,12.6,17.6,1.4,1.3,2.6,2.7,3.7,4.3,1.3,1.8,2.4,3.7,3.4,5.8,0,0,.2-6.3,1.5-14.7l.7-14.7c1.4-14.3-6.9-20.9-6.9-20.9-4.8-1.6-12.6-6-19.6-12.3Z\"/>\n        <path class=\"st1\" d=\"M157.2,389.8c8.4,11.7,16.6,20.1,15.5,43-.9,19-2.5,35-6.2,47.6-.3,3.5-.7,6.8-1.2,9.4-2.1,11.1-.8,14.4,5.9,20.6,6.7,6.3,2.5,9.5,7.7,13.3s11.3,3.6,14.2,2.6c2.9-1,9.3,1,12.1-2,2.9-3-3.5-8.2-6.4-11.9-2.9-3.7-11.5-17-11.5-17-.7-3.4-.9-9.3-.9-15.3-8.4-24-6.6-67.9-5.7-96.9-4.5,4.9-14.9,1.1-14.9,1.1-7-6.1-1-19.8-1-19.8-6-1.1-9.3-9-10.7-13.5-.4,8.1-1,15.8-2,22.1,1.7,10.8,5.1,16.5,5.1,16.5Z\"/>\n        <path class=\"st1\" d=\"M154.4,284.6c-.1.4-.2.6-.2.6-2.1,6-6.1,18.9-5.3,35.2.3,7.1,0,16.1-.5,23.9-.8-3.3-1.9-6.9-3.3-10.5-5-12.9-8.9-24.3-9-52.6,0-.2,4.9-5.2,11.3-11.6,0,0,.2-.2.3-.3,4.4,4.4,7.9,10.4,6.8,15.1Z\"/>\n        <path class=\"st1\" d=\"M157.6,301.9c-.2.7-.3,1.4-.5,2.1-2.2,9.6-2.2,29.3-3.1,47.2-.4,8.1-1,15.8-2,22.1-.7-4-1.1-8.7-1-14.1,0,0-.5-6.5-2.7-14.9h0c.5-7.8.8-16.8.5-24-.8-16.3,3.3-29.2,5.3-35.2,0,0,0-.2.2-.6,1-2.9,4.9-15.3,4.6-26.4.1-.2.3-.3.4-.4,1.2-1.2,2.4-2.4,3.5-3.5.8,13.1-2.4,34.3-5.3,47.7Z\"/>\n        <path class=\"st1\" d=\"M144.8,68.6c-3.4,7.5-9.2,22.8-11.2,42.3,0,0,0,0-.1.1,0-13.2,0-26,0-37.9h3.3c1.3,0,2.5-.4,3.5-1.1,1.2-.8,2.8-2,4.5-3.4Z\"/>\n        <path class=\"st1\" d=\"M188.4,134.2s-5.6,2.6-7,7.1c0,0,0,0,0,0-4.5,8.5-7.5,12.8-11.9,14.1-1.6.5-3.5.7-5.9.7-8.6.1-14.7,0-14.7,0l-15.2-9.7v27.5h-.2c0-20.6,0-42.2,0-62.9,0,0,0,0,.1-.1,1.9-1.9,3.7-4,5.2-6.1h34.5c-.7,11.5,6.6,21.9,15.1,29.5Z\"/>\n        <path class=\"st1\" d=\"M153.7,196.7c8-.8,16.7-10.6,19.4-13.6,2.5-2.9,2.1-9.4,6.7-13.5h0c.9-6.9,1.4-12,1.4-12,0,0,0-3.1,0-6.8-.9,9-6.5,14-6.5,14-1.5,7.9-9.5,15.9-15.9,18.8h0c0,7.3-.3,12.6-5,13.2Z\"/>\n        <path class=\"st1\" d=\"M175.5,241.8s-3,3-7.4,7.3c-1.6,1.5-3.3,3.3-5.2,5.1-1.1,1.1-2.3,2.3-3.5,3.5-.1.1-.3.3-.4.4-3.8,3.8-7.8,7.7-11.4,11.3,0,0-.2.2-.3.3-6.4,6.3-11.3,11.3-11.3,11.6h-5.6c0-.2-4.9-5.2-11.3-11.6,0,0-.2-.2-.3-.3-3.6-3.6-7.5-7.5-11.4-11.3-.1-.2-.3-.3-.4-.4-1.2-1.2-2.4-2.4-3.5-3.5-1.9-1.8-3.6-3.6-5.2-5.1-4.4-4.3-7.4-7.3-7.4-7.3,0,0-2.4-12.7-1.6-20.9s2.6-19.1,2.6-19.1c6.6,23.2,15,35,21.5,37.4,4,10.1,9.7,22.6,12.1,27.7.7,1.5,2.2,2.4,3.8,2.4h3.7c0-5.1,0-11.7,0-19.4v-12.6s0-17.9,0-17.9v-22.7c0,0-.1-22.8-.1-22.8h0c0-20.6,0-42.2,0-62.9,0-13.2,0-26,0-37.9h-3.3c-1.3,0-2.5-.4-3.5-1.1-1.2-.8-2.8-2-4.5-3.4h0c-1.9-1.5-3.8-3.2-5.4-4.9-.1-.1-.2-.3-.4-.4-4.1-4.7-4.2-14.3-4.2-14.3-4.8-1.1-6.2-9.4-5.4-12.5.7-3.1,4.5-1.4,4.5-1.4v-15.6C114.9,1,133.3,1,133.3,1c0,0,18.5,0,22.4,18.5v15.6s3.8-1.7,4.5,1.4c.7,3.1-.6,11.3-5.4,12.5,0,0-.1,9.6-4.2,14.3-.1.1-.2.3-.4.4-1.5,1.7-3.5,3.4-5.4,4.9h0c-1.7,1.4-3.4,2.6-4.5,3.4-1,.7-2.3,1.1-3.5,1.1h-3.3c0,11.9,0,24.8,0,37.9,0,20.7,0,42.3,0,62.9h.1v22.8c0,0-.1,22.7-.1,22.7v17.9s0,12.6,0,12.6c0,7.7,0,14.3,0,19.4h3.7c1.6,0,3.1-.9,3.8-2.4,2.4-5.1,8.1-17.6,12.1-27.7,6.5-2.4,14.9-14.2,21.5-37.4,0,0,1.7,10.9,2.6,19.1s-1.6,20.9-1.6,20.9Z\"/>\n        <path class=\"st1\" d=\"M165.3,449.4c2.1,5.8,2.2,19.8,1.2,31,3.6-12.6,5.2-28.6,6.2-47.6,1.1-23-7.1-31.3-15.5-43-4.2,33.7,5.4,52,8.1,59.6Z\"/>\n        <path class=\"st1\" d=\"M186.5,480.3c0-9.7.7-19.6.7-19.6,7.7-49.2,2.6-65.9-.6-76-.7-2.1-1.1-4.6-1.4-7.3l-3.4,4.7c-.3.5-.6,1-1,1.4-.9,28.9-2.7,72.9,5.7,96.9Z\"/>\n        <path class=\"st1\" d=\"M185.2,377.4l-3.4,4.7c-.3.5-.6,1-1,1.4-4.5,4.9-14.9,1.1-14.9,1.1-7-6.1-1-19.8-1-19.8,1.8-6.5,1.9-12.4,1.5-16.7,1.2,6.4,3.8,10.5,5.9,12.8,1.1,1.3,3.2.8,3.6-.9.4-1.7,1-4,1.6-6.7,3.9-16.2,11-47.1,11-57.2s-6.9-26.8-20.2-46.9c4.4-4.3,7.4-7.3,7.4-7.3,0,0,22.5,38.6,9.6,113.6,0,0-1.1,11.9,0,21.9Z\"/>\n        <path class=\"st1\" d=\"M181.1,150.6h0c0,3.8,0,6.9,0,6.9,0,0,1.4,10.7,4.9,14.8,2.9,3.4,5.5,11.2,6.3,13.8,0,0,.6-7.7.6-17h0c-1.2-2.7-2.1-5.3-2.4-7.6-1.2-7.8-2.1-27.3-2.1-27.3,0,0-5.6,2.6-7,7.1,0,0,0,0,0,0-.2.6-.3,1.2-.3,1.9,0,2.2,0,4.9,0,7.3Z\"/>\n        <path class=\"st1\" d=\"M225.7,251.5s.3,10.9,1.7,14.5c1.4,3.6,4,4.4,5.3,10.1,1.1,4.6,3.8,12.2,4.9,15,.2.7.9,1.1,1.6,1.1,1,0,1.8-.9,1.7-1.9l-2.5-16.9,6.7,19.5c.3.9,1.1,1.4,1.9,1.4s.3,0,.5,0c1.1-.3,1.8-1.4,1.4-2.5l-5.5-19.8,11.1,17.9c.5.8,1.3,1.2,2.2,1.2s1-.1,1.4-.4c1.1-.7,1.4-2.1.8-3.3l-9.1-17.3,11.2,15.8c.5.7,1.2,1,2,1s1.1-.2,1.6-.6c.9-.8,1.1-2.1.5-3.1l-13.9-22.3c1.6.8,3.2,2,5.7,3.1,3,1.4,5,.4,6.2-.6.7-.6.8-1.6.3-2.3-1.4-1.9-4.5-5.9-8.9-9.8-6-5.2-13-6.1-13-6.1-1.6,0-3.2.2-4.6.5-1.6.4-3.2,1-4.6,1.6-4,1.8-6.6,4.2-6.6,4.2Z\"/>\n        <path class=\"st1\" d=\"M193.9,195.2c1.3,6.6,3,12,4.9,16.5,7.1,5.1,14.6,11.4,17,24.9t0,0c4.9,6.8,10,14.9,10,14.9,0,0,2.7-2.3,6.6-4.2-2-2.3-5.6-6.9-11.5-15.9-8.1-12.4-19.1-28.5-27-36.2Z\"/>\n        <path class=\"st1\" d=\"M193.6,193.7c0,.5.2,1,.3,1.5h0c7.9,7.7,18.9,23.8,27,36.2,5.9,9,9.5,13.6,11.5,15.9,1.4-.6,2.9-1.2,4.6-1.6-7.3-11.4-13.5-26.7-17.5-34-.6-1-1.5-2.1-2.6-3.2-5.6-5.4-17-11.6-23.2-14.8Z\"/>\n        <path class=\"st1\" d=\"M192.3,186.1c.2.5.3.9.3.9.3,2.4.6,4.6,1,6.7,6.3,3.2,17.7,9.4,23.2,14.8-1.1-4.2-2.4-8.2-4.2-11.8-1-2.1-2.1-4-3.4-5.8-5.4-.9-16.9-4.9-16.9-4.9Z\"/>\n        <path class=\"st1\" d=\"M198.7,211.7c3.9,9.3,8.6,14.8,12,18.5,1.5,1.7,3.2,3.9,5,6.4-2.4-13.4-9.9-19.8-17-24.9Z\"/>\n        <path class=\"st1\" d=\"M158.7,208.2c0,1.6,0,3-.2,4.2,4.2-3.7,6.9-10.6,10.5-16.2,3.2-5.1,4-6.8,7.8-6.1,1.1-6.6,2.1-14.3,2.9-20.6-4.6,4.1-4.1,10.6-6.7,13.5-2.6,3-11.3,12.8-19.4,13.6-.3,0-.5,0-.8,0,1.3,0,5.8.8,5.8,11.5Z\"/>\n        <path class=\"st1\" d=\"M176.8,190.1c-.8,4.7-1.5,8.9-2.3,11.7-6.6,23.2-15,35-21.5,37.4,2.5-6.2,4.3-11.6,4.3-13.7,0-4.8-3.2-5.8-5-6,2.4,0,5.3-.3,6.1-7,4.2-3.7,6.9-10.6,10.5-16.2,3.2-5.1,4-6.8,7.8-6.1Z\"/>\n        <path class=\"st1\" d=\"M192.3,186.1s11.5,4,16.9,4.9c-1.1-1.6-2.4-3-3.7-4.3-5-4.8-9.8-11.4-12.6-17.6,0,9.3-.6,17-.6,17Z\"/>\n        <path class=\"st1\" d=\"M158.7,182.8v.7c0,7.3-.3,12.5-5,13.2-.3,0-.5,0-.8,0-.1,0-.2,0-.4,0h-19v-22.8h20.7s4.4.6,4.4,8.8Z\"/>\n        <path class=\"st1\" d=\"M158.7,208.2c0,1.6,0,3-.2,4.2-.8,6.8-3.7,7.1-6.1,7,0,0,0,0-.1,0-.7,0-1.1,0-1.1,0h-17.7v-22.7h19.1c.1,0,.2,0,.4,0,1.3,0,5.8.8,5.8,11.5Z\"/>\n        <path class=\"st1\" d=\"M157.3,225.4c0,2.1-1.8,7.5-4.3,13.7-4,10.1-9.7,22.6-12.1,27.7-.7,1.5-2.2,2.4-3.8,2.4h-3.7c0-5.1,0-11.7,0-19.4v-12.6s0-17.9,0-17.9h17.7c.4,0,.7,0,1.1,0,0,0,0,0,.1,0,1.8.2,5,1.2,5,6Z\"/>\n        <path class=\"st1\" d=\"M188.4,296c0,10.1-7.1,41.1-11,57.2-.6,2.7-1.2,5-1.6,6.7-.4,1.6-2.5,2.1-3.6.9-2.1-2.3-4.7-6.3-5.9-12.8,0,0,0,0,0,0-.2-2-.5-3.6-.7-4.7-1.9-11.7-6.3-33.5-8-41.3,2.9-13.4,6.2-34.6,5.3-47.7,1.9-1.8,3.6-3.6,5.2-5.1,13.4,20.1,20.2,33.6,20.2,46.9Z\"/>\n        <path class=\"st1\" d=\"M154.4,284.6c1.2-4.8-2.4-10.7-6.8-15.1,3.6-3.6,7.5-7.5,11.4-11.3.2,11.2-3.7,23.6-4.6,26.4Z\"/>\n        <path class=\"st1\" d=\"M154.1,351.2c1.4,4.6,4.8,12.4,10.7,13.5,1.8-6.5,1.9-12.4,1.5-16.7,0,0,0,0,0,0,0-.5-.2-1-.2-1.5-.1-1-.3-2-.5-3.2-1.9-11.7-6.3-33.5-8-41.3-.2.7-.3,1.4-.5,2.1-2.2,9.6-2.2,29.3-3.1,47.2Z\"/>\n        <path class=\"st1\" d=\"M167.3,167c.4,0,.7,0,1.1,0,.9,0,2.6-.3,6.1-2.2,0,0,5.6-5,6.5-14h0c0-2.5,0-5.2,0-7.4,0-.7.1-1.3.3-1.9-4.5,8.5-7.5,12.8-11.9,14.1-.2,3.9-1.4,8.8-2.2,11.5Z\"/>\n        <path class=\"st1\" d=\"M133.6,174h20.7c2.1,0,3.2-1.6,3.8-3.2.6-1.7.6-3.4.6-3.4,0-6.9-9.8-11.2-9.8-11.2l-15.2-9.7v27.5Z\"/>\n        <path class=\"st1\" d=\"M154.2,174s4.4.6,4.4,8.8v.7c6.4-2.9,14.3-10.8,15.9-18.8-3.5,2-5.3,2.3-6.1,2.2-.4,0-.7,0-1.1,0-.5,0-.9.3-1.3.5-1.8.9-4.9,2.4-7.9,3.3-.6,1.6-1.7,3.2-3.8,3.2Z\"/>\n        <path class=\"st1\" d=\"M158.7,167.4s0,1.7-.6,3.4c3.1-.9,6.1-2.4,7.9-3.3.4-.2.9-.4,1.3-.5.8-2.7,2-7.6,2.2-11.5-1.6.5-3.5.7-5.9.7-8.6.1-14.7,0-14.7,0,0,0,9.8,4.3,9.8,11.2Z\"/>\n      </g>\n    </g>\n    <g>\n      <g>\n        <path class=\"st1\" d=\"M446.5,52.2v151.4c-1.8-2.4-3.9-5.3-6-8.5-2.9-4.2-5.9-8.8-8.4-13.2-3.6-6.2-5.7-16.6-7.2-26.4h0c-1.7-10.9-2.6-20.9-3.9-23.5-1.3-2.7-3.8-6.5-7.2-10.6-2.8-3.4-6.2-7-10.2-10.3-4.4-3.8-8.5-5-13.1-4.4,4.7-1.6,8.9-1.5,10.6-1.6,5.1-.4,31.5-23.4,31.5-23.4v-9.8c1.9-12.9,2.8-19.7,7.1-19.7h6.8Z\"/>\n        <path class=\"st1\" d=\"M424.9,155.6h0c-8,7.2-17.4,4.1-26.1-4.1-.6-4.2-1.3-7.8-2-10.6,6.3-4.7,12.9-11,17-19.4,3.4,4.1,5.9,7.9,7.2,10.6,1.3,2.6,2.2,12.6,3.9,23.5Z\"/>\n        <path class=\"st1\" d=\"M413.8,121.5c-4.1,8.4-10.7,14.6-17,19.4,0,0,0,0-.2,0-1.5.9-13.7,8.2-25,11.4-2.8-32.4,9.1-42.4,18.9-45.6h0c4.6-.6,8.7.6,13.1,4.4,3.9,3.4,7.3,7,10.2,10.3Z\"/>\n        <path class=\"st1\" d=\"M396.6,141c-4,3-7.7,5.4-10.7,7.4-7.1,4.9-11,13.1-12,20-4.3,2.3-8.1,6.1-11,10.7.5-16.8,8.7-26.6,8.7-26.6,11.3-3.2,23.5-10.5,25-11.4Z\"/>\n        <path class=\"st1\" d=\"M373.7,178.1c-2.8,1.8-6.5,4.4-10.6,8-.3-2.5-.3-4.9-.3-7.1,2.9-4.5,6.7-8.4,11-10.7-.2,1.1-.2,2.1-.3,3.1,0,1.6,0,3.9,0,6.6Z\"/>\n        <path class=\"st1\" d=\"M373.9,186.1s-.2.3-.6.8c-5.1,3.8-11.6,7.2-16.6,9.6,3.6-8,6.4-10.4,6.4-10.4,4.1-3.7,7.7-6.3,10.6-8,0,2.4.1,5.2.2,8Z\"/>\n        <path class=\"st1\" d=\"M373.3,186.9c-2.2,3.1-10.8,15.2-15.1,22.3-2.9,4.8-6.6,13.5-13.2,26.2,1.1-3.9,2.4-9,4-15.5,2.6-10.7,5.3-18.2,7.7-23.3,5-2.4,11.4-5.8,16.6-9.6Z\"/>\n        <path class=\"st1\" d=\"M399.8,170.1c-.8,3.3-11.7,15.4-11.7,15.4-3.6,5-10.1,10.3-14.2,13.4.1-3.9,0-8.3,0-12.5,0-.1,0-.2,0-.3,0-2.9-.1-5.6-.2-8,0-2.7-.1-5,0-6.6,0-1,0-2.1.3-3.1,1-6.9,5-15.1,12-20,2.9-2,6.7-4.4,10.7-7.4.1,0,.2,0,.2,0,.7,2.8,1.4,6.4,2,10.6.7,5.4,1.2,11.7,1,18.6Z\"/>\n        <path class=\"st1\" d=\"M373.9,198.9c-.1,3.8-.4,7.1-.9,9.3-1.8,7.9-17.4,37.7-24.1,45-4.9-.1-8.6-4.1-8.6-4.1,0,0,1.2-1.2,4.7-13.7t0,0c6.7-12.6,10.3-21.4,13.2-26.2,4.3-7.1,12.9-19.2,15.1-22.3.2-.1.4-.3.6-.4,0,4.2,0,8.6,0,12.5Z\"/>\n        <path class=\"st1\" d=\"M388.1,185.5c-1.8,33.9-13.4,45-18.9,51-5.5,6-14.1,20.3-14.1,20.3-2.3-1.9-6.1-3.6-6.1-3.6,6.7-7.3,22.3-37.1,24.1-45,.5-2.2.8-5.5.9-9.3,4.1-3.1,10.5-8.4,14.2-13.4Z\"/>\n        <path class=\"st1\" d=\"M355.1,256.8c0,3.3-1.5,12.4-4.1,17.2-1.4,2.6-3.3,9.1-3.7,12.6-.3,2.6-3.3,8-4.8,10.6-.5.8-1.5,1.2-2.4.9-.8-.3-1.3-1.1-1.3-1.9s0-.5.1-.7c.8-2,2-5,2.6-6.5.9-2.3,1.1-9.4.3-9.9-.8-.5-1.4,5-2.3,8.7-.7,2.8-3.5,8.2-5,10.9-.5.9-1.5,1.2-2.4.9h0c-1-.4-1.6-1.4-1.3-2.4.4-1.3,1.1-3.2,2.3-5.6,2.3-4.8,3.2-12.4,2.7-13.1-.5-.7-2.6,4.5-2.6,4.5l-7.9,14.3c-.5,1-1.8,1.3-2.7.8l-.5-.3c-1-.6-1.3-1.8-.7-2.8.7-1.1,1.6-2.7,2.5-4.7,1.7-3.9,6.2-15.9,6.8-17-.7,1-8.1,12.9-11.5,18.3-.9,1.4-2.8,1.7-4.1.7-.7-.5-1-1.3-1-2.1s.2-1.1.5-1.5c1.8-2.6,5-7.2,7.1-10.4,2.7-4,6.9-11.8,7.9-13.8,0,0,0-.2-.1,0-1.2,1.2-5,4.8-8.6,6-2.3.8-3.8,0-4.8-.8-.8-.8-.8-2,0-2.8,1.8-1.9,5.8-5.8,11.1-10,7.4-5.8,13.2-7.7,13.2-7.7,0,0,3.7,4,8.6,4.1,0,0,3.8,1.7,6.1,3.6Z\"/>\n        <path class=\"st1\" d=\"M408.4,278.1c-3.8,13.4-1.5,13.9-1.5,13.9-12.9,22.3-15.7,40.7-12.6,64.9-2.2-13.9-5.9-40.1-4.8-56,.9-12.8,5.5-29.5,9.3-41.5,8,1.8,12.9,7.1,9.6,18.7Z\"/>\n        <path class=\"st1\" d=\"M446.5,256.8v24c-3.7,1.7-7.4,5.8-9.5,8.5-1.4,1.7-3.4,2.7-5.6,2.7h-24.4s-2.3-.5,1.5-13.9c3.3-11.6-1.7-16.9-9.6-18.7,2.7-8.4,4.9-14.6,5.3-15.5h0c5.1-3.2,10.9-7.4,14.5-12,1.9-2.4,3.6-5.3,5.4-8.6,9.9,7.9,19.8,17.8,22.5,33.5Z\"/>\n        <path class=\"st1\" d=\"M424,223.3c-1.8,3.3-3.6,6.2-5.4,8.6-3.6,4.6-9.3,8.8-14.5,12,0,0,0,0,0,0-2.9-20.3,2.2-34.6,2.2-34.6,4.5,4.5,11.1,8.8,17.6,14.1Z\"/>\n        <path class=\"st1\" d=\"M440.5,195.2c-6.6,7.7-11.6,19.1-16.5,28.1-6.6-5.2-13.2-9.5-17.6-14.1-6.4-17.1-6.5-39.1-6.5-39.1.2-6.9-.3-13.3-1-18.6,8.6,8.2,18.1,11.3,26.1,4.1,1.5,9.8,3.6,20.2,7.2,26.4,2.5,4.3,5.5,9,8.4,13.2Z\"/>\n        <path class=\"st1\" d=\"M446.5,203.6v53.2c-2.8-15.7-12.6-25.6-22.5-33.5,5-9.1,10-20.4,16.5-28.1,2.1,3.1,4.2,6,6,8.5Z\"/>\n        <path class=\"st1\" d=\"M446.5,280.9v6.8s-2.6-.6-2.5,11.7c.2,15.1-5,31-9.4,39.1-1.7-30.3-6.6-37.9-8.8-46.4h5.5c2.2,0,4.3-1,5.6-2.7,2.2-2.7,5.8-6.8,9.5-8.5Z\"/>\n        <path class=\"st1\" d=\"M434.7,338.4s0,0,0,0c-4.3,8.1-6.6,27-6.6,27-1.9,12.4-8.6,16.2-8.6,16.2-.6-3.1-.9-6-1.1-8.9-.6-6.4-1.1-12.8-3.8-21.5.2-.5.3-1,.4-1.5,2.8-10.6,3.3-32.9,5.2-57.8h5.8c2.3,8.5,7.1,16.1,8.8,46.4Z\"/>\n        <path class=\"st1\" d=\"M420,292.1c-1.8,25-2.3,47.2-5.2,57.8-.1.5-.3,1-.4,1.5-1.6,5.4-4.4,13.1-8.8,22.5-1.2,2.5-2.4,5.2-3.8,7.9-1.3-2.8-3.5-7.9-5.9-15.4,0,0-.7-3.7-1.6-9.4-3-24.2-.3-42.6,12.6-64.9h13.1Z\"/>\n        <path class=\"st1\" d=\"M401.8,381.9c-3.6,7.4-8.1,15.6-13.3,24.6,1-5.7,2.5-10,4-14,3.9-10.6,3.4-25.9,3.4-25.9,2.4,7.5,4.6,12.6,5.9,15.4Z\"/>\n        <path class=\"st1\" d=\"M428,365.5c-.1,19.7-4.4,30.7-4.4,30.7-2.2-5.5-3.5-10.2-4.2-14.4,0,0,6.7-3.8,8.6-16.2Z\"/>\n        <path class=\"st1\" d=\"M419.8,443.4c-.7,2.2-1.5,4.9-2.2,7.8-4.6,2.1-9.1-1.5-9.6-11.2h0c3.2-17.1,2.9-35.1,3.3-51.3,0,0,4.4-6.3,6.9-15.9.3,2.9.6,5.8,1.1,8.9.7,4.3,2,8.9,4.2,14.4,2,22.9-.7,37.8-3.8,47.2Z\"/>\n        <path class=\"st1\" d=\"M412.6,479.3c-.4,6.4,3.3,22,3.9,34.8.6,12.8-13.4,9.3-16.6,7.6-3.1-1.7-6.5-4-12-3.9-5.5.1-10.7,0-14.9-2.5-4.2-2.5,1.6-4.2,5.1-5.6,3.5-1.4,15.1-11.7,15.1-11.7,0,0,3.8-15.3-2.6-48.5-.7-3.9-1.3-7.5-1.8-10.8,7.5,18.7,15.7,18.4,18.7,3.4.1-.6.2-1.3.4-1.9.6,9.8,5,13.3,9.6,11.2-.3,1.3-.6,2.7-.9,4.1-2.1,9.2-3.8,19.6-4,23.9Z\"/>\n        <path class=\"st1\" d=\"M411.3,388.7c-.4,16.2-.2,34.2-3.3,51.2h0c-.1.7-.2,1.3-.4,2-3,15-11.3,15.4-18.7-3.4h0c-2.1-14.6-1.7-24.5-.4-32.1,5.3-9,9.7-17.2,13.3-24.6,1.4-2.8,2.6-5.4,3.8-7.9,2.2,8.2,5.7,14.8,5.7,14.8Z\"/>\n        <path class=\"st1\" d=\"M418.2,372.8c-2.6,9.5-6.9,15.9-6.9,15.9,0,0-3.4-6.6-5.7-14.8,4.4-9.5,7.2-17.1,8.8-22.5,2.7,8.6,3.2,15.1,3.8,21.5Z\"/>\n      </g>\n      <g>\n        <path class=\"st1\" d=\"M474.1,42.8c0,3.1-.8,12.8-5.8,12.4,0,0-.2,12.8-8,16.7-1.9-12.9-2.8-19.7-7.1-19.7h-13.6c-4.2,0-5.2,6.8-7.1,19.7-7.8-4-8-16.7-8-16.7-5,.4-5.8-9.4-5.8-12.4s4.6-2.1,4.6-2.1c0,0-.8-5.6.6-13.3,1.4-7.7,5-19.5,22.4-19.5s21,11.8,22.4,19.5c1.4,7.7.6,13.3.6,13.3,0,0,4.6-1,4.6,2.1Z\"/>\n        <path class=\"st1\" d=\"M502.5,106.8c-4.6-.6-8.7.6-13.1,4.4-3.9,3.4-7.3,7-10.2,10.3-3.4,4.1-5.9,7.9-7.2,10.6-1.3,2.6-2.2,12.6-3.9,23.5h0c-1.5,9.8-3.6,20.2-7.2,26.4-2.5,4.3-5.5,9-8.4,13.2-2.1,3.1-4.2,6-6,8.5V52.2h6.8c4.2,0,5.2,6.8,7.1,19.7v9.8s26.4,23,31.5,23.4c1.7.1,5.9,0,10.6,1.6Z\"/>\n        <path class=\"st1\" d=\"M496.2,140.9c-.7,2.8-1.4,6.4-2,10.6-8.6,8.2-18.1,11.3-26.1,4.1h0c1.7-10.9,2.6-20.9,3.9-23.5,1.3-2.7,3.8-6.5,7.2-10.6,4.1,8.4,10.7,14.6,17,19.4Z\"/>\n        <path class=\"st1\" d=\"M521.4,152.4c-11.3-3.2-23.5-10.5-25-11.4-.1,0-.2,0-.2,0-6.3-4.7-12.9-11-17-19.4,2.8-3.4,6.2-7,10.2-10.3,4.4-3.8,8.5-5,13.1-4.4h0c9.7,3.2,21.7,13.2,18.9,45.6Z\"/>\n        <path class=\"st1\" d=\"M530.1,179c-2.9-4.5-6.7-8.4-11-10.7-1-6.9-5-15.1-12-20-2.9-2-6.7-4.4-10.7-7.4,1.5.9,13.7,8.2,25,11.4,0,0,8.3,9.8,8.7,26.6Z\"/>\n        <path class=\"st1\" d=\"M529.8,186.1c-4.1-3.7-7.7-6.3-10.6-8,0-2.7.1-5,0-6.6,0-1,0-2.1-.3-3.1,4.3,2.3,8.1,6.1,11,10.7,0,2.3,0,4.6-.3,7.1Z\"/>\n        <path class=\"st1\" d=\"M536.2,196.5c-5-2.4-11.4-5.8-16.6-9.6-.4-.5-.6-.8-.6-.8,0-2.9.1-5.6.2-8,2.8,1.8,6.5,4.4,10.6,8,0,0,2.8,2.4,6.4,10.4Z\"/>\n        <path class=\"st1\" d=\"M548,235.4c-6.7-12.6-10.3-21.4-13.2-26.2-4.3-7.1-12.9-19.2-15.1-22.3,5.1,3.8,11.6,7.2,16.6,9.6,2.4,5.2,5.1,12.6,7.7,23.3,1.6,6.5,2.9,11.6,4,15.5Z\"/>\n        <path class=\"st1\" d=\"M519.3,178.1c0,2.4-.1,5.2-.2,8,0,0,0,.2,0,.3,0,4.2,0,8.6,0,12.5-4.1-3.1-10.5-8.4-14.2-13.4,0,0-11-12.1-11.7-15.4-.2-6.9.3-13.3,1-18.6.6-4.2,1.3-7.8,2-10.6,0,0,0,0,.2,0,4,3,7.7,5.4,10.7,7.4,7.1,4.9,11,13.1,12,20,.2,1.1.2,2.1.3,3.1,0,1.6,0,3.9,0,6.6Z\"/>\n        <path class=\"st1\" d=\"M552.7,249.1s-3.7,4-8.6,4.1c-6.7-7.3-22.3-37.1-24.1-45-.5-2.2-.8-5.5-.9-9.3,0-3.9,0-8.3,0-12.5.2.1.4.3.6.4,2.2,3.1,10.8,15.2,15.1,22.3,2.9,4.8,6.6,13.5,13.2,26.2t0,0c3.5,12.5,4.7,13.7,4.7,13.7Z\"/>\n        <path class=\"st1\" d=\"M544.1,253.2s-3.8,1.7-6.1,3.6c0,0-8.6-14.2-14.1-20.3-5.5-6-17.1-17.1-18.9-51,3.6,5,10.1,10.3,14.2,13.4.1,3.8.4,7.1.9,9.3,1.8,7.9,17.4,37.7,24.1,45Z\"/>\n        <path class=\"st1\" d=\"M578.9,290.2c0,.8-.4,1.6-1,2.1-1.3,1-3.2.7-4.1-.7-3.4-5.4-10.9-17.3-11.5-18.3.5,1.1,5,13.1,6.8,17,.9,2,1.8,3.6,2.5,4.7.6,1,.3,2.2-.7,2.8l-.5.3c-1,.5-2.2.2-2.7-.8l-7.9-14.3s-2-5.2-2.6-4.5c-.5.7.4,8.3,2.7,13.1,1.2,2.4,1.9,4.3,2.3,5.6.3,1-.3,2.1-1.3,2.4h0c-.9.3-1.9,0-2.4-.9-1.4-2.6-4.3-8.1-5-10.9-.9-3.7-1.5-9.2-2.3-8.7-.8.5-.6,7.6.3,9.9.6,1.5,1.8,4.5,2.6,6.5,0,.2.1.5.1.7,0,.8-.5,1.6-1.3,1.9-.9.3-1.9,0-2.4-.9-1.5-2.6-4.5-8-4.8-10.6-.4-3.5-2.3-9.9-3.7-12.6-2.6-4.7-4.1-13.9-4.1-17.2,2.3-1.9,6.1-3.6,6.1-3.6,4.9-.1,8.6-4.1,8.6-4.1,0,0,5.8,1.9,13.2,7.7,5.3,4.1,9.3,8.1,11.1,10,.8.8.8,2.1,0,2.8-.9.9-2.4,1.6-4.8.8-3.6-1.3-7.4-4.9-8.6-6,0,0-.2,0-.1,0,1.1,2,5.3,9.8,7.9,13.8,2.1,3.1,5.2,7.7,7.1,10.4.3.5.5,1,.5,1.5Z\"/>\n        <path class=\"st1\" d=\"M498.7,357c3-24.2.3-42.6-12.6-64.9,0,0,2.3-.5-1.5-13.9-3.3-11.6,1.7-16.9,9.6-18.7,3.8,12,8.4,28.7,9.3,41.5,1.1,16-2.5,42.1-4.8,56Z\"/>\n        <path class=\"st1\" d=\"M484.6,278.1c3.8,13.4,1.5,13.9,1.5,13.9h-24.4c-2.2,0-4.3-1-5.6-2.7-2.2-2.7-5.8-6.8-9.5-8.5v-24c2.8-15.7,12.6-25.6,22.5-33.5,1.8,3.3,3.6,6.2,5.4,8.6,3.6,4.6,9.3,8.8,14.5,12h0c.3.9,2.6,7.1,5.3,15.5-8,1.8-12.9,7.1-9.6,18.7Z\"/>\n        <path class=\"st1\" d=\"M488.9,243.8s0,0,0,0c-5.1-3.2-10.9-7.4-14.5-12-1.9-2.4-3.6-5.3-5.4-8.6,6.6-5.2,13.2-9.5,17.6-14.1,0,0,5.1,14.2,2.2,34.6Z\"/>\n        <path class=\"st1\" d=\"M493.2,170.1s-.1,22.1-6.5,39.1c-4.5,4.5-11.1,8.8-17.6,14.1-5-9.1-10-20.4-16.5-28.1,2.9-4.2,5.9-8.8,8.4-13.2,3.6-6.2,5.7-16.6,7.2-26.4,8,7.1,17.4,4.1,26.1-4.1-.7,5.4-1.2,11.7-1,18.6Z\"/>\n        <path class=\"st1\" d=\"M469,223.3c-9.9,7.9-19.8,17.8-22.5,33.5v-53.2c1.8-2.4,3.9-5.3,6-8.5,6.6,7.7,11.6,19.1,16.5,28.1Z\"/>\n        <path class=\"st1\" d=\"M467.2,292.1c-2.3,8.5-7.1,16.1-8.8,46.4-4.3-8.1-9.5-24-9.4-39.1.1-12.4-2.5-11.7-2.5-11.7v-6.8c3.7,1.7,7.4,5.8,9.5,8.5,1.4,1.7,3.4,2.7,5.6,2.7h5.5Z\"/>\n        <path class=\"st1\" d=\"M478.6,351.4c-2.7,8.6-3.2,15.1-3.8,21.5-.3,2.9-.6,5.8-1.1,8.9,0,0-6.7-3.8-8.6-16.2,0,0-2.3-18.9-6.6-27,0,0,0,0,0,0,1.7-30.3,6.6-37.9,8.8-46.4h5.8c1.8,25,2.3,47.2,5.2,57.8.1.5.3,1,.4,1.5Z\"/>\n        <path class=\"st1\" d=\"M498.7,357c-.9,5.8-1.6,9.4-1.6,9.4-2.4,7.5-4.6,12.6-5.9,15.4-1.4-2.8-2.6-5.4-3.8-7.9-4.4-9.5-7.2-17.1-8.8-22.5-.2-.5-.3-1-.4-1.5-2.8-10.6-3.3-32.9-5.2-57.8h13.1c12.9,22.3,15.7,40.7,12.6,64.9Z\"/>\n        <path class=\"st1\" d=\"M504.5,406.4c-5.3-9-9.7-17.2-13.3-24.6,1.3-2.8,3.5-7.9,5.9-15.4,0,0-.5,15.4,3.4,25.9,1.5,4,3,8.4,4,14Z\"/>\n        <path class=\"st1\" d=\"M473.7,381.8c-.7,4.3-2,8.9-4.2,14.4,0,0-4.3-11-4.4-30.7,1.9,12.4,8.6,16.2,8.6,16.2Z\"/>\n        <path class=\"st1\" d=\"M485,439.6c-.4,12-4.3,14.8-9.8,10.6-.7-2.6-1.3-4.9-1.9-6.8-3.1-9.4-5.7-24.3-3.8-47.2,2.2-5.5,3.5-10.2,4.2-14.4.6-3.1.9-6,1.1-8.9,2.6,9.5,6.9,15.9,6.9,15.9.4,16.1.2,33.9,3.3,50.9Z\"/>\n        <path class=\"st1\" d=\"M519.9,515.3c-4.2,2.5-9.4,2.6-14.9,2.5-5.5-.1-8.9,2.2-12,3.9-3.1,1.7-17.2,5.2-16.6-7.6.7-12.8,4.3-28.4,3.9-34.8-.3-4.3-2-14.7-4-23.9-.4-1.8-.8-3.5-1.2-5.1,5.5,4.1,9.4,1.4,9.8-10.6.1.8.3,1.6.4,2.3,3,15,11.3,15.4,18.7-3.4-.5,3.4-1.1,7-1.8,10.8-6.4,33.3-2.6,48.5-2.6,48.5,0,0,11.6,10.3,15.1,11.7,3.5,1.4,9.3,3.1,5.1,5.6Z\"/>\n        <path class=\"st1\" d=\"M504.1,438.5h0c-7.5,18.8-15.7,18.4-18.7,3.4-.2-.8-.3-1.5-.4-2.3-3.1-16.9-2.9-34.8-3.3-50.9,0,0,3.4-6.6,5.7-14.8,1.2,2.5,2.4,5.2,3.8,7.9,3.6,7.4,8.1,15.6,13.3,24.6,1.3,7.6,1.7,17.5-.4,32.1Z\"/>\n        <path class=\"st1\" d=\"M487.4,373.9c-2.2,8.2-5.7,14.8-5.7,14.8,0,0-4.4-6.3-6.9-15.9.6-6.4,1.1-12.8,3.8-21.5,1.6,5.4,4.4,13.1,8.8,22.5Z\"/>\n      </g>\n    </g>";
+const MUSCLE_FIGURE_FILLS = {
+  abs: "<path class=\"st0\" d=\"M133.1,196.8h-19c-.1,0-.2,0-.4,0-.3,0-.5,0-.8,0-4.7-.7-5-5.9-5-13.2v-.7c0-8.2,4.4-8.8,4.4-8.8h20.7v22.8Z\"/>\n    <path class=\"st0\" d=\"M133.2,219.4h-17.7s-.5,0-1.1,0c0,0,0,0,0,0-2.4,0-5.3-.3-6.1-7-.1-1.2-.2-2.6-.2-4.2,0-10.7,4.4-11.5,5.8-11.5.1,0,.2,0,.4,0h19v22.7Z\"/>\n    <path class=\"st0\" d=\"M133.3,269.3h-3.7c-1.6,0-3.1-.9-3.8-2.4-2.4-5.1-8.1-17.6-12.1-27.7-2.5-6.2-4.3-11.6-4.3-13.7,0-4.8,3.2-5.8,5-6,0,0,0,0,0,0,.4,0,.8,0,1.1,0h17.7v17.9s0,12.6,0,12.6c0,7.7,0,14.3,0,19.4Z\"/>\n    <path class=\"st0\" d=\"M133.1,174h-20.7c-2.1,0-3.2-1.6-3.8-3.2-.6-1.7-.6-3.4-.6-3.4,0-6.9,9.8-11.2,9.8-11.2l15.2-9.7v27.5Z\"/>\n    <path class=\"st0\" d=\"M158.7,182.8v.7c0,7.3-.3,12.5-5,13.2-.3,0-.5,0-.8,0-.1,0-.2,0-.4,0h-19v-22.8h20.7s4.4.6,4.4,8.8Z\"/>\n    <path class=\"st0\" d=\"M158.7,208.2c0,1.6,0,3-.2,4.2-.8,6.8-3.7,7.1-6.1,7,0,0,0,0-.1,0-.7,0-1.1,0-1.1,0h-17.7v-22.7h19.1c.1,0,.2,0,.4,0,1.3,0,5.8.8,5.8,11.5Z\"/>\n    <path class=\"st0\" d=\"M157.3,225.4c0,2.1-1.8,7.5-4.3,13.7-4,10.1-9.7,22.6-12.1,27.7-.7,1.5-2.2,2.4-3.8,2.4h-3.7c0-5.1,0-11.7,0-19.4v-12.6s0-17.9,0-17.9h17.7c.4,0,.7,0,1.1,0,0,0,0,0,.1,0,1.8.2,5,1.2,5,6Z\"/>\n    <path class=\"st0\" d=\"M133.6,174h20.7c2.1,0,3.2-1.6,3.8-3.2.6-1.7.6-3.4.6-3.4,0-6.9-9.8-11.2-9.8-11.2l-15.2-9.7v27.5Z\"/>\n    <path class=\"st0\" d=\"M424,223.3c-1.8,3.3-3.6,6.2-5.4,8.6-3.6,4.6-9.3,8.8-14.5,12,0,0,0,0,0,0-2.9-20.3,2.2-34.6,2.2-34.6,4.5,4.5,11.1,8.8,17.6,14.1Z\"/>\n    <path class=\"st0\" d=\"M488.9,243.8s0,0,0,0c-5.1-3.2-10.9-7.4-14.5-12-1.9-2.4-3.6-5.3-5.4-8.6,6.6-5.2,13.2-9.5,17.6-14.1,0,0,5.1,14.2,2.2,34.6Z\"/>\n    <path class=\"st0\" d=\"M113,196.7c-8-.8-16.7-10.6-19.4-13.6-2.5-2.9-2.1-9.4-6.7-13.5h0c-.9-6.9-1.4-12-1.4-12,0,0,0-3.1,0-6.8.9,9,6.5,14,6.5,14,1.5,7.9,9.5,15.9,15.9,18.8h0c0,7.3.3,12.6,5,13.2Z\"/>\n    <path class=\"st0\" d=\"M108,208.2c0,1.6,0,3,.2,4.2-4.2-3.7-6.9-10.6-10.5-16.2-3.2-5.1-4-6.8-7.8-6.1-1.1-6.6-2.1-14.3-2.9-20.6,4.6,4.1,4.1,10.6,6.7,13.5,2.6,3,11.3,12.8,19.4,13.6.3,0,.5,0,.8,0-1.3,0-5.8.8-5.8,11.5Z\"/>\n    <path class=\"st0\" d=\"M109.3,225.4c0,2.1,1.8,7.5,4.3,13.7-6.5-2.4-14.9-14.2-21.5-37.4-.7-2.8-1.5-7-2.3-11.7,3.8-.7,4.6,1.1,7.8,6.1,3.6,5.7,6.3,12.6,10.5,16.2.8,6.8,3.7,7.1,6.1,7-1.8.2-5,1.2-5,6Z\"/>\n    <path class=\"st0\" d=\"M112.4,174s-4.4.6-4.4,8.8v.7c-6.4-2.9-14.3-10.8-15.9-18.8,3.5,2,5.3,2.3,6.1,2.2.4,0,.7,0,1.1,0,.5,0,.9.3,1.3.5,1.8.9,4.9,2.4,7.9,3.3.6,1.6,1.7,3.2,3.8,3.2Z\"/>\n    <path class=\"st0\" d=\"M153.7,196.7c8-.8,16.7-10.6,19.4-13.6,2.5-2.9,2.1-9.4,6.7-13.5h0c.9-6.9,1.4-12,1.4-12,0,0,0-3.1,0-6.8-.9,9-6.5,14-6.5,14-1.5,7.9-9.5,15.9-15.9,18.8h0c0,7.3-.3,12.6-5,13.2Z\"/>\n    <path class=\"st0\" d=\"M177.1,220.9c-.9-8.3-2.6-19.1-2.6-19.1-6.6,23.2-15,35-21.5,37.4-4,10.1-9.7,22.6-12.1,27.7-.7,1.5-2.2,2.4-3.8,2.4h-7.6c-1.6,0-3.1-.9-3.8-2.4-2.4-5.1-8.1-17.6-12.1-27.7-6.5-2.4-14.9-14.2-21.5-37.4,0,0-1.7,10.9-2.6,19.1s1.6,20.9,1.6,20.9c0,0,3,3,7.4,7.3,1.6,1.5,3.3,3.3,5.2,5.1,1.1,1.1,2.3,2.3,3.5,3.5.1.1.3.3.4.4,3.8,3.8,7.8,7.7,11.4,11.3.1,0,.2.2.3.3,6.4,6.3,11.3,11.3,11.3,11.6h5.6c0-.2,4.9-5.2,11.3-11.6,0,0,.2-.2.3-.3,3.6-3.6,7.5-7.5,11.4-11.3.1-.2.3-.3.4-.4,1.2-1.2,2.4-2.4,3.5-3.5,1.9-1.8,3.6-3.6,5.2-5.1,4.4-4.3,7.4-7.3,7.4-7.3,0,0,2.4-12.7,1.6-20.9Z\"/>\n    <path class=\"st0\" d=\"M158.7,208.2c0,1.6,0,3-.2,4.2,4.2-3.7,6.9-10.6,10.5-16.2,3.2-5.1,4-6.8,7.8-6.1,1.1-6.6,2.1-14.3,2.9-20.6-4.6,4.1-4.1,10.6-6.7,13.5-2.6,3-11.3,12.8-19.4,13.6-.3,0-.5,0-.8,0,1.3,0,5.8.8,5.8,11.5Z\"/>\n    <path class=\"st0\" d=\"M176.8,190.1c-.8,4.7-1.5,8.9-2.3,11.7-6.6,23.2-15,35-21.5,37.4,2.5-6.2,4.3-11.6,4.3-13.7,0-4.8-3.2-5.8-5-6,2.4,0,5.3-.3,6.1-7,4.2-3.7,6.9-10.6,10.5-16.2,3.2-5.1,4-6.8,7.8-6.1Z\"/>\n    <path class=\"st0\" d=\"M154.2,174s4.4.6,4.4,8.8v.7c6.4-2.9,14.3-10.8,15.9-18.8-3.5,2-5.3,2.3-6.1,2.2-.4,0-.7,0-1.1,0-.5,0-.9.3-1.3.5-1.8.9-4.9,2.4-7.9,3.3-.6,1.6-1.7,3.2-3.8,3.2Z\"/>",
+  arms: "<path class=\"st0\" d=\"M78.3,134.2s-.9,19.5-2.1,27.3c-.3,2.3-1.2,4.9-2.4,7.6h0c-2.8,6.2-7.6,12.8-12.6,17.6-1.4,1.3-2.6,2.7-3.7,4.3-1.3,1.8-2.4,3.7-3.4,5.8,0,0-.2-6.3-1.5-14.7l-.7-14.7c-1.4-14.3,6.9-20.9,6.9-20.9,4.8-1.6,12.6-6,19.6-12.3Z\"/>\n    <path class=\"st0\" d=\"M85.6,150.6h0c0,3.8,0,6.9,0,6.9,0,0-1.4,10.7-4.9,14.8-2.9,3.4-5.5,11.2-6.3,13.8,0,0-.6-7.7-.6-17h0c1.2-2.7,2.1-5.3,2.4-7.6,1.2-7.8,2.1-27.3,2.1-27.3,0,0,5.6,2.6,7,7.1,0,0,0,0,0,0,.2.6.3,1.2.3,1.9,0,2.2,0,4.9,0,7.3Z\"/>\n    <path class=\"st0\" d=\"M188.4,134.2s.9,19.5,2.1,27.3c.3,2.3,1.2,4.9,2.4,7.6h0c2.8,6.2,7.6,12.8,12.6,17.6,1.4,1.3,2.6,2.7,3.7,4.3,1.3,1.8,2.4,3.7,3.4,5.8,0,0,.2-6.3,1.5-14.7l.7-14.7c1.4-14.3-6.9-20.9-6.9-20.9-4.8-1.6-12.6-6-19.6-12.3Z\"/>\n    <path class=\"st0\" d=\"M181.1,150.6h0c0,3.8,0,6.9,0,6.9,0,0,1.4,10.7,4.9,14.8,2.9,3.4,5.5,11.2,6.3,13.8,0,0,.6-7.7.6-17h0c-1.2-2.7-2.1-5.3-2.4-7.6-1.2-7.8-2.1-27.3-2.1-27.3,0,0-5.6,2.6-7,7.1,0,0,0,0,0,0-.2.6-.3,1.2-.3,1.9,0,2.2,0,4.9,0,7.3Z\"/>\n    <path class=\"st0\" d=\"M396.6,141c-4,3-7.7,5.4-10.7,7.4-7.1,4.9-11,13.1-12,20-4.3,2.3-8.1,6.1-11,10.7.5-16.8,8.7-26.6,8.7-26.6,11.3-3.2,23.5-10.5,25-11.4Z\"/>\n    <path class=\"st0\" d=\"M373.7,178.1c-2.8,1.8-6.5,4.4-10.6,8-.3-2.5-.3-4.9-.3-7.1,2.9-4.5,6.7-8.4,11-10.7-.2,1.1-.2,2.1-.3,3.1,0,1.6,0,3.9,0,6.6Z\"/>\n    <path class=\"st0\" d=\"M399.8,170.1c-.8,3.3-11.7,15.4-11.7,15.4-3.6,5-10.1,10.3-14.2,13.4.1-3.9,0-8.3,0-12.5,0-.1,0-.2,0-.3,0-2.9-.1-5.6-.2-8,0-2.7-.1-5,0-6.6,0-1,0-2.1.3-3.1,1-6.9,5-15.1,12-20,2.9-2,6.7-4.4,10.7-7.4.1,0,.2,0,.2,0,.7,2.8,1.4,6.4,2,10.6.7,5.4,1.2,11.7,1,18.6Z\"/>\n    <path class=\"st0\" d=\"M530.1,179c-2.9-4.5-6.7-8.4-11-10.7-1-6.9-5-15.1-12-20-2.9-2-6.7-4.4-10.7-7.4,1.5.9,13.7,8.2,25,11.4,0,0,8.3,9.8,8.7,26.6Z\"/>\n    <path class=\"st0\" d=\"M529.8,186.1c-4.1-3.7-7.7-6.3-10.6-8,0-2.7.1-5,0-6.6,0-1,0-2.1-.3-3.1,4.3,2.3,8.1,6.1,11,10.7,0,2.3,0,4.6-.3,7.1Z\"/>\n    <path class=\"st0\" d=\"M519.3,178.1c0,2.4-.1,5.2-.2,8,0,0,0,.2,0,.3,0,4.2,0,8.6,0,12.5-4.1-3.1-10.5-8.4-14.2-13.4,0,0-11-12.1-11.7-15.4-.2-6.9.3-13.3,1-18.6.6-4.2,1.3-7.8,2-10.6,0,0,0,0,.2,0,4,3,7.7,5.4,10.7,7.4,7.1,4.9,11,13.1,12,20,.2,1.1.2,2.1.3,3.1,0,1.6,0,3.9,0,6.6Z\"/>",
+  back: "<path class=\"st0\" d=\"M446.5,52.2v151.4c-1.8-2.4-3.9-5.3-6-8.5-2.9-4.2-5.9-8.8-8.4-13.2-3.6-6.2-5.7-16.6-7.2-26.4h0c-1.7-10.9-2.6-20.9-3.9-23.5-1.3-2.7-3.8-6.5-7.2-10.6-2.8-3.4-6.2-7-10.2-10.3-4.4-3.8-8.5-5-13.1-4.4,4.7-1.6,8.9-1.5,10.6-1.6,5.1-.4,31.5-23.4,31.5-23.4v-9.8c1.9-12.9,2.8-19.7,7.1-19.7h6.8Z\"/>\n    <path class=\"st0\" d=\"M424.9,155.6h0c-8,7.2-17.4,4.1-26.1-4.1-.6-4.2-1.3-7.8-2-10.6,6.3-4.7,12.9-11,17-19.4,3.4,4.1,5.9,7.9,7.2,10.6,1.3,2.6,2.2,12.6,3.9,23.5Z\"/>\n    <path class=\"st0\" d=\"M440.5,195.2c-6.6,7.7-11.6,19.1-16.5,28.1-6.6-5.2-13.2-9.5-17.6-14.1-6.4-17.1-6.5-39.1-6.5-39.1.2-6.9-.3-13.3-1-18.6,8.6,8.2,18.1,11.3,26.1,4.1,1.5,9.8,3.6,20.2,7.2,26.4,2.5,4.3,5.5,9,8.4,13.2Z\"/>\n    <path class=\"st0\" d=\"M446.5,203.6v53.2c-2.8-15.7-12.6-25.6-22.5-33.5,5-9.1,10-20.4,16.5-28.1,2.1,3.1,4.2,6,6,8.5Z\"/>\n    <path class=\"st0\" d=\"M502.5,106.8c-4.6-.6-8.7.6-13.1,4.4-3.9,3.4-7.3,7-10.2,10.3-3.4,4.1-5.9,7.9-7.2,10.6-1.3,2.6-2.2,12.6-3.9,23.5h0c-1.5,9.8-3.6,20.2-7.2,26.4-2.5,4.3-5.5,9-8.4,13.2-2.1,3.1-4.2,6-6,8.5V52.2h6.8c4.2,0,5.2,6.8,7.1,19.7v9.8s26.4,23,31.5,23.4c1.7.1,5.9,0,10.6,1.6Z\"/>\n    <path class=\"st0\" d=\"M496.2,140.9c-.7,2.8-1.4,6.4-2,10.6-8.6,8.2-18.1,11.3-26.1,4.1h0c1.7-10.9,2.6-20.9,3.9-23.5,1.3-2.7,3.8-6.5,7.2-10.6,4.1,8.4,10.7,14.6,17,19.4Z\"/>\n    <path class=\"st0\" d=\"M493.2,170.1s-.1,22.1-6.5,39.1c-4.5,4.5-11.1,8.8-17.6,14.1-5-9.1-10-20.4-16.5-28.1,2.9-4.2,5.9-8.8,8.4-13.2,3.6-6.2,5.7-16.6,7.2-26.4,8,7.1,17.4,4.1,26.1-4.1-.7,5.4-1.2,11.7-1,18.6Z\"/>\n    <path class=\"st0\" d=\"M469,223.3c-9.9,7.9-19.8,17.8-22.5,33.5v-53.2c1.8-2.4,3.9-5.3,6-8.5,6.6,7.7,11.6,19.1,16.5,28.1Z\"/>",
+  calves: "<path class=\"st0\" d=\"M101.3,449.4c-2.1,5.8-2.2,19.8-1.2,31-3.6-12.6-5.2-28.6-6.2-47.6-1.1-23,7.1-31.3,15.5-43,4.2,33.7-5.4,52-8.1,59.6Z\"/>\n    <path class=\"st0\" d=\"M80.2,480.3c0-9.7-.7-19.6-.7-19.6-7.7-49.2-2.6-65.9.6-76,.7-2.1,1.1-4.6,1.4-7.3l3.4,4.7c.3.5.6,1,1,1.4.9,28.9,2.7,72.9-5.7,96.9Z\"/>\n    <path class=\"st0\" d=\"M165.3,449.4c2.1,5.8,2.2,19.8,1.2,31,3.6-12.6,5.2-28.6,6.2-47.6,1.1-23-7.1-31.3-15.5-43-4.2,33.7,5.4,52,8.1,59.6Z\"/>\n    <path class=\"st0\" d=\"M186.5,480.3c0-9.7.7-19.6.7-19.6,7.7-49.2,2.6-65.9-.6-76-.7-2.1-1.1-4.6-1.4-7.3l-3.4,4.7c-.3.5-.6,1-1,1.4-.9,28.9-2.7,72.9,5.7,96.9Z\"/>\n    <path class=\"st0\" d=\"M419.8,443.4c-.7,2.2-1.5,4.9-2.2,7.8-4.6,2.1-9.1-1.5-9.6-11.2h0c3.2-17.1,2.9-35.1,3.3-51.3,0,0,4.4-6.3,6.9-15.9.3,2.9.6,5.8,1.1,8.9.7,4.3,2,8.9,4.2,14.4,2,22.9-.7,37.8-3.8,47.2Z\"/>\n    <path class=\"st0\" d=\"M411.3,388.7c-.4,16.2-.2,34.2-3.3,51.2h0c-.1.7-.2,1.3-.4,2-3,15-11.3,15.4-18.7-3.4h0c-2.1-14.6-1.7-24.5-.4-32.1,5.3-9,9.7-17.2,13.3-24.6,1.4-2.8,2.6-5.4,3.8-7.9,2.2,8.2,5.7,14.8,5.7,14.8Z\"/>\n    <path class=\"st0\" d=\"M485,439.6c-.4,12-4.3,14.8-9.8,10.6-.7-2.6-1.3-4.9-1.9-6.8-3.1-9.4-5.7-24.3-3.8-47.2,2.2-5.5,3.5-10.2,4.2-14.4.6-3.1.9-6,1.1-8.9,2.6,9.5,6.9,15.9,6.9,15.9.4,16.1.2,33.9,3.3,50.9Z\"/>\n    <path class=\"st0\" d=\"M504.1,438.5h0c-7.5,18.8-15.7,18.4-18.7,3.4-.2-.8-.3-1.5-.4-2.3-3.1-16.9-2.9-34.8-3.3-50.9,0,0,3.4-6.6,5.7-14.8,1.2,2.5,2.4,5.2,3.8,7.9,3.6,7.4,8.1,15.6,13.3,24.6,1.3,7.6,1.7,17.5-.4,32.1Z\"/>",
+  chest: "<path class=\"st0\" d=\"M133,146.5l-15.2,9.7s-6.1.1-14.7,0c-2.3,0-4.2-.2-5.9-.7-4.4-1.2-7.4-5.6-11.9-14.1,0,0,0,0,0,0-1.4-4.5-7-7.1-7-7.1,8.4-7.6,15.7-18,15.1-29.5h34.5c1.5,2.1,3.2,4.2,5.2,6.1,0,0,0,0,.1.1,0,20.7-.1,35.4-.1,35.4Z\"/>\n    <path class=\"st0\" d=\"M188.4,134.2s-5.6,2.6-7,7.1c0,0,0,0,0,0-4.5,8.5-7.5,12.8-11.9,14.1-1.6.5-3.5.7-5.9.7-8.6.1-14.7,0-14.7,0l-15.2-9.7s-.1-14.7-.1-35.4c0,0,0,0,.1-.1,1.9-1.9,3.7-4,5.2-6.1h34.5c-.7,11.5,6.6,21.9,15.1,29.5Z\"/>",
+  forearms: "<path class=\"st0\" d=\"M54,196.8c-1.8,3.6-3.1,7.6-4.2,11.8-1.1,1.1-2,2.2-2.6,3.2-4,7.3-10.2,22.6-17.5,34-1.5-.4-3-.6-4.6-.5,8.7-19.2,9.3-26.9,12.1-37.8,4.6-18,15.4-25.3,15.4-25.3,1.3,8.4,1.5,14.7,1.5,14.7Z\"/>\n    <path class=\"st0\" d=\"M72.8,195.2c-1.3,6.6-3,12-4.9,16.5-7.1,5.1-14.6,11.4-17,24.9t0,0c-4.9,6.8-10,14.9-10,14.9,0,0-2.7-2.3-6.6-4.2,2-2.3,5.6-6.9,11.5-15.9,8.1-12.4,19.1-28.5,27-36.2Z\"/>\n    <path class=\"st0\" d=\"M73,193.7c0,.5-.2,1-.3,1.5h0c-7.9,7.7-18.9,23.8-27,36.2-5.9,9-9.5,13.6-11.5,15.9-1.4-.6-2.9-1.2-4.6-1.6,7.3-11.4,13.5-26.7,17.5-34,.6-1,1.5-2.1,2.6-3.2,5.6-5.4,17-11.6,23.2-14.8Z\"/>\n    <path class=\"st0\" d=\"M74.3,186.1c-.2.5-.3.9-.3.9-.3,2.4-.6,4.6-1,6.7-6.3,3.2-17.7,9.4-23.2,14.8,1.1-4.2,2.4-8.2,4.2-11.8,1-2.1,2.1-4,3.4-5.8,5.4-.9,16.9-4.9,16.9-4.9Z\"/>\n    <path class=\"st0\" d=\"M67.9,211.7c-3.9,9.3-8.6,14.8-12,18.5-1.5,1.7-3.2,3.9-5,6.4,2.4-13.4,9.9-19.8,17-24.9Z\"/>\n    <path class=\"st0\" d=\"M212.6,196.8c1.8,3.6,3.1,7.6,4.2,11.8,1.1,1.1,2,2.2,2.6,3.2,4,7.3,10.2,22.6,17.5,34,1.5-.4,3-.6,4.6-.5-8.7-19.2-9.3-26.9-12.1-37.8-4.6-18-15.4-25.3-15.4-25.3-1.3,8.4-1.5,14.7-1.5,14.7Z\"/>\n    <path class=\"st0\" d=\"M193.9,195.2c1.3,6.6,3,12,4.9,16.5,7.1,5.1,14.6,11.4,17,24.9t0,0c4.9,6.8,10,14.9,10,14.9,0,0,2.7-2.3,6.6-4.2-2-2.3-5.6-6.9-11.5-15.9-8.1-12.4-19.1-28.5-27-36.2Z\"/>\n    <path class=\"st0\" d=\"M193.6,193.7c0,.5.2,1,.3,1.5h0c7.9,7.7,18.9,23.8,27,36.2,5.9,9,9.5,13.6,11.5,15.9,1.4-.6,2.9-1.2,4.6-1.6-7.3-11.4-13.5-26.7-17.5-34-.6-1-1.5-2.1-2.6-3.2-5.6-5.4-17-11.6-23.2-14.8Z\"/>\n    <path class=\"st0\" d=\"M192.3,186.1c.2.5.3.9.3.9.3,2.4.6,4.6,1,6.7,6.3,3.2,17.7,9.4,23.2,14.8-1.1-4.2-2.4-8.2-4.2-11.8-1-2.1-2.1-4-3.4-5.8-5.4-.9-16.9-4.9-16.9-4.9Z\"/>\n    <path class=\"st0\" d=\"M198.7,211.7c3.9,9.3,8.6,14.8,12,18.5,1.5,1.7,3.2,3.9,5,6.4-2.4-13.4-9.9-19.8-17-24.9Z\"/>\n    <path class=\"st0\" d=\"M373.9,186.1s-.2.3-.6.8c-5.1,3.8-11.6,7.2-16.6,9.6,3.6-8,6.4-10.4,6.4-10.4,4.1-3.7,7.7-6.3,10.6-8,0,2.4.1,5.2.2,8Z\"/>\n    <path class=\"st0\" d=\"M373.3,186.9c-2.2,3.1-10.8,15.2-15.1,22.3-2.9,4.8-6.6,13.5-13.2,26.2,1.1-3.9,2.4-9,4-15.5,2.6-10.7,5.3-18.2,7.7-23.3,5-2.4,11.4-5.8,16.6-9.6Z\"/>\n    <path class=\"st0\" d=\"M373.9,198.9c-.1,3.8-.4,7.1-.9,9.3-1.8,7.9-17.4,37.7-24.1,45-4.9-.1-8.6-4.1-8.6-4.1,0,0,1.2-1.2,4.7-13.7t0,0c6.7-12.6,10.3-21.4,13.2-26.2,4.3-7.1,12.9-19.2,15.1-22.3.2-.1.4-.3.6-.4,0,4.2,0,8.6,0,12.5Z\"/>\n    <path class=\"st0\" d=\"M388.1,185.5c-1.8,33.9-13.4,45-18.9,51-5.5,6-14.1,20.3-14.1,20.3-2.3-1.9-6.1-3.6-6.1-3.6,6.7-7.3,22.3-37.1,24.1-45,.5-2.2.8-5.5.9-9.3,4.1-3.1,10.5-8.4,14.2-13.4Z\"/>\n    <path class=\"st0\" d=\"M536.2,196.5c-5-2.4-11.4-5.8-16.6-9.6-.4-.5-.6-.8-.6-.8,0-2.9.1-5.6.2-8,2.8,1.8,6.5,4.4,10.6,8,0,0,2.8,2.4,6.4,10.4Z\"/>\n    <path class=\"st0\" d=\"M548,235.4c-6.7-12.6-10.3-21.4-13.2-26.2-4.3-7.1-12.9-19.2-15.1-22.3,5.1,3.8,11.6,7.2,16.6,9.6,2.4,5.2,5.1,12.6,7.7,23.3,1.6,6.5,2.9,11.6,4,15.5Z\"/>\n    <path class=\"st0\" d=\"M552.7,249.1s-3.7,4-8.6,4.1c-6.7-7.3-22.3-37.1-24.1-45-.5-2.2-.8-5.5-.9-9.3,0-3.9,0-8.3,0-12.5.2.1.4.3.6.4,2.2,3.1,10.8,15.2,15.1,22.3,2.9,4.8,6.6,13.5,13.2,26.2t0,0c3.5,12.5,4.7,13.7,4.7,13.7Z\"/>\n    <path class=\"st0\" d=\"M544.1,253.2s-3.8,1.7-6.1,3.6c0,0-8.6-14.2-14.1-20.3-5.5-6-17.1-17.1-18.9-51,3.6,5,10.1,10.3,14.2,13.4.1,3.8.4,7.1.9,9.3,1.8,7.9,17.4,37.7,24.1,45Z\"/>",
+  glutes: "<path class=\"st0\" d=\"M446.5,256.8v24c-3.7,1.7-7.4,5.8-9.5,8.5-1.4,1.7-3.4,2.7-5.6,2.7h-24.4s-2.3-.5,1.5-13.9c3.3-11.6-1.7-16.9-9.6-18.7,2.7-8.4,4.9-14.6,5.3-15.5h0c5.1-3.2,10.9-7.4,14.5-12,1.9-2.4,3.6-5.3,5.4-8.6,9.9,7.9,19.8,17.8,22.5,33.5Z\"/>\n    <path class=\"st0\" d=\"M484.6,278.1c3.8,13.4,1.5,13.9,1.5,13.9h-24.4c-2.2,0-4.3-1-5.6-2.7-2.2-2.7-5.8-6.8-9.5-8.5v-24c2.8-15.7,12.6-25.6,22.5-33.5,1.8,3.3,3.6,6.2,5.4,8.6,3.6,4.6,9.3,8.8,14.5,12h0c.3.9,2.6,7.1,5.3,15.5-8,1.8-12.9,7.1-9.6,18.7Z\"/>",
+  hamstrings: "<path class=\"st0\" d=\"M434.7,338.4s0,0,0,0c-4.3,8.1-6.6,27-6.6,27-1.9,12.4-8.6,16.2-8.6,16.2-.6-3.1-.9-6-1.1-8.9-.6-6.4-1.1-12.8-3.8-21.5.2-.5.3-1,.4-1.5,2.8-10.6,3.3-32.9,5.2-57.8h5.8c2.3,8.5,7.1,16.1,8.8,46.4Z\"/>\n    <path class=\"st0\" d=\"M420,292.1c-1.8,25-2.3,47.2-5.2,57.8-.1.5-.3,1-.4,1.5-1.6,5.4-4.4,13.1-8.8,22.5-1.2,2.5-2.4,5.2-3.8,7.9-1.3-2.8-3.5-7.9-5.9-15.4,0,0-.7-3.7-1.6-9.4-3-24.2-.3-42.6,12.6-64.9h13.1Z\"/>\n    <path class=\"st0\" d=\"M401.8,381.9c-3.6,7.4-8.1,15.6-13.3,24.6,1-5.7,2.5-10,4-14,3.9-10.6,3.4-25.9,3.4-25.9,2.4,7.5,4.6,12.6,5.9,15.4Z\"/>\n    <path class=\"st0\" d=\"M428,365.5c-.1,19.7-4.4,30.7-4.4,30.7-2.2-5.5-3.5-10.2-4.2-14.4,0,0,6.7-3.8,8.6-16.2Z\"/>\n    <path class=\"st0\" d=\"M478.6,351.4c-2.7,8.6-3.2,15.1-3.8,21.5-.3,2.9-.6,5.8-1.1,8.9,0,0-6.7-3.8-8.6-16.2,0,0-2.3-18.9-6.6-27,0,0,0,0,0,0,1.7-30.3,6.6-37.9,8.8-46.4h5.8c1.8,25,2.3,47.2,5.2,57.8.1.5.3,1,.4,1.5Z\"/>\n    <path class=\"st0\" d=\"M498.7,357c-.9,5.8-1.6,9.4-1.6,9.4-2.4,7.5-4.6,12.6-5.9,15.4-1.4-2.8-2.6-5.4-3.8-7.9-4.4-9.5-7.2-17.1-8.8-22.5-.2-.5-.3-1-.4-1.5-2.8-10.6-3.3-32.9-5.2-57.8h13.1c12.9,22.3,15.7,40.7,12.6,64.9Z\"/>\n    <path class=\"st0\" d=\"M504.5,406.4c-5.3-9-9.7-17.2-13.3-24.6,1.3-2.8,3.5-7.9,5.9-15.4,0,0-.5,15.4,3.4,25.9,1.5,4,3,8.4,4,14Z\"/>\n    <path class=\"st0\" d=\"M473.7,381.8c-.7,4.3-2,8.9-4.2,14.4,0,0-4.3-11-4.4-30.7,1.9,12.4,8.6,16.2,8.6,16.2Z\"/>",
+  quads: "<path class=\"st0\" d=\"M118.2,344.3h0c-2.2,8.5-2.7,14.9-2.7,14.9,0,5.4-.3,10.1-1,14.1-1-6.3-1.6-14-2-22.1-.9-17.9-.9-37.6-3.1-47.2-.2-.7-.3-1.3-.5-2.1-2.9-13.4-6.2-34.6-5.3-47.7,1.1,1.1,2.3,2.3,3.5,3.5.1.1.3.3.4.4-.2,11.2,3.7,23.6,4.6,26.4.1.4.2.6.2.6,2.1,6,6.1,18.9,5.3,35.2-.3,7.1,0,16.1.5,23.9Z\"/>\n    <path class=\"st0\" d=\"M109,301.9c-1.6,7.8-6.1,29.7-8,41.3-.3,1.2-.5,2.8-.7,4.7,0,0,0,0,0,0-1.2,6.4-3.8,10.5-5.9,12.8-1.1,1.3-3.2.8-3.6-.9-.4-1.7-1-4-1.6-6.7-3.9-16.2-11-47.1-11-57.2s6.9-26.8,20.2-46.9c1.6,1.5,3.3,3.3,5.2,5.1-.8,13.1,2.4,34.3,5.3,47.7Z\"/>\n    <path class=\"st0\" d=\"M112.6,351.2c-1.4,4.6-4.8,12.4-10.7,13.5-1.8-6.5-1.9-12.4-1.5-16.7,0,0,0,0,0,0,0-.5.2-1,.2-1.5.1-1,.3-2,.5-3.2,1.9-11.7,6.3-33.5,8-41.3.2.7.3,1.4.5,2.1,2.2,9.6,2.2,29.3,3.1,47.2Z\"/>\n    <path class=\"st0\" d=\"M157.6,301.9c-.2.7-.3,1.4-.5,2.1-2.2,9.6-2.2,29.3-3.1,47.2-.4,8.1-1,15.8-2,22.1-.7-4-1.1-8.7-1-14.1,0,0-.5-6.5-2.7-14.9h0c.5-7.8.8-16.8.5-24-.8-16.3,3.3-29.2,5.3-35.2,0,0,0-.2.2-.6,1-2.9,4.9-15.3,4.6-26.4.1-.2.3-.3.4-.4,1.2-1.2,2.4-2.4,3.5-3.5.8,13.1-2.4,34.3-5.3,47.7Z\"/>\n    <path class=\"st0\" d=\"M188.4,296c0,10.1-7.1,41.1-11,57.2-.6,2.7-1.2,5-1.6,6.7-.4,1.6-2.5,2.1-3.6.9-2.1-2.3-4.7-6.3-5.9-12.8,0,0,0,0,0,0-.2-2-.5-3.6-.7-4.7-1.9-11.7-6.3-33.5-8-41.3,2.9-13.4,6.2-34.6,5.3-47.7,1.9-1.8,3.6-3.6,5.2-5.1,13.4,20.1,20.2,33.6,20.2,46.9Z\"/>\n    <path class=\"st0\" d=\"M154.1,351.2c1.4,4.6,4.8,12.4,10.7,13.5,1.8-6.5,1.9-12.4,1.5-16.7,0,0,0,0,0,0,0-.5-.2-1-.2-1.5-.1-1-.3-2-.5-3.2-1.9-11.7-6.3-33.5-8-41.3-.2.7-.3,1.4-.5,2.1-2.2,9.6-2.2,29.3-3.1,47.2Z\"/>\n    <path class=\"st0\" d=\"M408.4,278.1c-3.8,13.4-1.5,13.9-1.5,13.9-12.9,22.3-15.7,40.7-12.6,64.9-2.2-13.9-5.9-40.1-4.8-56,.9-12.8,5.5-29.5,9.3-41.5,8,1.8,12.9,7.1,9.6,18.7Z\"/>\n    <path class=\"st0\" d=\"M498.7,357c3-24.2.3-42.6-12.6-64.9,0,0,2.3-.5-1.5-13.9-3.3-11.6,1.7-16.9,9.6-18.7,3.8,12,8.4,28.7,9.3,41.5,1.1,16-2.5,42.1-4.8,56Z\"/>",
+  shoulders: "<path class=\"st0\" d=\"M78.3,134.2c-7,6.3-14.8,10.7-19.6,12.3,0,0-3.6-15.5,3.1-31.3,6.7-15.8,26-16.3,30-17.8.9,2.5,1.4,5,1.5,7.4.7,11.5-6.6,21.9-15.1,29.5Z\"/>\n    <path class=\"st0\" d=\"M188.4,134.2c7,6.3,14.8,10.7,19.6,12.3,0,0,3.6-15.5-3.1-31.3-6.7-15.8-26-16.3-30-17.8-.9,2.5-1.4,5-1.5,7.4-.7,11.5,6.6,21.9,15.1,29.5Z\"/>\n    <path class=\"st0\" d=\"M413.8,121.5c-4.1,8.4-10.7,14.6-17,19.4,0,0,0,0-.2,0-1.5.9-13.7,8.2-25,11.4-2.8-32.4,9.1-42.4,18.9-45.6h0c4.6-.6,8.7.6,13.1,4.4,3.9,3.4,7.3,7,10.2,10.3Z\"/>\n    <path class=\"st0\" d=\"M521.4,152.4c-11.3-3.2-23.5-10.5-25-11.4-.1,0-.2,0-.2,0-6.3-4.7-12.9-11-17-19.4,2.8-3.4,6.2-7,10.2-10.3,4.4-3.8,8.5-5,13.1-4.4h0c9.7,3.2,21.7,13.2,18.9,45.6Z\"/>"
+};
+// <<< MUSCLE_FIGURES <<<
+
 // True when an exercise should use the built-in countdown timer (a hold),
 // rather than weight/reps rows (strength) or a minutes box (steady cardio).
 function isTimedHoldExercise(exerciseInfo, plannedEx) {
@@ -3655,6 +3819,76 @@ function getTodayWorkoutProgress() {
 
 function getExerciseById(exerciseId) {
   return exercises.find((exercise) => exercise.id === exerciseId) || null;
+}
+
+// ===== F3: muscle-group anatomy figures + worked-muscle heat map =====
+// Maps a library exercise's primaryMuscle/secondaryMuscles (real anatomy) onto
+// the 10 figure groups the prepared SVGs cover (mockups/MuscleGroups/, synced
+// in via MUSCLE_FIGURES above). A few real muscles don't get their own figure
+// and fall back to the closest visible group: traps -> back, adductors ->
+// quads, abductors -> glutes.
+const MUSCLE_GROUP_MAP = {
+  chest: "chest",
+  "lower back": "back",
+  "middle back": "back",
+  lats: "back",
+  traps: "back",
+  shoulders: "shoulders",
+  biceps: "arms",
+  triceps: "arms",
+  forearms: "forearms",
+  abdominals: "abs",
+  quadriceps: "quads",
+  adductors: "quads",
+  hamstrings: "hamstrings",
+  glutes: "glutes",
+  abductors: "glutes",
+  calves: "calves"
+};
+
+const MUSCLE_FIGURE_GROUP_ORDER = ["chest", "back", "shoulders", "arms", "forearms", "abs", "quads", "hamstrings", "glutes", "calves"];
+const MUSCLE_FIGURE_GROUP_LABELS = {
+  chest: "Chest", back: "Back", shoulders: "Shoulders", arms: "Arms", forearms: "Forearms",
+  abs: "Abs", quads: "Quads", hamstrings: "Hamstrings", glutes: "Glutes", calves: "Calves"
+};
+
+// Per-exercise muscle-group involvement, weighted 0-1. The primary muscle is
+// full weight; hand-curated secondary muscles (see exercises.json) are
+// lighter. "full body" moves (burpees, soccer, ...) have no single dominant
+// muscle, so every group gets one flat, modest weight instead of guessing.
+function getExerciseMuscleWeights(lib) {
+  const weights = {};
+  if (!lib) return weights;
+  if (lib.primaryMuscle === "full body") {
+    MUSCLE_FIGURE_GROUP_ORDER.forEach((g) => { weights[g] = 0.3; });
+  } else {
+    const primaryGroup = MUSCLE_GROUP_MAP[lib.primaryMuscle];
+    if (primaryGroup) weights[primaryGroup] = 1;
+  }
+  (Array.isArray(lib.secondaryMuscles) ? lib.secondaryMuscles : []).forEach((entry) => {
+    const group = MUSCLE_GROUP_MAP[entry?.muscle];
+    const weight = Number(entry?.weight);
+    if (!group || !Number.isFinite(weight) || weight <= 0) return;
+    weights[group] = Math.max(weights[group] || 0, weight);
+  });
+  return weights;
+}
+
+// Compose a front+back figure from the shared outline plus one lime fill
+// layer per group with nonzero weight (opacity = weight). Fill layers render
+// first and the outline on top, matching the source SVGs' own stacking (the
+// outline's anatomical crease lines are meant to show over a filled muscle).
+function buildMuscleFigure(weights, opts = {}) {
+  const ariaLabel = opts.ariaLabel || "Muscles worked";
+  const layers = MUSCLE_FIGURE_GROUP_ORDER
+    .filter((g) => (weights[g] || 0) > 0)
+    .map((g) => `<g class="muscle-fill" style="opacity:${Math.min(1, weights[g]).toFixed(2)}">${MUSCLE_FIGURE_FILLS[g]}</g>`)
+    .join("");
+  return `
+    <svg class="muscle-figure${opts.className ? ` ${opts.className}` : ""}" viewBox="${MUSCLE_FIGURE_VIEWBOX}" role="img" aria-label="${escapeHtml(ariaLabel)}">
+      ${layers}
+      <g class="muscle-outline">${MUSCLE_FIGURE_OUTLINE}</g>
+    </svg>`;
 }
 
 function getMetricProfile(exerciseInfo, plannedEx = {}) {
@@ -4688,6 +4922,10 @@ function getEffectivePhotos(lib) {
 // here, so this sheet is read-only.)
 function buildReferenceSheetMarkup(ex, closeAction) {
   const ref = getExerciseReference(ex);
+  const muscleWeights = getExerciseMuscleWeights(getExerciseById(ex.exerciseId));
+  const muscleBadge = Object.keys(muscleWeights).length
+    ? `<div class="lw-ref-muscle-badge">${buildMuscleFigure(muscleWeights, { className: "muscle-figure-badge", ariaLabel: `Muscles worked: ${ref.muscles}` })}</div>`
+    : "";
 
   // Generic tutorial link: a per-exercise `video` URL from the library if one
   // is set, otherwise a YouTube search for the move (placeholder for now).
@@ -4712,7 +4950,10 @@ function buildReferenceSheetMarkup(ex, closeAction) {
             <h3>${escapeHtml(ex.name)}</h3>
             <p>${escapeHtml(ref.muscles)}</p>
           </div>
-          <button class="lw-sheet-close" type="button" data-action="${closeAction}" aria-label="Close how to do it">&times;</button>
+          <div class="lw-sheet-head-actions">
+            ${muscleBadge}
+            <button class="lw-sheet-close" type="button" data-action="${closeAction}" aria-label="Close how to do it">&times;</button>
+          </div>
         </div>
         ${photosBlock}
         <div class="lw-ref-meta">
@@ -10520,6 +10761,50 @@ function countCompletedInWeek(mondayDate, completedSet) {
   return count;
 }
 
+// F3: this week's per-muscle-group score, Sum(involvement x intensity) across
+// every completed set/hold/session. Intensity is the logged 1-10 effort
+// (unrated work uses a neutral default so it still counts); a strength/timed
+// entry's "volume" is its number of completed sets/holds, while cardio/sport
+// (no discrete sets) counts once per logged session. Raw sums are then
+// normalized against the week's own highest-scoring group (0-1, brightest
+// muscle = 1) - that single normalized number drives both the heat-map
+// opacity and the value sent to the coach, so they can never disagree.
+const MUSCLE_SCORE_DEFAULT_EFFORT = 6;
+
+function computeWeeklyMuscleScores(data, mondayDate) {
+  const startKey = dateKeyUTC(mondayDate);
+  const endKey = dateKeyUTC(addDaysUTC(mondayDate, 6));
+  const raw = {};
+  MUSCLE_FIGURE_GROUP_ORDER.forEach((g) => { raw[g] = 0; });
+
+  (data.workouts || []).forEach((w) => {
+    if (!w.date || w.date < startKey || w.date > endKey) return;
+    (w.entries || []).forEach((entry) => {
+      if (entry.skipped) return;
+      let units = 0;
+      if (entry.type === "strength") units = Array.isArray(entry.sets) ? entry.sets.length : 0;
+      else if (entry.type === "timed") units = Array.isArray(entry.holds) ? entry.holds.length : 0;
+      else if (entry.type === "cardio" || entry.type === "sport") units = Number(entry.durationMinutes) > 0 ? 1 : 0;
+      if (units <= 0) return;
+
+      const effort = Number.isFinite(entry.difficulty) && entry.difficulty > 0 ? entry.difficulty : MUSCLE_SCORE_DEFAULT_EFFORT;
+      const contribution = (effort / 10) * units;
+      const weights = getExerciseMuscleWeights(getExerciseById(entry.exerciseId));
+      Object.entries(weights).forEach(([group, weight]) => {
+        raw[group] = (raw[group] || 0) + contribution * weight;
+      });
+    });
+  });
+
+  const maxRaw = Math.max(0, ...Object.values(raw));
+  const normalized = {};
+  MUSCLE_FIGURE_GROUP_ORDER.forEach((g) => {
+    normalized[g] = maxRaw > 0 ? Math.round((raw[g] / maxRaw) * 100) / 100 : 0;
+  });
+
+  return { raw, normalized, maxRaw, hasData: maxRaw > 0 };
+}
+
 function computeWeekStreak(target, completedSet) {
   // Consecutive weeks that hit the weekly target. The current week is still in
   // progress, so it only adds to the streak once hit - never breaks it early.
@@ -11031,32 +11316,17 @@ function hasAnyCardioLogged() {
     (w.entries || []).some((e) => e.type === "cardio"));
 }
 
-function renderProgressHero(data, doneThisWeek, target, streak, completedSet) {
+function renderProgressHero(data, streak, completedSet) {
   const totalWorkouts = Array.isArray(data.workouts) ? data.workouts.length : 0;
   const monthStart = (() => {
     const n = new Date();
     return dateKeyUTC(new Date(Date.UTC(n.getUTCFullYear(), n.getUTCMonth(), 1)));
   })();
   const thisMonth = Array.from(completedSet).filter((k) => String(k) >= monthStart).length;
-
-  const weekNote = target <= 0
-    ? "No days planned"
-    : (doneThisWeek >= target ? "Target hit — nice work!" : `${target - doneThisWeek} more to go`);
-  const hit = target > 0 && doneThisWeek >= target;
   const streakNote = streak === 0 ? "Hit your target to start one" : `${streak === 1 ? "week" : "weeks"} in a row`;
 
   return `
-    <div class="prog-hero">
-      <div class="hero-tile${hit ? " is-hit" : ""}">
-        <p class="card-kicker">This week</p>
-        <div class="hero-ring-row">
-          <div class="ring-wrap">
-            ${buildProgressRing(doneThisWeek, target)}
-            <span class="ring-label">${doneThisWeek}<i>/${target}</i></span>
-          </div>
-          <p class="hero-note">${escapeHtml(weekNote)}</p>
-        </div>
-      </div>
+    <div class="prog-hero prog-hero-secondary">
       <div class="hero-tile">
         <p class="card-kicker">Streak</p>
         <p class="hero-num">${streak}<span class="hero-unit"> ${streak === 1 ? "wk" : "wks"}</span></p>
@@ -11068,6 +11338,63 @@ function renderProgressHero(data, doneThisWeek, target, streak, completedSet) {
         <p class="hero-note">${thisMonth} this month</p>
       </div>
     </div>`;
+}
+
+// F3: the "This Week" tile grew into its own full-width card - the same
+// weekly-target ring as before, plus a front+back muscle heat map for
+// everything logged this week. Opacity/legend numbers are normalized 0-1
+// relative to the week's hardest-hit group (see computeWeeklyMuscleScores);
+// that same normalized number is what the coach packet reads too, so the
+// visual and the number the coach reasons from always agree.
+function renderWeeklyMuscleHeatMapCard(doneThisWeek, target) {
+  const data = getLocalData();
+  const weekNote = target <= 0
+    ? "No days planned"
+    : (doneThisWeek >= target ? "Target hit — nice work!" : `${target - doneThisWeek} more to go`);
+  const hit = target > 0 && doneThisWeek >= target;
+
+  const ringBlock = `
+    <div class="hero-ring-row">
+      <div class="ring-wrap">
+        ${buildProgressRing(doneThisWeek, target)}
+        <span class="ring-label">${doneThisWeek}<i>/${target}</i></span>
+      </div>
+      <p class="hero-note">${escapeHtml(weekNote)}</p>
+    </div>`;
+
+  const { normalized, hasData } = computeWeeklyMuscleScores(data, mondayOfWeek(new Date()));
+
+  let body;
+  if (!hasData) {
+    body = `<p class="prog-empty">Log a workout this week and a muscle heat map will build here automatically.</p>`;
+  } else {
+    const figure = buildMuscleFigure(normalized, { className: "muscle-figure-heatmap", ariaLabel: "This week's worked muscles" });
+    const legendRows = MUSCLE_FIGURE_GROUP_ORDER
+      .map((g) => ({ g, v: normalized[g] || 0 }))
+      .filter((r) => r.v > 0)
+      .sort((a, b) => b.v - a.v)
+      .map((r) => `
+        <div class="muscle-legend-row">
+          <span class="muscle-legend-name">${escapeHtml(MUSCLE_FIGURE_GROUP_LABELS[r.g])}</span>
+          <span class="muscle-legend-meta">${Math.round(r.v * 100)}%</span>
+        </div>`)
+      .join("");
+    body = `
+      <div class="muscle-heatmap-body">
+        ${figure}
+        <div class="muscle-legend">
+          <p class="muscle-legend-head">Worked this week &middot; relative to your hardest-hit group</p>
+          ${legendRows}
+        </div>
+      </div>`;
+  }
+
+  return `
+    <section class="prog-card muscle-heatmap-card${hit ? " is-hit" : ""}">
+      <p class="card-kicker">This week</p>
+      ${ringBlock}
+      ${body}
+    </section>`;
 }
 
 function renderStrengthProgressCard() {
@@ -12079,7 +12406,8 @@ function renderProgress(resetMonth = true) {
   const streak = computeWeekStreak(target, completedSet);
 
   progressContent.innerHTML = `
-    ${renderProgressHero(data, doneThisWeek, target, streak, completedSet)}
+    ${renderWeeklyMuscleHeatMapCard(doneThisWeek, target)}
+    ${renderProgressHero(data, streak, completedSet)}
     ${renderFocusGoalCard()}
     ${renderBodyWeightCard(data)}
     ${renderStrengthProgressCard()}

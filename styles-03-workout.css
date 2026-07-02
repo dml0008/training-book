@@ -1665,6 +1665,34 @@ body.in-workout .today-panel {
   cursor: pointer;
 }
 
+/* F3: the small front+back muscle badge next to a how-to sheet's title, plus
+   the close button - grouped so the badge sits close to the button it's near
+   without disturbing the head row's title/close space-between. */
+.lw-sheet-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: none;
+}
+
+.lw-ref-muscle-badge {
+  width: 64px;
+  flex: none;
+}
+
+/* Shared muscle-figure SVG: the fill layers use the app's lime accent (the
+   source assets were built to this exact color) at an opacity set per-layer
+   inline (involvement/heat weight); the outline is the shared body linework,
+   drawn last so its anatomical detail lines still show over a filled muscle. */
+.muscle-figure {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.muscle-figure .st0 { fill: var(--accent); }
+.muscle-figure .st1 { fill: none; stroke: var(--muted); stroke-linecap: round; stroke-linejoin: round; }
+
 .lw-stepper {
   display: flex;
   align-items: center;

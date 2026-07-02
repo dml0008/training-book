@@ -32,7 +32,17 @@
         "Repeat the movement for the prescribed amount of repetitions.",
         "When you are done, place the bar back in the rack."
       ],
-      "instructionsSource": "free-exercise-db"
+      "instructionsSource": "free-exercise-db",
+      "secondaryMuscles": [
+        {
+          "muscle": "shoulders",
+          "weight": 0.4
+        },
+        {
+          "muscle": "triceps",
+          "weight": 0.3
+        }
+      ]
     },
     {
       "name": "Incline Bench Press",
@@ -57,7 +67,17 @@
         "Repeat the movement for the prescribed amount of repetitions.",
         "When you are done, place the bar back in the rack."
       ],
-      "instructionsSource": "free-exercise-db"
+      "instructionsSource": "free-exercise-db",
+      "secondaryMuscles": [
+        {
+          "muscle": "shoulders",
+          "weight": 0.5
+        },
+        {
+          "muscle": "triceps",
+          "weight": 0.3
+        }
+      ]
     },
     {
       "name": "Dumbbell Bench Press",
@@ -82,7 +102,17 @@
         "Then, as you breathe out, use your chest to push the dumbbells up. Lock your arms at the top of the lift and squeeze your chest, hold for a second and then begin coming down slowly. Tip: Ideally, lowering the weight should take about twice as long as raising it.",
         "Repeat the movement for the prescribed amount of repetitions of your training program."
       ],
-      "instructionsSource": "free-exercise-db"
+      "instructionsSource": "free-exercise-db",
+      "secondaryMuscles": [
+        {
+          "muscle": "shoulders",
+          "weight": 0.4
+        },
+        {
+          "muscle": "triceps",
+          "weight": 0.3
+        }
+      ]
     },
     {
       "name": "Dumbbell Fly",
@@ -131,7 +161,21 @@
         "Now breathe out and press your upper body back up to the starting position while squeezing your chest.",
         "After a brief pause at the top contracted position, you can begin to lower yourself downward again for as many repetitions as needed."
       ],
-      "instructionsSource": "free-exercise-db"
+      "instructionsSource": "free-exercise-db",
+      "secondaryMuscles": [
+        {
+          "muscle": "shoulders",
+          "weight": 0.3
+        },
+        {
+          "muscle": "triceps",
+          "weight": 0.3
+        },
+        {
+          "muscle": "abdominals",
+          "weight": 0.2
+        }
+      ]
     },
     {
       "name": "Chest Dip",
@@ -155,7 +199,17 @@
         "Once you feel the stretch, use your chest to bring your body back to the starting position as you breathe out. Tip: Remember to squeeze the chest at the top of the movement for a second.",
         "Repeat the movement for the prescribed amount of repetitions."
       ],
-      "instructionsSource": "free-exercise-db"
+      "instructionsSource": "free-exercise-db",
+      "secondaryMuscles": [
+        {
+          "muscle": "triceps",
+          "weight": 0.5
+        },
+        {
+          "muscle": "shoulders",
+          "weight": 0.3
+        }
+      ]
     },
     {
       "name": "Cable Crossover",
@@ -205,7 +259,21 @@
         "Go back to the starting position by bending at the knees while simultaneously leaning the torso forward at the waist while keeping the back straight. When the weights on the bar touch the floor you are back at the starting position and ready to perform another repetition.",
         "Perform the amount of repetitions prescribed in the program."
       ],
-      "instructionsSource": "free-exercise-db"
+      "instructionsSource": "free-exercise-db",
+      "secondaryMuscles": [
+        {
+          "muscle": "hamstrings",
+          "weight": 0.7
+        },
+        {
+          "muscle": "glutes",
+          "weight": 0.6
+        },
+        {
+          "muscle": "forearms",
+          "weight": 0.3
+        }
+      ]
     },
     {
       "name": "Romanian Deadlift",
@@ -230,7 +298,17 @@
         "Once you are standing completely straight up, lower the bar by pushing the hips back, only slightly bending the knees, unlike when squatting. Tip: Take a deep breath at the start of the movement and keep your chest up. Hold your breath as you lower and exhale as you complete the movement.",
         "Repeat for the recommended amount of repetitions."
       ],
-      "instructionsSource": "free-exercise-db"
+      "instructionsSource": "free-exercise-db",
+      "secondaryMuscles": [
+        {
+          "muscle": "glutes",
+          "weight": 0.6
+        },
+        {
+          "muscle": "lower back",
+          "weight": 0.4
+        }
+      ]
     },
     {
       "name": "Pull-Up",
@@ -255,7 +333,17 @@
         "After a second on the contracted position, start to inhale and slowly lower your torso back to the starting position when your arms are fully extended and the lats are fully stretched.",
         "Repeat this motion for the prescribed amount of repetitions."
       ],
-      "instructionsSource": "free-exercise-db"
+      "instructionsSource": "free-exercise-db",
+      "secondaryMuscles": [
+        {
+          "muscle": "biceps",
+          "weight": 0.5
+        },
+        {
+          "muscle": "shoulders",
+          "weight": 0.2
+        }
+      ]
     },
     {
       "name": "Chin-Up",
@@ -280,7 +368,17 @@
         "After a second of squeezing the biceps in the contracted position, slowly lower your torso back to the starting position; when your arms are fully extended. Breathe in as you perform this portion of the movement.",
         "Repeat this motion for the prescribed amount of repetitions."
       ],
-      "instructionsSource": "free-exercise-db"
+      "instructionsSource": "free-exercise-db",
+      "secondaryMuscles": [
+        {
+          "muscle": "biceps",
+          "weight": 0.6
+        },
+        {
+          "muscle": "shoulders",
+          "weight": 0.2
+        }
+      ]
     },
     {
       "name": "Lat Pulldown",
@@ -306,7 +404,13 @@
         "After a second at the contracted position squeezing your shoulder blades together, slowly raise the bar back to the starting position when your arms are fully extended and the lats are fully stretched. Inhale during this portion of the movement.",
         "Repeat this motion for the prescribed amount of repetitions."
       ],
-      "instructionsSource": "free-exercise-db"
+      "instructionsSource": "free-exercise-db",
+      "secondaryMuscles": [
+        {
+          "muscle": "biceps",
+          "weight": 0.4
+        }
+      ]
     },
     {
       "name": "Bent-Over Barbell Row",
@@ -330,7 +434,17 @@
         "Then inhale and slowly lower the barbell back to the starting position.",
         "Repeat for the recommended amount of repetitions."
       ],
-      "instructionsSource": "free-exercise-db"
+      "instructionsSource": "free-exercise-db",
+      "secondaryMuscles": [
+        {
+          "muscle": "biceps",
+          "weight": 0.4
+        },
+        {
+          "muscle": "lats",
+          "weight": 0.3
+        }
+      ]
     },
     {
       "name": "Seated Cable Row",
@@ -355,7 +469,17 @@
         "Keeping the torso stationary, pull the handles back towards your torso while keeping the arms close to it until you touch the abdominals. Breathe out as you perform that movement. At that point you should be squeezing your back muscles hard. Hold that contraction for a second and slowly go back to the original position while breathing in.",
         "Repeat for the recommended amount of repetitions."
       ],
-      "instructionsSource": "free-exercise-db"
+      "instructionsSource": "free-exercise-db",
+      "secondaryMuscles": [
+        {
+          "muscle": "biceps",
+          "weight": 0.4
+        },
+        {
+          "muscle": "lats",
+          "weight": 0.2
+        }
+      ]
     },
     {
       "name": "One-Arm Dumbbell Row",
@@ -382,7 +506,17 @@
         "Repeat the movement for the specified amount of repetitions.",
         "Switch sides and repeat again with the other arm."
       ],
-      "instructionsSource": "free-exercise-db"
+      "instructionsSource": "free-exercise-db",
+      "secondaryMuscles": [
+        {
+          "muscle": "biceps",
+          "weight": 0.4
+        },
+        {
+          "muscle": "lats",
+          "weight": 0.3
+        }
+      ]
     },
     {
       "name": "Face Pull",
@@ -403,7 +537,13 @@
       "instructions": [
         "Facing a high pulley with a rope or dual handles attached, pull the weight directly towards your face, separating your hands as you do so. Keep your upper arms parallel to the ground."
       ],
-      "instructionsSource": "free-exercise-db"
+      "instructionsSource": "free-exercise-db",
+      "secondaryMuscles": [
+        {
+          "muscle": "middle back",
+          "weight": 0.3
+        }
+      ]
     },
     {
       "name": "Overhead Barbell Press",
@@ -429,7 +569,17 @@
         "Lift the bar back up to the starting position as you exhale.",
         "Repeat for the recommended amount of repetitions."
       ],
-      "instructionsSource": "free-exercise-db"
+      "instructionsSource": "free-exercise-db",
+      "secondaryMuscles": [
+        {
+          "muscle": "triceps",
+          "weight": 0.4
+        },
+        {
+          "muscle": "abdominals",
+          "weight": 0.2
+        }
+      ]
     },
     {
       "name": "Dumbbell Shoulder Press",
@@ -455,7 +605,13 @@
         "Then, after a brief pause at the top contracted position, slowly lower the weights back down to the starting position while inhaling.",
         "Repeat for the recommended amount of repetitions."
       ],
-      "instructionsSource": "free-exercise-db"
+      "instructionsSource": "free-exercise-db",
+      "secondaryMuscles": [
+        {
+          "muscle": "triceps",
+          "weight": 0.3
+        }
+      ]
     },
     {
       "name": "Lateral Raise",
@@ -552,7 +708,13 @@
         "After a second pause at the top, begin to lower the dumbbells to the original position by rotating the palms of your hands towards you. Tip: The left arm will be rotated in a counter clockwise manner while the right one will be rotated clockwise. Breathe in as you perform this portion of the movement.",
         "Repeat for the recommended amount of repetitions."
       ],
-      "instructionsSource": "free-exercise-db"
+      "instructionsSource": "free-exercise-db",
+      "secondaryMuscles": [
+        {
+          "muscle": "triceps",
+          "weight": 0.3
+        }
+      ]
     },
     {
       "name": "Shrug",
@@ -602,7 +764,17 @@
         "Begin to raise the bar as you exhale by pushing the floor with the heel or middle of your foot as you straighten the legs and extend the hips to go back to the starting position.",
         "Repeat for the recommended amount of repetitions."
       ],
-      "instructionsSource": "free-exercise-db"
+      "instructionsSource": "free-exercise-db",
+      "secondaryMuscles": [
+        {
+          "muscle": "glutes",
+          "weight": 0.5
+        },
+        {
+          "muscle": "hamstrings",
+          "weight": 0.3
+        }
+      ]
     },
     {
       "name": "Front Squat",
@@ -628,7 +800,17 @@
         "Begin to raise the bar as you exhale by pushing the floor mainly with the middle of your foot as you straighten the legs again and go back to the starting position.",
         "Repeat for the recommended amount of repetitions."
       ],
-      "instructionsSource": "free-exercise-db"
+      "instructionsSource": "free-exercise-db",
+      "secondaryMuscles": [
+        {
+          "muscle": "glutes",
+          "weight": 0.4
+        },
+        {
+          "muscle": "hamstrings",
+          "weight": 0.2
+        }
+      ]
     },
     {
       "name": "Goblet Squat",
@@ -651,7 +833,17 @@
         "Squat down between your legs until your hamstrings are on your calves. Keep your chest and head up and your back straight.",
         "At the bottom position, pause and use your elbows to push your knees out. Return to the starting position, and repeat for 10-20 repetitions."
       ],
-      "instructionsSource": "free-exercise-db"
+      "instructionsSource": "free-exercise-db",
+      "secondaryMuscles": [
+        {
+          "muscle": "glutes",
+          "weight": 0.4
+        },
+        {
+          "muscle": "hamstrings",
+          "weight": 0.2
+        }
+      ]
     },
     {
       "name": "Leg Press",
@@ -676,7 +868,17 @@
         "Pushing mainly with the heels of your feet and using the quadriceps go back to the starting position as you exhale.",
         "Repeat for the recommended amount of repetitions and ensure to lock the safety pins properly once you are done. You do not want that platform falling on you fully loaded."
       ],
-      "instructionsSource": "free-exercise-db"
+      "instructionsSource": "free-exercise-db",
+      "secondaryMuscles": [
+        {
+          "muscle": "glutes",
+          "weight": 0.4
+        },
+        {
+          "muscle": "hamstrings",
+          "weight": 0.2
+        }
+      ]
     },
     {
       "name": "Lunge",
@@ -700,7 +902,17 @@
         "Using mainly the heel of your foot, push up and go back to the starting position as you exhale.",
         "Repeat the movement for the recommended amount of repetitions and then perform with the left leg."
       ],
-      "instructionsSource": "free-exercise-db"
+      "instructionsSource": "free-exercise-db",
+      "secondaryMuscles": [
+        {
+          "muscle": "glutes",
+          "weight": 0.4
+        },
+        {
+          "muscle": "hamstrings",
+          "weight": 0.2
+        }
+      ]
     },
     {
       "name": "Bulgarian Split Squat",
@@ -724,7 +936,17 @@
         "Begin by descending, flexing your knee and hip to lower your body down. Maintain good posture througout the movement. Keep the front knee in line with the foot as you perform the exercise.",
         "At the bottom of the movement, drive through the heel to extend the knee and hip to return to the starting position."
       ],
-      "instructionsSource": "free-exercise-db"
+      "instructionsSource": "free-exercise-db",
+      "secondaryMuscles": [
+        {
+          "muscle": "glutes",
+          "weight": 0.5
+        },
+        {
+          "muscle": "hamstrings",
+          "weight": 0.2
+        }
+      ]
     },
     {
       "name": "Leg Extension",
@@ -820,7 +1042,13 @@
         "Roll the bar so that it is directly above your hips, and lean back against the bench so that your shoulder blades are near the top of it.",
         "Begin the movement by driving through your feet, extending your hips vertically through the bar. Your weight should be supported by your shoulder blades and your feet. Extend as far as possible, then reverse the motion to return to the starting position."
       ],
-      "instructionsSource": "free-exercise-db"
+      "instructionsSource": "free-exercise-db",
+      "secondaryMuscles": [
+        {
+          "muscle": "hamstrings",
+          "weight": 0.4
+        }
+      ]
     },
     {
       "name": "Barbell Curl",
@@ -1018,7 +1246,17 @@
         "Repeat the movement for the prescribed amount of repetitions.",
         "When you are done, place the bar back in the rack."
       ],
-      "instructionsSource": "free-exercise-db"
+      "instructionsSource": "free-exercise-db",
+      "secondaryMuscles": [
+        {
+          "muscle": "chest",
+          "weight": 0.4
+        },
+        {
+          "muscle": "shoulders",
+          "weight": 0.3
+        }
+      ]
     },
     {
       "name": "Plank",
@@ -1234,7 +1472,21 @@
         "Hike the bell back between your legs, then snap your hips forward to swing it up to chest height. Let your hips, not your arms, drive the movement.",
         "Let the bell fall back down, absorbing it with another hip hinge, and flow straight into the next rep."
       ],
-      "instructionsSource": "authored"
+      "instructionsSource": "authored",
+      "secondaryMuscles": [
+        {
+          "muscle": "hamstrings",
+          "weight": 0.5
+        },
+        {
+          "muscle": "lower back",
+          "weight": 0.3
+        },
+        {
+          "muscle": "shoulders",
+          "weight": 0.2
+        }
+      ]
     },
     {
       "name": "Jumping Jack",
@@ -1349,7 +1601,17 @@
         "At that point, bring the dumbbell back to the starting position using the arc through which the weight was lowered and exhale as you perform this movement.",
         "Hold the weight on the initial position for a second and repeat the motion for the prescribed number of repetitions."
       ],
-      "instructionsSource": "free-exercise-db"
+      "instructionsSource": "free-exercise-db",
+      "secondaryMuscles": [
+        {
+          "muscle": "lats",
+          "weight": 0.4
+        },
+        {
+          "muscle": "triceps",
+          "weight": 0.2
+        }
+      ]
     },
     {
       "name": "Machine Chest Press",
@@ -1428,7 +1690,17 @@
         "Repeat the movement for the prescribed amount of repetitions.",
         "When you are done, place the dumbbells back on your thighs and then on the floor. This is the safest manner to release the dumbbells."
       ],
-      "instructionsSource": "free-exercise-db"
+      "instructionsSource": "free-exercise-db",
+      "secondaryMuscles": [
+        {
+          "muscle": "shoulders",
+          "weight": 0.5
+        },
+        {
+          "muscle": "triceps",
+          "weight": 0.3
+        }
+      ]
     },
     {
       "name": "Decline Bench Press",
@@ -1454,7 +1726,13 @@
         "Repeat the movement for the prescribed amount of repetitions.",
         "When you are done, place the bar back in the rack."
       ],
-      "instructionsSource": "free-exercise-db"
+      "instructionsSource": "free-exercise-db",
+      "secondaryMuscles": [
+        {
+          "muscle": "triceps",
+          "weight": 0.3
+        }
+      ]
     },
     {
       "name": "Incline Dumbbell Fly",
@@ -1504,7 +1782,17 @@
         "Using your triceps and some of your pectoral muscles, press your upper body back up to the starting position and squeeze your chest. Breathe out as you perform this step.",
         "After a second pause at the contracted position, repeat the movement for the prescribed amount of repetitions."
       ],
-      "instructionsSource": "free-exercise-db"
+      "instructionsSource": "free-exercise-db",
+      "secondaryMuscles": [
+        {
+          "muscle": "chest",
+          "weight": 0.4
+        },
+        {
+          "muscle": "shoulders",
+          "weight": 0.3
+        }
+      ]
     },
     {
       "name": "Inverted Row",
@@ -1529,7 +1817,13 @@
         "Pause at the top of the motion, and return yourself to the start position.",
         "Repeat for the desired number of repetitions."
       ],
-      "instructionsSource": "free-exercise-db"
+      "instructionsSource": "free-exercise-db",
+      "secondaryMuscles": [
+        {
+          "muscle": "biceps",
+          "weight": 0.4
+        }
+      ]
     },
     {
       "name": "Decline Dumbbell Press",
@@ -1555,7 +1849,13 @@
         "As you breathe out, push the dumbbells up using your pectoral muscles. Lock your arms in the contracted position, squeeze your chest, hold for a second and then start coming down slowly. Tip: It should take at least twice as long to go down than to come up..",
         "Repeat the movement for the prescribed amount of repetitions of your training program."
       ],
-      "instructionsSource": "free-exercise-db"
+      "instructionsSource": "free-exercise-db",
+      "secondaryMuscles": [
+        {
+          "muscle": "triceps",
+          "weight": 0.3
+        }
+      ]
     },
     {
       "name": "T-Bar Row",
@@ -1580,7 +1880,17 @@
         "Pull the weight to your upper abdomen by retracting the shoulder blades and flexing the elbows. Do not jerk the weight or cheat during the movement.",
         "After a brief pause, return to the starting position."
       ],
-      "instructionsSource": "free-exercise-db"
+      "instructionsSource": "free-exercise-db",
+      "secondaryMuscles": [
+        {
+          "muscle": "biceps",
+          "weight": 0.4
+        },
+        {
+          "muscle": "lats",
+          "weight": 0.3
+        }
+      ]
     },
     {
       "name": "Good Morning",
@@ -1606,7 +1916,17 @@
         "Begin to raise the bar as you exhale by elevating your torso back to the starting position.",
         "Repeat for the recommended amount of repetitions."
       ],
-      "instructionsSource": "free-exercise-db"
+      "instructionsSource": "free-exercise-db",
+      "secondaryMuscles": [
+        {
+          "muscle": "hamstrings",
+          "weight": 0.6
+        },
+        {
+          "muscle": "glutes",
+          "weight": 0.4
+        }
+      ]
     },
     {
       "name": "Rack Pull",
@@ -1629,7 +1949,21 @@
         "With your head looking forward, extend through the hips and knees, pulling the weight up and back until lockout. Be sure to pull your shoulders back as you complete the movement.",
         "Return the weight to the pins and repeat."
       ],
-      "instructionsSource": "free-exercise-db"
+      "instructionsSource": "free-exercise-db",
+      "secondaryMuscles": [
+        {
+          "muscle": "hamstrings",
+          "weight": 0.5
+        },
+        {
+          "muscle": "glutes",
+          "weight": 0.4
+        },
+        {
+          "muscle": "forearms",
+          "weight": 0.3
+        }
+      ]
     },
     {
       "name": "Straight-Arm Pulldown",
@@ -1654,7 +1988,13 @@
         "While keeping the arms straight, go back to the starting position while breathing in.",
         "Repeat for the recommended amount of repetitions."
       ],
-      "instructionsSource": "free-exercise-db"
+      "instructionsSource": "free-exercise-db",
+      "secondaryMuscles": [
+        {
+          "muscle": "chest",
+          "weight": 0.2
+        }
+      ]
     },
     {
       "name": "Back Extension",
@@ -1680,7 +2020,17 @@
         "Slowly raise your torso back to the initial position as you inhale. Tip: Avoid the temptation to arch your back past a straight line. Also, do not swing the torso at any time in order to protect the back from injury.",
         "Repeat for the recommended amount of repetitions."
       ],
-      "instructionsSource": "free-exercise-db"
+      "instructionsSource": "free-exercise-db",
+      "secondaryMuscles": [
+        {
+          "muscle": "hamstrings",
+          "weight": 0.3
+        },
+        {
+          "muscle": "glutes",
+          "weight": 0.3
+        }
+      ]
     },
     {
       "name": "Dumbbell Shrug",
@@ -1730,7 +2080,13 @@
         "After a second on the contracted position, while breathing in, slowly bring the bar back to the starting position when your arms are fully extended and the lats are fully stretched.",
         "Repeat this motion for the prescribed amount of repetitions."
       ],
-      "instructionsSource": "free-exercise-db"
+      "instructionsSource": "free-exercise-db",
+      "secondaryMuscles": [
+        {
+          "muscle": "biceps",
+          "weight": 0.5
+        }
+      ]
     },
     {
       "name": "Wide-Grip Pull-Up",
@@ -1755,7 +2111,17 @@
         "After a second on the contracted position, start to inhale and slowly lower your torso back to the starting position when your arms are fully extended and the lats are fully stretched.",
         "Repeat this motion for the prescribed amount of repetitions."
       ],
-      "instructionsSource": "free-exercise-db"
+      "instructionsSource": "free-exercise-db",
+      "secondaryMuscles": [
+        {
+          "muscle": "biceps",
+          "weight": 0.4
+        },
+        {
+          "muscle": "shoulders",
+          "weight": 0.2
+        }
+      ]
     },
     {
       "name": "Upright Row",
@@ -1779,7 +2145,13 @@
         "Lower the bar back down slowly to the starting position. Inhale as you perform this portion of the movement.",
         "Repeat for the recommended amount of repetitions."
       ],
-      "instructionsSource": "free-exercise-db"
+      "instructionsSource": "free-exercise-db",
+      "secondaryMuscles": [
+        {
+          "muscle": "traps",
+          "weight": 0.3
+        }
+      ]
     },
     {
       "name": "Cable Lateral Raise",
@@ -1858,7 +2230,13 @@
         "After a second pause, slowly come down back to the starting position as you inhale.",
         "Repeat for the recommended amount of repetitions."
       ],
-      "instructionsSource": "free-exercise-db"
+      "instructionsSource": "free-exercise-db",
+      "secondaryMuscles": [
+        {
+          "muscle": "triceps",
+          "weight": 0.3
+        }
+      ]
     },
     {
       "name": "Reverse Pec Deck",
@@ -1931,7 +2309,17 @@
         "Using the momentum generated, finish pressing the weight overhead be extending through the arms.",
         "Return to the starting position, using your legs to absorb the impact."
       ],
-      "instructionsSource": "free-exercise-db"
+      "instructionsSource": "free-exercise-db",
+      "secondaryMuscles": [
+        {
+          "muscle": "triceps",
+          "weight": 0.4
+        },
+        {
+          "muscle": "quadriceps",
+          "weight": 0.3
+        }
+      ]
     },
     {
       "name": "Hack Squat",
@@ -1958,7 +2346,13 @@
         "Begin to raise the unit as you exhale by pushing the floor with mainly with the heel of your foot as you straighten the legs again and go back to the starting position.",
         "Repeat for the recommended amount of repetitions."
       ],
-      "instructionsSource": "free-exercise-db"
+      "instructionsSource": "free-exercise-db",
+      "secondaryMuscles": [
+        {
+          "muscle": "glutes",
+          "weight": 0.3
+        }
+      ]
     },
     {
       "name": "Barbell Lunge",
@@ -1983,7 +2377,17 @@
         "Using mainly the heel of your foot, push up and go back to the starting position as you exhale.",
         "Repeat the movement for the recommended amount of repetitions and then perform with the left leg."
       ],
-      "instructionsSource": "free-exercise-db"
+      "instructionsSource": "free-exercise-db",
+      "secondaryMuscles": [
+        {
+          "muscle": "glutes",
+          "weight": 0.4
+        },
+        {
+          "muscle": "hamstrings",
+          "weight": 0.2
+        }
+      ]
     },
     {
       "name": "Walking Lunge",
@@ -2007,7 +2411,17 @@
         "Drive through the heel of your lead foot and extend both knees to raise yourself back up.",
         "Step forward with your rear foot, repeating the lunge on the opposite leg."
       ],
-      "instructionsSource": "free-exercise-db"
+      "instructionsSource": "free-exercise-db",
+      "secondaryMuscles": [
+        {
+          "muscle": "glutes",
+          "weight": 0.4
+        },
+        {
+          "muscle": "hamstrings",
+          "weight": 0.2
+        }
+      ]
     },
     {
       "name": "Dumbbell Step-Up",
@@ -2031,7 +2445,13 @@
         "Step down with the left leg by flexing the hip and knee of the right leg as you inhale. Return to the original standing position by placing the right foot of to next to the left foot on the initial position.",
         "Repeat with the right leg for the recommended amount of repetitions and then perform with the left leg."
       ],
-      "instructionsSource": "free-exercise-db"
+      "instructionsSource": "free-exercise-db",
+      "secondaryMuscles": [
+        {
+          "muscle": "glutes",
+          "weight": 0.4
+        }
+      ]
     },
     {
       "name": "Sumo Deadlift",
@@ -2055,7 +2475,21 @@
         "As the bar passes through the knees, lean back and drive the hips into the bar, pulling your shoulder blades together.",
         "Return the weight to the ground by bending at the hips and controlling the weight on the way down."
       ],
-      "instructionsSource": "free-exercise-db"
+      "instructionsSource": "free-exercise-db",
+      "secondaryMuscles": [
+        {
+          "muscle": "glutes",
+          "weight": 0.6
+        },
+        {
+          "muscle": "lower back",
+          "weight": 0.4
+        },
+        {
+          "muscle": "quadriceps",
+          "weight": 0.3
+        }
+      ]
     },
     {
       "name": "Glute Bridge",
@@ -2078,7 +2512,13 @@
         "Begin the movement by driving through with your heels, extending your hips vertically through the bar. Your weight should be supported by your upper back and the heels of your feet.",
         "Extend as far as possible, then reverse the motion to return to the starting position."
       ],
-      "instructionsSource": "free-exercise-db"
+      "instructionsSource": "free-exercise-db",
+      "secondaryMuscles": [
+        {
+          "muscle": "hamstrings",
+          "weight": 0.3
+        }
+      ]
     },
     {
       "name": "Cable Pull Through",
@@ -2100,7 +2540,17 @@
         "Begin standing a few feet in front of a low pulley with a rope or handle attached. Face away from the machine, straddling the cable, with your feet set wide apart.",
         "Begin the movement by reaching through your legs as far as possible, bending at the hips. Keep your knees slightly bent. Keeping your arms straight, extend through the hip to stand straight up. Avoid pulling upward through the shoulders; all of the motion should originate through the hips."
       ],
-      "instructionsSource": "free-exercise-db"
+      "instructionsSource": "free-exercise-db",
+      "secondaryMuscles": [
+        {
+          "muscle": "hamstrings",
+          "weight": 0.4
+        },
+        {
+          "muscle": "lower back",
+          "weight": 0.2
+        }
+      ]
     },
     {
       "name": "Reverse Lunge",
@@ -2124,7 +2574,17 @@
         "Push up and go back to the starting position as you exhale. Tip: Use the ball of your feet to push in order to accentuate the quadriceps. To focus on the glutes, press with your heels.",
         "Now repeat with the opposite leg."
       ],
-      "instructionsSource": "free-exercise-db"
+      "instructionsSource": "free-exercise-db",
+      "secondaryMuscles": [
+        {
+          "muscle": "glutes",
+          "weight": 0.4
+        },
+        {
+          "muscle": "hamstrings",
+          "weight": 0.2
+        }
+      ]
     },
     {
       "name": "Plié Dumbbell Squat",
@@ -2149,7 +2609,17 @@
         "Press mainly with the heel of the foot to bring the body back to the starting position while exhaling.",
         "Repeat for the recommended amount of repetitions."
       ],
-      "instructionsSource": "free-exercise-db"
+      "instructionsSource": "free-exercise-db",
+      "secondaryMuscles": [
+        {
+          "muscle": "glutes",
+          "weight": 0.4
+        },
+        {
+          "muscle": "adductors",
+          "weight": 0.3
+        }
+      ]
     },
     {
       "name": "Glute Kickback",
@@ -2222,7 +2692,17 @@
         "With your back, shoulders, and core tight, push your knees and butt out and you begin your descent. Sit back with your hips until you are seated on the box. Ideally, your shins should be perpendicular to the ground. Pause when you reach the box, and relax the hip flexors. Never bounce off of a box.",
         "Keeping the weight on your heels and pushing your feet and knees out, drive upward off of the box as you lead the movement with your head. Continue upward, maintaining tightness head to toe."
       ],
-      "instructionsSource": "free-exercise-db"
+      "instructionsSource": "free-exercise-db",
+      "secondaryMuscles": [
+        {
+          "muscle": "glutes",
+          "weight": 0.4
+        },
+        {
+          "muscle": "hamstrings",
+          "weight": 0.2
+        }
+      ]
     },
     {
       "name": "Hip Adduction (Machine)",
@@ -2317,7 +2797,13 @@
         "Begin the movement by flexing your knees and hips, sitting back with your hips.",
         "Continue down to full depth if you are able,and quickly reverse the motion until you return to the starting position. As you squat, keep your head and chest up and push your knees out."
       ],
-      "instructionsSource": "free-exercise-db"
+      "instructionsSource": "free-exercise-db",
+      "secondaryMuscles": [
+        {
+          "muscle": "glutes",
+          "weight": 0.3
+        }
+      ]
     },
     {
       "name": "Stiff-Legged Deadlift",
@@ -2342,7 +2828,17 @@
         "Start bringing your torso up straight again by extending your hips and waist until you are back at the starting position. Inhale as you perform this movement.",
         "Repeat for the recommended amount of repetitions."
       ],
-      "instructionsSource": "free-exercise-db"
+      "instructionsSource": "free-exercise-db",
+      "secondaryMuscles": [
+        {
+          "muscle": "glutes",
+          "weight": 0.5
+        },
+        {
+          "muscle": "lower back",
+          "weight": 0.3
+        }
+      ]
     },
     {
       "name": "Hip Abduction (Machine)",
@@ -2542,7 +3038,13 @@
         "Using your triceps to bring your torso up again, lift yourself back to the starting position.",
         "Repeat for the recommended amount of repetitions."
       ],
-      "instructionsSource": "free-exercise-db"
+      "instructionsSource": "free-exercise-db",
+      "secondaryMuscles": [
+        {
+          "muscle": "shoulders",
+          "weight": 0.2
+        }
+      ]
     },
     {
       "name": "Floor Press",
@@ -2565,7 +3067,17 @@
         "Lower the bar towards the bottom of your chest or upper stomach, squeezing the bar and attempting to pull it apart as you do so. Ensure that you tuck your elbows throughout the movement. Lower the bar until your upper arm contacts the ground and pause, preventing any slamming or bouncing of the weight.",
         "Press the bar back up as fast as you can, keeping the bar, your wrists, and elbows in line as you do so."
       ],
-      "instructionsSource": "free-exercise-db"
+      "instructionsSource": "free-exercise-db",
+      "secondaryMuscles": [
+        {
+          "muscle": "chest",
+          "weight": 0.4
+        },
+        {
+          "muscle": "shoulders",
+          "weight": 0.3
+        }
+      ]
     },
     {
       "name": "Reverse Crunch",
@@ -2638,7 +3150,17 @@
         "Then, exhale and push your torso back up using your triceps to bring your body back to the starting position.",
         "Repeat the movement for the prescribed amount of repetitions."
       ],
-      "instructionsSource": "free-exercise-db"
+      "instructionsSource": "free-exercise-db",
+      "secondaryMuscles": [
+        {
+          "muscle": "chest",
+          "weight": 0.3
+        },
+        {
+          "muscle": "shoulders",
+          "weight": 0.3
+        }
+      ]
     },
     {
       "name": "Triceps Kickback",
@@ -2832,7 +3354,17 @@
         "Slowly roll the ab roller straight forward, stretching your body into a straight position. Tip: Go down as far as you can without touching the floor with your body. Breathe in during this portion of the movement.",
         "After a pause at the stretched position, start pulling yourself back to the starting position as you breathe out. Tip: Go slowly and keep your abs tight at all times."
       ],
-      "instructionsSource": "free-exercise-db"
+      "instructionsSource": "free-exercise-db",
+      "secondaryMuscles": [
+        {
+          "muscle": "shoulders",
+          "weight": 0.3
+        },
+        {
+          "muscle": "lower back",
+          "weight": 0.2
+        }
+      ]
     },
     {
       "name": "Decline Crunch",
@@ -3156,7 +3688,17 @@
         "Slowly lower the weight again to the starting position as you inhale.",
         "Repeat for the recommended amount of repetitions."
       ],
-      "instructionsSource": "free-exercise-db"
+      "instructionsSource": "free-exercise-db",
+      "secondaryMuscles": [
+        {
+          "muscle": "biceps",
+          "weight": 0.3
+        },
+        {
+          "muscle": "lats",
+          "weight": 0.2
+        }
+      ]
     },
     {
       "name": "Renegade Row",
@@ -3179,7 +3721,17 @@
         "Push one kettlebell into the floor and row the other kettlebell, retracting the shoulder blade of the working side as you flex the elbow, pulling it to your side.",
         "Then lower the kettlebell to the floor and begin the kettlebell in the opposite hand. Repeat for several reps."
       ],
-      "instructionsSource": "free-exercise-db"
+      "instructionsSource": "free-exercise-db",
+      "secondaryMuscles": [
+        {
+          "muscle": "biceps",
+          "weight": 0.3
+        },
+        {
+          "muscle": "abdominals",
+          "weight": 0.3
+        }
+      ]
     },
     {
       "name": "Zottman Curl",
@@ -3429,7 +3981,17 @@
         "Slowly begin to lower your arms, legs and chest back down to the starting position while inhaling.",
         "Repeat for the recommended amount of repetitions prescribed in your program."
       ],
-      "instructionsSource": "free-exercise-db"
+      "instructionsSource": "free-exercise-db",
+      "secondaryMuscles": [
+        {
+          "muscle": "glutes",
+          "weight": 0.3
+        },
+        {
+          "muscle": "hamstrings",
+          "weight": 0.2
+        }
+      ]
     },
     {
       "name": "Wide-Grip Push-Up",
@@ -3453,7 +4015,17 @@
         "Using your pectoral muscles, press your upper body back up to the starting position by extending the elbows. Exhale as you perform this step.",
         "After pausing at the contracted position, repeat the movement for the prescribed amount of repetitions."
       ],
-      "instructionsSource": "free-exercise-db"
+      "instructionsSource": "free-exercise-db",
+      "secondaryMuscles": [
+        {
+          "muscle": "shoulders",
+          "weight": 0.3
+        },
+        {
+          "muscle": "triceps",
+          "weight": 0.2
+        }
+      ]
     },
     {
       "name": "Decline Push-Up",
@@ -3478,7 +4050,17 @@
         "Using your pectoral muscles, press your upper body back up to the starting position and squeeze your chest. Breathe out as you perform this step.",
         "After a second pause at the contracted position, repeat the movement for the prescribed amount of repetitions."
       ],
-      "instructionsSource": "free-exercise-db"
+      "instructionsSource": "free-exercise-db",
+      "secondaryMuscles": [
+        {
+          "muscle": "shoulders",
+          "weight": 0.4
+        },
+        {
+          "muscle": "triceps",
+          "weight": 0.3
+        }
+      ]
     },
     {
       "name": "Seated Leg Tuck",

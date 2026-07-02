@@ -41,6 +41,7 @@
     align-items: stretch;
   }
   #progress-content > .prog-hero,
+  #progress-content > .muscle-heatmap-card,
   #progress-content > .consistency-card,
   #progress-content > .cal-card {
     grid-column: 1 / -1;
@@ -925,6 +926,13 @@ button.cal-cell:active {
   .prog-hero .hero-tile:first-child { grid-column: 1 / -1; }
 }
 
+/* F3: "This week" grew into its own full-width card (muscle-heatmap-card
+   below), so the remaining hero row is just Streak + All-time. */
+.prog-hero-secondary { grid-template-columns: 1fr 1fr; }
+@media (max-width: 520px) {
+  .prog-hero-secondary .hero-tile:first-child { grid-column: auto; }
+}
+
 .hero-tile {
   border: 1px solid var(--line);
   border-radius: var(--radius-md);
@@ -1344,4 +1352,51 @@ button.cal-cell:active {
 .cardio-split-row + .cardio-split-row { border-top: 1px solid var(--line); }
 .cardio-split-name { font-weight: 700; color: var(--text); }
 .cardio-split-meta { color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; }
+
+/* ---- F3: weekly muscle heat map ("This week" card) ---- */
+.muscle-heatmap-card.is-hit {
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 1px rgba(182, 211, 50, 0.25);
+}
+
+.muscle-heatmap-body {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin-top: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--line);
+}
+
+.muscle-figure-heatmap {
+  width: 150px;
+  flex: none;
+}
+
+.muscle-legend { flex: 1; min-width: 0; }
+
+.muscle-legend-head {
+  margin: 0 0 var(--space-1);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--dim);
+}
+
+.muscle-legend-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: 6px 0;
+  font-size: 13px;
+}
+
+.muscle-legend-row + .muscle-legend-row { border-top: 1px solid var(--line); }
+.muscle-legend-name { font-weight: 700; color: var(--text); }
+.muscle-legend-meta { color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; }
+
+@media (max-width: 480px) {
+  .muscle-heatmap-body { flex-direction: column; align-items: stretch; }
+  .muscle-figure-heatmap { width: 130px; margin: 0 auto; }
+}
 
