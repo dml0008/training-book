@@ -3,7 +3,7 @@ const DROPBOX_TOKEN_URL = "https://api.dropboxapi.com/oauth2/token";
 const DROPBOX_UPLOAD_URL = "https://content.dropboxapi.com/2/files/upload";
 const DROPBOX_DOWNLOAD_URL = "https://content.dropboxapi.com/2/files/download";
 const DATA_FILE_PATH = "/04_Technical/06_Side_Projects/Workout and Nutrition App/data/workout-data.json";
-const APP_VERSION = "1.0.18";
+const APP_VERSION = "1.0.19";
 const SOCCER_DURATION_MINUTES = 60;
 
 const STORAGE = {
@@ -4029,7 +4029,7 @@ function getCoachMeta(data = getLocalData()) {
 
 function normalizeCoachChanges(changes) {
   if (!Array.isArray(changes)) return [];
-  const allowed = new Set(["weight", "swap", "note", "target", "add", "remove"]);
+  const allowed = new Set(["weight", "swap", "note", "target", "add", "remove", "goal"]);
   return changes.map((change, index) => {
     if (!change || typeof change !== "object") return null;
     const type = String(change.type || "").toLowerCase().trim();
@@ -6600,7 +6600,11 @@ function getStarterActivePlan() {
     mainGoal: "",
     notes: "",
     reviewCadence: "Weekly AI review",
-    nextReviewDate: ""
+    nextReviewDate: "",
+    // A small number of plan-aware focus goals (F2 slice: Bench Press first,
+    // 1-3 max later). Empty until the coach or Daniel sets one through the
+    // user-confirmed coach apply flow - never invented by the app.
+    focusGoals: []
   };
 }
 
@@ -9747,6 +9751,7 @@ function saveActivePlanFromScreen() {
   const data = getLocalData();
   data.activePlan = {
     ...getStarterActivePlan(),
+    ...data.activePlan,
     name: document.querySelector("#plan-name-input")?.value.trim() || "Current Training Plan",
     mainGoal: document.querySelector("#plan-goal-input")?.value.trim() || "",
     reviewCadence: document.querySelector("#plan-review-input")?.value.trim() || "",
@@ -10855,6 +10860,66 @@ function renderStrengthProgressCard() {
     </section>`;
 }
 
+// F2 slice: a small plan-aware focus goal (Bench Press first). The goal itself
+// is only ever added/revised through the user-confirmed coach apply flow, so
+// this card simply reflects whatever is on the active plan - it stays hidden
+// until one exists rather than inventing a placeholder target.
+function renderFocusGoalCard() {
+  const data = getLocalData();
+  const goals = Array.isArray(data.activePlan?.focusGoals) ? data.activePlan.focusGoals : [];
+  if (!goals.length) return "";
+  return `
+    <section class="prog-card">
+      <div class="prog-card-head">
+        <p class="card-kicker">Focus goal</p>
+        <span class="prog-sub">set through coach apply</span>
+      </div>
+      <div class="goal-list">${goals.map((goal) => renderFocusGoalItem(goal)).join("")}</div>
+    </section>`;
+}
+
+function renderFocusGoalItem(goal) {
+  const exerciseId = goal.exerciseId;
+  const name = goal.exerciseName || getExerciseById(exerciseId)?.name || "Exercise";
+  const targetParts = [];
+  if (Number(goal.targetWeight) > 0) targetParts.push(`${goal.targetWeight} lb`);
+  if (Number(goal.targetReps) > 0) targetParts.push(`${goal.targetReps} reps`);
+  if (Number(goal.targetSets) > 0) targetParts.push(`${goal.targetSets} sets`);
+  const targetText = targetParts.length ? targetParts.join(" × ") : "Target not set yet";
+
+  const { sessions } = exerciseId ? getStrengthSeries(exerciseId) : { sessions: [] };
+  const best = sessions.reduce((top, s) => (!top || s.y > top.y) ? s : top, null);
+  const recent = sessions.slice(-3).reverse();
+
+  let progressNote = "";
+  let progressHit = false;
+  if (best && Number(goal.targetWeight) > 0) {
+    const diff = Math.round((goal.targetWeight - best.y) * 10) / 10;
+    progressHit = diff <= 0;
+    progressNote = progressHit ? "Target hit — nice work!" : `${diff} lb to go`;
+  }
+
+  const recentList = recent.length
+    ? `<ul class="goal-recent">${recent.map((s) => `<li><span>${escapeHtml(formatWorkoutDate(s.date))}</span><span>${s.y} lb${s.reps ? ` × ${s.reps}` : ""}</span></li>`).join("")}</ul>`
+    : `<p class="prog-empty">No logged sets for this exercise yet.</p>`;
+
+  return `
+    <article class="goal-item">
+      <div class="goal-item-head">
+        <p class="goal-name">${escapeHtml(name)}</p>
+        <span class="goal-target-tag">${escapeHtml(targetText)}</span>
+      </div>
+      <div class="prog-chart-foot">
+        <div class="goal-stat">
+          <p class="mini-num">${best ? best.y : "—"}${best ? `<span class="mini-unit"> lb</span>` : ""}</p>
+          <p class="mini-note">${best ? `best set${best.reps ? ` · ×${best.reps}` : ""}` : "no sets logged yet"}</p>
+        </div>
+        ${progressNote ? `<p class="goal-progress-note${progressHit ? " is-hit" : ""}">${escapeHtml(progressNote)}</p>` : ""}
+      </div>
+      ${recentList}
+    </article>`;
+}
+
 function renderPersonalRecords() {
   const prs = getPersonalRecords();
   if (!prs.length) return "";
@@ -11229,7 +11294,8 @@ function formatCoachChangeType(type) {
     swap: "Swap exercise",
     weight: "Weight change",
     target: "Target update",
-    note: "Coaching note"
+    note: "Coaching note",
+    goal: "Focus goal"
   };
   return labels[String(type || "").toLowerCase()] || "";
 }
@@ -11477,6 +11543,8 @@ function closeCoachReviewModal() {
 function applyCoachChangesToData(data, changes) {
   const next = structuredClone(data);
   next.routines = Array.isArray(next.routines) ? next.routines : [];
+  next.activePlan = next.activePlan && typeof next.activePlan === "object" ? next.activePlan : getStarterActivePlan();
+  next.activePlan.focusGoals = Array.isArray(next.activePlan.focusGoals) ? next.activePlan.focusGoals : [];
   const routineMatches = (routine, change) => {
     const names = Array.isArray(change.routines) ? change.routines.map((name) => name.toLowerCase()) : [];
     return !names.length || names.includes(String(routine.name || "").toLowerCase());
@@ -11489,8 +11557,28 @@ function applyCoachChangesToData(data, changes) {
     if (Number(change.targetDuration) > 0) exercise.targetDuration = Number(change.targetDuration);
     if (change.note) exercise.coachNote = change.note;
   };
+  // Focus goals live on the plan, not a routine: add-or-revise by exerciseId
+  // (F2 slice supports Bench Press; the array stays ready for the later 1-3
+  // goal cap without another migration).
+  const applyGoalChange = (change) => {
+    const exerciseId = findExerciseId(change.exercise);
+    if (!exerciseId) return;
+    const goals = next.activePlan.focusGoals;
+    const now = new Date().toISOString();
+    const index = goals.findIndex((goal) => goal.exerciseId === exerciseId);
+    const base = index >= 0 ? goals[index] : { id: `goal-${exerciseId}`, exerciseId, createdAt: now };
+    const updated = { ...base, exerciseName: getExerciseById(exerciseId)?.name || change.exercise, updatedAt: now };
+    if (Number(change.targetWeight) > 0) updated.targetWeight = Number(change.targetWeight);
+    if (Number(change.targetReps) > 0) updated.targetReps = Number(change.targetReps);
+    if (Number(change.targetSets) > 0) updated.targetSets = Number(change.targetSets);
+    if (change.note) updated.note = change.note;
+    if (index >= 0) goals[index] = updated;
+    else goals.push(updated);
+    if (goals.length > 3) goals.splice(0, goals.length - 3);
+  };
 
   normalizeCoachChanges(changes).forEach((change) => {
+    if (change.type === "goal") { applyGoalChange(change); return; }
     next.routines.forEach((routine) => {
       if (!routineMatches(routine, change)) return;
       routine.exercises = Array.isArray(routine.exercises) ? routine.exercises : [];
@@ -11725,6 +11813,7 @@ function renderProgress(resetMonth = true) {
 
   progressContent.innerHTML = `
     ${renderProgressHero(data, doneThisWeek, target, streak, completedSet)}
+    ${renderFocusGoalCard()}
     ${renderBodyWeightCard(data)}
     ${renderStrengthProgressCard()}
     ${renderCardioProgressCard()}
@@ -12985,6 +13074,22 @@ function generateReviewPacket() {
   packet.push(`next review date: ${activePlan.nextReviewDate || "(not set)"}`);
   packet.push(`notes: ${activePlan.notes || "(none)"}`);
   packet.push("");
+
+  const focusGoals = Array.isArray(activePlan.focusGoals) ? activePlan.focusGoals : [];
+  if (focusGoals.length) {
+    packet.push("FOCUS GOALS (context only — this manual chat format has no way to save changes to these):");
+    focusGoals.forEach((goal) => {
+      const name = goal.exerciseName || getExerciseById(goal.exerciseId)?.name || goal.exerciseId || "Exercise";
+      const targetParts = [];
+      if (Number(goal.targetWeight) > 0) targetParts.push(`${goal.targetWeight} lb`);
+      if (Number(goal.targetReps) > 0) targetParts.push(`${goal.targetReps} reps`);
+      if (Number(goal.targetSets) > 0) targetParts.push(`${goal.targetSets} sets`);
+      const { sessions } = goal.exerciseId ? getStrengthSeries(goal.exerciseId) : { sessions: [] };
+      const best = sessions.reduce((top, s) => (!top || s.y > top.y) ? s : top, null);
+      packet.push(`- ${name}: target ${targetParts.length ? targetParts.join(" x ") : "(not set)"}, best so far ${best ? `${best.y} lb x ${best.reps} (${best.date})` : "(no logged sets yet)"}`);
+    });
+    packet.push("");
+  }
 
   packet.push("EXERCISE LIBRARY:");
   library.forEach((exercise) => {

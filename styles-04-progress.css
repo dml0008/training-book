@@ -1098,6 +1098,79 @@ button.cal-cell:active {
 
 .range-btn.is-active { background: var(--accent); color: #0c0f0e; }
 
+/* ---- Focus goal (F2 slice: plan-aware Bench Press goal) ---- */
+.goal-list {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.goal-item {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--panel);
+  padding: var(--space-3);
+}
+
+.goal-item-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.goal-name {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.goal-target-tag {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--dim);
+}
+
+.goal-item .prog-chart-foot {
+  margin-top: var(--space-2);
+  align-items: center;
+}
+
+.goal-progress-note {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--muted);
+  text-align: right;
+}
+
+.goal-progress-note.is-hit {
+  color: var(--accent);
+}
+
+.goal-recent {
+  display: grid;
+  gap: 4px;
+  margin: var(--space-2) 0 0;
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--line);
+  list-style: none;
+}
+
+.goal-recent li {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.goal-recent li span:last-child {
+  color: var(--text);
+  font-weight: 700;
+}
+
 /* ---- Personal records ---- */
 .pr-grid {
   display: grid;
