@@ -3,22 +3,25 @@
 This folder contains the live Training Book app files that get uploaded to the
 public GitHub repo named `training-book`.
 
-> **Current state (2026-06-26).** Data now lives in **Firebase** (Cloud
+> **Current state (2026-07-03).** Data now lives in **Firebase** (Cloud
 > Firestore), not Dropbox — the older Dropbox notes below are historical. The
 > app is **multi-user**: each person signs in with their own Google account and
 > gets a private data space scoped to `users/{uid}`. A brand-new account starts
 > with a blank plan on top of the shared exercise-library catalog. The Firestore
 > security rules are in `firestore.rules` (any signed-in user reads/writes only
 > their own document + `backups`). `styles.css` was split into ordered
-> `styles-01..07` part files. The web API key in `app.js` is a public project
-> identifier, not a secret. Onboard a new person via the AI prompt in
+> `styles-01..07` part files, and the app script is split into ordered
+> `app-01..12` classic-script files. The Firebase web API key in
+> `app-12-bootstrap.js` is a public project identifier, not a secret. Onboard a new person via the AI prompt in
 > `../../ai-fitness-coach/new-user-plan-prompt.md`.
 
 It is intentionally simple static web files so GitHub Pages can host it:
 
 - `index.html` - the visible app frame
-- `styles.css` - the Focused Dark styling
-- `app.js` - tab navigation plus the Dropbox/local save-load engine
+- `styles-01..07.css` - the Focused Dark styling, split into ordered no-build parts
+- `app-01..12.js` - app state, workout logging, library, plan, progress, coach,
+  history, manual import/export, and final bootstrap wiring, split into ordered
+  classic scripts
 - `manifest.webmanifest` - install information for phone/desktop
 - `sw.js` - small offline helper for app files
 - `icons/icon.svg` - temporary home-screen icon

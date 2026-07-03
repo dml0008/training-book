@@ -1,4 +1,4 @@
-const CACHE_NAME = "training-book-shell-v91";
+const CACHE_NAME = "training-book-shell-v92";
 const STATIC_ASSETS = [
   "manifest.webmanifest",
   "icons/icon.svg",
@@ -18,7 +18,19 @@ const APP_FILES = [
   "styles-05-interactions.css",
   "styles-06-plan.css",
   "styles-07-library.css",
-  "app.js",
+  // app.js was split into ordered classic-script parts (load order set in index.html).
+  "app-01-core.js",
+  "app-02-muscles.js",
+  "app-03-workout.js",
+  "app-04-data-ui.js",
+  "app-05-notes.js",
+  "app-06-library.js",
+  "app-07-plan.js",
+  "app-08-progress.js",
+  "app-09-coach.js",
+  "app-10-history.js",
+  "app-11-review-import.js",
+  "app-12-bootstrap.js",
   // throwaway style-guide page: network-first so edits show fresh while iterating
   "styleguide.html"
 ];
