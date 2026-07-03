@@ -1760,6 +1760,21 @@ body.history-detail-open .app-shell {
   white-space: nowrap;
 }
 
+/* Six tabs on a narrow phone leaves each label very little width - "Workout"
+   and "Progress" were the two long enough to hit the ellipsis first. Shrink
+   the label (and tighten the tab gap slightly to give back a few more px per
+   column) only below the width where that actually happens. */
+@media (max-width: 400px) {
+  .tabbar {
+    gap: 4px;
+  }
+
+  .tab span:last-child {
+    font-size: 9.5px;
+    letter-spacing: -0.1px;
+  }
+}
+
 .tab-icon {
   display: grid;
   width: 24px;
