@@ -446,6 +446,15 @@
   margin-top: 1px;
 }
 
+/* Small muscle-group figure on the preview row, pushed to the right; the
+   SPORT/TIMED tag (if present) trails right after it since its own
+   margin-left:auto has no space left to consume once this claims it. */
+.today-preview-card .pv-muscle-badge {
+  width: 30px;
+  flex: none;
+  margin-left: auto;
+}
+
 .today-preview-card .pv-tag {
   margin-left: auto;
   flex: 0 0 auto;
@@ -931,6 +940,14 @@ body.in-workout .today-panel {
 
 .live-add-search {
   margin-bottom: var(--space-3);
+}
+
+.live-add-filter-strip {
+  margin-bottom: var(--space-3);
+}
+
+.live-add-filter-strip .filter-strip {
+  padding: 2px 2px 4px;
 }
 
 /* Compact result list (small photo/glyph + name + type), mirroring the History

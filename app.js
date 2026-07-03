@@ -3,7 +3,7 @@ const DROPBOX_TOKEN_URL = "https://api.dropboxapi.com/oauth2/token";
 const DROPBOX_UPLOAD_URL = "https://content.dropboxapi.com/2/files/upload";
 const DROPBOX_DOWNLOAD_URL = "https://content.dropboxapi.com/2/files/download";
 const DATA_FILE_PATH = "/04_Technical/06_Side_Projects/Workout and Nutrition App/data/workout-data.json";
-const APP_VERSION = "1.0.25";
+const APP_VERSION = "1.0.26";
 const SOCCER_DURATION_MINUTES = 60;
 
 const STORAGE = {
@@ -2665,6 +2665,7 @@ const activeWorkout = {
   roundNumber: 0,
   addExerciseOpen: false,
   addExerciseQuery: "",
+  addExerciseFilter: "all",
   flowChoiceOpen: false,
   restoredFromDraft: false,
   // Slice 2 (focused workout): which exercise screen we're on, and whether
@@ -4465,7 +4466,8 @@ function formatPreviewMeta(exercise) {
     return `${exercise.targetSubtype ? `${exercise.targetSubtype} · ` : ""}${mins} min`;
   }
   if (exercise.targetReps) {
-    return `${exercise.targetSets} × ${exercise.targetReps}`;
+    const weight = Number(exercise.targetWeight) > 0 ? ` · ${exercise.targetWeight} lb` : "";
+    return `${exercise.targetSets} × ${exercise.targetReps}${weight}`;
   }
   return exercise.targetSets ? `${exercise.targetSets} sets` : "";
 }
@@ -4491,6 +4493,7 @@ function renderTodayPreview(routine) {
     const tag = ex.type === "sport"
       ? `<span class="pv-tag">SPORT</span>`
       : ((ex.type === "cardio" || ex.type === "timed") ? `<span class="pv-tag">TIMED</span>` : "");
+    const muscleBadge = renderMuscleBadge(ex.exerciseId, "pv-muscle-badge", `Muscles worked: ${ex.area || ex.name}`);
     return `
     <article class="today-preview-card" data-action="preview-how-to" data-id="${escapeHtml(ex.exerciseId)}" role="button" tabindex="0" aria-label="How to do ${escapeHtml(ex.name)}">
       ${thumb}
@@ -4499,6 +4502,7 @@ function renderTodayPreview(routine) {
         <p class="pv-meta">${escapeHtml(formatPreviewMeta(ex))}</p>
         ${ex.coachNote ? `<p class="pv-note">${getUiIcon("sparkles")}${escapeHtml(ex.coachNote)}</p>` : ""}
       </div>
+      ${muscleBadge}
       ${tag}
     </article>`;
   }).join("")}${renderWorkoutFlowChoiceSheet()}`;
@@ -4593,6 +4597,7 @@ function resetLiveWorkoutState() {
   activeWorkout.referenceOpen = false;
   activeWorkout.addExerciseOpen = false;
   activeWorkout.addExerciseQuery = "";
+  activeWorkout.addExerciseFilter = "all";
   activeWorkout.flowChoiceOpen = false;
 }
 
@@ -5015,6 +5020,7 @@ function renderLiveExerciseArt(ex) {
 function openLiveAddExercise() {
   activeWorkout.addExerciseOpen = true;
   activeWorkout.addExerciseQuery = "";
+  activeWorkout.addExerciseFilter = "all";
   activeWorkout.editTargetsOpen = false;
   activeWorkout.referenceOpen = false;
   renderTodayWorkout();
@@ -5024,6 +5030,7 @@ function openLiveAddExercise() {
 function closeLiveAddExercise() {
   activeWorkout.addExerciseOpen = false;
   activeWorkout.addExerciseQuery = "";
+  activeWorkout.addExerciseFilter = "all";
   renderTodayWorkout();
 }
 
@@ -5035,6 +5042,7 @@ function addExerciseToLiveWorkout(exerciseId) {
   activeWorkout.currentSet = activeWorkout.flowMode === "round" ? activeWorkout.roundNumber : 0;
   activeWorkout.addExerciseOpen = false;
   activeWorkout.addExerciseQuery = "";
+  activeWorkout.addExerciseFilter = "all";
   persistActiveWorkoutDraft();
   renderTodayWorkout();
 }
@@ -5046,12 +5054,18 @@ function addExerciseToLiveWorkout(exerciseId) {
 // sheet on mobile.
 function renderLiveAddResults() {
   const query = (activeWorkout.addExerciseQuery || "").trim().toLowerCase();
+  const filter = activeWorkout.addExerciseFilter || "all";
   const matches = exercises
     .filter((exercise) => {
+      let matchesFilter;
+      if (filter === "all") matchesFilter = true;
+      else if (filter === "favorites") matchesFilter = Boolean(exercise.favorite);
+      else matchesFilter = (exercise.tags || []).includes(filter);
+      if (!matchesFilter) return false;
       if (!query) return true;
       return `${exercise.name} ${exercise.area || ""} ${(exercise.tags || []).join(" ")}`.toLowerCase().includes(query);
     })
-    .slice(0, 18);
+    .slice(0, 60);
 
   // A clean, compact row per exercise: small photo/glyph thumbnail + name + type.
   // Deliberately NOT renderExerciseArt — that nests the How-to and favourite
@@ -5073,6 +5087,26 @@ function renderLiveAddResults() {
   }).join("") || `<p class="empty-state">No matching exercises.</p>`;
 }
 
+// Same chip set as the Library tab's renderFilterStrip(), but scoped to this
+// sheet's own addExerciseFilter state instead of the global library filter, so
+// opening this sheet never disturbs whatever the Library tab has selected.
+function renderLiveAddFilterStrip() {
+  const filter = activeWorkout.addExerciseFilter || "all";
+  const chip = (value, label, extraClass = "", iconHtml = "") => {
+    const active = filter === value ? " is-active" : "";
+    return `<button class="filter-chip${extraClass}${active}" type="button" data-action="live-add-filter" data-filter="${escapeHtml(value)}">${iconHtml}${escapeHtml(label)}</button>`;
+  };
+  return `
+    <div class="filter-strip live-add-filter-strip">
+      ${[
+        chip("all", "All"),
+        chip("favorites", "Favorites", " filter-chip-fav", getUiIcon("star")),
+        ...categories.map((cat) => chip(cat.key, cat.label))
+      ].join("")}
+    </div>
+  `;
+}
+
 function renderLiveAddExerciseSheet() {
   if (!activeWorkout.addExerciseOpen) return "";
   return `
@@ -5089,6 +5123,7 @@ function renderLiveAddExerciseSheet() {
           <span class="library-search-icon" data-icon="search" aria-hidden="true"></span>
           <input type="search" id="live-add-search" value="${escapeHtml(activeWorkout.addExerciseQuery)}" data-action="live-add-search" placeholder="Search exercises" autocomplete="off" aria-label="Search exercises" />
         </div>
+        ${renderLiveAddFilterStrip()}
         <div class="live-add-results">
           ${renderLiveAddResults()}
         </div>
@@ -5605,11 +5640,15 @@ function renderFinishScreen() {
   const routineName = todayRoutineName?.textContent || "Workout";
   const loggedCount = exercises.filter(isExerciseLogged).length;
   const anyLogged = loggedCount > 0;
-  const customNote = activeWorkout.isCustom ? `
+  // A broader, whole-session note - not tied to any one exercise - so
+  // "skipped X because..." or "added Y because..." has somewhere to live.
+  // Custom workouts get their original "why custom" framing; planned
+  // workouts get a general prompt. Both write the same substitutionNote.
+  const customNote = `
         <label class="lw-live-note lw-custom-note">
-          <span>Why custom today? (optional)</span>
-          <textarea rows="2" data-action="custom-workout-note" placeholder="Example: swapped in a lighter session, gym was crowded, short on time...">${escapeHtml(activeWorkout.substitutionNote || "")}</textarea>
-        </label>` : "";
+          <span>${activeWorkout.isCustom ? "Why custom today? (optional)" : "Workout note (optional)"}</span>
+          <textarea rows="2" data-action="custom-workout-note" placeholder="${activeWorkout.isCustom ? "Example: swapped in a lighter session, gym was crowded, short on time..." : "Example: skipped bench because of shoulder soreness, added an extra set of rows..."}">${escapeHtml(activeWorkout.substitutionNote || "")}</textarea>
+        </label>`;
 
   todayRoutineList.innerHTML = `
     <div class="live-workout lw-finish-screen">
@@ -6414,6 +6453,12 @@ async function handleTodayWorkoutClick(event) {
     return;
   }
 
+  if (action === "live-add-filter") {
+    activeWorkout.addExerciseFilter = button.dataset.filter || "all";
+    renderTodayWorkout();
+    return;
+  }
+
   if (action === "skip-exercise" && exercise) {
     const ok = await showConfirmModal({
       title: `Skip ${exercise.name}?`,
@@ -6650,10 +6695,13 @@ async function saveTodayWorkout() {
     flowMode: activeWorkout.flowMode,
     entries: loggedEntries
   };
+  // A whole-session note is available on any workout, not just custom ones -
+  // only `custom`/`replacedRoutine` stay custom-only, since those describe a
+  // routine swap that a planned workout never has.
+  const sessionNote = (activeWorkout.substitutionNote || "").trim();
+  if (sessionNote) savedWorkout.substitutionNote = sessionNote;
   if (activeWorkout.isCustom) {
     savedWorkout.custom = true;
-    const note = (activeWorkout.substitutionNote || "").trim();
-    if (note) savedWorkout.substitutionNote = note;
     if (activeWorkout.replacedRoutineId || activeWorkout.replacedRoutineName) {
       savedWorkout.replacedRoutine = {
         id: activeWorkout.replacedRoutineId || null,
@@ -12979,9 +13027,11 @@ function renderHistoryEditBody(workout, entries) {
 // Read-only summary: a clean, scannable recap so review needs no input fields.
 function renderHistoryViewBody(workout, entries) {
   const count = entries.length;
+  const sessionNote = (workout.substitutionNote || "").trim();
   return `
     <div class="detail-section">
       <p class="hist-view-meta">${escapeHtml(formatWorkoutDate(workout.date))} · ${count} exercise${count === 1 ? "" : "s"}</p>
+      ${sessionNote ? `<p class="hist-view-session-note">${getUiIcon("notebook-pen")}${escapeHtml(sessionNote)}</p>` : ""}
     </div>
     <div class="detail-section">
       ${count

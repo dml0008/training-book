@@ -1182,6 +1182,24 @@ body.history-detail-open .app-shell {
   font-size: 13px;
 }
 
+/* Whole-session note (not tied to one exercise) - accented like a coach note
+   so it reads as distinct from the muted per-set notes above. */
+.hist-view-session-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin: 6px 0 0;
+  color: var(--accent);
+  font-size: 13px;
+  line-height: 1.4;
+}
+.hist-view-session-note svg {
+  width: 14px;
+  height: 14px;
+  flex: 0 0 auto;
+  margin-top: 1px;
+}
+
 .hist-view-actions {
   display: flex;
   flex-wrap: wrap;
