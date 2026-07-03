@@ -3,7 +3,7 @@ const DROPBOX_TOKEN_URL = "https://api.dropboxapi.com/oauth2/token";
 const DROPBOX_UPLOAD_URL = "https://content.dropboxapi.com/2/files/upload";
 const DROPBOX_DOWNLOAD_URL = "https://content.dropboxapi.com/2/files/download";
 const DATA_FILE_PATH = "/04_Technical/06_Side_Projects/Workout and Nutrition App/data/workout-data.json";
-const APP_VERSION = "1.0.23";
+const APP_VERSION = "1.0.24";
 const SOCCER_DURATION_MINUTES = 60;
 
 const STORAGE = {
@@ -7073,6 +7073,29 @@ function unionBy(preferred, other, keyFn) {
   return out;
 }
 
+// App notes need real per-item delete, unlike workout history which is unioned
+// forever on purpose. A plain union can't tell "deleted on device A" apart from
+// "never seen this device yet" - both just look like the id being absent from
+// one side - so a stale copy anywhere always wins the note back. Fixing that
+// means a delete has to leave behind a small tombstone ({ id, deleted: true,
+// deletedAt }) instead of removing the item, so it's present-and-comparable on
+// both sides. For each id seen on either side, keep whichever copy has the
+// later updatedAt (a delete always stamps a fresh updatedAt, so it beats a
+// stale add/edit from a device that hasn't caught up yet). Tombstones stay in
+// data.appNotes permanently so a third, even-more-stale device can't undo the
+// delete later; getVisibleNotes() is what hides them from the UI/export.
+function mergeAppNotes(newer, older) {
+  const byId = new Map();
+  for (const note of [...(older || []), ...(newer || [])]) {
+    if (!note || !note.id) continue;
+    const existing = byId.get(note.id);
+    if (!existing || Date.parse(note.updatedAt || 0) >= Date.parse(existing.updatedAt || 0)) {
+      byId.set(note.id, note);
+    }
+  }
+  return Array.from(byId.values());
+}
+
 // completedWorkouts (the dates the calendar / streak / weekly ring count as
 // "worked out") is DERIVED data: it should be exactly the distinct dates that
 // have a saved workout. Saving adds both together, but deleting or re-dating a
@@ -7128,9 +7151,9 @@ function mergeWorkoutData(local, remote) {
     (m) => (typeof m === "string" ? m : (m?.id || m?.date || JSON.stringify(m)))
   );
   merged.bodyWeights = unionBy(newer.bodyWeights, older.bodyWeights, (b) => b?.date || JSON.stringify(b));
-  // App notes are unioned like history so a note captured on one device can't be
-  // wiped by a sync from another. Duplicate ids prefer the newer copy's text.
-  merged.appNotes = unionBy(newer.appNotes, older.appNotes, (n) => n?.id || JSON.stringify(n));
+  // App notes: a real per-item delete, tombstone-protected against resurrection
+  // by a stale device - see mergeAppNotes() for why this can't be a plain union.
+  merged.appNotes = mergeAppNotes(newer.appNotes, older.appNotes);
   const newerCoach = getCoachMeta(newer);
   const olderCoach = getCoachMeta(older);
   merged.coach = {
@@ -7740,9 +7763,18 @@ function makeNoteId() {
   return `note-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
 }
 
+// Raw list, including delete tombstones - only mergeAppNotes() and the
+// add/edit/delete/toggle actions below (which must pass tombstones through
+// unchanged when they persist) should read this directly.
 function getAppNotes() {
   const data = getLocalData();
   return Array.isArray(data.appNotes) ? data.appNotes : [];
+}
+
+// What the UI and the Copy all / Export .md output should ever show: real
+// notes only, tombstones hidden.
+function getVisibleNotes() {
+  return getAppNotes().filter((n) => !n?.deleted);
 }
 
 // Save the notes list everywhere (local + pending queue + cloud), mirroring how
@@ -7817,7 +7849,7 @@ function renderNotesModal() {
     root.innerHTML = "";
     return;
   }
-  const notes = getAppNotes();
+  const notes = getVisibleNotes();
   const open = notes.filter((n) => n.status !== "done");
   const done = notes.filter((n) => n.status === "done");
   const laneOptions = NOTE_LANES.map((l) => `<option value="${l.key}">${l.label}</option>`).join("");
@@ -7963,7 +7995,13 @@ async function deleteNote(id) {
     danger: true
   });
   if (!ok) return;
-  persistAppNotes(getAppNotes().filter((n) => n.id !== id));
+  const now = new Date().toISOString();
+  // Leave a tombstone rather than filtering the id out entirely - see
+  // mergeAppNotes() for why an outright removal doesn't survive a sync from a
+  // device that still has the old copy.
+  persistAppNotes(getAppNotes().map((n) => (
+    n.id === id ? { id: n.id, deleted: true, deletedAt: now, updatedAt: now } : n
+  )));
   if (editingNoteId === id) editingNoteId = null;
   renderNotesModal();
   setNotesStatus("Note deleted.");
@@ -7972,7 +8010,7 @@ async function deleteNote(id) {
 // Plain markdown the way a coding agent can read it: open notes first, done
 // notes after, each with its lane, date, and capture source.
 function buildNotesMarkdown() {
-  const notes = getAppNotes();
+  const notes = getVisibleNotes();
   const today = new Date().toISOString().slice(0, 10);
   const lines = ["# Training Book - App Notes", `Exported ${today}`, ""];
   if (!notes.length) {
