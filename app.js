@@ -3,7 +3,7 @@ const DROPBOX_TOKEN_URL = "https://api.dropboxapi.com/oauth2/token";
 const DROPBOX_UPLOAD_URL = "https://content.dropboxapi.com/2/files/upload";
 const DROPBOX_DOWNLOAD_URL = "https://content.dropboxapi.com/2/files/download";
 const DATA_FILE_PATH = "/04_Technical/06_Side_Projects/Workout and Nutrition App/data/workout-data.json";
-const APP_VERSION = "1.0.28";
+const APP_VERSION = "1.0.29";
 const SOCCER_DURATION_MINUTES = 60;
 
 const STORAGE = {
@@ -28,6 +28,7 @@ const STORAGE = {
   soccerSeeded: "trainingBookSoccerSeeded",
   libraryV2Seeded: "trainingBookLibraryV2Seeded",
   libraryV3Merged: "trainingBookLibraryV3Merged",
+  libraryFieldsRefreshed: "trainingBookLibraryFieldsRefreshed",
   pelotonSeeded: "trainingBookPelotonSeeded",
   pickleballSeeded: "trainingBookPickleballSeeded",
   sportTypeFixed: "trainingBookSportTypeFixed",
@@ -2487,6 +2488,60 @@ function mergeLibraryV3Once() {
   }
 
   localStorage.setItem(STORAGE.libraryV3Merged, "1");
+}
+
+// One-time, purely additive catch-up for starter-exercise METADATA fields.
+// mergeLibraryV3Once above only adds an exercise when its id is entirely
+// missing, so a field added to the starter catalog later (F3's
+// secondaryMuscles, F6's dualStack) never reaches an id that was already
+// installed before that field existed - which is exactly what happened here:
+// F6 shipped dualStack: true on 4 exercises, but Daniel's and Shaina's
+// already-synced library entries for those ids kept the old shape and the
+// live app kept showing plain "lb". Fixed by backfilling ONLY the fields
+// listed below, and ONLY when the existing entry is missing the field
+// entirely - never touching name/type/equipment/category/photos, since the
+// Library "Edit exercise" screen lets Daniel and Shaina customize those per
+// exercise and a blind full replace would silently discard that.
+function refreshLibraryFieldsOnce() {
+  if (localStorage.getItem(STORAGE.libraryFieldsRefreshed)) return;
+
+  const FIELDS_TO_BACKFILL = ["dualStack", "secondaryMuscles"];
+  const data = getLocalData();
+  const library = Array.isArray(data.library) ? data.library : [];
+  const starterById = new Map(getStarterExercises().map((ex) => [ex.id, ex]));
+  let changed = false;
+  const updated = library.map((ex) => {
+    const starter = ex && ex.id ? starterById.get(ex.id) : null;
+    if (!starter) return ex;
+    let next = ex;
+    FIELDS_TO_BACKFILL.forEach((field) => {
+      if (next[field] === undefined && starter[field] !== undefined) {
+        if (next === ex) next = { ...ex };
+        next[field] = starter[field];
+        changed = true;
+      }
+    });
+    return next;
+  });
+
+  if (changed) {
+    data.library = updated;
+    data.updatedAt = new Date().toISOString();
+    data.updatedBy = getDeviceId();
+    saveLocalData(data);
+    markPendingData(data);
+    exercises = data.library;
+    renderExercises();
+    renderExercisePicker();
+    renderTodayRoutine();
+    if (navigator.onLine) {
+      uploadWorkoutData(data).then(clearPendingData).catch(() => {
+        // Not signed in yet or offline: queued, syncs later.
+      });
+    }
+  }
+
+  localStorage.setItem(STORAGE.libraryFieldsRefreshed, "1");
 }
 
 // One-time, additive seed that adds the Soccer exercise to the shared library
@@ -14924,6 +14979,7 @@ async function initCloud() {
     // No cloud to reconcile against, so it is safe to seed locally now.
     reseedLibraryOnce();
     mergeLibraryV3Once();
+    refreshLibraryFieldsOnce();
     seedSoccerOnce();
     seedPelotonOnce();
     seedPickleballOnce();
@@ -15036,6 +15092,7 @@ async function initCloud() {
         // at startup, avoids a stale device overwriting newer cloud data.
         reseedLibraryOnce();
         mergeLibraryV3Once();
+        refreshLibraryFieldsOnce();
         seedSoccerOnce();
         seedPelotonOnce();
         seedPickleballOnce();
