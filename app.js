@@ -3,7 +3,7 @@ const DROPBOX_TOKEN_URL = "https://api.dropboxapi.com/oauth2/token";
 const DROPBOX_UPLOAD_URL = "https://content.dropboxapi.com/2/files/upload";
 const DROPBOX_DOWNLOAD_URL = "https://content.dropboxapi.com/2/files/download";
 const DATA_FILE_PATH = "/04_Technical/06_Side_Projects/Workout and Nutrition App/data/workout-data.json";
-const APP_VERSION = "1.0.27";
+const APP_VERSION = "1.0.28";
 const SOCCER_DURATION_MINUTES = 60;
 
 const STORAGE = {
@@ -363,6 +363,7 @@ function getStarterExercises() {
     equipment: "barbell",
     primaryMuscle: "chest",
     secondaryMuscles: [{"muscle":"shoulders","weight":0.4},{"muscle":"triceps","weight":0.3}],
+    dualStack: false,
     icon: "barbell",
     photos: { start: "assets/icons/photos/barbell-bench-press/start.jpg", finish: "assets/icons/photos/barbell-bench-press/finish.jpg" },
     tags: ["gym"]
@@ -376,6 +377,7 @@ function getStarterExercises() {
     equipment: "barbell",
     primaryMuscle: "chest",
     secondaryMuscles: [{"muscle":"shoulders","weight":0.5},{"muscle":"triceps","weight":0.3}],
+    dualStack: false,
     icon: "barbell",
     photos: { start: "assets/icons/photos/incline-bench-press/start.jpg", finish: "assets/icons/photos/incline-bench-press/finish.jpg" },
     tags: ["gym"]
@@ -389,6 +391,7 @@ function getStarterExercises() {
     equipment: "dumbbell",
     primaryMuscle: "chest",
     secondaryMuscles: [{"muscle":"shoulders","weight":0.4},{"muscle":"triceps","weight":0.3}],
+    dualStack: false,
     icon: "dumbbell",
     photos: { start: "assets/icons/photos/dumbbell-bench-press/start.jpg", finish: "assets/icons/photos/dumbbell-bench-press/finish.jpg" },
     tags: ["home","gym","dumbbells"]
@@ -402,6 +405,7 @@ function getStarterExercises() {
     equipment: "dumbbell",
     primaryMuscle: "chest",
     secondaryMuscles: [],
+    dualStack: false,
     icon: "dumbbell",
     photos: { start: "assets/icons/photos/dumbbell-fly/start.jpg", finish: "assets/icons/photos/dumbbell-fly/finish.jpg" },
     tags: ["home","gym","dumbbells"]
@@ -415,6 +419,7 @@ function getStarterExercises() {
     equipment: "body only",
     primaryMuscle: "chest",
     secondaryMuscles: [{"muscle":"shoulders","weight":0.3},{"muscle":"triceps","weight":0.3},{"muscle":"abdominals","weight":0.2}],
+    dualStack: false,
     icon: "gymnastics",
     photos: { start: "assets/icons/photos/push-up/start.jpg", finish: "assets/icons/photos/push-up/finish.jpg" },
     tags: ["home","gym","bodyweight"]
@@ -428,6 +433,7 @@ function getStarterExercises() {
     equipment: "body only",
     primaryMuscle: "chest",
     secondaryMuscles: [{"muscle":"triceps","weight":0.5},{"muscle":"shoulders","weight":0.3}],
+    dualStack: false,
     icon: "gymnastics",
     photos: { start: "assets/icons/photos/chest-dip/start.jpg", finish: "assets/icons/photos/chest-dip/finish.jpg" },
     tags: ["home","gym","bodyweight"]
@@ -441,6 +447,7 @@ function getStarterExercises() {
     equipment: "cable",
     primaryMuscle: "chest",
     secondaryMuscles: [],
+    dualStack: true,
     icon: "weight",
     photos: { start: "assets/icons/photos/cable-crossover/start.jpg", finish: "assets/icons/photos/cable-crossover/finish.jpg" },
     tags: ["gym","machine"]
@@ -454,6 +461,7 @@ function getStarterExercises() {
     equipment: "barbell",
     primaryMuscle: "lower back",
     secondaryMuscles: [{"muscle":"hamstrings","weight":0.7},{"muscle":"glutes","weight":0.6},{"muscle":"forearms","weight":0.3}],
+    dualStack: false,
     icon: "barbell",
     photos: { start: "assets/icons/photos/deadlift/start.jpg", finish: "assets/icons/photos/deadlift/finish.jpg" },
     tags: ["gym"]
@@ -467,6 +475,7 @@ function getStarterExercises() {
     equipment: "barbell",
     primaryMuscle: "hamstrings",
     secondaryMuscles: [{"muscle":"glutes","weight":0.6},{"muscle":"lower back","weight":0.4}],
+    dualStack: false,
     icon: "barbell",
     photos: { start: "assets/icons/photos/romanian-deadlift/start.jpg", finish: "assets/icons/photos/romanian-deadlift/finish.jpg" },
     tags: ["gym"]
@@ -480,6 +489,7 @@ function getStarterExercises() {
     equipment: "body only",
     primaryMuscle: "lats",
     secondaryMuscles: [{"muscle":"biceps","weight":0.5},{"muscle":"shoulders","weight":0.2}],
+    dualStack: false,
     icon: "gymnastics",
     photos: { start: "assets/icons/photos/pull-up/start.jpg", finish: "assets/icons/photos/pull-up/finish.jpg" },
     tags: ["home","gym","bodyweight"]
@@ -493,6 +503,7 @@ function getStarterExercises() {
     equipment: "body only",
     primaryMuscle: "lats",
     secondaryMuscles: [{"muscle":"biceps","weight":0.6},{"muscle":"shoulders","weight":0.2}],
+    dualStack: false,
     icon: "gymnastics",
     photos: { start: "assets/icons/photos/chin-up/start.jpg", finish: "assets/icons/photos/chin-up/finish.jpg" },
     tags: ["home","gym","bodyweight"]
@@ -506,6 +517,7 @@ function getStarterExercises() {
     equipment: "cable",
     primaryMuscle: "lats",
     secondaryMuscles: [{"muscle":"biceps","weight":0.4}],
+    dualStack: true,
     icon: "weight",
     photos: { start: "assets/icons/photos/lat-pulldown/start.jpg", finish: "assets/icons/photos/lat-pulldown/finish.jpg" },
     tags: ["gym","machine"]
@@ -519,6 +531,7 @@ function getStarterExercises() {
     equipment: "barbell",
     primaryMuscle: "middle back",
     secondaryMuscles: [{"muscle":"biceps","weight":0.4},{"muscle":"lats","weight":0.3}],
+    dualStack: false,
     icon: "barbell",
     photos: { start: "assets/icons/photos/bent-over-row/start.jpg", finish: "assets/icons/photos/bent-over-row/finish.jpg" },
     tags: ["gym"]
@@ -532,6 +545,7 @@ function getStarterExercises() {
     equipment: "cable",
     primaryMuscle: "middle back",
     secondaryMuscles: [{"muscle":"biceps","weight":0.4},{"muscle":"lats","weight":0.2}],
+    dualStack: true,
     icon: "weight",
     photos: { start: "assets/icons/photos/seated-cable-row/start.jpg", finish: "assets/icons/photos/seated-cable-row/finish.jpg" },
     tags: ["gym","machine"]
@@ -545,6 +559,7 @@ function getStarterExercises() {
     equipment: "dumbbell",
     primaryMuscle: "middle back",
     secondaryMuscles: [{"muscle":"biceps","weight":0.4},{"muscle":"lats","weight":0.3}],
+    dualStack: false,
     icon: "dumbbell",
     photos: { start: "assets/icons/photos/one-arm-dumbbell-row/start.jpg", finish: "assets/icons/photos/one-arm-dumbbell-row/finish.jpg" },
     tags: ["home","gym","dumbbells"]
@@ -558,6 +573,7 @@ function getStarterExercises() {
     equipment: "cable",
     primaryMuscle: "shoulders",
     secondaryMuscles: [{"muscle":"middle back","weight":0.3}],
+    dualStack: false,
     icon: "weight",
     photos: { start: "assets/icons/photos/face-pull/start.jpg", finish: "assets/icons/photos/face-pull/finish.jpg" },
     tags: ["gym","machine"]
@@ -571,6 +587,7 @@ function getStarterExercises() {
     equipment: "barbell",
     primaryMuscle: "shoulders",
     secondaryMuscles: [{"muscle":"triceps","weight":0.4},{"muscle":"abdominals","weight":0.2}],
+    dualStack: false,
     icon: "barbell",
     photos: { start: "assets/icons/photos/overhead-press/start.jpg", finish: "assets/icons/photos/overhead-press/finish.jpg" },
     tags: ["gym"]
@@ -584,6 +601,7 @@ function getStarterExercises() {
     equipment: "dumbbell",
     primaryMuscle: "shoulders",
     secondaryMuscles: [{"muscle":"triceps","weight":0.3}],
+    dualStack: false,
     icon: "dumbbell",
     photos: { start: "assets/icons/photos/dumbbell-shoulder-press/start.jpg", finish: "assets/icons/photos/dumbbell-shoulder-press/finish.jpg" },
     tags: ["home","gym","dumbbells"]
@@ -597,6 +615,7 @@ function getStarterExercises() {
     equipment: "dumbbell",
     primaryMuscle: "shoulders",
     secondaryMuscles: [],
+    dualStack: false,
     icon: "dumbbell",
     photos: { start: "assets/icons/photos/lateral-raise/start.jpg", finish: "assets/icons/photos/lateral-raise/finish.jpg" },
     tags: ["home","gym","dumbbells"]
@@ -610,6 +629,7 @@ function getStarterExercises() {
     equipment: "dumbbell",
     primaryMuscle: "shoulders",
     secondaryMuscles: [],
+    dualStack: false,
     icon: "dumbbell",
     photos: { start: "assets/icons/photos/front-raise/start.jpg", finish: "assets/icons/photos/front-raise/finish.jpg" },
     tags: ["home","gym","dumbbells"]
@@ -623,6 +643,7 @@ function getStarterExercises() {
     equipment: "dumbbell",
     primaryMuscle: "shoulders",
     secondaryMuscles: [],
+    dualStack: false,
     icon: "dumbbell",
     photos: { start: "assets/icons/photos/rear-delt-fly/start.jpg", finish: "assets/icons/photos/rear-delt-fly/finish.jpg" },
     tags: ["home","gym","dumbbells"]
@@ -636,6 +657,7 @@ function getStarterExercises() {
     equipment: "dumbbell",
     primaryMuscle: "shoulders",
     secondaryMuscles: [{"muscle":"triceps","weight":0.3}],
+    dualStack: false,
     icon: "dumbbell",
     photos: { start: "assets/icons/photos/arnold-press/start.jpg", finish: "assets/icons/photos/arnold-press/finish.jpg" },
     tags: ["home","gym","dumbbells"]
@@ -649,6 +671,7 @@ function getStarterExercises() {
     equipment: "barbell",
     primaryMuscle: "traps",
     secondaryMuscles: [],
+    dualStack: false,
     icon: "barbell",
     photos: { start: "assets/icons/photos/shrug/start.jpg", finish: "assets/icons/photos/shrug/finish.jpg" },
     tags: ["gym"]
@@ -662,6 +685,7 @@ function getStarterExercises() {
     equipment: "barbell",
     primaryMuscle: "quadriceps",
     secondaryMuscles: [{"muscle":"glutes","weight":0.5},{"muscle":"hamstrings","weight":0.3}],
+    dualStack: false,
     icon: "barbell",
     photos: { start: "assets/icons/photos/back-squat/start.jpg", finish: "assets/icons/photos/back-squat/finish.jpg" },
     tags: ["gym"]
@@ -675,6 +699,7 @@ function getStarterExercises() {
     equipment: "barbell",
     primaryMuscle: "quadriceps",
     secondaryMuscles: [{"muscle":"glutes","weight":0.4},{"muscle":"hamstrings","weight":0.2}],
+    dualStack: false,
     icon: "barbell",
     photos: { start: "assets/icons/photos/front-squat/start.jpg", finish: "assets/icons/photos/front-squat/finish.jpg" },
     tags: ["gym"]
@@ -688,6 +713,7 @@ function getStarterExercises() {
     equipment: "dumbbell",
     primaryMuscle: "quadriceps",
     secondaryMuscles: [{"muscle":"glutes","weight":0.4},{"muscle":"hamstrings","weight":0.2}],
+    dualStack: false,
     icon: "dumbbell",
     photos: { start: "assets/icons/photos/goblet-squat/start.jpg", finish: "assets/icons/photos/goblet-squat/finish.jpg" },
     tags: ["home","gym","dumbbells"]
@@ -701,6 +727,7 @@ function getStarterExercises() {
     equipment: "machine",
     primaryMuscle: "quadriceps",
     secondaryMuscles: [{"muscle":"glutes","weight":0.4},{"muscle":"hamstrings","weight":0.2}],
+    dualStack: false,
     icon: "weight",
     photos: { start: "assets/icons/photos/leg-press/start.jpg", finish: "assets/icons/photos/leg-press/finish.jpg" },
     tags: ["gym","machine"]
@@ -714,6 +741,7 @@ function getStarterExercises() {
     equipment: "dumbbell",
     primaryMuscle: "quadriceps",
     secondaryMuscles: [{"muscle":"glutes","weight":0.4},{"muscle":"hamstrings","weight":0.2}],
+    dualStack: false,
     icon: "walk",
     photos: { start: "assets/icons/photos/lunge/start.jpg", finish: "assets/icons/photos/lunge/finish.jpg" },
     tags: ["home","gym","dumbbells"]
@@ -727,6 +755,7 @@ function getStarterExercises() {
     equipment: "dumbbell",
     primaryMuscle: "quadriceps",
     secondaryMuscles: [{"muscle":"glutes","weight":0.5},{"muscle":"hamstrings","weight":0.2}],
+    dualStack: false,
     icon: "walk",
     photos: { start: "assets/icons/photos/bulgarian-split-squat/start.jpg", finish: "assets/icons/photos/bulgarian-split-squat/finish.jpg" },
     tags: ["home","gym","dumbbells"]
@@ -740,6 +769,7 @@ function getStarterExercises() {
     equipment: "machine",
     primaryMuscle: "quadriceps",
     secondaryMuscles: [],
+    dualStack: false,
     icon: "weight",
     photos: { start: "assets/icons/photos/leg-extension/start.jpg", finish: "assets/icons/photos/leg-extension/finish.jpg" },
     tags: ["gym","machine"]
@@ -753,6 +783,7 @@ function getStarterExercises() {
     equipment: "machine",
     primaryMuscle: "hamstrings",
     secondaryMuscles: [],
+    dualStack: false,
     icon: "weight",
     photos: { start: "assets/icons/photos/leg-curl/start.jpg", finish: "assets/icons/photos/leg-curl/finish.jpg" },
     tags: ["gym","machine"]
@@ -766,6 +797,7 @@ function getStarterExercises() {
     equipment: "machine",
     primaryMuscle: "calves",
     secondaryMuscles: [],
+    dualStack: false,
     icon: "weight",
     photos: { start: "assets/icons/photos/calf-raise/start.jpg", finish: "assets/icons/photos/calf-raise/finish.jpg" },
     tags: ["gym","machine"]
@@ -779,6 +811,7 @@ function getStarterExercises() {
     equipment: "barbell",
     primaryMuscle: "glutes",
     secondaryMuscles: [{"muscle":"hamstrings","weight":0.4}],
+    dualStack: false,
     icon: "barbell",
     photos: { start: "assets/icons/photos/hip-thrust/start.jpg", finish: "assets/icons/photos/hip-thrust/finish.jpg" },
     tags: ["gym"]
@@ -792,6 +825,7 @@ function getStarterExercises() {
     equipment: "barbell",
     primaryMuscle: "biceps",
     secondaryMuscles: [],
+    dualStack: false,
     icon: "biceps-flexed",
     photos: { start: "assets/icons/photos/barbell-curl/start.jpg", finish: "assets/icons/photos/barbell-curl/finish.jpg" },
     tags: ["gym"]
@@ -805,6 +839,7 @@ function getStarterExercises() {
     equipment: "dumbbell",
     primaryMuscle: "biceps",
     secondaryMuscles: [],
+    dualStack: false,
     icon: "biceps-flexed",
     photos: { start: "assets/icons/photos/dumbbell-curl/start.jpg", finish: "assets/icons/photos/dumbbell-curl/finish.jpg" },
     tags: ["home","gym","dumbbells"]
@@ -818,6 +853,7 @@ function getStarterExercises() {
     equipment: "dumbbell",
     primaryMuscle: "biceps",
     secondaryMuscles: [],
+    dualStack: false,
     icon: "biceps-flexed",
     photos: { start: "assets/icons/photos/hammer-curl/start.jpg", finish: "assets/icons/photos/hammer-curl/finish.jpg" },
     tags: ["home","gym","dumbbells"]
@@ -831,6 +867,7 @@ function getStarterExercises() {
     equipment: "barbell",
     primaryMuscle: "biceps",
     secondaryMuscles: [],
+    dualStack: false,
     icon: "biceps-flexed",
     photos: { start: "assets/icons/photos/preacher-curl/start.jpg", finish: "assets/icons/photos/preacher-curl/finish.jpg" },
     tags: ["gym"]
@@ -844,6 +881,7 @@ function getStarterExercises() {
     equipment: "cable",
     primaryMuscle: "triceps",
     secondaryMuscles: [],
+    dualStack: false,
     icon: "weight",
     photos: { start: "assets/icons/photos/triceps-pushdown/start.jpg", finish: "assets/icons/photos/triceps-pushdown/finish.jpg" },
     tags: ["gym","machine"]
@@ -857,6 +895,7 @@ function getStarterExercises() {
     equipment: "barbell",
     primaryMuscle: "triceps",
     secondaryMuscles: [],
+    dualStack: false,
     icon: "barbell",
     photos: { start: "assets/icons/photos/skullcrusher/start.jpg", finish: "assets/icons/photos/skullcrusher/finish.jpg" },
     tags: ["gym"]
@@ -870,6 +909,7 @@ function getStarterExercises() {
     equipment: "dumbbell",
     primaryMuscle: "triceps",
     secondaryMuscles: [],
+    dualStack: false,
     icon: "dumbbell",
     photos: { start: "assets/icons/photos/overhead-triceps-extension/start.jpg", finish: "assets/icons/photos/overhead-triceps-extension/finish.jpg" },
     tags: ["home","gym","dumbbells"]
@@ -883,6 +923,7 @@ function getStarterExercises() {
     equipment: "barbell",
     primaryMuscle: "triceps",
     secondaryMuscles: [{"muscle":"chest","weight":0.4},{"muscle":"shoulders","weight":0.3}],
+    dualStack: false,
     icon: "barbell",
     photos: { start: "assets/icons/photos/close-grip-bench-press/start.jpg", finish: "assets/icons/photos/close-grip-bench-press/finish.jpg" },
     tags: ["gym"]
@@ -896,6 +937,7 @@ function getStarterExercises() {
     equipment: "body only",
     primaryMuscle: "abdominals",
     secondaryMuscles: [],
+    dualStack: false,
     icon: "yoga",
     photos: { start: "assets/icons/photos/plank/start.jpg", finish: "assets/icons/photos/plank/finish.jpg" },
     tags: ["home","gym","bodyweight"]
@@ -909,6 +951,7 @@ function getStarterExercises() {
     equipment: "body only",
     primaryMuscle: "abdominals",
     secondaryMuscles: [],
+    dualStack: false,
     icon: "stretching",
     photos: { start: "assets/icons/photos/crunch/start.jpg", finish: "assets/icons/photos/crunch/finish.jpg" },
     tags: ["home","gym","bodyweight"]
@@ -922,6 +965,7 @@ function getStarterExercises() {
     equipment: "body only",
     primaryMuscle: "abdominals",
     secondaryMuscles: [],
+    dualStack: false,
     icon: "stretching",
     photos: { start: "assets/icons/photos/sit-up/start.jpg", finish: "assets/icons/photos/sit-up/finish.jpg" },
     tags: ["home","gym","bodyweight"]
@@ -935,6 +979,7 @@ function getStarterExercises() {
     equipment: "body only",
     primaryMuscle: "abdominals",
     secondaryMuscles: [],
+    dualStack: false,
     icon: "gymnastics",
     photos: { start: "assets/icons/photos/hanging-leg-raise/start.jpg", finish: "assets/icons/photos/hanging-leg-raise/finish.jpg" },
     tags: ["home","gym","bodyweight"]
@@ -948,6 +993,7 @@ function getStarterExercises() {
     equipment: "dumbbell",
     primaryMuscle: "abdominals",
     secondaryMuscles: [],
+    dualStack: false,
     icon: "stretching-2",
     photos: { start: "assets/icons/photos/russian-twist/start.jpg", finish: "assets/icons/photos/russian-twist/finish.jpg" },
     tags: ["home","gym","dumbbells"]
@@ -961,6 +1007,7 @@ function getStarterExercises() {
     equipment: "cable",
     primaryMuscle: "abdominals",
     secondaryMuscles: [],
+    dualStack: false,
     icon: "weight",
     photos: { start: "assets/icons/photos/cable-crunch/start.jpg", finish: "assets/icons/photos/cable-crunch/finish.jpg" },
     tags: ["gym","machine"]
@@ -974,6 +1021,7 @@ function getStarterExercises() {
     equipment: "body only",
     primaryMuscle: "abdominals",
     secondaryMuscles: [],
+    dualStack: false,
     icon: "run",
     photos: { start: "assets/icons/photos/mountain-climber/start.jpg", finish: "assets/icons/photos/mountain-climber/finish.jpg" },
     tags: ["home","gym","bodyweight"]
@@ -987,6 +1035,7 @@ function getStarterExercises() {
     equipment: "body only",
     primaryMuscle: "full body",
     secondaryMuscles: [],
+    dualStack: false,
     icon: "run",
     photos: null,
     tags: ["home","gym","bodyweight","cardio"]
@@ -1000,6 +1049,7 @@ function getStarterExercises() {
     equipment: "kettlebell",
     primaryMuscle: "glutes",
     secondaryMuscles: [{"muscle":"hamstrings","weight":0.5},{"muscle":"lower back","weight":0.3},{"muscle":"shoulders","weight":0.2}],
+    dualStack: false,
     icon: "dumbbell",
     photos: { start: "assets/icons/photos/kettlebell-swing/start.jpg", finish: "assets/icons/photos/kettlebell-swing/finish.jpg" },
     tags: ["home","gym","cardio"]
@@ -1013,6 +1063,7 @@ function getStarterExercises() {
     equipment: "body only",
     primaryMuscle: "full body",
     secondaryMuscles: [],
+    dualStack: false,
     icon: "jump-rope",
     photos: { start: "assets/icons/photos/jumping-jack/start.jpg", finish: "assets/icons/photos/jumping-jack/finish.jpg" },
     tags: ["home","gym","bodyweight","cardio"]
@@ -1026,6 +1077,7 @@ function getStarterExercises() {
     equipment: "body only",
     primaryMuscle: "quadriceps",
     secondaryMuscles: [],
+    dualStack: false,
     icon: "jump-rope",
     photos: { start: "assets/icons/photos/box-jump/start.jpg", finish: "assets/icons/photos/box-jump/finish.jpg" },
     tags: ["home","gym","bodyweight","cardio"]
@@ -1039,6 +1091,7 @@ function getStarterExercises() {
     equipment: "body only",
     primaryMuscle: "full body",
     secondaryMuscles: [],
+    dualStack: false,
     icon: "soccer",
     photos: null,
     tags: ["sport"]
@@ -1052,6 +1105,7 @@ function getStarterExercises() {
     equipment: "body only",
     primaryMuscle: "full body",
     secondaryMuscles: [],
+    dualStack: false,
     icon: "soccer",
     photos: null,
     tags: ["sport"]
@@ -1065,6 +1119,7 @@ function getStarterExercises() {
     equipment: "dumbbell",
     primaryMuscle: "chest",
     secondaryMuscles: [{"muscle":"lats","weight":0.4},{"muscle":"triceps","weight":0.2}],
+    dualStack: false,
     icon: "dumbbell",
     photos: { start: "assets/icons/photos/dumbbell-pullover/start.jpg", finish: "assets/icons/photos/dumbbell-pullover/finish.jpg" },
     tags: ["home","gym","dumbbells"]
@@ -1078,6 +1133,7 @@ function getStarterExercises() {
     equipment: "machine",
     primaryMuscle: "chest",
     secondaryMuscles: [],
+    dualStack: false,
     icon: "weight",
     photos: { start: "assets/icons/photos/machine-chest-press/start.jpg", finish: "assets/icons/photos/machine-chest-press/finish.jpg" },
     tags: ["gym","machine"]
@@ -1091,6 +1147,7 @@ function getStarterExercises() {
     equipment: "machine",
     primaryMuscle: "chest",
     secondaryMuscles: [],
+    dualStack: false,
     icon: "weight",
     photos: { start: "assets/icons/photos/pec-deck-fly/start.jpg", finish: "assets/icons/photos/pec-deck-fly/finish.jpg" },
     tags: ["gym","machine"]
@@ -1104,6 +1161,7 @@ function getStarterExercises() {
     equipment: "dumbbell",
     primaryMuscle: "chest",
     secondaryMuscles: [{"muscle":"shoulders","weight":0.5},{"muscle":"triceps","weight":0.3}],
+    dualStack: false,
     icon: "dumbbell",
     photos: { start: "assets/icons/photos/incline-dumbbell-press/start.jpg", finish: "assets/icons/photos/incline-dumbbell-press/finish.jpg" },
     tags: ["home","gym","dumbbells"]
@@ -1117,6 +1175,7 @@ function getStarterExercises() {
     equipment: "barbell",
     primaryMuscle: "chest",
     secondaryMuscles: [{"muscle":"triceps","weight":0.3}],
+    dualStack: false,
     icon: "barbell",
     photos: { start: "assets/icons/photos/decline-bench-press/start.jpg", finish: "assets/icons/photos/decline-bench-press/finish.jpg" },
     tags: ["gym"]
@@ -1130,6 +1189,7 @@ function getStarterExercises() {
     equipment: "dumbbell",
     primaryMuscle: "chest",
     secondaryMuscles: [],
+    dualStack: false,
     icon: "dumbbell",
     photos: { start: "assets/icons/photos/incline-dumbbell-fly/start.jpg", finish: "assets/icons/photos/incline-dumbbell-fly/finish.jpg" },
     tags: ["home","gym","dumbbells"]
@@ -1143,6 +1203,7 @@ function getStarterExercises() {
     equipment: "body only",
     primaryMuscle: "triceps",
     secondaryMuscles: [{"muscle":"chest","weight":0.4},{"muscle":"shoulders","weight":0.3}],
+    dualStack: false,
     icon: "gymnastics",
     photos: { start: "assets/icons/photos/diamond-push-up/start.jpg", finish: "assets/icons/photos/diamond-push-up/finish.jpg" },
     tags: ["home","gym","bodyweight"]
@@ -1156,6 +1217,7 @@ function getStarterExercises() {
     equipment: "body only",
     primaryMuscle: "middle back",
     secondaryMuscles: [{"muscle":"biceps","weight":0.4}],
+    dualStack: false,
     icon: "gymnastics",
     photos: { start: "assets/icons/photos/inverted-row/start.jpg", finish: "assets/icons/photos/inverted-row/finish.jpg" },
     tags: ["home","gym","bodyweight"]
@@ -1169,6 +1231,7 @@ function getStarterExercises() {
     equipment: "dumbbell",
     primaryMuscle: "chest",
     secondaryMuscles: [{"muscle":"triceps","weight":0.3}],
+    dualStack: false,
     icon: "dumbbell",
     photos: { start: "assets/icons/photos/decline-dumbbell-press/start.jpg", finish: "assets/icons/photos/decline-dumbbell-press/finish.jpg" },
     tags: ["home","gym","dumbbells"]
@@ -1182,6 +1245,7 @@ function getStarterExercises() {
     equipment: "barbell",
     primaryMuscle: "middle back",
     secondaryMuscles: [{"muscle":"biceps","weight":0.4},{"muscle":"lats","weight":0.3}],
+    dualStack: false,
     icon: "barbell",
     photos: { start: "assets/icons/photos/t-bar-row/start.jpg", finish: "assets/icons/photos/t-bar-row/finish.jpg" },
     tags: ["gym"]
@@ -1195,6 +1259,7 @@ function getStarterExercises() {
     equipment: "barbell",
     primaryMuscle: "lower back",
     secondaryMuscles: [{"muscle":"hamstrings","weight":0.6},{"muscle":"glutes","weight":0.4}],
+    dualStack: false,
     icon: "barbell",
     photos: { start: "assets/icons/photos/good-morning/start.jpg", finish: "assets/icons/photos/good-morning/finish.jpg" },
     tags: ["gym"]
@@ -1208,6 +1273,7 @@ function getStarterExercises() {
     equipment: "barbell",
     primaryMuscle: "lower back",
     secondaryMuscles: [{"muscle":"hamstrings","weight":0.5},{"muscle":"glutes","weight":0.4},{"muscle":"forearms","weight":0.3}],
+    dualStack: false,
     icon: "barbell",
     photos: { start: "assets/icons/photos/rack-pull/start.jpg", finish: "assets/icons/photos/rack-pull/finish.jpg" },
     tags: ["gym"]
@@ -1221,6 +1287,7 @@ function getStarterExercises() {
     equipment: "cable",
     primaryMuscle: "lats",
     secondaryMuscles: [{"muscle":"chest","weight":0.2}],
+    dualStack: false,
     icon: "weight",
     photos: { start: "assets/icons/photos/straight-arm-pulldown/start.jpg", finish: "assets/icons/photos/straight-arm-pulldown/finish.jpg" },
     tags: ["gym","machine"]
@@ -1234,6 +1301,7 @@ function getStarterExercises() {
     equipment: "body only",
     primaryMuscle: "lower back",
     secondaryMuscles: [{"muscle":"hamstrings","weight":0.3},{"muscle":"glutes","weight":0.3}],
+    dualStack: false,
     icon: "gymnastics",
     photos: { start: "assets/icons/photos/back-extension/start.jpg", finish: "assets/icons/photos/back-extension/finish.jpg" },
     tags: ["home","gym","bodyweight"]
@@ -1247,6 +1315,7 @@ function getStarterExercises() {
     equipment: "dumbbell",
     primaryMuscle: "traps",
     secondaryMuscles: [],
+    dualStack: false,
     icon: "dumbbell",
     photos: { start: "assets/icons/photos/dumbbell-shrug/start.jpg", finish: "assets/icons/photos/dumbbell-shrug/finish.jpg" },
     tags: ["home","gym","dumbbells"]
@@ -1260,6 +1329,7 @@ function getStarterExercises() {
     equipment: "cable",
     primaryMuscle: "lats",
     secondaryMuscles: [{"muscle":"biceps","weight":0.5}],
+    dualStack: false,
     icon: "weight",
     photos: { start: "assets/icons/photos/cable-pulldown-underhand/start.jpg", finish: "assets/icons/photos/cable-pulldown-underhand/finish.jpg" },
     tags: ["gym","machine"]
@@ -1273,6 +1343,7 @@ function getStarterExercises() {
     equipment: "body only",
     primaryMuscle: "lats",
     secondaryMuscles: [{"muscle":"biceps","weight":0.4},{"muscle":"shoulders","weight":0.2}],
+    dualStack: false,
     icon: "gymnastics",
     photos: { start: "assets/icons/photos/wide-grip-pull-up/start.jpg", finish: "assets/icons/photos/wide-grip-pull-up/finish.jpg" },
     tags: ["home","gym","bodyweight"]
@@ -1286,6 +1357,7 @@ function getStarterExercises() {
     equipment: "barbell",
     primaryMuscle: "shoulders",
     secondaryMuscles: [{"muscle":"traps","weight":0.3}],
+    dualStack: false,
     icon: "barbell",
     photos: { start: "assets/icons/photos/upright-row/start.jpg", finish: "assets/icons/photos/upright-row/finish.jpg" },
     tags: ["gym"]
@@ -1299,6 +1371,7 @@ function getStarterExercises() {
     equipment: "cable",
     primaryMuscle: "shoulders",
     secondaryMuscles: [],
+    dualStack: false,
     icon: "weight",
     photos: { start: "assets/icons/photos/cable-lateral-raise/start.jpg", finish: "assets/icons/photos/cable-lateral-raise/finish.jpg" },
     tags: ["gym","machine"]
@@ -1312,6 +1385,7 @@ function getStarterExercises() {
     equipment: "dumbbell",
     primaryMuscle: "shoulders",
     secondaryMuscles: [],
+    dualStack: false,
     icon: "dumbbell",
     photos: { start: "assets/icons/photos/reverse-dumbbell-fly/start.jpg", finish: "assets/icons/photos/reverse-dumbbell-fly/finish.jpg" },
     tags: ["home","gym","dumbbells"]
@@ -1325,6 +1399,7 @@ function getStarterExercises() {
     equipment: "dumbbell",
     primaryMuscle: "shoulders",
     secondaryMuscles: [{"muscle":"triceps","weight":0.3}],
+    dualStack: false,
     icon: "dumbbell",
     photos: { start: "assets/icons/photos/seated-dumbbell-press/start.jpg", finish: "assets/icons/photos/seated-dumbbell-press/finish.jpg" },
     tags: ["home","gym","dumbbells"]
@@ -1338,6 +1413,7 @@ function getStarterExercises() {
     equipment: "machine",
     primaryMuscle: "shoulders",
     secondaryMuscles: [],
+    dualStack: false,
     icon: "weight",
     photos: { start: "assets/icons/photos/reverse-pec-deck/start.jpg", finish: "assets/icons/photos/reverse-pec-deck/finish.jpg" },
     tags: ["gym","machine"]
@@ -1351,6 +1427,7 @@ function getStarterExercises() {
     equipment: "dumbbell",
     primaryMuscle: "shoulders",
     secondaryMuscles: [],
+    dualStack: false,
     icon: "dumbbell",
     photos: { start: "assets/icons/photos/external-rotation/start.jpg", finish: "assets/icons/photos/external-rotation/finish.jpg" },
     tags: ["home","gym","dumbbells"]
@@ -1364,6 +1441,7 @@ function getStarterExercises() {
     equipment: "barbell",
     primaryMuscle: "shoulders",
     secondaryMuscles: [{"muscle":"triceps","weight":0.4},{"muscle":"quadriceps","weight":0.3}],
+    dualStack: false,
     icon: "barbell",
     photos: { start: "assets/icons/photos/push-press/start.jpg", finish: "assets/icons/photos/push-press/finish.jpg" },
     tags: ["gym"]
@@ -1377,6 +1455,7 @@ function getStarterExercises() {
     equipment: "machine",
     primaryMuscle: "quadriceps",
     secondaryMuscles: [{"muscle":"glutes","weight":0.3}],
+    dualStack: false,
     icon: "weight",
     photos: { start: "assets/icons/photos/hack-squat/start.jpg", finish: "assets/icons/photos/hack-squat/finish.jpg" },
     tags: ["gym","machine"]
@@ -1390,6 +1469,7 @@ function getStarterExercises() {
     equipment: "barbell",
     primaryMuscle: "quadriceps",
     secondaryMuscles: [{"muscle":"glutes","weight":0.4},{"muscle":"hamstrings","weight":0.2}],
+    dualStack: false,
     icon: "barbell",
     photos: { start: "assets/icons/photos/barbell-lunge/start.jpg", finish: "assets/icons/photos/barbell-lunge/finish.jpg" },
     tags: ["gym"]
@@ -1403,6 +1483,7 @@ function getStarterExercises() {
     equipment: "barbell",
     primaryMuscle: "quadriceps",
     secondaryMuscles: [{"muscle":"glutes","weight":0.4},{"muscle":"hamstrings","weight":0.2}],
+    dualStack: false,
     icon: "barbell",
     photos: { start: "assets/icons/photos/walking-lunge/start.jpg", finish: "assets/icons/photos/walking-lunge/finish.jpg" },
     tags: ["gym"]
@@ -1416,6 +1497,7 @@ function getStarterExercises() {
     equipment: "dumbbell",
     primaryMuscle: "quadriceps",
     secondaryMuscles: [{"muscle":"glutes","weight":0.4}],
+    dualStack: false,
     icon: "dumbbell",
     photos: { start: "assets/icons/photos/dumbbell-step-up/start.jpg", finish: "assets/icons/photos/dumbbell-step-up/finish.jpg" },
     tags: ["home","gym","dumbbells"]
@@ -1429,6 +1511,7 @@ function getStarterExercises() {
     equipment: "barbell",
     primaryMuscle: "hamstrings",
     secondaryMuscles: [{"muscle":"glutes","weight":0.6},{"muscle":"lower back","weight":0.4},{"muscle":"quadriceps","weight":0.3}],
+    dualStack: false,
     icon: "barbell",
     photos: { start: "assets/icons/photos/sumo-deadlift/start.jpg", finish: "assets/icons/photos/sumo-deadlift/finish.jpg" },
     tags: ["gym"]
@@ -1442,6 +1525,7 @@ function getStarterExercises() {
     equipment: "barbell",
     primaryMuscle: "glutes",
     secondaryMuscles: [{"muscle":"hamstrings","weight":0.3}],
+    dualStack: false,
     icon: "barbell",
     photos: { start: "assets/icons/photos/glute-bridge/start.jpg", finish: "assets/icons/photos/glute-bridge/finish.jpg" },
     tags: ["gym"]
@@ -1455,6 +1539,7 @@ function getStarterExercises() {
     equipment: "cable",
     primaryMuscle: "glutes",
     secondaryMuscles: [{"muscle":"hamstrings","weight":0.4},{"muscle":"lower back","weight":0.2}],
+    dualStack: false,
     icon: "weight",
     photos: { start: "assets/icons/photos/cable-pull-through/start.jpg", finish: "assets/icons/photos/cable-pull-through/finish.jpg" },
     tags: ["gym","machine"]
@@ -1468,6 +1553,7 @@ function getStarterExercises() {
     equipment: "dumbbell",
     primaryMuscle: "quadriceps",
     secondaryMuscles: [{"muscle":"glutes","weight":0.4},{"muscle":"hamstrings","weight":0.2}],
+    dualStack: false,
     icon: "dumbbell",
     photos: { start: "assets/icons/photos/reverse-lunge/start.jpg", finish: "assets/icons/photos/reverse-lunge/finish.jpg" },
     tags: ["home","gym","dumbbells"]
@@ -1481,6 +1567,7 @@ function getStarterExercises() {
     equipment: "dumbbell",
     primaryMuscle: "quadriceps",
     secondaryMuscles: [{"muscle":"glutes","weight":0.4},{"muscle":"adductors","weight":0.3}],
+    dualStack: false,
     icon: "dumbbell",
     photos: { start: "assets/icons/photos/pli-dumbbell-squat/start.jpg", finish: "assets/icons/photos/pli-dumbbell-squat/finish.jpg" },
     tags: ["home","gym","dumbbells"]
@@ -1494,6 +1581,7 @@ function getStarterExercises() {
     equipment: "body only",
     primaryMuscle: "glutes",
     secondaryMuscles: [],
+    dualStack: false,
     icon: "walk",
     photos: { start: "assets/icons/photos/glute-kickback/start.jpg", finish: "assets/icons/photos/glute-kickback/finish.jpg" },
     tags: ["home","gym","bodyweight"]
@@ -1507,6 +1595,7 @@ function getStarterExercises() {
     equipment: "machine",
     primaryMuscle: "hamstrings",
     secondaryMuscles: [],
+    dualStack: false,
     icon: "weight",
     photos: { start: "assets/icons/photos/seated-leg-curl/start.jpg", finish: "assets/icons/photos/seated-leg-curl/finish.jpg" },
     tags: ["gym","machine"]
@@ -1520,6 +1609,7 @@ function getStarterExercises() {
     equipment: "barbell",
     primaryMuscle: "quadriceps",
     secondaryMuscles: [{"muscle":"glutes","weight":0.4},{"muscle":"hamstrings","weight":0.2}],
+    dualStack: false,
     icon: "barbell",
     photos: { start: "assets/icons/photos/box-squat/start.jpg", finish: "assets/icons/photos/box-squat/finish.jpg" },
     tags: ["gym"]
@@ -1533,6 +1623,7 @@ function getStarterExercises() {
     equipment: "machine",
     primaryMuscle: "adductors",
     secondaryMuscles: [],
+    dualStack: false,
     icon: "weight",
     photos: { start: "assets/icons/photos/hip-adduction-machine/start.jpg", finish: "assets/icons/photos/hip-adduction-machine/finish.jpg" },
     tags: ["gym","machine"]
@@ -1546,6 +1637,7 @@ function getStarterExercises() {
     equipment: "body only",
     primaryMuscle: "glutes",
     secondaryMuscles: [],
+    dualStack: false,
     icon: "walk",
     photos: { start: "assets/icons/photos/step-up-with-knee-raise/start.jpg", finish: "assets/icons/photos/step-up-with-knee-raise/finish.jpg" },
     tags: ["home","gym","bodyweight"]
@@ -1559,6 +1651,7 @@ function getStarterExercises() {
     equipment: "barbell",
     primaryMuscle: "biceps",
     secondaryMuscles: [],
+    dualStack: false,
     icon: "biceps-flexed",
     photos: { start: "assets/icons/photos/ez-bar-curl/start.jpg", finish: "assets/icons/photos/ez-bar-curl/finish.jpg" },
     tags: ["gym"]
@@ -1572,6 +1665,7 @@ function getStarterExercises() {
     equipment: "body only",
     primaryMuscle: "quadriceps",
     secondaryMuscles: [{"muscle":"glutes","weight":0.3}],
+    dualStack: false,
     icon: "walk",
     photos: { start: "assets/icons/photos/bodyweight-squat/start.jpg", finish: "assets/icons/photos/bodyweight-squat/finish.jpg" },
     tags: ["home","gym","bodyweight"]
@@ -1585,6 +1679,7 @@ function getStarterExercises() {
     equipment: "dumbbell",
     primaryMuscle: "hamstrings",
     secondaryMuscles: [{"muscle":"glutes","weight":0.5},{"muscle":"lower back","weight":0.3}],
+    dualStack: false,
     icon: "dumbbell",
     photos: { start: "assets/icons/photos/stiff-legged-deadlift/start.jpg", finish: "assets/icons/photos/stiff-legged-deadlift/finish.jpg" },
     tags: ["home","gym","dumbbells"]
@@ -1598,6 +1693,7 @@ function getStarterExercises() {
     equipment: "machine",
     primaryMuscle: "abductors",
     secondaryMuscles: [],
+    dualStack: false,
     icon: "weight",
     photos: { start: "assets/icons/photos/hip-abduction-machine/start.jpg", finish: "assets/icons/photos/hip-abduction-machine/finish.jpg" },
     tags: ["gym","machine"]
@@ -1611,6 +1707,7 @@ function getStarterExercises() {
     equipment: "dumbbell",
     primaryMuscle: "biceps",
     secondaryMuscles: [],
+    dualStack: false,
     icon: "biceps-flexed",
     photos: { start: "assets/icons/photos/concentration-curl/start.jpg", finish: "assets/icons/photos/concentration-curl/finish.jpg" },
     tags: ["home","gym","dumbbells"]
@@ -1624,6 +1721,7 @@ function getStarterExercises() {
     equipment: "cable",
     primaryMuscle: "biceps",
     secondaryMuscles: [],
+    dualStack: false,
     icon: "biceps-flexed",
     photos: { start: "assets/icons/photos/cable-hammer-curl/start.jpg", finish: "assets/icons/photos/cable-hammer-curl/finish.jpg" },
     tags: ["gym","machine"]
@@ -1637,6 +1735,7 @@ function getStarterExercises() {
     equipment: "dumbbell",
     primaryMuscle: "biceps",
     secondaryMuscles: [],
+    dualStack: false,
     icon: "biceps-flexed",
     photos: { start: "assets/icons/photos/incline-dumbbell-curl/start.jpg", finish: "assets/icons/photos/incline-dumbbell-curl/finish.jpg" },
     tags: ["home","gym","dumbbells"]
@@ -1650,6 +1749,7 @@ function getStarterExercises() {
     equipment: "cable",
     primaryMuscle: "biceps",
     secondaryMuscles: [],
+    dualStack: false,
     icon: "biceps-flexed",
     photos: { start: "assets/icons/photos/cable-curl/start.jpg", finish: "assets/icons/photos/cable-curl/finish.jpg" },
     tags: ["gym","machine"]
@@ -1663,6 +1763,7 @@ function getStarterExercises() {
     equipment: "barbell",
     primaryMuscle: "biceps",
     secondaryMuscles: [],
+    dualStack: false,
     icon: "biceps-flexed",
     photos: { start: "assets/icons/photos/reverse-curl/start.jpg", finish: "assets/icons/photos/reverse-curl/finish.jpg" },
     tags: ["gym"]
@@ -1676,6 +1777,7 @@ function getStarterExercises() {
     equipment: "cable",
     primaryMuscle: "forearms",
     secondaryMuscles: [],
+    dualStack: false,
     icon: "weight",
     photos: { start: "assets/icons/photos/wrist-curl/start.jpg", finish: "assets/icons/photos/wrist-curl/finish.jpg" },
     tags: ["gym","machine"]
@@ -1689,6 +1791,7 @@ function getStarterExercises() {
     equipment: "body only",
     primaryMuscle: "triceps",
     secondaryMuscles: [{"muscle":"shoulders","weight":0.2}],
+    dualStack: false,
     icon: "gymnastics",
     photos: { start: "assets/icons/photos/bench-dip/start.jpg", finish: "assets/icons/photos/bench-dip/finish.jpg" },
     tags: ["home","gym","bodyweight"]
@@ -1702,6 +1805,7 @@ function getStarterExercises() {
     equipment: "barbell",
     primaryMuscle: "triceps",
     secondaryMuscles: [{"muscle":"chest","weight":0.4},{"muscle":"shoulders","weight":0.3}],
+    dualStack: false,
     icon: "barbell",
     photos: { start: "assets/icons/photos/floor-press/start.jpg", finish: "assets/icons/photos/floor-press/finish.jpg" },
     tags: ["gym"]
@@ -1715,6 +1819,7 @@ function getStarterExercises() {
     equipment: "body only",
     primaryMuscle: "abdominals",
     secondaryMuscles: [],
+    dualStack: false,
     icon: "yoga",
     photos: { start: "assets/icons/photos/reverse-crunch/start.jpg", finish: "assets/icons/photos/reverse-crunch/finish.jpg" },
     tags: ["home","gym","bodyweight"]
@@ -1728,6 +1833,7 @@ function getStarterExercises() {
     equipment: "dumbbell",
     primaryMuscle: "triceps",
     secondaryMuscles: [],
+    dualStack: false,
     icon: "dumbbell",
     photos: { start: "assets/icons/photos/seated-triceps-press/start.jpg", finish: "assets/icons/photos/seated-triceps-press/finish.jpg" },
     tags: ["home","gym","dumbbells"]
@@ -1741,6 +1847,7 @@ function getStarterExercises() {
     equipment: "body only",
     primaryMuscle: "triceps",
     secondaryMuscles: [{"muscle":"chest","weight":0.3},{"muscle":"shoulders","weight":0.3}],
+    dualStack: false,
     icon: "gymnastics",
     photos: { start: "assets/icons/photos/dips-triceps/start.jpg", finish: "assets/icons/photos/dips-triceps/finish.jpg" },
     tags: ["home","gym","bodyweight"]
@@ -1754,6 +1861,7 @@ function getStarterExercises() {
     equipment: "dumbbell",
     primaryMuscle: "triceps",
     secondaryMuscles: [],
+    dualStack: false,
     icon: "dumbbell",
     photos: { start: "assets/icons/photos/triceps-kickback/start.jpg", finish: "assets/icons/photos/triceps-kickback/finish.jpg" },
     tags: ["home","gym","dumbbells"]
@@ -1767,6 +1875,7 @@ function getStarterExercises() {
     equipment: "body only",
     primaryMuscle: "abdominals",
     secondaryMuscles: [],
+    dualStack: false,
     icon: "yoga",
     photos: { start: "assets/icons/photos/side-plank/start.jpg", finish: "assets/icons/photos/side-plank/finish.jpg" },
     tags: ["home","gym","bodyweight"]
@@ -1780,6 +1889,7 @@ function getStarterExercises() {
     equipment: "body only",
     primaryMuscle: "abdominals",
     secondaryMuscles: [],
+    dualStack: false,
     icon: "yoga",
     photos: { start: "assets/icons/photos/cross-body-crunch/start.jpg", finish: "assets/icons/photos/cross-body-crunch/finish.jpg" },
     tags: ["home","gym","bodyweight"]
@@ -1793,6 +1903,7 @@ function getStarterExercises() {
     equipment: "body only",
     primaryMuscle: "abdominals",
     secondaryMuscles: [],
+    dualStack: false,
     icon: "yoga",
     photos: null,
     tags: ["home","gym","bodyweight"]
@@ -1806,6 +1917,7 @@ function getStarterExercises() {
     equipment: "body only",
     primaryMuscle: "abdominals",
     secondaryMuscles: [],
+    dualStack: false,
     icon: "yoga",
     photos: { start: "assets/icons/photos/v-up/start.jpg", finish: "assets/icons/photos/v-up/finish.jpg" },
     tags: ["home","gym","bodyweight"]
@@ -1819,6 +1931,7 @@ function getStarterExercises() {
     equipment: "body only",
     primaryMuscle: "glutes",
     secondaryMuscles: [],
+    dualStack: false,
     icon: "yoga",
     photos: { start: "assets/icons/photos/flutter-kicks/start.jpg", finish: "assets/icons/photos/flutter-kicks/finish.jpg" },
     tags: ["home","gym","bodyweight"]
@@ -1832,6 +1945,7 @@ function getStarterExercises() {
     equipment: "body only",
     primaryMuscle: "abdominals",
     secondaryMuscles: [],
+    dualStack: false,
     icon: "yoga",
     photos: { start: "assets/icons/photos/bicycle-crunch/start.jpg", finish: "assets/icons/photos/bicycle-crunch/finish.jpg" },
     tags: ["home","gym","bodyweight"]
@@ -1845,6 +1959,7 @@ function getStarterExercises() {
     equipment: "body only",
     primaryMuscle: "abdominals",
     secondaryMuscles: [{"muscle":"shoulders","weight":0.3},{"muscle":"lower back","weight":0.2}],
+    dualStack: false,
     icon: "yoga",
     photos: { start: "assets/icons/photos/ab-rollout/start.jpg", finish: "assets/icons/photos/ab-rollout/finish.jpg" },
     tags: ["home","gym","bodyweight"]
@@ -1858,6 +1973,7 @@ function getStarterExercises() {
     equipment: "body only",
     primaryMuscle: "abdominals",
     secondaryMuscles: [],
+    dualStack: false,
     icon: "yoga",
     photos: { start: "assets/icons/photos/decline-crunch/start.jpg", finish: "assets/icons/photos/decline-crunch/finish.jpg" },
     tags: ["home","gym","bodyweight"]
@@ -1871,6 +1987,7 @@ function getStarterExercises() {
     equipment: "body only",
     primaryMuscle: "abdominals",
     secondaryMuscles: [],
+    dualStack: false,
     icon: "yoga",
     photos: { start: "assets/icons/photos/dead-bug/start.jpg", finish: "assets/icons/photos/dead-bug/finish.jpg" },
     tags: ["home","gym","bodyweight"]
@@ -1884,6 +2001,7 @@ function getStarterExercises() {
     equipment: "body only",
     primaryMuscle: "abdominals",
     secondaryMuscles: [],
+    dualStack: false,
     icon: "yoga",
     photos: { start: "assets/icons/photos/hip-raise/start.jpg", finish: "assets/icons/photos/hip-raise/finish.jpg" },
     tags: ["home","gym","bodyweight"]
@@ -1897,6 +2015,7 @@ function getStarterExercises() {
     equipment: "body only",
     primaryMuscle: "abdominals",
     secondaryMuscles: [],
+    dualStack: false,
     icon: "yoga",
     photos: { start: "assets/icons/photos/oblique-crunch/start.jpg", finish: "assets/icons/photos/oblique-crunch/finish.jpg" },
     tags: ["home","gym","bodyweight"]
@@ -1910,6 +2029,7 @@ function getStarterExercises() {
     equipment: "cable",
     primaryMuscle: "abdominals",
     secondaryMuscles: [],
+    dualStack: false,
     icon: "weight",
     photos: { start: "assets/icons/photos/cable-woodchopper/start.jpg", finish: "assets/icons/photos/cable-woodchopper/finish.jpg" },
     tags: ["gym","machine"]
@@ -1923,6 +2043,7 @@ function getStarterExercises() {
     equipment: "body only",
     primaryMuscle: "quadriceps",
     secondaryMuscles: [],
+    dualStack: false,
     icon: "run",
     photos: { start: "assets/icons/photos/jump-rope/start.jpg", finish: "assets/icons/photos/jump-rope/finish.jpg" },
     tags: ["home","gym","bodyweight","cardio"]
@@ -1936,6 +2057,7 @@ function getStarterExercises() {
     equipment: "body only",
     primaryMuscle: "quadriceps",
     secondaryMuscles: [],
+    dualStack: false,
     icon: "run",
     photos: { start: "assets/icons/photos/broad-jump/start.jpg", finish: "assets/icons/photos/broad-jump/finish.jpg" },
     tags: ["home","gym","bodyweight","cardio"]
@@ -1949,6 +2071,7 @@ function getStarterExercises() {
     equipment: "machine",
     primaryMuscle: "quadriceps",
     secondaryMuscles: [],
+    dualStack: false,
     icon: "weight",
     photos: { start: "assets/icons/photos/stationary-bike/start.jpg", finish: "assets/icons/photos/stationary-bike/finish.jpg" },
     tags: ["gym","machine","cardio"]
@@ -1962,6 +2085,7 @@ function getStarterExercises() {
     equipment: "body only",
     primaryMuscle: "quadriceps",
     secondaryMuscles: [],
+    dualStack: false,
     icon: "run",
     photos: { start: "assets/icons/photos/squat-jump/start.jpg", finish: "assets/icons/photos/squat-jump/finish.jpg" },
     tags: ["home","gym","bodyweight","cardio"]
@@ -1975,6 +2099,7 @@ function getStarterExercises() {
     equipment: "machine",
     primaryMuscle: "quadriceps",
     secondaryMuscles: [],
+    dualStack: false,
     icon: "weight",
     photos: { start: "assets/icons/photos/rowing-machine/start.jpg", finish: "assets/icons/photos/rowing-machine/finish.jpg" },
     tags: ["gym","machine","cardio"]
@@ -1988,6 +2113,7 @@ function getStarterExercises() {
     equipment: "machine",
     primaryMuscle: "quadriceps",
     secondaryMuscles: [],
+    dualStack: false,
     icon: "run",
     photos: { start: "assets/icons/photos/treadmill-run/start.jpg", finish: "assets/icons/photos/treadmill-run/finish.jpg" },
     tags: ["gym","machine","cardio"]
@@ -2001,6 +2127,7 @@ function getStarterExercises() {
     equipment: "body only",
     primaryMuscle: "adductors",
     secondaryMuscles: [],
+    dualStack: false,
     icon: "run",
     photos: { start: "assets/icons/photos/skater-jump/start.jpg", finish: "assets/icons/photos/skater-jump/finish.jpg" },
     tags: ["home","gym","bodyweight","cardio"]
@@ -2014,6 +2141,7 @@ function getStarterExercises() {
     equipment: "dumbbell",
     primaryMuscle: "middle back",
     secondaryMuscles: [{"muscle":"biceps","weight":0.3},{"muscle":"lats","weight":0.2}],
+    dualStack: false,
     icon: "dumbbell",
     photos: { start: "assets/icons/photos/chest-supported-row/start.jpg", finish: "assets/icons/photos/chest-supported-row/finish.jpg" },
     tags: ["home","gym","dumbbells"]
@@ -2027,6 +2155,7 @@ function getStarterExercises() {
     equipment: "kettlebell",
     primaryMuscle: "middle back",
     secondaryMuscles: [{"muscle":"biceps","weight":0.3},{"muscle":"abdominals","weight":0.3}],
+    dualStack: false,
     icon: "dumbbell",
     photos: { start: "assets/icons/photos/renegade-row/start.jpg", finish: "assets/icons/photos/renegade-row/finish.jpg" },
     tags: ["home","gym"]
@@ -2040,6 +2169,7 @@ function getStarterExercises() {
     equipment: "dumbbell",
     primaryMuscle: "biceps",
     secondaryMuscles: [],
+    dualStack: false,
     icon: "biceps-flexed",
     photos: { start: "assets/icons/photos/zottman-curl/start.jpg", finish: "assets/icons/photos/zottman-curl/finish.jpg" },
     tags: ["home","gym","dumbbells"]
@@ -2053,6 +2183,7 @@ function getStarterExercises() {
     equipment: "body only",
     primaryMuscle: "hamstrings",
     secondaryMuscles: [],
+    dualStack: false,
     icon: "run",
     photos: { start: "assets/icons/photos/tuck-jump/start.jpg", finish: "assets/icons/photos/tuck-jump/finish.jpg" },
     tags: ["home","gym","bodyweight","cardio"]
@@ -2066,6 +2197,7 @@ function getStarterExercises() {
     equipment: "body only",
     primaryMuscle: "chest",
     secondaryMuscles: [],
+    dualStack: false,
     icon: "run",
     photos: { start: "assets/icons/photos/plyo-push-up/start.jpg", finish: "assets/icons/photos/plyo-push-up/finish.jpg" },
     tags: ["home","gym","bodyweight","cardio"]
@@ -2079,6 +2211,7 @@ function getStarterExercises() {
     equipment: "barbell",
     primaryMuscle: "quadriceps",
     secondaryMuscles: [],
+    dualStack: false,
     icon: "barbell",
     photos: { start: "assets/icons/photos/sissy-squat/start.jpg", finish: "assets/icons/photos/sissy-squat/finish.jpg" },
     tags: ["gym"]
@@ -2092,6 +2225,7 @@ function getStarterExercises() {
     equipment: "machine",
     primaryMuscle: "calves",
     secondaryMuscles: [],
+    dualStack: false,
     icon: "weight",
     photos: { start: "assets/icons/photos/seated-calf-raise/start.jpg", finish: "assets/icons/photos/seated-calf-raise/finish.jpg" },
     tags: ["gym","machine"]
@@ -2105,6 +2239,7 @@ function getStarterExercises() {
     equipment: "cable",
     primaryMuscle: "biceps",
     secondaryMuscles: [],
+    dualStack: false,
     icon: "biceps-flexed",
     photos: { start: "assets/icons/photos/standing-cable-curl/start.jpg", finish: "assets/icons/photos/standing-cable-curl/finish.jpg" },
     tags: ["gym","machine"]
@@ -2118,6 +2253,7 @@ function getStarterExercises() {
     equipment: "barbell",
     primaryMuscle: "biceps",
     secondaryMuscles: [],
+    dualStack: false,
     icon: "biceps-flexed",
     photos: { start: "assets/icons/photos/spider-curl/start.jpg", finish: "assets/icons/photos/spider-curl/finish.jpg" },
     tags: ["gym"]
@@ -2131,6 +2267,7 @@ function getStarterExercises() {
     equipment: "body only",
     primaryMuscle: "calves",
     secondaryMuscles: [],
+    dualStack: false,
     icon: "walk",
     photos: { start: "assets/icons/photos/donkey-calf-raise/start.jpg", finish: "assets/icons/photos/donkey-calf-raise/finish.jpg" },
     tags: ["home","gym","bodyweight"]
@@ -2144,6 +2281,7 @@ function getStarterExercises() {
     equipment: "barbell",
     primaryMuscle: "shoulders",
     secondaryMuscles: [],
+    dualStack: false,
     icon: "barbell",
     photos: { start: "assets/icons/photos/barbell-front-raise/start.jpg", finish: "assets/icons/photos/barbell-front-raise/finish.jpg" },
     tags: ["gym"]
@@ -2157,6 +2295,7 @@ function getStarterExercises() {
     equipment: "body only",
     primaryMuscle: "lower back",
     secondaryMuscles: [{"muscle":"glutes","weight":0.3},{"muscle":"hamstrings","weight":0.2}],
+    dualStack: false,
     icon: "yoga",
     photos: { start: "assets/icons/photos/superman/start.jpg", finish: "assets/icons/photos/superman/finish.jpg" },
     tags: ["home","gym","bodyweight"]
@@ -2170,6 +2309,7 @@ function getStarterExercises() {
     equipment: "body only",
     primaryMuscle: "chest",
     secondaryMuscles: [{"muscle":"shoulders","weight":0.3},{"muscle":"triceps","weight":0.2}],
+    dualStack: false,
     icon: "gymnastics",
     photos: { start: "assets/icons/photos/wide-grip-push-up/start.jpg", finish: "assets/icons/photos/wide-grip-push-up/finish.jpg" },
     tags: ["home","gym","bodyweight"]
@@ -2183,6 +2323,7 @@ function getStarterExercises() {
     equipment: "body only",
     primaryMuscle: "chest",
     secondaryMuscles: [{"muscle":"shoulders","weight":0.4},{"muscle":"triceps","weight":0.3}],
+    dualStack: false,
     icon: "gymnastics",
     photos: { start: "assets/icons/photos/decline-push-up/start.jpg", finish: "assets/icons/photos/decline-push-up/finish.jpg" },
     tags: ["home","gym","bodyweight"]
@@ -2196,6 +2337,7 @@ function getStarterExercises() {
     equipment: "body only",
     primaryMuscle: "abdominals",
     secondaryMuscles: [],
+    dualStack: false,
     icon: "yoga",
     photos: { start: "assets/icons/photos/seated-leg-tuck/start.jpg", finish: "assets/icons/photos/seated-leg-tuck/finish.jpg" },
     tags: ["home","gym","bodyweight"]
@@ -2209,6 +2351,7 @@ function getStarterExercises() {
     equipment: "cable",
     primaryMuscle: "chest",
     secondaryMuscles: [],
+    dualStack: true,
     icon: "weight",
     photos: { start: "assets/icons/photos/incline-cable-fly/start.jpg", finish: "assets/icons/photos/incline-cable-fly/finish.jpg" },
     tags: ["gym","machine"]
@@ -3982,6 +4125,31 @@ function renderPlateHint(ex, weight) {
   return `<p class="lw-plate-hint" aria-live="polite">${text}</p>`;
 }
 
+// ===== Dual weight-tower (cable) helper =====
+// A small set of cable/functional-trainer exercises (Cable Crossover, Incline
+// Cable Fly, Lat Pulldown, Seated Cable Row on Daniel's Ares 2.0 rack) pull
+// off two fully independent weight stacks. Unlike a barbell, the logged/target
+// number here is naturally ALREADY per-side (that's what you dial in on each
+// stack) -- there's nothing to derive, just label it so it's never mistaken
+// for a combined total. Flip the catalog's dualStack: true on any exercise to
+// add/remove it from this list.
+function isDualStackLift(ex) {
+  return getExerciseById(ex?.exerciseId)?.dualStack === true;
+}
+
+// "lb" normally, "lb per side" for a flagged dual-stack exercise.
+function weightUnitLabel(ex) {
+  return isDualStackLift(ex) ? "lb per side" : "lb";
+}
+
+// Returns a small HTML hint showing the combined total for a flagged
+// dual-stack exercise ("45 lb per side · 90 lb combined"), "" otherwise.
+function renderDualStackHint(ex, weight) {
+  if (!isDualStackLift(ex)) return "";
+  const perSide = Number(weight) || 0;
+  return `<p class="lw-plate-hint" aria-live="polite"><strong>${formatPlateNum(perSide)} lb</strong> per side &middot; ${formatPlateNum(perSide * 2)} lb combined</p>`;
+}
+
 function getExerciseSubtypeOptions(exerciseId) {
   if (exerciseId === "peloton-tread") return ["Incline Walk", "Run", "Walk", "Run + Walk", "Hike"];
   if (exerciseId === "peloton-bike") return ["Just Ride", "Ride Class", "Power Zone"];
@@ -4466,7 +4634,7 @@ function formatPreviewMeta(exercise) {
     return `${exercise.targetSubtype ? `${exercise.targetSubtype} · ` : ""}${mins} min`;
   }
   if (exercise.targetReps) {
-    const weight = Number(exercise.targetWeight) > 0 ? ` · ${exercise.targetWeight} lb` : "";
+    const weight = Number(exercise.targetWeight) > 0 ? ` · ${exercise.targetWeight} ${weightUnitLabel(exercise)}` : "";
     return `${exercise.targetSets} × ${exercise.targetReps}${weight}`;
   }
   return exercise.targetSets ? `${exercise.targetSets} sets` : "";
@@ -4784,7 +4952,7 @@ function formatExerciseRecap(ex) {
   if (doneSets.length === 0) return "Not logged";
   const topWeight = Math.max(...doneSets.map((set) => Number(set.weight) || 0));
   const repsAtTop = doneSets.find((set) => (Number(set.weight) || 0) === topWeight)?.reps || 0;
-  const weightPart = topWeight > 0 ? ` · ${topWeight} lb × ${repsAtTop}` : "";
+  const weightPart = topWeight > 0 ? ` · ${topWeight} ${weightUnitLabel(ex)} × ${repsAtTop}` : "";
   return `${doneSets.length} set${doneSets.length === 1 ? "" : "s"}${weightPart}`;
 }
 
@@ -4804,7 +4972,7 @@ function formatFocusTarget(ex, includeRest = true) {
   if (ex.type === "timed") return `${(ex.holds || []).length} × ${ex.holdSeconds || 0} sec${rest}`;
   if (ex.type === "cardio" || ex.type === "sport") return `${ex.targetSubtype ? `${ex.targetSubtype} · ` : ""}${ex.targetDuration || ex.actualDuration || 0} min`;
   if (ex.targetReps) {
-    const weight = Number(ex.targetWeight) > 0 ? ` · ${ex.targetWeight} lb` : "";
+    const weight = Number(ex.targetWeight) > 0 ? ` · ${ex.targetWeight} ${weightUnitLabel(ex)}` : "";
     return `${ex.targetSets || (ex.sets || []).length} × ${ex.targetReps}${weight}${rest}`;
   }
   return `${ex.targetSets || (ex.sets || []).length} sets${rest}`;
@@ -4872,7 +5040,7 @@ function renderEditTargetsSheet(ex) {
     controls = `
       ${renderTargetStepper("Sets", "targetSets", ex.targetSets || (ex.sets || []).length, 1, 1, 12)}
       ${renderTargetStepper("Reps", "targetReps", ex.targetReps || 0, 1, 0, 100)}
-      ${renderTargetStepper("Weight", "targetWeight", ex.targetWeight || 0, 5, 0, 1000, "lb")}
+      ${renderTargetStepper(isDualStackLift(ex) ? "Weight (per side)" : "Weight", "targetWeight", ex.targetWeight || 0, 5, 0, 1000, "lb")}
     `;
   }
 
@@ -5532,19 +5700,24 @@ function renderFocusedExercise() {
       const set = sets[s];
       // Barbell lifts are entered as plates-per-side (set.weight stays the total).
       const barbell = isBarbellLift(ex);
-      const weightLabel = barbell ? "Per side" : "Weight";
+      // Dual-stack cable lifts (e.g. Seated Cable Row, Lat Pulldown on Daniel's
+      // Ares 2.0) are naturally already per-side -- nothing to derive, just label it.
+      const dualStack = !barbell && isDualStackLift(ex);
+      const weightLabel = barbell ? "Per side" : (dualStack ? "Weight (per side)" : "Weight");
       const weightShown = barbell ? perSideFromTotal(set.weight) : (Number(set.weight) || 0);
-      const lowerAria = barbell ? "Lower plates 5 pounds per side" : "Lower weight 5 pounds";
-      const raiseAria = barbell ? "Raise plates 5 pounds per side" : "Raise weight 5 pounds";
+      const weightUnitText = dualStack ? "lb/side" : "lb";
+      const lowerAria = barbell ? "Lower plates 5 pounds per side" : (dualStack ? "Lower weight 5 pounds per side" : "Lower weight 5 pounds");
+      const raiseAria = barbell ? "Raise plates 5 pounds per side" : (dualStack ? "Raise weight 5 pounds per side" : "Raise weight 5 pounds");
       const weightControl = usesWeightMetric(ex) ? `
           <div class="lw-bigstep">
             <span class="lw-bigstep-label">${weightLabel}</span>
             <div class="lw-bigstep-row">
               <button class="lw-wbtn lw-wbtn-lg" type="button" data-action="set-weight-step" data-set-index="${s}" data-delta="-5" aria-label="${lowerAria}">&minus;</button>
-              <span class="lw-bigstep-val"><strong>${escapeHtml(weightShown)}</strong> lb</span>
+              <span class="lw-bigstep-val"><strong>${escapeHtml(weightShown)}</strong> ${weightUnitText}</span>
               <button class="lw-wbtn lw-wbtn-lg" type="button" data-action="set-weight-step" data-set-index="${s}" data-delta="5" aria-label="${raiseAria}">+</button>
             </div>
             ${renderPlateHint(ex, set.weight)}
+            ${renderDualStackHint(ex, set.weight)}
           </div>
       ` : "";
       body = `
@@ -9664,9 +9837,10 @@ function formatEntryDetails(entry) {
     return `${planned}actual ${entry.actualSummary?.sets || 0} × ${secs} sec`;
   }
 
+  const entryWeightUnit = weightUnitLabel(entry);
   const summary = entry.actualSummary
-    ? `${entry.actualSummary.sets}x${entry.actualSummary.reps}${Number(entry.actualSummary.weight) > 0 ? ` @ ${entry.actualSummary.weight} lb` : ""}`
-    : entry.sets?.map((set) => `${set.reps}@${set.weight}lb`).join(", ");
+    ? `${entry.actualSummary.sets}x${entry.actualSummary.reps}${Number(entry.actualSummary.weight) > 0 ? ` @ ${entry.actualSummary.weight} ${entryWeightUnit}` : ""}`
+    : entry.sets?.map((set) => `${set.reps}@${set.weight} ${entryWeightUnit}`).join(", ");
   const planned = entry.planned?.sets ? `planned ${entry.planned.sets}x${entry.planned.reps || 0}, ` : "";
   return `${planned}actual ${summary || "no sets"}`;
 }
@@ -9684,7 +9858,7 @@ function formatRoutineExercise(exercise) {
   if (exerciseInfo?.type === "timed") {
     return `- ${name}: ${exercise.targetSets || 1}x${exercise.targetReps || 0} sec${rest}`;
   }
-  const weight = Number(exercise.targetWeight) > 0 ? ` @ ${exercise.targetWeight} lb` : "";
+  const weight = Number(exercise.targetWeight) > 0 ? ` @ ${exercise.targetWeight} ${exerciseInfo?.dualStack ? "lb per side" : "lb"}` : "";
   return `- ${name}: ${exercise.targetSets || 1}x${exercise.targetReps || 0}${weight}${rest}`;
 }
 
@@ -9752,7 +9926,7 @@ function describeRoutineExercise(ex) {
   const name = lib?.name || ex.exerciseId;
   if (ex.targetDuration || lib?.type === "cardio" || lib?.type === "sport") return { name, detail: `${ex.targetDuration || 20} min` };
   if ((lib?.type) === "timed") return { name, detail: `${ex.targetSets || 1} × ${ex.targetReps || 0} sec` };
-  const weight = Number(ex.targetWeight) > 0 ? ` @ ${ex.targetWeight} lb` : "";
+  const weight = Number(ex.targetWeight) > 0 ? ` @ ${ex.targetWeight} ${lib?.dualStack ? "lb per side" : "lb"}` : "";
   return { name, detail: `${ex.targetSets || 1} × ${ex.targetReps || 0}${weight}` };
 }
 
@@ -9888,7 +10062,7 @@ function renderRoutineExerciseEditRow(routineId, ex, index, count) {
   } else {
     fields = numInput("targetSets", ex.targetSets || 3, "sets", 1)
       + numInput("targetReps", ex.targetReps || 8, "reps", 0)
-      + numInput("targetWeight", Number(ex.targetWeight) || 0, "lb", 0)
+      + numInput("targetWeight", Number(ex.targetWeight) || 0, lib?.dualStack ? "lb/side" : "lb", 0)
       + restInput + restTimerToggle;
   }
 
@@ -10104,7 +10278,7 @@ function renderMilestoneGoalsCard(activePlan) {
 function renderMilestoneGoalRow(goal) {
   const name = goal.exerciseName || getExerciseById(goal.exerciseId)?.name || "Exercise";
   const targetParts = [];
-  if (Number(goal.targetWeight) > 0) targetParts.push(`${goal.targetWeight} lb`);
+  if (Number(goal.targetWeight) > 0) targetParts.push(`${goal.targetWeight} ${getExerciseById(goal.exerciseId)?.dualStack ? "lb per side" : "lb"}`);
   if (Number(goal.targetReps) > 0) targetParts.push(`${goal.targetReps} reps`);
   if (Number(goal.targetSets) > 0) targetParts.push(`${goal.targetSets} sets`);
   const targetText = targetParts.length ? targetParts.join(" × ") : "Target not set yet";
@@ -10236,7 +10410,7 @@ function renderGoalEditorModal() {
         </div>
         <div class="plan-form goal-editor-form">
           <div class="goal-editor-targets">
-            <label><span>Weight (lb)</span><input type="number" inputmode="decimal" min="0" id="goal-target-weight" value="${escapeHtml(goalEditor.targetWeight)}" placeholder="e.g. 185"></label>
+            <label><span>Weight (${getExerciseById(goalEditor.exerciseId)?.dualStack ? "lb per side" : "lb"})</span><input type="number" inputmode="decimal" min="0" id="goal-target-weight" value="${escapeHtml(goalEditor.targetWeight)}" placeholder="e.g. 185"></label>
             <label><span>Reps</span><input type="number" inputmode="numeric" min="0" id="goal-target-reps" value="${escapeHtml(goalEditor.targetReps)}" placeholder="e.g. 5"></label>
             <label><span>Sets</span><input type="number" inputmode="numeric" min="0" id="goal-target-sets" value="${escapeHtml(goalEditor.targetSets)}" placeholder="e.g. 3"></label>
           </div>
@@ -11517,7 +11691,7 @@ function renderStrengthProgressCard() {
     strengthExerciseId = list.slice().sort((a, b) => b.sessions - a.sessions)[0].id;
   }
   const { weighted, sessions } = getStrengthSeries(strengthExerciseId);
-  const unit = weighted ? "lb" : "reps";
+  const unit = weighted ? (getExerciseById(strengthExerciseId)?.dualStack ? "lb/side" : "lb") : "reps";
   const options = list.map((x) =>
     `<option value="${escapeHtml(x.id)}"${x.id === strengthExerciseId ? " selected" : ""}>${escapeHtml(x.name)}</option>`
   ).join("");
@@ -11579,8 +11753,9 @@ function renderFocusGoalCard() {
 function renderFocusGoalItem(goal) {
   const exerciseId = goal.exerciseId;
   const name = goal.exerciseName || getExerciseById(exerciseId)?.name || "Exercise";
+  const weightUnit = getExerciseById(exerciseId)?.dualStack ? "lb per side" : "lb";
   const targetParts = [];
-  if (Number(goal.targetWeight) > 0) targetParts.push(`${goal.targetWeight} lb`);
+  if (Number(goal.targetWeight) > 0) targetParts.push(`${goal.targetWeight} ${weightUnit}`);
   if (Number(goal.targetReps) > 0) targetParts.push(`${goal.targetReps} reps`);
   if (Number(goal.targetSets) > 0) targetParts.push(`${goal.targetSets} sets`);
   const targetText = targetParts.length ? targetParts.join(" × ") : "Target not set yet";
@@ -11594,11 +11769,11 @@ function renderFocusGoalItem(goal) {
   if (best && Number(goal.targetWeight) > 0) {
     const diff = Math.round((goal.targetWeight - best.y) * 10) / 10;
     progressHit = diff <= 0;
-    progressNote = progressHit ? "Target hit — nice work!" : `${diff} lb to go`;
+    progressNote = progressHit ? "Target hit — nice work!" : `${diff} ${weightUnit} to go`;
   }
 
   const recentList = recent.length
-    ? `<ul class="goal-recent">${recent.map((s) => `<li><span>${escapeHtml(formatWorkoutDate(s.date))}</span><span>${s.y} lb${s.reps ? ` × ${s.reps}` : ""}</span></li>`).join("")}</ul>`
+    ? `<ul class="goal-recent">${recent.map((s) => `<li><span>${escapeHtml(formatWorkoutDate(s.date))}</span><span>${s.y} ${weightUnit}${s.reps ? ` × ${s.reps}` : ""}</span></li>`).join("")}</ul>`
     : `<p class="prog-empty">No logged sets for this exercise yet.</p>`;
 
   return `
@@ -11612,7 +11787,7 @@ function renderFocusGoalItem(goal) {
       </div>
       <div class="prog-chart-foot">
         <div class="goal-stat">
-          <p class="mini-num">${best ? best.y : "—"}${best ? `<span class="mini-unit"> lb</span>` : ""}</p>
+          <p class="mini-num">${best ? best.y : "—"}${best ? `<span class="mini-unit"> ${weightUnit}</span>` : ""}</p>
           <p class="mini-note">${best ? `best set${best.reps ? ` · ×${best.reps}` : ""}` : "no sets logged yet"}</p>
         </div>
         ${progressNote ? `<p class="goal-progress-note${progressHit ? " is-hit" : ""}">${escapeHtml(progressNote)}</p>` : ""}
@@ -11630,7 +11805,7 @@ function renderPersonalRecords() {
       <div class="pr-body">
         <p class="pr-name">${escapeHtml(r.name)}</p>
         <p class="pr-value">${r.weighted
-          ? `${r.value}<span class="pr-unit"> lb</span>${r.reps ? ` <span class="pr-x">× ${r.reps}</span>` : ""}`
+          ? `${r.value}<span class="pr-unit"> ${getExerciseById(r.id)?.dualStack ? "lb/side" : "lb"}</span>${r.reps ? ` <span class="pr-x">× ${r.reps}</span>` : ""}`
           : `${r.value}<span class="pr-unit"> reps</span>`}</p>
         <p class="pr-date">${escapeHtml(formatWorkoutDate(r.date))}</p>
       </div>
@@ -13073,16 +13248,17 @@ function renderDetailExerciseView(entry, index) {
     ? (Array.isArray(entry.holds) ? entry.holds : [])
     : (Array.isArray(entry.sets) ? entry.sets : []);
   const showWeight = entry.metricProfile !== "strength-bodyweight";
+  const entryWeightUnit = weightUnitLabel(entry);
   const planned = isTimed
     ? (entry.planned?.sets ? `${entry.planned.sets} × ${entry.planned.seconds || 0} sec` : "")
-    : (entry.planned?.sets ? `${entry.planned.sets}×${entry.planned.reps || 0}${Number(entry.planned.weight) > 0 ? ` @ ${entry.planned.weight} lb` : ""}` : "");
+    : (entry.planned?.sets ? `${entry.planned.sets}×${entry.planned.reps || 0}${Number(entry.planned.weight) > 0 ? ` @ ${entry.planned.weight} ${entryWeightUnit}` : ""}` : "");
 
   const rows = units.map((unit, i) => {
     const label = isTimed ? `Hold ${i + 1}` : `Set ${i + 1}`;
     const val = isTimed
       ? `${Number(unit.seconds) || 0}s`
       : (showWeight
-          ? `${Number(unit.reps) || 0} × ${Number(unit.weight) || 0} lb`
+          ? `${Number(unit.reps) || 0} × ${Number(unit.weight) || 0} ${entryWeightUnit}`
           : `${Number(unit.reps) || 0} reps`);
     return `
       <div class="hist-view-set">
@@ -13525,12 +13701,14 @@ function renderDetailExercise(entry, index) {
   // Strength exercise — one editable row per set, each with optional effort.
   const showWeight = entry.metricProfile !== "strength-bodyweight";
   const sets = Array.isArray(entry.sets) ? entry.sets : [];
-  const planned = entry.planned?.sets ? `${entry.planned.sets}×${entry.planned.reps || 0}${Number(entry.planned.weight) > 0 ? ` @ ${entry.planned.weight} lb` : ""}` : "—";
+  const entryWeightUnit = weightUnitLabel(entry);
+  const entryIsDualStack = isDualStackLift(entry);
+  const planned = entry.planned?.sets ? `${entry.planned.sets}×${entry.planned.reps || 0}${Number(entry.planned.weight) > 0 ? ` @ ${entry.planned.weight} ${entryWeightUnit}` : ""}` : "—";
   const rows = sets.map((set, si) => `
     <div class="hist-set-row" data-set-index="${si}">
       <span class="hist-set-num">Set ${si + 1}</span>
       <label class="hist-set-field"><span>reps</span><input type="number" min="0" step="1" value="${escapeHtml(set.reps ?? 0)}" data-hfield="reps"></label>
-      ${showWeight ? `<label class="hist-set-field"><span>lb</span><input type="number" min="0" step="0.5" value="${escapeHtml(set.weight ?? 0)}" data-hfield="weight"></label>` : ""}
+      ${showWeight ? `<label class="hist-set-field"><span>${entryIsDualStack ? "lb/side" : "lb"}</span><input type="number" min="0" step="0.5" value="${escapeHtml(set.weight ?? 0)}" data-hfield="weight"></label>` : ""}
       ${renderSetMoreToggle(index, si, set)}
       <button class="hist-set-remove btn-ico" type="button" data-haction="remove-set" data-entry-index="${index}" data-set-index="${si}" aria-label="Remove set ${si + 1}">${getUiIcon("x")}</button>
       ${renderSetExtra(index, si, set, "Set note (optional)")}
@@ -13767,6 +13945,7 @@ function generateReviewPacket() {
   packet.push("- Cardio/Peloton targets are a subtype plus minutes (Peloton Tread: Incline Walk, 30 min; Peloton Bike: Just Ride, 20 min). I log output, average power, distance, notes, and effort.");
   packet.push("- For bike work, default to Peloton Bike instead of Stationary Bike unless I explicitly say it is a non-Peloton stationary bike.");
   packet.push("- Russian Twist should usually include a light starting weight when programming it for me, and one rep means right side plus left side. Dead Bug reps also count right plus left as one full rep.");
+  packet.push("- Cable Crossover, Incline Cable Fly, Lat Pulldown, and Seated Cable Row are on a dual-independent-stack cable machine (Ares 2.0): the weight for these is per side, not a combined total, and every place it's shown says \"lb per side\" or \"lb/side\". When suggesting a weight for these four exercises, give the per-side number, matching what's already logged.");
   packet.push("- Held moves (e.g. plank) are timed: targets are sets x seconds (3x45 sec), optionally a rest target. I log EACH hold's actual seconds separately (e.g. 60s · 60s · 45s) plus optional per-hold effort.");
   packet.push("- Effort is rated 1-10 (1 = easy, 10 = all-out), logged per set/hold, and is optional — \"not logged\" means I didn't rate it, not that it was easy.");
   packet.push("- Rest targets (rest 90s) show during the live workout. Add \"timer\" after a rest target only when Training Book should run a countdown.");
@@ -13788,13 +13967,14 @@ function generateReviewPacket() {
     packet.push("FOCUS GOALS (context only — this manual chat format has no way to save changes to these):");
     focusGoals.forEach((goal) => {
       const name = goal.exerciseName || getExerciseById(goal.exerciseId)?.name || goal.exerciseId || "Exercise";
+      const goalWeightUnit = getExerciseById(goal.exerciseId)?.dualStack ? "lb per side" : "lb";
       const targetParts = [];
-      if (Number(goal.targetWeight) > 0) targetParts.push(`${goal.targetWeight} lb`);
+      if (Number(goal.targetWeight) > 0) targetParts.push(`${goal.targetWeight} ${goalWeightUnit}`);
       if (Number(goal.targetReps) > 0) targetParts.push(`${goal.targetReps} reps`);
       if (Number(goal.targetSets) > 0) targetParts.push(`${goal.targetSets} sets`);
       const { sessions } = goal.exerciseId ? getStrengthSeries(goal.exerciseId) : { sessions: [] };
       const best = sessions.reduce((top, s) => (!top || s.y > top.y) ? s : top, null);
-      packet.push(`- ${name}: target ${targetParts.length ? targetParts.join(" x ") : "(not set)"}, best so far ${best ? `${best.y} lb x ${best.reps} (${best.date})` : "(no logged sets yet)"}`);
+      packet.push(`- ${name}: target ${targetParts.length ? targetParts.join(" x ") : "(not set)"}, best so far ${best ? `${best.y} ${goalWeightUnit} x ${best.reps} (${best.date})` : "(no logged sets yet)"}`);
     });
     packet.push("");
   }

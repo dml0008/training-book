@@ -216,6 +216,7 @@
       "slug": "cable-crossover",
       "group": "chest",
       "equipment": "cable",
+      "dualStack": true,
       "primaryMuscle": "chest",
       "icon": {
         "glyph": "weight",
@@ -385,6 +386,7 @@
       "slug": "lat-pulldown",
       "group": "back",
       "equipment": "cable",
+      "dualStack": true,
       "primaryMuscle": "lats",
       "icon": {
         "glyph": "weight",
@@ -451,6 +453,7 @@
       "slug": "seated-cable-row",
       "group": "back",
       "equipment": "cable",
+      "dualStack": true,
       "primaryMuscle": "middle back",
       "icon": {
         "glyph": "weight",
@@ -4091,6 +4094,7 @@
       "slug": "incline-cable-fly",
       "group": "chest",
       "equipment": "cable",
+      "dualStack": true,
       "primaryMuscle": "chest",
       "icon": {
         "glyph": "weight",
