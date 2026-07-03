@@ -446,17 +446,26 @@
   margin-top: 1px;
 }
 
-/* Small muscle-group figure on the preview row, pushed to the right; the
-   SPORT/TIMED tag (if present) trails right after it since its own
-   margin-left:auto has no space left to consume once this claims it. */
-.today-preview-card .pv-muscle-badge {
-  width: 30px;
+/* The optional SPORT/TIMED tag and the muscle badge cluster together as one
+   unit pinned to the right edge (single margin-left:auto on the wrapper).
+   Giving both children their own margin-left:auto split the leftover space
+   between them instead, which shoved the badge toward the middle of the row
+   whenever a tag was also present - a single shared auto-margin keeps both
+   always in the same spot, tag immediately left of the badge. */
+.today-preview-card .pv-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   flex: none;
   margin-left: auto;
 }
 
+.today-preview-card .pv-muscle-badge {
+  width: 46px;
+  flex: none;
+}
+
 .today-preview-card .pv-tag {
-  margin-left: auto;
   flex: 0 0 auto;
   font-size: 10px;
   font-weight: 800;
