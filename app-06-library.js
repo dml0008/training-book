@@ -1357,7 +1357,8 @@ function formatEntryDetails(entry) {
   if (entry.type === "cardio") {
     const planned = entry.planned?.durationMinutes ? `planned ${entry.planned.durationMinutes} min, ` : "";
     const subtype = entry.subtype || entry.planned?.subtype;
-    return `${subtype ? `${subtype}: ` : ""}${planned}actual ${entry.durationMinutes || 0} min${formatCardioStats(entry.stats)}${entry.notes ? ` · ${entry.notes}` : ""}`;
+    const intervals = formatCardioSegmentsSummary(entry.segments, { compact: true });
+    return `${subtype ? `${subtype}: ` : ""}${planned}actual ${entry.durationMinutes || 0} min${intervals ? ` · ${intervals}` : ""}${formatCardioStats(entry.stats)}${entry.notes ? ` · ${entry.notes}` : ""}`;
   }
 
   if (entry.type === "sport") {

@@ -503,6 +503,8 @@ function renderDetailExerciseView(entry, index) {
     if (entry.type === "cardio") {
       const subtype = entry.subtype || entry.planned?.subtype;
       if (subtype) parts.unshift(escapeHtml(subtype));
+      const intervals = formatCardioSegmentsSummary(entry.segments, { compact: true });
+      if (intervals) parts.push(escapeHtml(intervals));
       const stats = formatCardioStats(entry.stats).replace(/^ · /, "");
       if (stats) parts.push(escapeHtml(stats));
     }
@@ -703,6 +705,58 @@ function setHistoryStat(entry, key, value) {
   entry.stats[key] = Number(value) || 0;
 }
 
+function setHistorySegmentField(entry, index, key, value) {
+  entry.segments = Array.isArray(entry.segments) ? entry.segments : [];
+  const segment = entry.segments[index];
+  if (!segment) return;
+  if (key === "seconds") segment.seconds = clampNumber(value, 0, 3600);
+  else if (key === "kind") segment.kind = value === "rest" ? "rest" : "work";
+  else if (key === "targetType") {
+    segment.target = segment.target || {};
+    segment.target.type = value;
+    if (!value) segment.target.value = "";
+  } else if (key === "targetValue") {
+    segment.target = segment.target || {};
+    segment.target.value = value;
+  }
+}
+
+function renderHistoryCardioSegments(entry, entryIndex) {
+  const segments = Array.isArray(entry.segments) ? entry.segments : [];
+  const rows = segments.map((segment, index) => {
+    const target = segment.target || {};
+    return `
+      <div class="hist-interval-row" data-segment-index="${index}">
+        <select data-hfield="segmentKind" aria-label="Interval ${index + 1} type">
+          <option value="work"${segment.kind !== "rest" ? " selected" : ""}>Work</option>
+          <option value="rest"${segment.kind === "rest" ? " selected" : ""}>Rest</option>
+        </select>
+        <label class="hist-inline-field">
+          <input type="number" min="0" step="5" value="${escapeHtml(segment.seconds || "")}" data-hfield="segmentSeconds" placeholder="60">
+          <span>sec</span>
+        </label>
+        <select data-hfield="segmentTargetType" aria-label="Interval ${index + 1} target type">
+          <option value="">No target</option>
+          <option value="watts"${target.type === "watts" ? " selected" : ""}>Watts</option>
+          <option value="pace"${target.type === "pace" ? " selected" : ""}>Pace</option>
+          <option value="incline"${target.type === "incline" ? " selected" : ""}>Incline</option>
+          <option value="resistance"${target.type === "resistance" ? " selected" : ""}>Resistance</option>
+        </select>
+        <input class="hist-interval-target" type="text" value="${escapeHtml(target.value || "")}" data-hfield="segmentTargetValue" placeholder="target" aria-label="Interval ${index + 1} target value">
+        <button class="hist-set-remove btn-ico" type="button" data-haction="remove-segment" data-entry-index="${entryIndex}" data-segment-index="${index}" aria-label="Remove interval ${index + 1}">${getUiIcon("x")}</button>
+      </div>`;
+  }).join("");
+  return `
+    <div class="hist-intervals">
+      <p class="hist-planned-line">Intervals are optional; total time above still drives Progress.</p>
+      <div class="hist-interval-list">${rows || `<p class="empty-state">No intervals logged.</p>`}</div>
+      <div class="hist-interval-actions">
+        <button class="quiet-button small-button btn-ico" type="button" data-haction="add-segment" data-entry-index="${entryIndex}" data-kind="work">${getUiIcon("plus")}Work</button>
+        <button class="quiet-button small-button btn-ico" type="button" data-haction="add-segment" data-entry-index="${entryIndex}" data-kind="rest">${getUiIcon("plus")}Rest</button>
+      </div>
+    </div>`;
+}
+
 // All button taps inside the History editor (delegated from the panel).
 function handleHistoryDetailClick(event) {
   if (!historyEdit) return;
@@ -774,6 +828,27 @@ function handleHistoryDetailClick(event) {
     const arr = entry?.type === "timed" ? entry.holds : entry?.sets;
     if (Array.isArray(arr) && arr.length) {
       arr.splice(si, 1);
+      historyEdit.dirty = true;
+      renderHistoryDetail();
+    }
+    return;
+  }
+
+  if (action === "add-segment") {
+    const entry = historyEdit.workout.entries?.[entryIndex];
+    if (!entry || entry.type !== "cardio") return;
+    entry.segments = Array.isArray(entry.segments) ? entry.segments : [];
+    entry.segments.push(makeCardioSegment(btn.dataset.kind || "work"));
+    historyEdit.dirty = true;
+    renderHistoryDetail();
+    return;
+  }
+
+  if (action === "remove-segment") {
+    const entry = historyEdit.workout.entries?.[entryIndex];
+    const si = Number(btn.dataset.segmentIndex);
+    if (entry?.type === "cardio" && Array.isArray(entry.segments)) {
+      entry.segments.splice(si, 1);
       historyEdit.dirty = true;
       renderHistoryDetail();
     }
@@ -860,6 +935,18 @@ function handleHistoryDetailInput(event) {
     case "statDistance": setHistoryStat(entry, "distance", field.value); break;
     case "statElevation": setHistoryStat(entry, "elevation", field.value); break;
     case "statCalories": setHistoryStat(entry, "calories", field.value); break;
+    case "segmentKind":
+      setHistorySegmentField(entry, Number(field.closest("[data-segment-index]")?.dataset.segmentIndex), "kind", field.value);
+      break;
+    case "segmentSeconds":
+      setHistorySegmentField(entry, Number(field.closest("[data-segment-index]")?.dataset.segmentIndex), "seconds", field.value);
+      break;
+    case "segmentTargetType":
+      setHistorySegmentField(entry, Number(field.closest("[data-segment-index]")?.dataset.segmentIndex), "targetType", field.value);
+      break;
+    case "segmentTargetValue":
+      setHistorySegmentField(entry, Number(field.closest("[data-segment-index]")?.dataset.segmentIndex), "targetValue", field.value);
+      break;
     default: return;
   }
   historyEdit.dirty = true;
@@ -908,6 +995,7 @@ function renderDetailExercise(entry, index) {
           </div>
           ${statFields}
         </div>
+        ${renderHistoryCardioSegments(entry, index)}
         <label class="detail-sport-notes">
           <span>Notes</span>
           <textarea rows="2" data-hfield="notes" placeholder="Optional notes">${escapeHtml(entry.notes || "")}</textarea>
@@ -1023,6 +1111,8 @@ function normalizeHistoryEntry(entry) {
       if (v > 0) stats[k] = v;
     });
     if (Object.keys(stats).length) out.stats = stats;
+    const segments = normalizeCardioSegments(entry.segments);
+    if (segments.length) out.segments = segments;
     const note = (entry.notes || "").trim();
     if (note) out.notes = note;
     if (Number(entry.difficulty) > 0) out.difficulty = Number(entry.difficulty);

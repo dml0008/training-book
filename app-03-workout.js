@@ -277,6 +277,7 @@ function makeTodayExercise(plannedEx, source = "planned") {
     cardioDistance: "",
     cardioElevation: "",
     cardioCalories: "",
+    cardioSegments: [],
     notes: "",
     skipped: false,
     // Sport moves (e.g. soccer): a "done" flag and a free-text note, alongside
@@ -869,7 +870,8 @@ function isExerciseLogged(ex) {
 function formatExerciseRecap(ex) {
   if (ex.skipped && !isExerciseLogged(ex)) return "Skipped";
   if (ex.type === "cardio") {
-    return ex.cardioDone ? `${Number(ex.actualDuration) || 0} min${formatCardioStats(collectCardioStats(ex))}` : "Not logged";
+    const intervals = formatCardioSegmentsSummary(ex.cardioSegments, { compact: true });
+    return ex.cardioDone ? `${Number(ex.actualDuration) || 0} min${intervals ? ` · ${intervals}` : ""}${formatCardioStats(collectCardioStats(ex))}` : "Not logged";
   }
   if (ex.type === "sport") {
     if (!ex.sportDone) return "Not logged";
@@ -923,6 +925,118 @@ function renderVisibleRestButton(ex, className = "lw-rest-start") {
   if (!canStartVisibleRest(ex)) return "";
   const label = `${formatRest(ex.restSeconds)} rest`;
   return `<button class="${className}" type="button" data-action="start-rest" aria-label="Start ${escapeHtml(label)} timer">${escapeHtml(label)}</button>`;
+}
+
+function makeCardioSegment(kind = "work") {
+  return {
+    id: `seg-${randomString(5)}`,
+    kind: kind === "rest" ? "rest" : "work",
+    seconds: kind === "rest" ? 60 : 60,
+    targetType: "",
+    targetValue: "",
+    notes: ""
+  };
+}
+
+function normalizeCardioSegments(segments) {
+  if (!Array.isArray(segments)) return [];
+  return segments.map((segment, index) => {
+    const kind = segment?.kind === "rest" ? "rest" : "work";
+    const seconds = Math.max(0, Math.round(Number(segment?.seconds) || 0));
+    if (seconds <= 0) return null;
+    const rawTargetType = segment?.targetType || segment?.target?.type || "";
+    const targetType = ["watts", "pace", "incline", "resistance"].includes(rawTargetType) ? rawTargetType : "";
+    const targetValue = String(segment?.targetValue || segment?.target?.value || "").trim();
+    const notes = String(segment?.notes || "").trim();
+    const out = {
+      id: String(segment?.id || `seg-${index + 1}`),
+      kind,
+      seconds
+    };
+    if (targetType && targetValue) out.target = { type: targetType, value: targetValue };
+    if (notes) out.notes = notes;
+    return out;
+  }).filter(Boolean);
+}
+
+function formatSegmentDuration(seconds) {
+  const sec = Math.max(0, Math.round(Number(seconds) || 0));
+  const min = Math.floor(sec / 60);
+  const rem = sec % 60;
+  if (min && rem) return `${min}:${String(rem).padStart(2, "0")}`;
+  if (min) return `${min}m`;
+  return `${sec}s`;
+}
+
+function formatCardioTarget(target) {
+  if (!target || !target.type || !target.value) return "";
+  const label = {
+    watts: "W",
+    pace: "pace",
+    incline: "% incline",
+    resistance: "resistance"
+  }[target.type] || target.type;
+  return target.type === "watts"
+    ? `${target.value} ${label}`
+    : `${target.value} ${label}`;
+}
+
+function formatCardioSegmentsSummary(segments, options = {}) {
+  const clean = normalizeCardioSegments(segments);
+  if (!clean.length) return "";
+  const work = clean.filter((segment) => segment.kind !== "rest").length;
+  const rest = clean.filter((segment) => segment.kind === "rest").length;
+  const totalSeconds = clean.reduce((sum, segment) => sum + (Number(segment.seconds) || 0), 0);
+  if (options.compact) {
+    const pieces = [];
+    if (work) pieces.push(`${work} work`);
+    if (rest) pieces.push(`${rest} rest`);
+    return `intervals: ${pieces.join(" / ")} · ${formatSegmentDuration(totalSeconds)}`;
+  }
+  return clean.map((segment, index) => {
+    const target = formatCardioTarget(segment.target);
+    return `${index + 1}. ${segment.kind === "rest" ? "Rest" : "Work"} ${formatSegmentDuration(segment.seconds)}${target ? ` @ ${target}` : ""}${segment.notes ? ` (${segment.notes})` : ""}`;
+  }).join(" · ");
+}
+
+function renderCardioIntervalsEditor(ex) {
+  const segments = Array.isArray(ex.cardioSegments) ? ex.cardioSegments : [];
+  const open = segments.length ? " open" : "";
+  const totalSeconds = normalizeCardioSegments(segments).reduce((sum, segment) => sum + (Number(segment.seconds) || 0), 0);
+  const rows = segments.map((segment, index) => `
+    <div class="lw-interval-row" data-segment-index="${index}">
+      <select data-action="cardio-segment-field" data-field="kind" aria-label="Interval ${index + 1} type">
+        <option value="work"${segment.kind !== "rest" ? " selected" : ""}>Work</option>
+        <option value="rest"${segment.kind === "rest" ? " selected" : ""}>Rest</option>
+      </select>
+      <label class="lw-field lw-interval-seconds">
+        <input type="number" inputmode="numeric" min="0" step="5" value="${escapeHtml(segment.seconds || "")}" data-action="cardio-segment-field" data-field="seconds" aria-label="Interval ${index + 1} seconds" placeholder="60">
+        <span>sec</span>
+      </label>
+      <select data-action="cardio-segment-field" data-field="targetType" aria-label="Interval ${index + 1} target type">
+        <option value="">No target</option>
+        <option value="watts"${(segment.targetType || segment.target?.type) === "watts" ? " selected" : ""}>Watts</option>
+        <option value="pace"${(segment.targetType || segment.target?.type) === "pace" ? " selected" : ""}>Pace</option>
+        <option value="incline"${(segment.targetType || segment.target?.type) === "incline" ? " selected" : ""}>Incline</option>
+        <option value="resistance"${(segment.targetType || segment.target?.type) === "resistance" ? " selected" : ""}>Resistance</option>
+      </select>
+      <input class="lw-interval-target" type="text" value="${escapeHtml(segment.targetValue || segment.target?.value || "")}" data-action="cardio-segment-field" data-field="targetValue" aria-label="Interval ${index + 1} target value" placeholder="target">
+      <button class="lw-interval-remove btn-ico" type="button" data-action="remove-cardio-segment" data-segment-index="${index}" aria-label="Remove interval ${index + 1}">${getUiIcon("x")}</button>
+    </div>
+  `).join("");
+  return `
+    <details class="lw-cardio-stats lw-cardio-intervals"${open}>
+      <summary>Intervals (optional)</summary>
+      <div class="lw-interval-list">
+        ${rows || `<p class="lw-cardio-stat-hint">Add work/rest blocks for interval sessions. Leave empty for steady cardio.</p>`}
+      </div>
+      <div class="lw-interval-actions">
+        <button class="quiet-button small-button btn-ico" type="button" data-action="add-cardio-segment" data-kind="work">${getUiIcon("plus")}Work</button>
+        <button class="quiet-button small-button btn-ico" type="button" data-action="add-cardio-segment" data-kind="rest">${getUiIcon("plus")}Rest</button>
+        ${totalSeconds > 0 ? `<button class="quiet-button small-button" type="button" data-action="use-cardio-interval-total">Use ${Math.round(totalSeconds / 60)} min total</button>` : ""}
+      </div>
+      <p class="lw-cardio-stat-hint">Saved as interval detail only; the total minutes above still drives Progress, calories, and coaching summaries.</p>
+    </details>`;
 }
 
 function renderFocusTarget(ex) {
@@ -1588,6 +1702,7 @@ function renderFocusedExercise() {
         <p class="lw-cardio-stat-hint">Numbers from your machine&rsquo;s summary screen. Leave any blank &mdash; blank calories get a rough <span aria-hidden="true">~</span>estimate from your effort.</p>
       </details>`;
       })()}
+      ${renderCardioIntervalsEditor(ex)}
       <label class="lw-live-note">
         <span>Notes (optional)</span>
         <textarea rows="2" data-action="exercise-notes" placeholder="Anything to remember about this session">${escapeHtml(ex.notes || "")}</textarea>
@@ -1908,6 +2023,18 @@ function handleTodayWorkoutChange(event) {
       exercise[field] = input.value;
       persistActiveWorkoutDraft();
     }
+  }
+
+  if (action === "cardio-segment-field") {
+    const index = Number(input.closest("[data-segment-index]")?.dataset.segmentIndex);
+    const field = input.dataset.field;
+    const segment = exercise.cardioSegments?.[index];
+    if (!segment) return;
+    if (field === "seconds") segment.seconds = clampNumber(input.value, 0, 3600);
+    else if (field === "kind") segment.kind = input.value === "rest" ? "rest" : "work";
+    else if (field === "targetType") segment.targetType = input.value;
+    else if (field === "targetValue") segment.targetValue = input.value;
+    persistActiveWorkoutDraft();
   }
 }
 
@@ -2537,6 +2664,30 @@ async function handleTodayWorkoutClick(event) {
     return;
   }
 
+  if (action === "add-cardio-segment" && exercise) {
+    exercise.cardioSegments = Array.isArray(exercise.cardioSegments) ? exercise.cardioSegments : [];
+    exercise.cardioSegments.push(makeCardioSegment(button.dataset.kind || "work"));
+    renderTodayWorkout();
+    persistActiveWorkoutDraft();
+    return;
+  }
+
+  if (action === "remove-cardio-segment" && exercise) {
+    const index = Number(button.dataset.segmentIndex);
+    if (Array.isArray(exercise.cardioSegments)) exercise.cardioSegments.splice(index, 1);
+    renderTodayWorkout();
+    persistActiveWorkoutDraft();
+    return;
+  }
+
+  if (action === "use-cardio-interval-total" && exercise) {
+    const totalSeconds = normalizeCardioSegments(exercise.cardioSegments).reduce((sum, segment) => sum + (Number(segment.seconds) || 0), 0);
+    if (totalSeconds > 0) exercise.actualDuration = Math.round(totalSeconds / 60);
+    renderTodayWorkout();
+    persistActiveWorkoutDraft();
+    return;
+  }
+
   if (action === "toggle-sport" && exercise) {
     exercise.sportDone = !exercise.sportDone;
     renderTodayWorkout();
@@ -2672,6 +2823,7 @@ async function saveTodayWorkout() {
 
       if (ex.type === "cardio") {
         const stats = collectCardioStats(ex);
+        const segments = normalizeCardioSegments(ex.cardioSegments);
         const entry = {
           id: ex.id,
           type: "cardio",
@@ -2690,6 +2842,7 @@ async function saveTodayWorkout() {
         if (Number.isFinite(ex.difficulty) && ex.difficulty > 0) entry.difficulty = ex.difficulty;
         if (!entry.notes) delete entry.notes;
         if (stats) entry.stats = stats;
+        if (segments.length) entry.segments = segments;
         return entry;
       }
 

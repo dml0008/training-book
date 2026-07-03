@@ -1312,6 +1312,50 @@ body.history-detail-open .app-shell {
   color: var(--dim);
 }
 
+.hist-intervals {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.hist-interval-list {
+  display: grid;
+  gap: 8px;
+}
+
+.hist-interval-row {
+  display: grid;
+  grid-template-columns: 78px minmax(78px, 0.8fr) minmax(102px, 1fr) minmax(78px, 1fr) 32px;
+  gap: 8px;
+  align-items: center;
+}
+
+.hist-interval-row select,
+.hist-interval-target {
+  width: 100%;
+  min-width: 0;
+  height: 40px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: rgba(9, 12, 11, 0.72);
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+  padding: 0 8px;
+}
+
+.hist-interval-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+@media (max-width: 520px) {
+  .hist-interval-row {
+    grid-template-columns: minmax(0, 1fr) minmax(86px, 0.8fr) 32px;
+  }
+}
+
 .detail-section {
   display: grid;
   gap: 12px;
@@ -1819,4 +1863,3 @@ body.history-detail-open .app-shell {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
-

@@ -1396,7 +1396,6 @@ body.in-workout .today-panel {
   color: var(--muted);
 }
 
-/* cardio placeholder (real timer arrives in the next slice) */
 .lw-cardio {
   display: flex;
   align-items: stretch;
@@ -1482,6 +1481,69 @@ body.in-workout .today-panel {
   margin: 8px 0 12px;
   color: var(--dim);
   font-size: 11px;
+}
+
+.lw-cardio-intervals {
+  margin-top: 10px;
+}
+
+.lw-interval-list {
+  display: grid;
+  gap: 8px;
+  padding-bottom: 8px;
+}
+
+.lw-interval-row {
+  display: grid;
+  grid-template-columns: 78px minmax(76px, 0.8fr) minmax(102px, 1fr) minmax(78px, 1fr) 32px;
+  gap: 8px;
+  align-items: center;
+}
+
+.lw-interval-row select,
+.lw-interval-target {
+  width: 100%;
+  min-width: 0;
+  height: 42px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: rgba(9, 12, 11, 0.72);
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+  padding: 0 8px;
+}
+
+.lw-interval-seconds {
+  min-width: 0;
+}
+
+.lw-interval-remove {
+  width: 32px;
+  height: 32px;
+  border: 1px solid rgba(155, 168, 161, 0.18);
+  background: rgba(16, 20, 19, 0.65);
+  color: var(--muted);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.lw-interval-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-bottom: 2px;
+}
+
+@media (max-width: 520px) {
+  .lw-interval-row {
+    grid-template-columns: minmax(0, 1fr) minmax(86px, 0.8fr) 32px;
+  }
+
+  .lw-interval-row select[data-field="targetType"],
+  .lw-interval-target {
+    grid-column: span 1;
+  }
 }
 
 /* Peloton stat boxes in the History edit view */
@@ -2743,4 +2805,3 @@ button.lw-rest-hint:active {
     }
   }
 }
-

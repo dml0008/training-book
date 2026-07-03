@@ -1042,7 +1042,10 @@ function formatWorkoutForExport(workout) {
     const effort = perUnitEfforts.length
       ? `Effort per set: ${perUnitEfforts.join(" · ")}/10`
       : `Difficulty: ${entry.difficulty || "not logged"}/10`;
-    lines.push(`  ${entry.exerciseName}: ${formatEntryDetails(entry)} | ${effort}${notes ? ` | Notes: ${notes}` : ""}`);
+    const intervalDetail = entry.type === "cardio" && Array.isArray(entry.segments) && entry.segments.length
+      ? ` | Intervals: ${formatCardioSegmentsSummary(entry.segments)}`
+      : "";
+    lines.push(`  ${entry.exerciseName}: ${formatEntryDetails(entry)}${intervalDetail} | ${effort}${notes ? ` | Notes: ${notes}` : ""}`);
   });
 
   return lines.join("\n");

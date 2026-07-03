@@ -51,7 +51,7 @@ function generateReviewPacket() {
   packet.push("HOW TRAINING BOOK WORKS (so the plan you give me imports cleanly):");
   packet.push("- My workout follows the weekly plan and its routines, but I can add ad-hoc exercises mid-session.");
   packet.push("- Strength targets are sets x reps, optionally a starting weight (3x8 @ 95 lb) and a rest target (rest 90s). I log actual sets, reps, weight, per-set notes, and an optional per-set effort 1-10.");
-  packet.push("- Cardio/Peloton targets are a subtype plus minutes (Peloton Tread: Incline Walk, 30 min; Peloton Bike: Just Ride, 20 min). I log output, average power, distance, notes, and effort.");
+  packet.push("- Cardio/Peloton targets are a subtype plus minutes (Peloton Tread: Incline Walk, 30 min; Peloton Bike: Just Ride, 20 min). I log output, average power, distance, notes, effort, and sometimes optional work/rest interval segments; the total minutes are still the source of truth for volume.");
   packet.push("- For bike work, default to Peloton Bike instead of Stationary Bike unless I explicitly say it is a non-Peloton stationary bike.");
   packet.push("- Russian Twist should usually include a light starting weight when programming it for me, and one rep means right side plus left side. Dead Bug reps also count right plus left as one full rep.");
   packet.push("- Cable Crossover, Incline Cable Fly, Lat Pulldown, and Seated Cable Row are on a dual-independent-stack cable machine (Ares 2.0): the weight for these is per side, not a combined total, and every place it's shown says \"lb per side\" or \"lb/side\". When suggesting a weight for these four exercises, give the per-side number, matching what's already logged.");
