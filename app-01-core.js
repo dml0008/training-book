@@ -3,7 +3,7 @@ const DROPBOX_TOKEN_URL = "https://api.dropboxapi.com/oauth2/token";
 const DROPBOX_UPLOAD_URL = "https://content.dropboxapi.com/2/files/upload";
 const DROPBOX_DOWNLOAD_URL = "https://content.dropboxapi.com/2/files/download";
 const DATA_FILE_PATH = "/04_Technical/06_Side_Projects/Workout and Nutrition App/data/workout-data.json";
-const APP_VERSION = "1.0.39";
+const APP_VERSION = "1.0.41";
 const SOCCER_DURATION_MINUTES = 60;
 
 const STORAGE = {
@@ -33,7 +33,8 @@ const STORAGE = {
   pickleballSeeded: "trainingBookPickleballSeeded",
   sportTypeFixed: "trainingBookSportTypeFixed",
   catalogDataFixed: "trainingBookCatalogDataFixed",
-  pelotonBikeHistoryFixed: "trainingBookPelotonBikeHistoryFixed"
+  pelotonBikeHistoryFixed: "trainingBookPelotonBikeHistoryFixed",
+  pilatesSeeded: "trainingBookPilatesSeeded"
 };
 
 const screens = Array.from(document.querySelectorAll(".screen"));
@@ -366,7 +367,8 @@ function getStarterCategories() {
     { key: "bodyweight", label: "No equipment" },
     { key: "dumbbells", label: "Dumbbells" },
     { key: "machine", label: "Cable/machine" },
-    { key: "cardio", label: "Cardio" }
+    { key: "cardio", label: "Cardio" },
+    { key: "pilates", label: "Pilates" }
   ];
 }
 
@@ -958,7 +960,7 @@ function getStarterExercises() {
     dualStack: false,
     icon: "yoga",
     photos: { start: "assets/icons/photos/plank/start.jpg", finish: "assets/icons/photos/plank/finish.jpg" },
-    tags: ["home","gym","bodyweight"]
+    tags: ["home","gym","bodyweight","pilates"]
   },
   {
     id: "crunch",
@@ -1896,7 +1898,7 @@ function getStarterExercises() {
     dualStack: false,
     icon: "yoga",
     photos: { start: "assets/icons/photos/side-plank/start.jpg", finish: "assets/icons/photos/side-plank/finish.jpg" },
-    tags: ["home","gym","bodyweight"]
+    tags: ["home","gym","bodyweight","pilates"]
   },
   {
     id: "cross-body-crunch",
@@ -1952,7 +1954,7 @@ function getStarterExercises() {
     dualStack: false,
     icon: "yoga",
     photos: { start: "assets/icons/photos/flutter-kicks/start.jpg", finish: "assets/icons/photos/flutter-kicks/finish.jpg" },
-    tags: ["home","gym","bodyweight"]
+    tags: ["home","gym","bodyweight","pilates"]
   },
   {
     id: "bicycle-crunch",
@@ -1966,7 +1968,7 @@ function getStarterExercises() {
     dualStack: false,
     icon: "yoga",
     photos: { start: "assets/icons/photos/bicycle-crunch/start.jpg", finish: "assets/icons/photos/bicycle-crunch/finish.jpg" },
-    tags: ["home","gym","bodyweight"]
+    tags: ["home","gym","bodyweight","pilates"]
   },
   {
     id: "ab-rollout",
@@ -1980,7 +1982,7 @@ function getStarterExercises() {
     dualStack: false,
     icon: "yoga",
     photos: { start: "assets/icons/photos/ab-rollout/start.jpg", finish: "assets/icons/photos/ab-rollout/finish.jpg" },
-    tags: ["home","gym","bodyweight"]
+    tags: ["home","gym","bodyweight","pilates"]
   },
   {
     id: "decline-crunch",
@@ -2008,7 +2010,7 @@ function getStarterExercises() {
     dualStack: false,
     icon: "yoga",
     photos: { start: "assets/icons/photos/dead-bug/start.jpg", finish: "assets/icons/photos/dead-bug/finish.jpg" },
-    tags: ["home","gym","bodyweight"]
+    tags: ["home","gym","bodyweight","pilates"]
   },
   {
     id: "hip-raise",
@@ -2022,7 +2024,7 @@ function getStarterExercises() {
     dualStack: false,
     icon: "yoga",
     photos: { start: "assets/icons/photos/hip-raise/start.jpg", finish: "assets/icons/photos/hip-raise/finish.jpg" },
-    tags: ["home","gym","bodyweight"]
+    tags: ["home","gym","bodyweight","pilates"]
   },
   {
     id: "oblique-crunch",
@@ -2358,7 +2360,273 @@ function getStarterExercises() {
     dualStack: false,
     icon: "yoga",
     photos: { start: "assets/icons/photos/seated-leg-tuck/start.jpg", finish: "assets/icons/photos/seated-leg-tuck/finish.jpg" },
-    tags: ["home","gym","bodyweight"]
+    tags: ["home","gym","bodyweight","pilates"]
+  },
+  {
+    id: "bird-dog",
+    name: "Bird Dog",
+    type: "strength",
+    area: "Core",
+    group: "core",
+    equipment: "body only",
+    primaryMuscle: "abdominals",
+    secondaryMuscles: [],
+    dualStack: false,
+    icon: "yoga",
+    photos: null,
+    tags: ["home","gym","bodyweight","pilates"]
+  },
+  {
+    id: "the-hundred",
+    name: "The Hundred",
+    type: "timed",
+    area: "Core",
+    group: "core",
+    equipment: "body only",
+    primaryMuscle: "abdominals",
+    secondaryMuscles: [],
+    dualStack: false,
+    icon: "yoga",
+    photos: null,
+    tags: ["home","gym","bodyweight","pilates"]
+  },
+  {
+    id: "roll-up",
+    name: "Roll-Up",
+    type: "strength",
+    area: "Core",
+    group: "core",
+    equipment: "body only",
+    primaryMuscle: "abdominals",
+    secondaryMuscles: [],
+    dualStack: false,
+    icon: "yoga",
+    photos: null,
+    tags: ["home","gym","bodyweight","pilates"]
+  },
+  {
+    id: "single-leg-stretch",
+    name: "Single-Leg Stretch",
+    type: "strength",
+    area: "Core",
+    group: "core",
+    equipment: "body only",
+    primaryMuscle: "abdominals",
+    secondaryMuscles: [],
+    dualStack: false,
+    icon: "yoga",
+    photos: null,
+    tags: ["home","gym","bodyweight","pilates"]
+  },
+  {
+    id: "double-leg-stretch",
+    name: "Double-Leg Stretch",
+    type: "strength",
+    area: "Core",
+    group: "core",
+    equipment: "body only",
+    primaryMuscle: "abdominals",
+    secondaryMuscles: [],
+    dualStack: false,
+    icon: "yoga",
+    photos: null,
+    tags: ["home","gym","bodyweight","pilates"]
+  },
+  {
+    id: "scissors",
+    name: "Scissors",
+    type: "strength",
+    area: "Core",
+    group: "core",
+    equipment: "body only",
+    primaryMuscle: "abdominals",
+    secondaryMuscles: [],
+    dualStack: false,
+    icon: "yoga",
+    photos: null,
+    tags: ["home","gym","bodyweight","pilates"]
+  },
+  {
+    id: "criss-cross",
+    name: "Criss-Cross",
+    type: "strength",
+    area: "Core",
+    group: "core",
+    equipment: "body only",
+    primaryMuscle: "abdominals",
+    secondaryMuscles: [],
+    dualStack: false,
+    icon: "yoga",
+    photos: null,
+    tags: ["home","gym","bodyweight","pilates"]
+  },
+  {
+    id: "swan-dive",
+    name: "Swan Dive",
+    type: "strength",
+    area: "Core",
+    group: "core",
+    equipment: "body only",
+    primaryMuscle: "lower back",
+    secondaryMuscles: [],
+    dualStack: false,
+    icon: "yoga",
+    photos: null,
+    tags: ["home","gym","bodyweight","pilates"]
+  },
+  {
+    id: "saw",
+    name: "Saw",
+    type: "strength",
+    area: "Core",
+    group: "core",
+    equipment: "body only",
+    primaryMuscle: "abdominals",
+    secondaryMuscles: [],
+    dualStack: false,
+    icon: "yoga",
+    photos: null,
+    tags: ["home","gym","bodyweight","pilates"]
+  },
+  {
+    id: "spine-stretch-forward",
+    name: "Spine Stretch Forward",
+    type: "strength",
+    area: "Core",
+    group: "core",
+    equipment: "body only",
+    primaryMuscle: "abdominals",
+    secondaryMuscles: [],
+    dualStack: false,
+    icon: "yoga",
+    photos: null,
+    tags: ["home","gym","bodyweight","pilates"]
+  },
+  {
+    id: "roll-like-a-ball",
+    name: "Roll-Like-a-Ball",
+    type: "strength",
+    area: "Core",
+    group: "core",
+    equipment: "body only",
+    primaryMuscle: "abdominals",
+    secondaryMuscles: [],
+    dualStack: false,
+    icon: "yoga",
+    photos: null,
+    tags: ["home","gym","bodyweight","pilates"]
+  },
+  {
+    id: "teaser",
+    name: "Teaser",
+    type: "strength",
+    area: "Core",
+    group: "core",
+    equipment: "body only",
+    primaryMuscle: "abdominals",
+    secondaryMuscles: [],
+    dualStack: false,
+    icon: "yoga",
+    photos: null,
+    tags: ["home","gym","bodyweight","pilates"]
+  },
+  {
+    id: "side-lying-leg-lifts",
+    name: "Side-Lying Leg Lifts",
+    type: "strength",
+    area: "Legs",
+    group: "legs",
+    equipment: "body only",
+    primaryMuscle: "abductors",
+    secondaryMuscles: [],
+    dualStack: false,
+    icon: "yoga",
+    photos: null,
+    tags: ["home","gym","bodyweight","pilates"]
+  },
+  {
+    id: "clamshell",
+    name: "Clamshell",
+    type: "strength",
+    area: "Legs",
+    group: "legs",
+    equipment: "body only",
+    primaryMuscle: "abductors",
+    secondaryMuscles: [],
+    dualStack: false,
+    icon: "yoga",
+    photos: null,
+    tags: ["home","gym","bodyweight","pilates"]
+  },
+  {
+    id: "bear-hold",
+    name: "Bear Hold",
+    type: "timed",
+    area: "Core",
+    group: "core",
+    equipment: "body only",
+    primaryMuscle: "abdominals",
+    secondaryMuscles: [],
+    dualStack: false,
+    icon: "yoga",
+    photos: null,
+    tags: ["home","gym","bodyweight","pilates"]
+  },
+  {
+    id: "pilates-push-up",
+    name: "Pilates Push-Up",
+    type: "strength",
+    area: "Core",
+    group: "core",
+    equipment: "body only",
+    primaryMuscle: "abdominals",
+    secondaryMuscles: [],
+    dualStack: false,
+    icon: "gymnastics",
+    photos: null,
+    tags: ["home","gym","bodyweight","pilates"]
+  },
+  {
+    id: "swimming",
+    name: "Swimming",
+    type: "strength",
+    area: "Core",
+    group: "core",
+    equipment: "body only",
+    primaryMuscle: "lower back",
+    secondaryMuscles: [],
+    dualStack: false,
+    icon: "yoga",
+    photos: null,
+    tags: ["home","gym","bodyweight","pilates"]
+  },
+  {
+    id: "single-leg-circles",
+    name: "Single-Leg Circles",
+    type: "strength",
+    area: "Core",
+    group: "core",
+    equipment: "body only",
+    primaryMuscle: "abdominals",
+    secondaryMuscles: [],
+    dualStack: false,
+    icon: "yoga",
+    photos: null,
+    tags: ["home","gym","bodyweight","pilates"]
+  },
+  {
+    id: "kneeling-side-kick",
+    name: "Kneeling Side Kick",
+    type: "strength",
+    area: "Legs",
+    group: "legs",
+    equipment: "body only",
+    primaryMuscle: "abductors",
+    secondaryMuscles: [],
+    dualStack: false,
+    icon: "yoga",
+    photos: null,
+    tags: ["home","gym","bodyweight","pilates"]
   },
   {
     id: "incline-cable-fly",
@@ -2685,6 +2953,77 @@ function seedPickleballOnce() {
   saveLocalData(data);
   markPendingData(data);
   refreshLibrary();
+  renderExercises();
+  renderExercisePicker();
+  renderTodayRoutine();
+  if (navigator.onLine) {
+    uploadWorkoutData(data).then(clearPendingData).catch(() => {});
+  }
+}
+
+// One-time, additive seed for the Pilates batch: 19 mat/bodyweight exercises
+// (Bird Dog + 18 more, already in getStarterExercises) plus a "Pilates"
+// filter category, plus a retroactive "pilates" tag on existing library
+// exercises that are genuinely Pilates-style bodyweight moves. Mirrors
+// seedPickleballOnce/seedPelotonOnce: getStarterExercises/getStarterCategories
+// only seed brand-new installs, so anything added to those catalogs after an
+// existing account's one-time library merge already ran needs its own
+// catch-up seed like this one, or it silently never reaches that account.
+// Library/category-only - never touches routines or the weekly plan - and
+// guarded by a localStorage flag so it runs once per device and never
+// re-imposes itself if Daniel or Shaina later removes one.
+const PILATES_EXERCISE_IDS = [
+  "bird-dog", "the-hundred", "roll-up", "single-leg-stretch", "double-leg-stretch",
+  "scissors", "criss-cross", "swan-dive", "saw", "spine-stretch-forward",
+  "roll-like-a-ball", "teaser", "side-lying-leg-lifts", "clamshell", "bear-hold",
+  "pilates-push-up", "swimming", "single-leg-circles", "kneeling-side-kick"
+];
+const PILATES_RETROACTIVE_TAG_IDS = [
+  "plank", "side-plank", "dead-bug", "flutter-kicks", "bicycle-crunch",
+  "ab-rollout", "seated-leg-tuck", "hip-raise"
+];
+
+function seedPilatesOnce() {
+  if (localStorage.getItem(STORAGE.pilatesSeeded) === "1") return;
+  const data = getLocalData();
+  let changed = false;
+
+  const nextCategories = Array.isArray(data.categories) ? data.categories.slice() : getStarterCategories();
+  if (!nextCategories.some((cat) => cat.key === "pilates")) {
+    nextCategories.push({ key: "pilates", label: "Pilates" });
+    changed = true;
+  }
+
+  const starterById = new Map(getStarterExercises().map((ex) => [ex.id, ex]));
+  const library = Array.isArray(data.library) ? data.library.slice() : getStarterExercises();
+  const haveIds = new Set(library.map((ex) => ex.id));
+  PILATES_EXERCISE_IDS.forEach((id) => {
+    if (haveIds.has(id)) return;
+    const starter = starterById.get(id);
+    if (!starter) return;
+    library.push(starter);
+    changed = true;
+  });
+
+  PILATES_RETROACTIVE_TAG_IDS.forEach((id) => {
+    const exercise = library.find((ex) => ex.id === id);
+    if (!exercise) return;
+    const tags = Array.isArray(exercise.tags) ? exercise.tags : [];
+    if (tags.includes("pilates")) return;
+    exercise.tags = [...tags, "pilates"];
+    changed = true;
+  });
+
+  localStorage.setItem(STORAGE.pilatesSeeded, "1");
+  if (!changed) return;
+  data.library = library;
+  data.categories = nextCategories;
+  data.updatedAt = new Date().toISOString();
+  data.updatedBy = getDeviceId();
+  saveLocalData(data);
+  markPendingData(data);
+  refreshLibrary();
+  renderFilterStrip();
   renderExercises();
   renderExercisePicker();
   renderTodayRoutine();
@@ -3876,6 +4215,127 @@ const EXERCISE_INSTRUCTIONS = {
     "Bring the knees in toward you as you move your torso closer to them at the same time. Breathe out as you perform this movement.",
     "After a second pause, go back to the starting position as you inhale.",
     "Repeat for the recommended amount of repetitions."
+  ],
+  "bird-dog": [
+    "Start on all fours with your hands under your shoulders and knees under your hips, spine in a neutral, flat position.",
+    "Brace your core, then extend your right arm straight forward and your left leg straight back at the same time, keeping your hips and shoulders level.",
+    "Hold for a beat at full extension without letting your lower back arch or your hips rotate.",
+    "Return to the starting position with control, then repeat on the opposite side (left arm, right leg).",
+    "Count one rep as right-arm/left-leg plus left-arm/right-leg, then repeat for the prescribed reps."
+  ],
+  "the-hundred": [
+    "Lie on your back with knees bent to tabletop (or legs extended to a low diagonal for more challenge).",
+    "Curl your head, neck, and shoulders off the mat, reaching your arms long by your sides at hip height.",
+    "Pump your arms up and down in small, quick beats while breathing in for 5 counts and out for 5 counts.",
+    "Keep your lower back pressed into the mat and your core braced throughout.",
+    "Continue pumping for the target time, then lower back down with control."
+  ],
+  "roll-up": [
+    "Lie on your back with legs extended and arms reaching overhead.",
+    "Inhale and lift your arms toward the ceiling, then curl your chin to your chest and begin rolling your spine off the mat one vertebra at a time.",
+    "Continue rolling forward over your legs, reaching toward your toes, exhaling fully at the top.",
+    "Reverse the motion, rolling down one vertebra at a time back to the mat with control.",
+    "Repeat for the prescribed reps, keeping the movement slow and segmented rather than a quick sit-up."
+  ],
+  "single-leg-stretch": [
+    "Lie on your back, curl your head and shoulders off the mat, and bring both knees to your chest.",
+    "Extend your right leg out to a 45-degree angle while pulling your left knee in toward your chest with both hands.",
+    "Switch legs, extending the left leg while pulling the right knee in, keeping your core braced and lower back flat.",
+    "Continue alternating with a steady breathing rhythm. Count one rep as one full switch (both sides)."
+  ],
+  "double-leg-stretch": [
+    "Lie on your back with knees pulled into your chest and head/shoulders curled off the mat.",
+    "Inhale as you extend both legs out to a 45-degree angle and reach both arms straight back overhead.",
+    "Exhale as you circle your arms around and pull both knees back into your chest, wrapping your hands around your shins.",
+    "Keep your core engaged and lower back pressed into the mat throughout - don't let your back arch as your legs extend.",
+    "Repeat for the prescribed reps."
+  ],
+  "scissors": [
+    "Also called the Single Straight-Leg Stretch. Lie on your back, curl your head and shoulders off the mat, and extend both legs straight up toward the ceiling.",
+    "Hold your right leg with both hands (at the calf or ankle) and pulse it gently toward your chest twice while your left leg lowers toward the floor without touching.",
+    "Switch legs, pulsing the left leg in and lowering the right, keeping your core braced and lower back flat on the mat.",
+    "Continue alternating with a steady breathing rhythm. Count one rep as one full switch (both sides)."
+  ],
+  "criss-cross": [
+    "Lie on your back with hands laced behind your head and knees pulled into tabletop position.",
+    "Curl your head and shoulders off the mat, then rotate your torso to bring your right elbow toward your left knee while extending your right leg straight out.",
+    "Switch sides, rotating to bring your left elbow toward your right knee while extending your left leg.",
+    "Keep the rotation coming from your ribcage, not from pulling on your neck. Count one rep as one full switch (both sides)."
+  ],
+  "swan-dive": [
+    "Also called Swan. Lie face down with your hands planted under your shoulders and legs extended long behind you.",
+    "Press through your hands and lift your chest off the mat, extending your spine into a gentle backbend while keeping your shoulders down and away from your ears.",
+    "For the dynamic version, rock forward onto your torso and lift your legs behind you, then rock back down with control, using your back and glute strength rather than your hands to drive the motion.",
+    "Keep the movement smooth and controlled, avoiding any hard bouncing on the lower back.",
+    "Repeat for the prescribed reps."
+  ],
+  "saw": [
+    "Sit tall with legs extended slightly wider than hip-width and arms out to the sides at shoulder height.",
+    "Rotate your torso to the right, then hinge forward and reach your left hand past your right pinky toe, as if sawing off the end of it.",
+    "Roll back up to tall and return to center, keeping your hips square to the front throughout the rotation.",
+    "Repeat on the opposite side. Count one rep as right plus left."
+  ],
+  "spine-stretch-forward": [
+    "Sit tall with legs extended slightly wider than hip-width, feet flexed, and arms reaching forward at shoulder height.",
+    "Inhale to sit tall, then exhale as you curl your chin to your chest and roll forward, reaching your arms toward your feet one vertebra at a time.",
+    "Keep reaching forward and down until you feel a stretch through your spine and hamstrings, without collapsing your chest.",
+    "Inhale and roll back up to tall, stacking your spine one vertebra at a time.",
+    "Repeat for the prescribed reps."
+  ],
+  "roll-like-a-ball": [
+    "Sit with your knees pulled into your chest, feet lifted off the mat, and hands holding your shins just below the knees.",
+    "Round your spine into a C-curve and balance just behind your sit bones, finding your balance point.",
+    "Inhale and roll back onto your upper back (not your neck), then exhale and roll back up to the starting balance point with control.",
+    "Keep the roll smooth and controlled using your core, not momentum. Repeat for the prescribed reps."
+  ],
+  "teaser": [
+    "Lie on your back with legs extended and arms reaching overhead.",
+    "In one controlled motion, roll your spine up off the mat while simultaneously lifting your legs to meet your torso in a V-sit, balancing on your sit bones with arms reaching toward your toes.",
+    "Hold the top position briefly, keeping your core braced and chest lifted.",
+    "Roll back down with control to the starting position, keeping your legs and arms from touching the mat until you're flat.",
+    "Repeat for the prescribed reps."
+  ],
+  "side-lying-leg-lifts": [
+    "Lie on your side with your body in a straight line, legs stacked and slightly in front of your hips, head resting on your lower arm.",
+    "Brace your core, then lift your top leg straight up toward the ceiling without rotating your hip open.",
+    "Lower with control back to just above your bottom leg without resting it down between reps.",
+    "Complete all reps on one side, then switch and repeat on the other."
+  ],
+  "clamshell": [
+    "Lie on your side with knees bent to about 90 degrees, stacked on top of each other, hips stacked vertically.",
+    "Keeping your feet together, rotate your top knee open like a clamshell, without letting your pelvis roll backward.",
+    "Lower the knee back down with control, keeping the movement small and controlled from the hip.",
+    "Complete all reps on one side, then switch and repeat on the other."
+  ],
+  "bear-hold": [
+    "Also called Bear Plank. Start on all fours with hands under shoulders and knees under hips.",
+    "Curl your toes under and lift your knees an inch or two off the mat, keeping your back flat and core braced.",
+    "Hold the position, keeping your hips level with your shoulders and avoiding any rounding or arching of your spine.",
+    "Breathe steadily and hold for the target time."
+  ],
+  "pilates-push-up": [
+    "Stand tall with feet hip-width apart, then exhale and roll your spine down one vertebra at a time until your hands reach the mat.",
+    "Walk your hands forward into a plank position, keeping your core braced and body in a straight line.",
+    "Perform one push-up, then walk your hands back toward your feet.",
+    "Roll your spine back up to standing one vertebra at a time. Count one rep as the full down-push-up-up sequence."
+  ],
+  "swimming": [
+    "Lie face down with arms extended overhead and legs extended long behind you.",
+    "Lift your chest, arms, and legs slightly off the mat, engaging your lower back and glutes.",
+    "Alternately raise your right arm with your left leg, and your left arm with your right leg, in a small, quick fluttering motion, as if swimming.",
+    "Keep breathing steadily and your neck long, continuing the flutter for the target time or reps."
+  ],
+  "single-leg-circles": [
+    "Lie on your back with one leg extended straight up toward the ceiling and the other flat on the mat for stability.",
+    "Keeping your hips still and pressed into the mat, circle the raised leg in a smooth, controlled circle, keeping the motion coming from the hip.",
+    "Complete the prescribed circles in one direction, then reverse direction.",
+    "Switch legs and repeat, keeping your core braced so your pelvis doesn't rock."
+  ],
+  "kneeling-side-kick": [
+    "Kneel tall with one hand planted on the mat under your shoulder for support and the other hand behind your head, torso in one straight line from knee to head.",
+    "Extend your top leg straight out to the side at hip height.",
+    "Kick the leg forward with a small pulse, then sweep it back behind you, keeping your hips stacked and still throughout.",
+    "Complete all reps on one side, then switch and repeat on the other."
   ],
   "incline-cable-fly": [
     "To get yourself into the starting position, set the pulleys at the floor level (lowest level possible on the machine that is below your torso).",

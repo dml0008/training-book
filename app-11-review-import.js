@@ -248,7 +248,10 @@ function generateReviewPacket() {
   packet.push("- Peloton Bike: Just Ride, 20 min");
   packet.push("");
   packet.push("Rules for the final block:");
-  packet.push("- Use exercise names from my library above when possible.");
+  packet.push("- Only use exercise names that appear in EXERCISE LIBRARY above, spelled exactly as");
+  packet.push("  listed there - never invent a new exercise name or rename one. If the best move for a");
+  packet.push("  slot isn't in my library, say so in your written coaching (not in this final block) so");
+  packet.push("  I can decide whether to add it, and use the closest library exercise in the plan for now.");
   packet.push("- Keep each routine exercise on one dash line.");
   packet.push("- Tag each ROUTINE line with where it happens: add \"[Home]\", \"[Gym]\", or \"[Home or");
   packet.push("  gym]\" right after the routine name (e.g. \"ROUTINE: Full Body A [Gym]\"), matching");

@@ -406,6 +406,7 @@ async function initCloud() {
     seedSoccerOnce();
     seedPelotonOnce();
     seedPickleballOnce();
+    seedPilatesOnce();
     restoreSportTypesOnce();
     repairCatalogDataOnce();
     repairPelotonBikeHistoryOnce();
@@ -536,6 +537,7 @@ async function initCloud() {
         seedSoccerOnce();
         seedPelotonOnce();
         seedPickleballOnce();
+        seedPilatesOnce();
         restoreSportTypesOnce();
         repairCatalogDataOnce();
         repairPelotonBikeHistoryOnce();

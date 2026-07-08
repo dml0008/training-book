@@ -3423,6 +3423,340 @@
       "instructionsSource": "free-exercise-db"
     },
     {
+      "name": "Bird Dog",
+      "slug": "bird-dog",
+      "group": "core",
+      "equipment": "body only",
+      "primaryMuscle": "abdominals",
+      "icon": {
+        "glyph": "yoga",
+        "file": "assets/icons/glyphs/yoga.svg",
+        "source": "tabler"
+      },
+      "dbId": null,
+      "photos": null,
+      "instructions": [
+        "Start on all fours with your hands under your shoulders and knees under your hips, spine in a neutral, flat position.",
+        "Brace your core, then extend your right arm straight forward and your left leg straight back at the same time, keeping your hips and shoulders level.",
+        "Hold for a beat at full extension without letting your lower back arch or your hips rotate.",
+        "Return to the starting position with control, then repeat on the opposite side (left arm, right leg).",
+        "Count one rep as right-arm/left-leg plus left-arm/right-leg, then repeat for the prescribed reps."
+      ],
+      "instructionsSource": "authored"
+    },
+    {
+      "name": "The Hundred",
+      "slug": "the-hundred",
+      "group": "core",
+      "equipment": "body only",
+      "primaryMuscle": "abdominals",
+      "icon": { "glyph": "yoga", "file": "assets/icons/glyphs/yoga.svg", "source": "tabler" },
+      "dbId": null,
+      "photos": null,
+      "instructions": [
+        "Lie on your back with knees bent to tabletop (or legs extended to a low diagonal for more challenge).",
+        "Curl your head, neck, and shoulders off the mat, reaching your arms long by your sides at hip height.",
+        "Pump your arms up and down in small, quick beats while breathing in for 5 counts and out for 5 counts.",
+        "Keep your lower back pressed into the mat and your core braced throughout.",
+        "Continue pumping for the target time, then lower back down with control."
+      ],
+      "instructionsSource": "authored"
+    },
+    {
+      "name": "Roll-Up",
+      "slug": "roll-up",
+      "group": "core",
+      "equipment": "body only",
+      "primaryMuscle": "abdominals",
+      "icon": { "glyph": "yoga", "file": "assets/icons/glyphs/yoga.svg", "source": "tabler" },
+      "dbId": null,
+      "photos": null,
+      "instructions": [
+        "Lie on your back with legs extended and arms reaching overhead.",
+        "Inhale and lift your arms toward the ceiling, then curl your chin to your chest and begin rolling your spine off the mat one vertebra at a time.",
+        "Continue rolling forward over your legs, reaching toward your toes, exhaling fully at the top.",
+        "Reverse the motion, rolling down one vertebra at a time back to the mat with control.",
+        "Repeat for the prescribed reps, keeping the movement slow and segmented rather than a quick sit-up."
+      ],
+      "instructionsSource": "authored"
+    },
+    {
+      "name": "Single-Leg Stretch",
+      "slug": "single-leg-stretch",
+      "group": "core",
+      "equipment": "body only",
+      "primaryMuscle": "abdominals",
+      "icon": { "glyph": "yoga", "file": "assets/icons/glyphs/yoga.svg", "source": "tabler" },
+      "dbId": null,
+      "photos": null,
+      "instructions": [
+        "Lie on your back, curl your head and shoulders off the mat, and bring both knees to your chest.",
+        "Extend your right leg out to a 45-degree angle while pulling your left knee in toward your chest with both hands.",
+        "Switch legs, extending the left leg while pulling the right knee in, keeping your core braced and lower back flat.",
+        "Continue alternating with a steady breathing rhythm. Count one rep as one full switch (both sides)."
+      ],
+      "instructionsSource": "authored"
+    },
+    {
+      "name": "Double-Leg Stretch",
+      "slug": "double-leg-stretch",
+      "group": "core",
+      "equipment": "body only",
+      "primaryMuscle": "abdominals",
+      "icon": { "glyph": "yoga", "file": "assets/icons/glyphs/yoga.svg", "source": "tabler" },
+      "dbId": null,
+      "photos": null,
+      "instructions": [
+        "Lie on your back with knees pulled into your chest and head/shoulders curled off the mat.",
+        "Inhale as you extend both legs out to a 45-degree angle and reach both arms straight back overhead.",
+        "Exhale as you circle your arms around and pull both knees back into your chest, wrapping your hands around your shins.",
+        "Keep your core engaged and lower back pressed into the mat throughout - don't let your back arch as your legs extend.",
+        "Repeat for the prescribed reps."
+      ],
+      "instructionsSource": "authored"
+    },
+    {
+      "name": "Scissors",
+      "slug": "scissors",
+      "group": "core",
+      "equipment": "body only",
+      "primaryMuscle": "abdominals",
+      "icon": { "glyph": "yoga", "file": "assets/icons/glyphs/yoga.svg", "source": "tabler" },
+      "dbId": null,
+      "photos": null,
+      "instructions": [
+        "Also called the Single Straight-Leg Stretch. Lie on your back, curl your head and shoulders off the mat, and extend both legs straight up toward the ceiling.",
+        "Hold your right leg with both hands (at the calf or ankle) and pulse it gently toward your chest twice while your left leg lowers toward the floor without touching.",
+        "Switch legs, pulsing the left leg in and lowering the right, keeping your core braced and lower back flat on the mat.",
+        "Continue alternating with a steady breathing rhythm. Count one rep as one full switch (both sides)."
+      ],
+      "instructionsSource": "authored"
+    },
+    {
+      "name": "Criss-Cross",
+      "slug": "criss-cross",
+      "group": "core",
+      "equipment": "body only",
+      "primaryMuscle": "abdominals",
+      "icon": { "glyph": "yoga", "file": "assets/icons/glyphs/yoga.svg", "source": "tabler" },
+      "dbId": null,
+      "photos": null,
+      "instructions": [
+        "Lie on your back with hands laced behind your head and knees pulled into tabletop position.",
+        "Curl your head and shoulders off the mat, then rotate your torso to bring your right elbow toward your left knee while extending your right leg straight out.",
+        "Switch sides, rotating to bring your left elbow toward your right knee while extending your left leg.",
+        "Keep the rotation coming from your ribcage, not from pulling on your neck. Count one rep as one full switch (both sides)."
+      ],
+      "instructionsSource": "authored"
+    },
+    {
+      "name": "Swan Dive",
+      "slug": "swan-dive",
+      "group": "core",
+      "equipment": "body only",
+      "primaryMuscle": "lower back",
+      "icon": { "glyph": "yoga", "file": "assets/icons/glyphs/yoga.svg", "source": "tabler" },
+      "dbId": null,
+      "photos": null,
+      "instructions": [
+        "Also called Swan. Lie face down with your hands planted under your shoulders and legs extended long behind you.",
+        "Press through your hands and lift your chest off the mat, extending your spine into a gentle backbend while keeping your shoulders down and away from your ears.",
+        "For the dynamic version, rock forward onto your torso and lift your legs behind you, then rock back down with control, using your back and glute strength rather than your hands to drive the motion.",
+        "Keep the movement smooth and controlled, avoiding any hard bouncing on the lower back.",
+        "Repeat for the prescribed reps."
+      ],
+      "instructionsSource": "authored"
+    },
+    {
+      "name": "Saw",
+      "slug": "saw",
+      "group": "core",
+      "equipment": "body only",
+      "primaryMuscle": "abdominals",
+      "icon": { "glyph": "yoga", "file": "assets/icons/glyphs/yoga.svg", "source": "tabler" },
+      "dbId": null,
+      "photos": null,
+      "instructions": [
+        "Sit tall with legs extended slightly wider than hip-width and arms out to the sides at shoulder height.",
+        "Rotate your torso to the right, then hinge forward and reach your left hand past your right pinky toe, as if sawing off the end of it.",
+        "Roll back up to tall and return to center, keeping your hips square to the front throughout the rotation.",
+        "Repeat on the opposite side. Count one rep as right plus left."
+      ],
+      "instructionsSource": "authored"
+    },
+    {
+      "name": "Spine Stretch Forward",
+      "slug": "spine-stretch-forward",
+      "group": "core",
+      "equipment": "body only",
+      "primaryMuscle": "abdominals",
+      "icon": { "glyph": "yoga", "file": "assets/icons/glyphs/yoga.svg", "source": "tabler" },
+      "dbId": null,
+      "photos": null,
+      "instructions": [
+        "Sit tall with legs extended slightly wider than hip-width, feet flexed, and arms reaching forward at shoulder height.",
+        "Inhale to sit tall, then exhale as you curl your chin to your chest and roll forward, reaching your arms toward your feet one vertebra at a time.",
+        "Keep reaching forward and down until you feel a stretch through your spine and hamstrings, without collapsing your chest.",
+        "Inhale and roll back up to tall, stacking your spine one vertebra at a time.",
+        "Repeat for the prescribed reps."
+      ],
+      "instructionsSource": "authored"
+    },
+    {
+      "name": "Roll-Like-a-Ball",
+      "slug": "roll-like-a-ball",
+      "group": "core",
+      "equipment": "body only",
+      "primaryMuscle": "abdominals",
+      "icon": { "glyph": "yoga", "file": "assets/icons/glyphs/yoga.svg", "source": "tabler" },
+      "dbId": null,
+      "photos": null,
+      "instructions": [
+        "Sit with your knees pulled into your chest, feet lifted off the mat, and hands holding your shins just below the knees.",
+        "Round your spine into a C-curve and balance just behind your sit bones, finding your balance point.",
+        "Inhale and roll back onto your upper back (not your neck), then exhale and roll back up to the starting balance point with control.",
+        "Keep the roll smooth and controlled using your core, not momentum. Repeat for the prescribed reps."
+      ],
+      "instructionsSource": "authored"
+    },
+    {
+      "name": "Teaser",
+      "slug": "teaser",
+      "group": "core",
+      "equipment": "body only",
+      "primaryMuscle": "abdominals",
+      "icon": { "glyph": "yoga", "file": "assets/icons/glyphs/yoga.svg", "source": "tabler" },
+      "dbId": null,
+      "photos": null,
+      "instructions": [
+        "Lie on your back with legs extended and arms reaching overhead.",
+        "In one controlled motion, roll your spine up off the mat while simultaneously lifting your legs to meet your torso in a V-sit, balancing on your sit bones with arms reaching toward your toes.",
+        "Hold the top position briefly, keeping your core braced and chest lifted.",
+        "Roll back down with control to the starting position, keeping your legs and arms from touching the mat until you're flat.",
+        "Repeat for the prescribed reps."
+      ],
+      "instructionsSource": "authored"
+    },
+    {
+      "name": "Side-Lying Leg Lifts",
+      "slug": "side-lying-leg-lifts",
+      "group": "legs",
+      "equipment": "body only",
+      "primaryMuscle": "abductors",
+      "icon": { "glyph": "yoga", "file": "assets/icons/glyphs/yoga.svg", "source": "tabler" },
+      "dbId": null,
+      "photos": null,
+      "instructions": [
+        "Lie on your side with your body in a straight line, legs stacked and slightly in front of your hips, head resting on your lower arm.",
+        "Brace your core, then lift your top leg straight up toward the ceiling without rotating your hip open.",
+        "Lower with control back to just above your bottom leg without resting it down between reps.",
+        "Complete all reps on one side, then switch and repeat on the other."
+      ],
+      "instructionsSource": "authored"
+    },
+    {
+      "name": "Clamshell",
+      "slug": "clamshell",
+      "group": "legs",
+      "equipment": "body only",
+      "primaryMuscle": "abductors",
+      "icon": { "glyph": "yoga", "file": "assets/icons/glyphs/yoga.svg", "source": "tabler" },
+      "dbId": null,
+      "photos": null,
+      "instructions": [
+        "Lie on your side with knees bent to about 90 degrees, stacked on top of each other, hips stacked vertically.",
+        "Keeping your feet together, rotate your top knee open like a clamshell, without letting your pelvis roll backward.",
+        "Lower the knee back down with control, keeping the movement small and controlled from the hip.",
+        "Complete all reps on one side, then switch and repeat on the other."
+      ],
+      "instructionsSource": "authored"
+    },
+    {
+      "name": "Bear Hold",
+      "slug": "bear-hold",
+      "group": "core",
+      "equipment": "body only",
+      "primaryMuscle": "abdominals",
+      "icon": { "glyph": "yoga", "file": "assets/icons/glyphs/yoga.svg", "source": "tabler" },
+      "dbId": null,
+      "photos": null,
+      "instructions": [
+        "Also called Bear Plank. Start on all fours with hands under shoulders and knees under hips.",
+        "Curl your toes under and lift your knees an inch or two off the mat, keeping your back flat and core braced.",
+        "Hold the position, keeping your hips level with your shoulders and avoiding any rounding or arching of your spine.",
+        "Breathe steadily and hold for the target time."
+      ],
+      "instructionsSource": "authored"
+    },
+    {
+      "name": "Pilates Push-Up",
+      "slug": "pilates-push-up",
+      "group": "core",
+      "equipment": "body only",
+      "primaryMuscle": "abdominals",
+      "icon": { "glyph": "gymnastics", "file": "assets/icons/glyphs/gymnastics.svg", "source": "tabler" },
+      "dbId": null,
+      "photos": null,
+      "instructions": [
+        "Stand tall with feet hip-width apart, then exhale and roll your spine down one vertebra at a time until your hands reach the mat.",
+        "Walk your hands forward into a plank position, keeping your core braced and body in a straight line.",
+        "Perform one push-up, then walk your hands back toward your feet.",
+        "Roll your spine back up to standing one vertebra at a time. Count one rep as the full down-push-up-up sequence."
+      ],
+      "instructionsSource": "authored"
+    },
+    {
+      "name": "Swimming",
+      "slug": "swimming",
+      "group": "core",
+      "equipment": "body only",
+      "primaryMuscle": "lower back",
+      "icon": { "glyph": "yoga", "file": "assets/icons/glyphs/yoga.svg", "source": "tabler" },
+      "dbId": null,
+      "photos": null,
+      "instructions": [
+        "Lie face down with arms extended overhead and legs extended long behind you.",
+        "Lift your chest, arms, and legs slightly off the mat, engaging your lower back and glutes.",
+        "Alternately raise your right arm with your left leg, and your left arm with your right leg, in a small, quick fluttering motion, as if swimming.",
+        "Keep breathing steadily and your neck long, continuing the flutter for the target time or reps."
+      ],
+      "instructionsSource": "authored"
+    },
+    {
+      "name": "Single-Leg Circles",
+      "slug": "single-leg-circles",
+      "group": "core",
+      "equipment": "body only",
+      "primaryMuscle": "abdominals",
+      "icon": { "glyph": "yoga", "file": "assets/icons/glyphs/yoga.svg", "source": "tabler" },
+      "dbId": null,
+      "photos": null,
+      "instructions": [
+        "Lie on your back with one leg extended straight up toward the ceiling and the other flat on the mat for stability.",
+        "Keeping your hips still and pressed into the mat, circle the raised leg in a smooth, controlled circle, keeping the motion coming from the hip.",
+        "Complete the prescribed circles in one direction, then reverse direction.",
+        "Switch legs and repeat, keeping your core braced so your pelvis doesn't rock."
+      ],
+      "instructionsSource": "authored"
+    },
+    {
+      "name": "Kneeling Side Kick",
+      "slug": "kneeling-side-kick",
+      "group": "legs",
+      "equipment": "body only",
+      "primaryMuscle": "abductors",
+      "icon": { "glyph": "yoga", "file": "assets/icons/glyphs/yoga.svg", "source": "tabler" },
+      "dbId": null,
+      "photos": null,
+      "instructions": [
+        "Kneel tall with one hand planted on the mat under your shoulder for support and the other hand behind your head, torso in one straight line from knee to head.",
+        "Extend your top leg straight out to the side at hip height.",
+        "Kick the leg forward with a small pulse, then sweep it back behind you, keeping your hips stacked and still throughout.",
+        "Complete all reps on one side, then switch and repeat on the other."
+      ],
+      "instructionsSource": "authored"
+    },
+    {
       "name": "Hip Raise",
       "slug": "hip-raise",
       "group": "core",
