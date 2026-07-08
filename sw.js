@@ -1,4 +1,4 @@
-const CACHE_NAME = "training-book-shell-v97";
+const CACHE_NAME = "training-book-shell-v98";
 const STATIC_ASSETS = [
   "manifest.webmanifest",
   "icons/icon.svg",

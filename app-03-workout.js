@@ -1322,6 +1322,32 @@ function renderLiveAddFilterStrip() {
   `;
 }
 
+function renderLiveAddExercisePage() {
+  if (!activeWorkout.addExerciseOpen) return "";
+  return `
+    <div class="live-add-page" aria-label="Add exercise to workout">
+      <div class="live-add-page-head">
+        <button class="quiet-button small-button btn-ico live-add-back" type="button" data-action="close-live-add" aria-label="Back to workout">${getUiIcon("arrow-left")}Back</button>
+        <div>
+          <p class="eyebrow">Add to workout</p>
+          <h3>Add exercise</h3>
+          <p>Add it to this workout only. Search or filter, then tap an exercise.</p>
+        </div>
+      </div>
+      <div class="live-add-controls">
+        <div class="library-search live-add-search">
+          <span class="library-search-icon" data-icon="search" aria-hidden="true"></span>
+          <input type="search" id="live-add-search" value="${escapeHtml(activeWorkout.addExerciseQuery)}" data-action="live-add-search" placeholder="Search exercises" autocomplete="off" aria-label="Search exercises" />
+        </div>
+        ${renderLiveAddFilterStrip()}
+      </div>
+      <div class="live-add-results" aria-live="polite">
+        ${renderLiveAddResults()}
+      </div>
+    </div>
+  `;
+}
+
 function renderLiveAddExerciseSheet() {
   if (!activeWorkout.addExerciseOpen) return "";
   return `
@@ -1906,6 +1932,13 @@ function renderFinishScreen() {
 function renderTodayWorkout() {
   if (!todayRoutineList) return;
 
+  if (activeWorkout.addExerciseOpen) {
+    todayRoutineList.innerHTML = renderLiveAddExercisePage();
+    renderUiIcons();
+    setTimeout(() => document.querySelector("#live-add-search")?.focus(), 0);
+    return;
+  }
+
   if (!activeWorkout.exercises.length) {
     todayRoutineList.innerHTML = `
       <div class="live-workout">
@@ -1922,7 +1955,6 @@ function renderTodayWorkout() {
           <p>Add an exercise to start logging.</p>
           <button class="primary-button today-start-button btn-ico" type="button" data-action="open-live-add">${getUiIcon("plus-circle")}Add exercise</button>
         </div>
-        ${renderLiveAddExerciseSheet()}
       </div>
     `;
     renderUiIcons();
