@@ -439,11 +439,21 @@ async function initCloud() {
   function reconcile(remote) {
     const local = readJson(STORAGE.localData);
 
+    function applySharedAppNotesCache() {
+      if (!Array.isArray(sharedAppNotesCache)) return;
+      const localNotes = getLocalData().appNotes || [];
+      const mergedNotes = mergeAppNotes(sharedAppNotesCache, localNotes);
+      if (JSON.stringify(localNotes) !== JSON.stringify(mergedNotes)) {
+        setLocalAppNotes(mergedNotes);
+      }
+    }
+
     if (!remote) {
       // Nothing in the cloud yet: seed it from this device, but never write a
       // blank/starter doc as the canonical copy.
       if (local && normalizeSoccerDurationInData(local)) {
         applyRecoveredData(local);
+        applySharedAppNotesCache();
       }
       if (local && hasRealHistory(local)) {
         cloudSave(local).catch((e) => console.error("Initial cloud push failed:", e));
@@ -456,6 +466,7 @@ async function initCloud() {
       const firstRun = structuredClone(remote);
       const soccerFixed = normalizeSoccerDurationInData(firstRun);
       applyRecoveredData(firstRun);
+      applySharedAppNotesCache();
       if (soccerFixed) {
         cloudSave(firstRun).catch((e) => console.error("Soccer duration cloud repair failed:", e));
       }
@@ -469,6 +480,7 @@ async function initCloud() {
     if (dataChanged(local, merged)) pushLocalSnapshot("before sync", local);
 
     applyRecoveredData(merged);
+    applySharedAppNotesCache();
 
     // Heal the cloud if our merge holds data the remote copy was missing.
     if (soccerFixed || dataChanged(merged, remote)) {
@@ -476,8 +488,29 @@ async function initCloud() {
     }
   }
 
+  function reconcileSharedAppNotes(remote) {
+    const remoteNotes = Array.isArray(remote?.notes)
+      ? remote.notes
+      : (Array.isArray(remote?.appNotes) ? remote.appNotes : []);
+    const localNotes = getLocalData().appNotes || [];
+    const pendingNotes = readJson(STORAGE.pendingAppNotes)?.notes || [];
+    const merged = mergeAppNotes(remoteNotes, mergeAppNotes(localNotes, pendingNotes));
+    const localChanged = JSON.stringify(localNotes) !== JSON.stringify(merged);
+    const remoteChanged = JSON.stringify(remoteNotes) !== JSON.stringify(merged);
+
+    sharedAppNotesCache = merged;
+    if (localChanged) setLocalAppNotes(merged);
+    if (!remote || remoteChanged) {
+      saveSharedAppNotes(merged).catch((e) => {
+        markPendingAppNotes(merged);
+        console.error("Shared notes migration/sync failed:", e);
+      });
+    }
+  }
+
   authMod.onAuthStateChanged(fbAuth, (user) => {
     if (_cloudUnsub) { _cloudUnsub(); _cloudUnsub = null; }
+    if (_sharedNotesUnsub) { _sharedNotesUnsub(); _sharedNotesUnsub = null; }
 
     if (user) {
       // Profile-switch guard. The working copy in localStorage belongs to one
@@ -497,6 +530,7 @@ async function initCloud() {
 
       cloudUser = { uid: user.uid, email: user.email, name: user.displayName || "" };
       _fbDoc = fsMod.doc(fbDb, "users", user.uid);
+      _sharedAppNotesDoc = fsMod.doc(fbDb, "shared", "appNotes");
       // Listen for changes so the other device updates automatically.
       _cloudUnsub = fsMod.onSnapshot(_fbDoc, (snap) => {
         if (snap.metadata.hasPendingWrites) return; // ignore our own just-made save
@@ -515,9 +549,16 @@ async function initCloud() {
         repairPelotonBikeHistoryOnce();
         repairSoccerDurationInvariant({ rerender: true });
       }, (error) => console.error("Cloud listener error:", error));
+      _sharedNotesUnsub = fsMod.onSnapshot(_sharedAppNotesDoc, (snap) => {
+        if (snap.metadata.hasPendingWrites) return;
+        reconcileSharedAppNotes(snap.exists() ? snap.data() : null);
+        syncPendingAppNotes().catch((e) => console.error("Pending shared notes sync failed:", e));
+      }, (error) => console.error("Shared notes listener error:", error));
     } else {
       cloudUser = null;
       _fbDoc = null;
+      _sharedAppNotesDoc = null;
+      sharedAppNotesCache = null;
       // Signed out: the local cache belongs to whoever just left, so drop it.
       // No plan/history/progress should linger on the device while nobody is
       // signed in - that lingering cache is what let one account's data bleed
@@ -577,6 +618,9 @@ async function initCloud() {
       if (hasPendingData() && navigator.onLine) {
         const pending = readJson(STORAGE.pendingData);
         if (pending) { await uploadWorkoutData(pending); clearPendingData(); }
+      }
+      if (hasPendingAppNotes() && navigator.onLine) {
+        await syncPendingAppNotes();
       }
     } catch (e) {
       console.error("Pre-sign-out sync skipped:", e);

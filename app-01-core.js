@@ -3,7 +3,7 @@ const DROPBOX_TOKEN_URL = "https://api.dropboxapi.com/oauth2/token";
 const DROPBOX_UPLOAD_URL = "https://content.dropboxapi.com/2/files/upload";
 const DROPBOX_DOWNLOAD_URL = "https://content.dropboxapi.com/2/files/download";
 const DATA_FILE_PATH = "/04_Technical/06_Side_Projects/Workout and Nutrition App/data/workout-data.json";
-const APP_VERSION = "1.0.31";
+const APP_VERSION = "1.0.32";
 const SOCCER_DURATION_MINUTES = 60;
 
 const STORAGE = {
@@ -15,6 +15,7 @@ const STORAGE = {
   refreshToken: "trainingBookDropboxRefreshToken",
   localData: "trainingBookWorkoutData",
   pendingData: "trainingBookPendingWorkoutData",
+  pendingAppNotes: "trainingBookPendingAppNotes",
   localSnapshots: "trainingBookLocalSnapshots",
   // The uid of the account whose data currently sits in localData. Used to
   // detect a profile switch (a DIFFERENT person signing in on this device) so
@@ -191,6 +192,9 @@ let authChecked = false;    // true once Firebase has reported the initial auth 
 let _fbDoc = null;        // reference to this user's data document
 let _setDoc = null;       // Firebase's save function, captured after it loads
 let _cloudUnsub = null;   // function to stop listening for remote changes
+let _sharedAppNotesDoc = null; // shared product notes document for every signed-in user
+let _sharedNotesUnsub = null;  // listener for the shared notes document
+let sharedAppNotesCache = null; // latest shared list, reapplied after user-data syncs
 let _fb = null;           // captured Firestore module helpers (see initCloud)
 let _coachReviewCallable = null; // callable cloud helper; reads only this signed-in user's Firestore doc
 
@@ -271,6 +275,49 @@ async function fetchCloudBackup(id) {
   const col = _fb.collection(_fb.db, "users", cloudUser.uid, "backups");
   const d = await _fb.getDoc(_fb.doc(col, id));
   return d.exists() ? d.data().data : null;
+}
+
+function sharedAppNotesPayload(notes) {
+  return {
+    notes: Array.isArray(notes) ? notes : [],
+    updatedAt: new Date().toISOString(),
+    updatedBy: getDeviceId()
+  };
+}
+
+function setLocalAppNotes(notes) {
+  const data = getLocalData();
+  data.appNotes = Array.isArray(notes) ? notes : [];
+  saveLocalData(data);
+  if (typeof renderNotesModal === "function" && notesModalOpen) renderNotesModal();
+}
+
+function markPendingAppNotes(notes) {
+  setItemSafe(STORAGE.pendingAppNotes, JSON.stringify(sharedAppNotesPayload(notes)));
+  updateConnectionState();
+}
+
+function clearPendingAppNotes() {
+  localStorage.removeItem(STORAGE.pendingAppNotes);
+  updateConnectionState();
+}
+
+function hasPendingAppNotes() {
+  return Boolean(localStorage.getItem(STORAGE.pendingAppNotes));
+}
+
+async function saveSharedAppNotes(notes) {
+  if (!_sharedAppNotesDoc || !_fb?.setDoc) throw new Error("Sign in to sync shared notes.");
+  await _fb.setDoc(_sharedAppNotesDoc, sharedAppNotesPayload(notes));
+  clearPendingAppNotes();
+}
+
+async function syncPendingAppNotes() {
+  const pending = readJson(STORAGE.pendingAppNotes);
+  if (!pending || !Array.isArray(pending.notes)) return false;
+  if (!navigator.onLine) return false;
+  await saveSharedAppNotes(pending.notes);
+  return true;
 }
 
 // The short label shown in the header pill while signed in: the account's first

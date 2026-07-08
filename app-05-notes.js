@@ -1,9 +1,9 @@
 // ===== App / product notes =====
 // A small global notes surface for Daniel's feature ideas and agent notes,
 // opened from the header (and from the live-workout topbar, where the header is
-// hidden). Notes live under data.appNotes, completely separate from workout
-// history, and can be copied/exported as plain markdown so a future coding agent
-// can read them without any private Firebase credentials.
+// hidden). Notes sync through one shared Firestore document, with data.appNotes
+// kept as the offline/local migration copy. They stay completely separate from
+// workout history and can be copied/exported as plain markdown.
 let notesModalOpen = false;
 let editingNoteId = null;           // id of the note being edited inline (null = none)
 let pendingNoteSource = "manual";   // tags new notes with where they were captured
@@ -38,16 +38,24 @@ function getVisibleNotes() {
   return getAppNotes().filter((n) => !n?.deleted);
 }
 
-// Save the notes list everywhere (local + pending queue + cloud), mirroring how
-// persistCategories handles its own slice. Real workout data is never touched.
+// Save the notes list to the shared app-notes document. We still keep a local
+// copy in data.appNotes so existing saved notes migrate forward and the sheet
+// works offline, but notes no longer belong to one user's private workout doc.
 function persistAppNotes(notes) {
   const data = getLocalData();
   data.appNotes = notes;
-  data.updatedAt = new Date().toISOString();
-  data.updatedBy = getDeviceId();
   saveLocalData(data);
-  markPendingData(data);
-  syncOrWarn(data);
+  markPendingAppNotes(notes);
+  if (!navigator.onLine) return;
+  saveSharedAppNotes(notes).catch((error) => {
+    const msg = String(error?.message || error || "");
+    const expected = /sign in/i.test(msg);
+    if (!expected) {
+      console.error("Shared notes save failed:", error);
+      setNotesStatus("Saved on this device. Shared sync will retry automatically.", "warn");
+    }
+    updateConnectionState();
+  });
 }
 
 // Short, human date for a note's meta line: "Today" / "Yesterday" / "Jun 28".
