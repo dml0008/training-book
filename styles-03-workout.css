@@ -1867,32 +1867,62 @@ body.in-workout .today-panel {
   padding-bottom: 4px;
 }
 
-/* ===== App / product notes sheet =====
-   Reuses the .lw-sheet bottom-sheet shell. Head + compose + footer are fixed;
-   only the notes list scrolls, so the capture box and export controls stay put
-   no matter how many notes pile up. */
-.notes-sheet {
-  display: flex;
-  flex-direction: column;
-  max-height: 86vh;
+/* ===== Shared app notes page ===== */
+.notes-page-panel {
+  max-width: 980px;
+  margin: 0 auto;
 }
 
-.notes-sheet .lw-sheet-head,
+.notes-page {
+  display: grid;
+  gap: 14px;
+}
+
+.notes-page-head {
+  display: grid;
+  gap: 12px;
+  align-items: start;
+  grid-template-columns: auto minmax(0, 1fr);
+}
+
+.notes-page-head h2,
+.notes-page-head p {
+  margin: 0;
+}
+
+.notes-page-head h2 {
+  font-size: clamp(26px, 5vw, 38px);
+  letter-spacing: 0;
+}
+
+.notes-page-head > div {
+  display: grid;
+  gap: 6px;
+}
+
+.notes-page-head > div > p:not(.eyebrow) {
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.notes-back-button {
+  width: auto;
+}
+
 .notes-compose,
 .notes-foot {
-  flex: none;
+  min-width: 0;
 }
 
 .notes-compose {
   display: grid;
-  gap: 8px;
-  margin-bottom: 12px;
+  gap: 10px;
 }
 
 .notes-compose textarea {
   width: 100%;
   resize: vertical;
-  min-height: 64px;
+  min-height: 92px;
   padding: 10px 12px;
   border: 1px solid var(--line);
   border-radius: var(--radius-md);
@@ -1907,7 +1937,8 @@ body.in-workout .today-panel {
 }
 
 .notes-compose-row {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) auto;
   align-items: center;
   gap: 8px;
   position: relative;
@@ -1989,29 +2020,26 @@ body.in-workout .today-panel {
 }
 
 .notes-compose-row .primary-button {
-  flex: 0 0 auto;
   width: auto;
   min-height: 40px;
 }
 
 .notes-compose-separator {
   height: 1px;
-  margin: 2px 0 10px;
   background: var(--line);
 }
 
 .notes-toolbar {
   display: grid;
-  gap: 8px;
-  margin-bottom: 10px;
+  grid-template-columns: minmax(0, 1fr) minmax(210px, auto);
+  align-items: center;
+  gap: 10px;
 }
 
 .notes-filter-strip {
   display: flex;
+  flex-wrap: wrap;
   gap: 6px;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  padding-bottom: 2px;
 }
 
 .notes-filter-chip {
@@ -2075,8 +2103,6 @@ body.in-workout .today-panel {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
   padding-bottom: 4px;
 }
 
@@ -2097,7 +2123,7 @@ body.in-workout .today-panel {
   border: 1px solid var(--line);
   border-radius: var(--radius-md);
   background: var(--panel-2);
-  padding: 12px 14px;
+  padding: 14px 16px;
 }
 
 .note-card.is-done {
@@ -2206,7 +2232,6 @@ body.in-workout .today-panel {
 .notes-foot {
   display: flex;
   gap: 8px;
-  margin-top: 12px;
 }
 
 .notes-foot .small-button {
@@ -2933,6 +2958,27 @@ button.lw-rest-hint:active {
   .today-progress {
     width: 100%;
     text-align: left;
+  }
+
+  .notes-page-head,
+  .notes-compose-row,
+  .notes-toolbar {
+    grid-template-columns: 1fr;
+  }
+
+  .notes-back-button,
+  .notes-compose-row .primary-button {
+    width: 100%;
+  }
+
+  .note-card-foot,
+  .note-card-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .note-card-actions .small-button {
+    width: 100%;
   }
 }
 

@@ -1,10 +1,10 @@
 // ===== App / product notes =====
-// A small global notes surface for Daniel's feature ideas and agent notes,
-// opened from the header (and from the live-workout topbar, where the header is
-// hidden). Notes read/write the shared Firestore document directly. Older
+// A shared notes page for Daniel's feature ideas and agent notes, opened from
+// the header, exercise reports, and the live-workout topbar. Notes read/write
+// the shared Firestore document directly. Older
 // per-user data.appNotes are only used once as migration input, not as the live
 // source for the UI.
-let notesModalOpen = false;
+let notesPageOpen = false;
 let editingNoteId = null;           // id of the note being edited inline (null = none)
 let pendingNoteSource = "manual";   // tags new notes with where they were captured
 let pendingNoteLane = "idea";
@@ -12,6 +12,7 @@ let notesLaneMenuOpen = false;
 let noteDraftText = "";
 let notesFilter = "all";
 let notesSort = "newest";
+let notesReturnScreen = "today";
 
 // The lanes a note can sit in. Kept tiny on purpose: enough to triage, not a
 // whole project board. Order here is the order shown in the compose dropdown.
@@ -178,13 +179,9 @@ function renderNoteCard(note) {
     </div>`;
 }
 
-function renderNotesModal() {
-  const root = document.querySelector("#notes-modal-root");
+function renderNotesPage() {
+  const root = document.querySelector("#notes-page-root");
   if (!root) return;
-  if (!notesModalOpen) {
-    root.innerHTML = "";
-    return;
-  }
   const notes = getVisibleNotes();
   const filteredNotes = getSortedNotes(getFilteredNotes(notes));
   const open = filteredNotes.filter((n) => n.status !== "done");
@@ -221,53 +218,57 @@ function renderNotesModal() {
     : listHtml;
 
   root.innerHTML = `
-    <div class="lw-sheet-scrim" role="presentation" data-notes-scrim>
-      <section class="lw-sheet notes-sheet" role="dialog" aria-modal="true" aria-label="App notes">
-        <div class="lw-sheet-head">
-          <div>
-            <h3>Notes</h3>
-            <p>Capture app ideas and feature requests. Kept separate from your workout history.</p>
-          </div>
-          <button class="lw-sheet-close" type="button" data-action="close-notes" aria-label="Close notes">&times;</button>
+    <div class="notes-page">
+      <div class="notes-page-head">
+        <button class="quiet-button small-button btn-ico notes-back-button" type="button" data-action="close-notes">
+          ${getUiIcon("arrow-left")}Back
+        </button>
+        <div>
+          <p class="eyebrow">Shared app notes</p>
+          <h2 id="notes-title">Ideas, bugs, and features</h2>
+          <p>One live database-backed list for both accounts. Changes here update everywhere.</p>
         </div>
-        <div class="notes-compose">
-          <textarea id="note-input" rows="3" placeholder="New idea, bug, or feature request...">${escapeHtml(noteDraftText)}</textarea>
-          <div class="notes-compose-row">
-            ${renderNoteLaneSelect()}
-            <button class="primary-button small-button" type="button" data-action="add-note" ${notesLoaded ? "" : "disabled"}>Add note</button>
-          </div>
+      </div>
+      <div class="notes-compose">
+        <textarea id="note-input" rows="3" placeholder="New idea, bug, or feature request...">${escapeHtml(noteDraftText)}</textarea>
+        <div class="notes-compose-row">
+          ${renderNoteLaneSelect()}
+          <button class="primary-button small-button" type="button" data-action="add-note" ${notesLoaded ? "" : "disabled"}>Add note</button>
         </div>
-        <div class="notes-compose-separator"></div>
-        <div class="notes-toolbar">
-          <div class="notes-filter-strip" aria-label="Filter notes">${filterHtml}</div>
-          <label class="notes-sort">
-            <span>${getUiIcon("arrow-down-narrow-wide")}Sort</span>
-            <select data-action="set-notes-sort" aria-label="Sort notes">
-              <option value="newest"${notesSort === "newest" ? " selected" : ""}>Newest activity</option>
-              <option value="oldest"${notesSort === "oldest" ? " selected" : ""}>Oldest first</option>
-              <option value="lane"${notesSort === "lane" ? " selected" : ""}>Type</option>
-            </select>
-          </label>
-        </div>
-        <div class="notes-list">${finalListHtml}</div>
-        <div class="notes-foot">
-          <button class="quiet-button small-button btn-ico" type="button" data-action="copy-notes">${getUiIcon("copy")}Copy all</button>
-          <button class="quiet-button small-button btn-ico" type="button" data-action="export-notes">${getUiIcon("download")}Export .md</button>
-        </div>
-        <p class="settings-foot-note" id="notes-status" role="status"></p>
-      </section>
+      </div>
+      <div class="notes-compose-separator"></div>
+      <div class="notes-toolbar">
+        <div class="notes-filter-strip" aria-label="Filter notes">${filterHtml}</div>
+        <label class="notes-sort">
+          <span>${getUiIcon("arrow-down-narrow-wide")}Sort</span>
+          <select data-action="set-notes-sort" aria-label="Sort notes">
+            <option value="newest"${notesSort === "newest" ? " selected" : ""}>Newest activity</option>
+            <option value="oldest"${notesSort === "oldest" ? " selected" : ""}>Oldest first</option>
+            <option value="lane"${notesSort === "lane" ? " selected" : ""}>Type</option>
+          </select>
+        </label>
+      </div>
+      <div class="notes-list">${finalListHtml}</div>
+      <div class="notes-foot">
+        <button class="quiet-button small-button btn-ico" type="button" data-action="copy-notes">${getUiIcon("copy")}Copy all</button>
+        <button class="quiet-button small-button btn-ico" type="button" data-action="export-notes">${getUiIcon("download")}Export .md</button>
+      </div>
+      <p class="settings-foot-note" id="notes-status" role="status"></p>
     </div>
   `;
   renderUiIcons(root);
 }
 
-function openNotesModal(opts = {}) {
-  notesModalOpen = true;
+function openNotesPage(opts = {}) {
+  const currentScreen = document.querySelector(".screen.is-active")?.dataset.screen;
+  notesReturnScreen = currentScreen && currentScreen !== "notes" ? currentScreen : (localStorage.getItem(STORAGE.activeTab) || "today");
+  notesPageOpen = true;
   editingNoteId = null;
   pendingNoteSource = opts.source || "manual";
   pendingNoteLane = normalizeNoteLane(opts.lane || pendingNoteLane);
   noteDraftText = opts.prefill || noteDraftText || "";
-  renderNotesModal();
+  renderNotesPage();
+  showScreen("notes", false);
   requestAnimationFrame(() => {
     const input = document.querySelector("#note-input");
     if (input) {
@@ -279,12 +280,24 @@ function openNotesModal(opts = {}) {
   });
 }
 
-function closeNotesModal() {
-  notesModalOpen = false;
+function closeNotesPage() {
+  notesPageOpen = false;
   editingNoteId = null;
   notesLaneMenuOpen = false;
-  renderNotesModal();
+  showScreen(notesReturnScreen || localStorage.getItem(STORAGE.activeTab) || "today", false);
 }
+
+function setNotesPageOpen(isOpen) {
+  notesPageOpen = Boolean(isOpen);
+  if (notesPageOpen) renderNotesPage();
+  const button = document.querySelector("#notes-button");
+  button?.classList.toggle("is-active", notesPageOpen);
+  button?.setAttribute("aria-pressed", notesPageOpen ? "true" : "false");
+}
+
+const openNotesModal = openNotesPage;
+const closeNotesModal = closeNotesPage;
+const renderNotesModal = renderNotesPage;
 
 function addNoteFromInput() {
   const input = document.querySelector("#note-input");
@@ -311,7 +324,7 @@ function addNoteFromInput() {
   // Newest first so a fresh idea is right under the compose box.
   if (!persistAppNotes([note, ...getAppNotes()])) return;
   noteDraftText = "";
-  renderNotesModal();
+  renderNotesPage();
   setNotesStatus("Note saved.", "good");
   requestAnimationFrame(() => document.querySelector("#note-input")?.focus());
 }
@@ -323,12 +336,12 @@ function toggleNoteStatus(id) {
   note.status = note.status === "done" ? "open" : "done";
   note.updatedAt = new Date().toISOString();
   if (!persistAppNotes(notes)) return;
-  renderNotesModal();
+  renderNotesPage();
 }
 
 function startEditNote(id) {
   editingNoteId = id;
-  renderNotesModal();
+  renderNotesPage();
   requestAnimationFrame(() => {
     const ta = document.querySelector(`[data-note-edit="${id}"]`);
     if (ta) {
@@ -340,7 +353,7 @@ function startEditNote(id) {
 
 function cancelEditNote() {
   editingNoteId = null;
-  renderNotesModal();
+  renderNotesPage();
 }
 
 function saveEditNote(id) {
@@ -357,7 +370,7 @@ function saveEditNote(id) {
   note.updatedAt = new Date().toISOString();
   if (!persistAppNotes(notes)) return;
   editingNoteId = null;
-  renderNotesModal();
+  renderNotesPage();
   setNotesStatus("Note updated.", "good");
 }
 
@@ -377,7 +390,7 @@ async function deleteNote(id) {
     n.id === id ? { id: n.id, deleted: true, deletedAt: now, updatedAt: now } : n
   )))) return;
   if (editingNoteId === id) editingNoteId = null;
-  renderNotesModal();
+  renderNotesPage();
   setNotesStatus("Note deleted.");
 }
 
@@ -431,26 +444,26 @@ async function exportNotes() {
 
 function handleNotesAction(action, noteId) {
   switch (action) {
-    case "close-notes": closeNotesModal(); break;
+    case "close-notes": closeNotesPage(); break;
     case "add-note": addNoteFromInput(); break;
     case "toggle-note-lane-menu":
       captureNoteDraftFromDom();
       notesLaneMenuOpen = !notesLaneMenuOpen;
-      renderNotesModal();
+      renderNotesPage();
       break;
     case "set-note-lane":
       captureNoteDraftFromDom();
       pendingNoteLane = normalizeNoteLane(noteId);
       notesLaneMenuOpen = false;
-      renderNotesModal();
+      renderNotesPage();
       break;
     case "set-notes-filter":
       notesFilter = noteId || "all";
-      renderNotesModal();
+      renderNotesPage();
       break;
     case "set-notes-sort":
       notesSort = noteId || "newest";
-      renderNotesModal();
+      renderNotesPage();
       break;
     case "toggle-note-status": toggleNoteStatus(noteId); break;
     case "edit-note": startEditNote(noteId); break;

@@ -18,8 +18,8 @@
        sequence. Concatenating them in this order reproduces the old styles.css
        byte-for-byte. -->
   <link rel="stylesheet" href="styles-01-base.css?v=1.0.31">
-  <link rel="stylesheet" href="styles-02-layout.css?v=1.0.31">
-  <link rel="stylesheet" href="styles-03-workout.css?v=1.0.34">
+  <link rel="stylesheet" href="styles-02-layout.css?v=1.0.35">
+  <link rel="stylesheet" href="styles-03-workout.css?v=1.0.35">
   <link rel="stylesheet" href="styles-04-progress.css?v=1.0.31">
   <link rel="stylesheet" href="styles-05-interactions.css?v=1.0.31">
   <link rel="stylesheet" href="styles-06-plan.css?v=1.0.31">
@@ -57,7 +57,7 @@
             </div>
           </div>
         </div>
-        <button class="settings-gear" id="notes-button" type="button" aria-label="Notes" aria-haspopup="dialog" aria-expanded="false">
+        <button class="settings-gear" id="notes-button" type="button" aria-label="Open notes">
           <span data-icon="notebook-pen" aria-hidden="true"></span>
         </button>
         <button class="settings-gear" id="settings-button" type="button" aria-label="Settings" aria-haspopup="dialog" aria-expanded="false">
@@ -69,11 +69,6 @@
     <!-- Settings modal (gear button in the header). The style guide now lives
          in here instead of on the main page. -->
     <div id="settings-modal-root"></div>
-
-    <!-- App/product notes sheet. Opened from the header notebook button and from
-         the live-workout topbar (where the header is hidden). Top-level so it
-         overlays any screen, including focused workout mode. -->
-    <div id="notes-modal-root"></div>
 
     <!-- Schedule calendar modal (calendar button beside the Workout day
          switcher). Reuses the same calendar the Progress tab draws. -->
@@ -297,6 +292,12 @@
           <div id="progress-content" aria-live="polite"></div>
         </div>
       </section>
+
+      <section class="screen" data-screen="notes" aria-labelledby="notes-title">
+        <div class="notes-page-panel">
+          <div id="notes-page-root" aria-live="polite"></div>
+        </div>
+      </section>
     </main>
 
     <nav class="tabbar" aria-label="Main sections">
@@ -343,17 +344,17 @@
   <!-- App script split into ordered no-build parts. LOAD ORDER MATTERS:
        these are classic scripts sharing the same global scope, and the final
        bootstrap file wires events, starts Firebase, and performs initial render. -->
-  <script src="app-01-core.js?v=1.0.34"></script>
+  <script src="app-01-core.js?v=1.0.35"></script>
   <script src="app-02-muscles.js?v=1.0.31"></script>
-  <script src="app-03-workout.js?v=1.0.33"></script>
+  <script src="app-03-workout.js?v=1.0.35"></script>
   <script src="app-04-data-ui.js?v=1.0.34"></script>
-  <script src="app-05-notes.js?v=1.0.34"></script>
+  <script src="app-05-notes.js?v=1.0.35"></script>
   <script src="app-06-library.js?v=1.0.33"></script>
   <script src="app-07-plan.js?v=1.0.31"></script>
   <script src="app-08-progress.js?v=1.0.31"></script>
   <script src="app-09-coach.js?v=1.0.31"></script>
   <script src="app-10-history.js?v=1.0.31"></script>
   <script src="app-11-review-import.js?v=1.0.31"></script>
-  <script src="app-12-bootstrap.js?v=1.0.34"></script>
+  <script src="app-12-bootstrap.js?v=1.0.35"></script>
 </body>
 </html>

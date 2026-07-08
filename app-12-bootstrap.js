@@ -195,36 +195,36 @@ document.addEventListener("keydown", (event) => {
   if (event.key === "Escape" && goalEditor.step !== "closed") closeGoalEditor();
 });
 
-// App / product notes: the header button opens the sheet; the live-workout
-// topbar button (handled in handleTodayWorkoutClick) opens it tagged "workout".
+// App / product notes: the header button opens the shared Notes page; the
+// live-workout topbar button (handled in handleTodayWorkoutClick) opens it
+// tagged "workout".
 const notesButton = document.querySelector("#notes-button");
-notesButton?.addEventListener("click", () => openNotesModal({ source: "manual" }));
+notesButton?.addEventListener("click", () => openNotesPage({ source: "manual" }));
 
-const notesModalRoot = document.querySelector("#notes-modal-root");
-notesModalRoot?.addEventListener("click", (event) => {
-  if (event.target.hasAttribute("data-notes-scrim")) { closeNotesModal(); return; }
+const notesPageRoot = document.querySelector("#notes-page-root");
+notesPageRoot?.addEventListener("click", (event) => {
   const button = event.target.closest("[data-action]");
   if (!button) return;
   if (button.tagName === "SELECT") return;
   handleNotesAction(button.dataset.action, button.dataset.noteId || button.dataset.lane || button.dataset.filter || button.value);
 });
-notesModalRoot?.addEventListener("input", (event) => {
+notesPageRoot?.addEventListener("input", (event) => {
   if (event.target.id === "note-input") noteDraftText = event.target.value;
 });
-notesModalRoot?.addEventListener("change", (event) => {
+notesPageRoot?.addEventListener("change", (event) => {
   const target = event.target.closest("[data-action]");
   if (!target) return;
   handleNotesAction(target.dataset.action, target.value);
 });
 // Ctrl/Cmd+Enter in the compose box is a quick "add note" so capture stays fast.
-notesModalRoot?.addEventListener("keydown", (event) => {
+notesPageRoot?.addEventListener("keydown", (event) => {
   if ((event.metaKey || event.ctrlKey) && event.key === "Enter" && event.target.id === "note-input") {
     event.preventDefault();
     addNoteFromInput();
   }
 });
 document.addEventListener("keydown", (event) => {
-  if (event.key === "Escape" && notesModalOpen) closeNotesModal();
+  if (event.key === "Escape" && notesPageOpen) closeNotesPage();
 });
 
 // Schedule calendar modal: open from the Workout day switcher, navigate months,
@@ -494,7 +494,7 @@ async function initCloud() {
     const remoteChanged = JSON.stringify(remoteNotes) !== JSON.stringify(merged);
 
     sharedAppNotesCache = merged;
-    if (typeof renderNotesModal === "function" && notesModalOpen) renderNotesModal();
+    if (typeof renderNotesPage === "function" && notesPageOpen) renderNotesPage();
     if (!remote || remoteChanged) {
       saveSharedAppNotes(merged).catch((e) => console.error("Shared notes migration/sync failed:", e));
     }
@@ -550,7 +550,7 @@ async function initCloud() {
       _fbDoc = null;
       _sharedAppNotesDoc = null;
       sharedAppNotesCache = null;
-      if (typeof renderNotesModal === "function" && notesModalOpen) renderNotesModal();
+      if (typeof renderNotesPage === "function" && notesPageOpen) renderNotesPage();
       // Signed out: the local cache belongs to whoever just left, so drop it.
       // No plan/history/progress should linger on the device while nobody is
       // signed in - that lingering cache is what let one account's data bleed

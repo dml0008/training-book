@@ -1220,7 +1220,7 @@ function reportExerciseIssue(exerciseId, name) {
   if (todayReferenceId) closeTodayReference();
   const label = name || getExerciseById(exerciseId)?.name || "this exercise";
   const idPart = exerciseId ? ` (${exerciseId})` : "";
-  openNotesModal({ source: "catalog", lane: "bug", prefill: `Exercise issue — ${label}${idPart}: ` });
+  openNotesPage({ source: "catalog", lane: "bug", prefill: `Exercise issue — ${label}${idPart}: ` });
 }
 
 function renderLiveExerciseArt(ex) {
@@ -2309,7 +2309,7 @@ async function handleTodayWorkoutClick(event) {
   // Capture an idea mid-workout. Handled before the rest-timer checks so opening
   // notes never cancels an active rest countdown.
   if (action === "open-notes") {
-    openNotesModal({ source: "workout" });
+    openNotesPage({ source: "workout" });
     return;
   }
 
@@ -3040,6 +3040,10 @@ function showScreen(name, remember = false) {
 
   if (validName === "progress") {
     renderProgress();
+  }
+
+  if (typeof setNotesPageOpen === "function") {
+    setNotesPageOpen(validName === "notes");
   }
 
   // The review reminder is a global banner above the tabs, so keep it current

@@ -52,7 +52,8 @@
 .history-panel,
 .plan-panel,
 .coach-panel,
-.progress-panel {
+.progress-panel,
+.notes-page-panel {
   position: relative;
   border: 1px solid var(--line);
   border-radius: var(--radius-lg);
@@ -73,7 +74,8 @@
 .history-panel::before,
 .plan-panel::before,
 .coach-panel::before,
-.progress-panel::before {
+.progress-panel::before,
+.notes-page-panel::before {
   content: "";
   position: absolute;
   inset: 0 0 auto 0;
