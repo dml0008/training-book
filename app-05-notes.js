@@ -7,17 +7,31 @@
 let notesModalOpen = false;
 let editingNoteId = null;           // id of the note being edited inline (null = none)
 let pendingNoteSource = "manual";   // tags new notes with where they were captured
+let pendingNoteLane = "idea";
+let notesLaneMenuOpen = false;
+let noteDraftText = "";
+let notesFilter = "all";
+let notesSort = "newest";
 
 // The lanes a note can sit in. Kept tiny on purpose: enough to triage, not a
 // whole project board. Order here is the order shown in the compose dropdown.
 const NOTE_LANES = [
-  { key: "idea", label: "Idea" },
-  { key: "bug", label: "Bug" },
-  { key: "now", label: "Priority" }
+  { key: "idea", label: "Idea", icon: "lightbulb" },
+  { key: "bug", label: "Bug", icon: "bug" },
+  { key: "feature", label: "Feature", icon: "sparkles" }
 ];
 
+function normalizeNoteLane(key) {
+  if (key === "now") return "feature";
+  return NOTE_LANES.some((l) => l.key === key) ? key : "idea";
+}
+
 function noteLaneLabel(key) {
-  return NOTE_LANES.find((l) => l.key === key)?.label || "Idea";
+  return NOTE_LANES.find((l) => l.key === normalizeNoteLane(key))?.label || "Idea";
+}
+
+function noteLaneIcon(key) {
+  return NOTE_LANES.find((l) => l.key === normalizeNoteLane(key))?.icon || "lightbulb";
 }
 
 function makeNoteId() {
@@ -35,6 +49,11 @@ function getAppNotes() {
 // notes only, tombstones hidden.
 function getVisibleNotes() {
   return getAppNotes().filter((n) => !n?.deleted);
+}
+
+function captureNoteDraftFromDom() {
+  const input = document.querySelector("#note-input");
+  if (input) noteDraftText = input.value;
 }
 
 // Save the notes list to the shared app-notes document. No local pending copy:
@@ -72,11 +91,63 @@ function setNotesStatus(message, tone = "") {
   el.className = `settings-foot-note${tone ? " " + tone : ""}`;
 }
 
+function getSortedNotes(notes) {
+  const laneRank = new Map(NOTE_LANES.map((lane, index) => [lane.key, index]));
+  const time = (note, field) => Date.parse(note?.[field] || note?.createdAt || 0) || 0;
+  return notes.slice().sort((a, b) => {
+    if (notesSort === "oldest") return time(a, "createdAt") - time(b, "createdAt");
+    if (notesSort === "lane") {
+      const laneDelta = (laneRank.get(normalizeNoteLane(a.lane)) ?? 99) - (laneRank.get(normalizeNoteLane(b.lane)) ?? 99);
+      if (laneDelta) return laneDelta;
+    }
+    return time(b, "updatedAt") - time(a, "updatedAt");
+  });
+}
+
+function getFilteredNotes(notes) {
+  if (notesFilter === "open") return notes.filter((n) => n.status !== "done");
+  if (notesFilter === "done") return notes.filter((n) => n.status === "done");
+  if (NOTE_LANES.some((lane) => lane.key === notesFilter)) {
+    return notes.filter((n) => normalizeNoteLane(n.lane) === notesFilter);
+  }
+  return notes;
+}
+
+function renderNotesFilterButton(key, label, count, icon = "") {
+  const active = notesFilter === key ? " is-active" : "";
+  return `
+    <button class="notes-filter-chip${active}" type="button" data-action="set-notes-filter" data-filter="${escapeHtml(key)}" aria-pressed="${notesFilter === key ? "true" : "false"}">
+      ${icon ? getUiIcon(icon) : ""}
+      <span>${escapeHtml(label)}</span>
+      <strong>${count}</strong>
+    </button>`;
+}
+
+function renderNoteLaneSelect() {
+  const lane = NOTE_LANES.find((l) => l.key === pendingNoteLane) || NOTE_LANES[0];
+  return `
+    <div class="notes-lane-select${notesLaneMenuOpen ? " is-open" : ""}">
+      <button class="notes-lane-button" type="button" data-action="toggle-note-lane-menu" aria-haspopup="listbox" aria-expanded="${notesLaneMenuOpen ? "true" : "false"}">
+        <span class="notes-lane-button-main">${getUiIcon(lane.icon)}${escapeHtml(lane.label)}</span>
+        <span class="notes-lane-chevron">${getUiIcon("chevron-down")}</span>
+      </button>
+      ${notesLaneMenuOpen ? `
+        <div class="notes-lane-menu" role="listbox" aria-label="Note type">
+          ${NOTE_LANES.map((item) => `
+            <button class="notes-lane-option${item.key === pendingNoteLane ? " is-active" : ""}" type="button" role="option" aria-selected="${item.key === pendingNoteLane ? "true" : "false"}" data-action="set-note-lane" data-lane="${item.key}">
+              ${getUiIcon(item.icon)}
+              <span>${escapeHtml(item.label)}</span>
+            </button>`).join("")}
+        </div>` : ""}
+    </div>`;
+}
+
 function renderNoteCard(note) {
   const isDone = note.status === "done";
   const editing = editingNoteId === note.id;
+  const lane = normalizeNoteLane(note.lane);
   const meta = [
-    `<span class="note-lane note-lane-${escapeHtml(note.lane || "idea")}">${escapeHtml(noteLaneLabel(note.lane))}</span>`,
+    `<span class="note-lane note-lane-${escapeHtml(lane)}">${getUiIcon(noteLaneIcon(lane))}${escapeHtml(noteLaneLabel(lane))}</span>`,
     `<span class="note-when">${escapeHtml(formatNoteWhen(note.createdAt))}</span>`,
     note.source === "workout" ? `<span class="note-src">from a workout</span>`
       : note.source === "catalog" ? `<span class="note-src">exercise report</span>` : ""
@@ -115,18 +186,39 @@ function renderNotesModal() {
     return;
   }
   const notes = getVisibleNotes();
-  const open = notes.filter((n) => n.status !== "done");
-  const done = notes.filter((n) => n.status === "done");
-  const laneOptions = NOTE_LANES.map((l) => `<option value="${l.key}">${l.label}</option>`).join("");
+  const filteredNotes = getSortedNotes(getFilteredNotes(notes));
+  const open = filteredNotes.filter((n) => n.status !== "done");
+  const done = filteredNotes.filter((n) => n.status === "done");
+  const counts = {
+    all: notes.length,
+    open: notes.filter((n) => n.status !== "done").length,
+    done: notes.filter((n) => n.status === "done").length
+  };
+  NOTE_LANES.forEach((lane) => {
+    counts[lane.key] = notes.filter((n) => normalizeNoteLane(n.lane) === lane.key).length;
+  });
 
   const notesLoaded = Array.isArray(sharedAppNotesCache);
+  const emptyMessage = notes.length
+    ? "No notes match that filter."
+    : "No notes yet. Jot the first idea above - it stays out of your workout history.";
+  const filterHtml = [
+    renderNotesFilterButton("all", "All", counts.all, "list-filter"),
+    renderNotesFilterButton("open", "Open", counts.open, "circle-dot"),
+    ...NOTE_LANES.map((lane) => renderNotesFilterButton(lane.key, lane.label, counts[lane.key], lane.icon)),
+    renderNotesFilterButton("done", "Done", counts.done, "check")
+  ].join("");
   const listHtml = !notesLoaded
     ? `<p class="plan-muted notes-empty">Loading shared notes...</p>`
-    : notes.length
+    : filteredNotes.length
     ? `${open.map(renderNoteCard).join("")}${done.length ? `
         <p class="notes-group-label">Done (${done.length})</p>
         ${done.map(renderNoteCard).join("")}` : ""}`
     : `<p class="plan-muted notes-empty">No notes yet. Jot the first idea above — it stays out of your workout history.</p>`;
+
+  const finalListHtml = notesLoaded && !filteredNotes.length
+    ? `<p class="plan-muted notes-empty">${escapeHtml(emptyMessage)}</p>`
+    : listHtml;
 
   root.innerHTML = `
     <div class="lw-sheet-scrim" role="presentation" data-notes-scrim>
@@ -139,13 +231,25 @@ function renderNotesModal() {
           <button class="lw-sheet-close" type="button" data-action="close-notes" aria-label="Close notes">&times;</button>
         </div>
         <div class="notes-compose">
-          <textarea id="note-input" rows="3" placeholder="New idea, bug, or feature request..."></textarea>
+          <textarea id="note-input" rows="3" placeholder="New idea, bug, or feature request...">${escapeHtml(noteDraftText)}</textarea>
           <div class="notes-compose-row">
-            <select id="note-lane" aria-label="Note type">${laneOptions}</select>
+            ${renderNoteLaneSelect()}
             <button class="primary-button small-button" type="button" data-action="add-note" ${notesLoaded ? "" : "disabled"}>Add note</button>
           </div>
         </div>
-        <div class="notes-list">${listHtml}</div>
+        <div class="notes-compose-separator"></div>
+        <div class="notes-toolbar">
+          <div class="notes-filter-strip" aria-label="Filter notes">${filterHtml}</div>
+          <label class="notes-sort">
+            <span>${getUiIcon("arrow-down-narrow-wide")}Sort</span>
+            <select data-action="set-notes-sort" aria-label="Sort notes">
+              <option value="newest"${notesSort === "newest" ? " selected" : ""}>Newest activity</option>
+              <option value="oldest"${notesSort === "oldest" ? " selected" : ""}>Oldest first</option>
+              <option value="lane"${notesSort === "lane" ? " selected" : ""}>Type</option>
+            </select>
+          </label>
+        </div>
+        <div class="notes-list">${finalListHtml}</div>
         <div class="notes-foot">
           <button class="quiet-button small-button btn-ico" type="button" data-action="copy-notes">${getUiIcon("copy")}Copy all</button>
           <button class="quiet-button small-button btn-ico" type="button" data-action="export-notes">${getUiIcon("download")}Export .md</button>
@@ -161,19 +265,16 @@ function openNotesModal(opts = {}) {
   notesModalOpen = true;
   editingNoteId = null;
   pendingNoteSource = opts.source || "manual";
+  pendingNoteLane = normalizeNoteLane(opts.lane || pendingNoteLane);
+  noteDraftText = opts.prefill || noteDraftText || "";
   renderNotesModal();
   requestAnimationFrame(() => {
     const input = document.querySelector("#note-input");
     if (input) {
-      if (opts.prefill) input.value = opts.prefill;
       input.focus();
       // Drop the cursor at the end so a pre-filled template reads as a prompt.
       const end = input.value.length;
       try { input.setSelectionRange(end, end); } catch (_) {}
-    }
-    if (opts.lane) {
-      const laneSelect = document.querySelector("#note-lane");
-      if (laneSelect) laneSelect.value = opts.lane;
     }
   });
 }
@@ -181,12 +282,12 @@ function openNotesModal(opts = {}) {
 function closeNotesModal() {
   notesModalOpen = false;
   editingNoteId = null;
+  notesLaneMenuOpen = false;
   renderNotesModal();
 }
 
 function addNoteFromInput() {
   const input = document.querySelector("#note-input");
-  const laneSelect = document.querySelector("#note-lane");
   const text = (input?.value || "").trim();
   if (!Array.isArray(sharedAppNotesCache)) {
     setNotesStatus("Shared notes are still loading.");
@@ -204,11 +305,12 @@ function addNoteFromInput() {
     updatedAt: now,
     text,
     status: "open",
-    lane: laneSelect?.value || "idea",
+    lane: pendingNoteLane,
     source: pendingNoteSource
   };
   // Newest first so a fresh idea is right under the compose box.
   if (!persistAppNotes([note, ...getAppNotes()])) return;
+  noteDraftText = "";
   renderNotesModal();
   setNotesStatus("Note saved.", "good");
   requestAnimationFrame(() => document.querySelector("#note-input")?.focus());
@@ -331,6 +433,25 @@ function handleNotesAction(action, noteId) {
   switch (action) {
     case "close-notes": closeNotesModal(); break;
     case "add-note": addNoteFromInput(); break;
+    case "toggle-note-lane-menu":
+      captureNoteDraftFromDom();
+      notesLaneMenuOpen = !notesLaneMenuOpen;
+      renderNotesModal();
+      break;
+    case "set-note-lane":
+      captureNoteDraftFromDom();
+      pendingNoteLane = normalizeNoteLane(noteId);
+      notesLaneMenuOpen = false;
+      renderNotesModal();
+      break;
+    case "set-notes-filter":
+      notesFilter = noteId || "all";
+      renderNotesModal();
+      break;
+    case "set-notes-sort":
+      notesSort = noteId || "newest";
+      renderNotesModal();
+      break;
     case "toggle-note-status": toggleNoteStatus(noteId); break;
     case "edit-note": startEditNote(noteId); break;
     case "save-note": saveEditNote(noteId); break;

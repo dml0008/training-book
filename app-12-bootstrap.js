@@ -205,7 +205,16 @@ notesModalRoot?.addEventListener("click", (event) => {
   if (event.target.hasAttribute("data-notes-scrim")) { closeNotesModal(); return; }
   const button = event.target.closest("[data-action]");
   if (!button) return;
-  handleNotesAction(button.dataset.action, button.dataset.noteId);
+  if (button.tagName === "SELECT") return;
+  handleNotesAction(button.dataset.action, button.dataset.noteId || button.dataset.lane || button.dataset.filter || button.value);
+});
+notesModalRoot?.addEventListener("input", (event) => {
+  if (event.target.id === "note-input") noteDraftText = event.target.value;
+});
+notesModalRoot?.addEventListener("change", (event) => {
+  const target = event.target.closest("[data-action]");
+  if (!target) return;
+  handleNotesAction(target.dataset.action, target.value);
 });
 // Ctrl/Cmd+Enter in the compose box is a quick "add note" so capture stays fast.
 notesModalRoot?.addEventListener("keydown", (event) => {

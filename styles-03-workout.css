@@ -1910,12 +1910,22 @@ body.in-workout .today-panel {
   display: flex;
   align-items: center;
   gap: 8px;
+  position: relative;
 }
 
-.notes-compose-row select {
+.notes-lane-select {
   flex: 1 1 auto;
+  position: relative;
+}
+
+.notes-lane-button {
+  width: 100%;
   min-height: 40px;
-  padding: 0 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 0 10px 0 12px;
   border: 1px solid var(--line);
   border-radius: var(--radius-sm);
   background: var(--panel-2);
@@ -1923,10 +1933,142 @@ body.in-workout .today-panel {
   font: inherit;
 }
 
+.notes-lane-button-main,
+.notes-lane-option,
+.notes-filter-chip,
+.notes-sort span,
+.note-lane {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.notes-lane-button svg,
+.notes-lane-option svg,
+.notes-filter-chip svg,
+.notes-sort svg,
+.note-lane svg {
+  width: 15px;
+  height: 15px;
+  flex: 0 0 auto;
+}
+
+.notes-lane-chevron {
+  display: inline-flex;
+  color: var(--muted);
+}
+
+.notes-lane-menu {
+  position: absolute;
+  z-index: 20;
+  left: 0;
+  right: 0;
+  top: calc(100% + 6px);
+  padding: 6px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--panel);
+  box-shadow: 0 18px 40px rgba(0,0,0,.32);
+}
+
+.notes-lane-option {
+  width: 100%;
+  min-height: 36px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+}
+
+.notes-lane-option.is-active,
+.notes-lane-option:hover {
+  background: var(--accent-soft);
+}
+
 .notes-compose-row .primary-button {
   flex: 0 0 auto;
   width: auto;
   min-height: 40px;
+}
+
+.notes-compose-separator {
+  height: 1px;
+  margin: 2px 0 10px;
+  background: var(--line);
+}
+
+.notes-toolbar {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.notes-filter-strip {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 2px;
+}
+
+.notes-filter-chip {
+  flex: 0 0 auto;
+  min-height: 34px;
+  padding: 0 9px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--panel-2);
+  color: var(--muted);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.notes-filter-chip.is-active {
+  border-color: var(--accent-line);
+  background: var(--accent-soft);
+  color: var(--text);
+}
+
+.notes-filter-chip strong {
+  min-width: 18px;
+  padding: 1px 5px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.06);
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.3;
+}
+
+.notes-sort {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 38px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--panel-2);
+}
+
+.notes-sort span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.notes-sort select {
+  flex: 1 1 auto;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  text-align: right;
 }
 
 .notes-list {
@@ -2012,6 +2154,11 @@ body.in-workout .today-panel {
 .note-lane-bug {
   color: var(--danger);
   border-color: var(--danger);
+}
+
+.note-lane-feature {
+  color: var(--accent);
+  border-color: var(--accent-line);
 }
 
 .note-src::before {
