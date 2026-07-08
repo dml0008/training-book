@@ -87,6 +87,12 @@ function getMetricProfile(exerciseInfo, plannedEx = {}) {
       ? "peloton"
       : "cardio-duration";
   }
+  // Real equipment wins over the area/muscle guess below - otherwise loaded
+  // core moves like Russian Twist or Cable Crunch (area "Core", equipment
+  // "dumbbell"/"cable") get misclassified as bodyweight and lose their
+  // weight control.
+  const equipment = (exerciseInfo.equipment || "").toLowerCase();
+  if (equipment && equipment !== "body only" && equipment !== "none") return "strength-weighted";
   const tags = Array.isArray(exerciseInfo.tags) ? exerciseInfo.tags : [];
   const text = `${exerciseInfo.area || ""} ${exerciseInfo.primaryMuscle || ""}`.toLowerCase();
   if (tags.includes("bodyweight") || text.includes("core") || text.includes("abs")) return "strength-bodyweight";
