@@ -431,7 +431,7 @@ function parseRoutineExerciseLine(line) {
       exerciseId,
       targetDuration: Number(durationMatch[1])
     };
-    const subtypeText = rawTarget.slice(0, rawTarget.toLowerCase().indexOf(durationMatch[0])).replace(/[,|-]+$/g, "").trim();
+    const subtypeText = rawTarget.slice(0, rawTarget.toLowerCase().indexOf(durationMatch[0])).trim().replace(/[,|-]+$/g, "").trim();
     if (subtypeText && !/^\d/.test(subtypeText)) parsed.targetSubtype = subtypeText;
     return withRest(parsed);
   }
@@ -564,17 +564,25 @@ function parseAiPlanText(text) {
         }
         return;
       }
-      if (/^[-*]\s*/.test(line)) {
-        const parsedExercise = parseRoutineExerciseLine(line);
-        if (parsedExercise) currentRoutine.exercises.push(parsedExercise);
-      }
+      // No longer requires a leading "-"/"*" — pasting from a chat app's
+      // rendered markdown list (not its raw source) commonly strips bullet
+      // markers, and parseRoutineExerciseLine already tolerates one being
+      // absent. Its own "Name: target" shape match is what rejects non-exercise
+      // lines, so this doesn't need a bullet gate to stay safe.
+      const parsedExercise = parseRoutineExerciseLine(line);
+      if (parsedExercise) currentRoutine.exercises.push(parsedExercise);
     }
   });
+
+  const droppedRoutineNames = routines
+    .filter((routine) => routine.name && routine.exercises.length === 0)
+    .map((routine) => routine.name);
 
   return {
     activePlan,
     routines: routines.filter((routine) => routine.name && routine.exercises.length > 0),
-    weeklyPlanNames
+    weeklyPlanNames,
+    droppedRoutineNames
   };
 }
 
@@ -688,7 +696,9 @@ function previewPlanImportFromScreen() {
     const nextData = buildImportedPlanData(data, parsed);
     planImportPreview = { parsed, nextData };
     planImportSummary = summarizePlanImport(parsed, nextData).replace(/\nLoad this updated plan into Training Book\?$/, "");
-    planImportMessage = "Preview ready. If this looks right, save the imported plan.";
+    planImportMessage = parsed.droppedRoutineNames.length > 0
+      ? `Preview ready, but could not read any exercises for: ${parsed.droppedRoutineNames.join(", ")}. Those routine(s) will NOT be added — check the paste formatting before saving.`
+      : "Preview ready. If this looks right, save the imported plan.";
   } catch (error) {
     planImportPreview = null;
     planImportSummary = "";
@@ -729,7 +739,10 @@ function importUpdatedPlan() {
 
     const data = getLocalData();
     const nextData = buildImportedPlanData(data, parsed);
-    if (!confirm(summarizePlanImport(parsed, nextData))) return;
+    const droppedWarning = parsed.droppedRoutineNames.length > 0
+      ? `\n\nWARNING: could not read any exercises for: ${parsed.droppedRoutineNames.join(", ")}. Those routine(s) will NOT be added.\n`
+      : "";
+    if (!confirm(droppedWarning + summarizePlanImport(parsed, nextData))) return;
 
     nextData.updatedAt = new Date().toISOString();
     nextData.updatedBy = getDeviceId();
