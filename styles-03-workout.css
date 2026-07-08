@@ -333,6 +333,7 @@
 .today-footer[hidden],
 .today-start-row[hidden],
 .today-preview-sub[hidden],
+.today-routine-loc[hidden],
 .today-back-button[hidden] {
   display: none;
 }
@@ -342,6 +343,20 @@
   margin: 6px 0 0;
   color: var(--muted);
   font-size: 14px;
+}
+
+/* Small pill badge showing whether today's routine is a home or gym day. */
+.today-routine-loc {
+  display: inline-block;
+  margin: 6px 0 0;
+  padding: 3px 10px;
+  border: 1px solid rgba(183, 255, 53, 0.3);
+  border-radius: var(--radius-full);
+  background: rgba(183, 255, 53, 0.08);
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
 }
 
 .today-back-button {

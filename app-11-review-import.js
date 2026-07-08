@@ -1,3 +1,72 @@
+// Mirrors choosePerson() in ai-fitness-coach/functions/index.js so the manual
+// "Copy prompt" packet knows whose equipment facts to include. cloudUser is a
+// global set in app-12-bootstrap.js's auth listener (declared app-01-core.js).
+function getReviewPacketPerson() {
+  const label = `${cloudUser?.name || ""} ${cloudUser?.email || ""}`.toLowerCase();
+  if (label.includes("shaina")) return "Shaina";
+  if (label.includes("daniel")) return "Daniel";
+  return "Generic";
+}
+
+// Per-person equipment/location facts for the manual "Copy prompt" packet.
+// Source of truth for these facts is the private docs in ai-fitness-coach/ —
+// keep this in sync with Daniel's and Shaina's current-goals.md Equipment
+// sections whenever equipment changes. Generic (unrecognized user) gets no
+// invented equipment — the packet just prompts the AI to ask, as before.
+function getReviewPacketEquipmentLines(person) {
+  if (person === "Daniel") {
+    return [
+      "MY EQUIPMENT & TRAINING LOCATIONS:",
+      "- Home: Peloton Bike, adjustable dumbbells up to 50 lb each hand, mat/bodyweight space.",
+      "  No bench at home — press from the floor or use push-ups instead.",
+      "- Sister's gym: REP Ares 2.0 power rack with an integrated dual-independent-stack",
+      "  cable/functional trainer — Lat Pulldown, Seated Cable Row, Cable Crossover, and",
+      "  Incline Cable Fly are all on it and logged/discussed as PER-SIDE weight, not a",
+      "  combined total. Also there: a pull-up bar, an adjustable bench, barbell + weight",
+      "  plates, adjustable dumbbells, a Peloton Tread AND a Peloton Bike, mats, and a sauna.",
+      "  No other selectorized machines (no leg press, leg curl/extension, pec deck, etc.) —",
+      "  leg and accessory work uses the barbell, dumbbells, cables, and bodyweight instead.",
+      "- Typical weekly split: about 2-3 days/week at the sister's gym, 2 days/week at home,",
+      "  plus Thursday soccer — but the exact split varies week to week, so always ask me how",
+      "  many sessions I'm planning at each location before finalizing a plan.",
+      "- Each of my current routines is tagged in CURRENT ROUTINES below as [Home], [Gym], or",
+      "  [Home or gym] — use that tag to know which location's equipment applies, and update it",
+      "  if we change where a routine happens.",
+      "- Exercise equipment tags below, mapped to where I can actually do them: \"body only\" and",
+      "  \"dumbbell\" work at both locations. \"barbell\" and \"cable\" only work at the sister's gym",
+      "  (no barbell or cable machine at home). \"machine\" and \"kettlebell\" exercises are NOT",
+      "  available to me at either location right now — do not program those unless I tell you",
+      "  that's changed.",
+      ""
+    ];
+  }
+  if (person === "Shaina") {
+    return [
+      "MY EQUIPMENT & TRAINING LOCATIONS:",
+      "- Home: Peloton Bike, adjustable dumbbells, and a mat.",
+      "- Sibling's house: a treadmill and a REP Ares 2.0 cable machine (dual-independent-stack",
+      "  — Cable Crossover, Incline Cable Fly, Lat Pulldown, and Seated Cable Row are",
+      "  logged/discussed as PER-SIDE weight, not a combined total).",
+      "- Typical schedule: about 4-5 days/week, often Monday, Wednesday, Friday, Saturday,",
+      "  Sunday, roughly 20-45 minutes per session — but the exact split varies week to week,",
+      "  so always ask me how many sessions I'm planning at each location before finalizing a",
+      "  plan.",
+      "- Limitation: recurring hip and lumbar pain — keep spinal loading light; avoid heavy",
+      "  hinging/deadlifts and loaded twisting.",
+      "- Each of my current routines is tagged in CURRENT ROUTINES below as [Home], [Gym], or",
+      "  [Home or gym] — use that tag to know which location's equipment applies, and update it",
+      "  if we change where a routine happens.",
+      "- Exercise equipment tags below, mapped to where I can actually do them: \"body only\" and",
+      "  \"dumbbell\" work at both locations. \"cable\" only works at the sibling's house (the Ares",
+      "  2.0 cable machine there). \"barbell\", \"machine\", and \"kettlebell\" exercises are NOT",
+      "  available to me at either location right now — do not program those unless I tell you",
+      "  that's changed.",
+      ""
+    ];
+  }
+  return [];
+}
+
 function generateReviewPacket() {
   const data = getLocalData();
   const packet = [];
@@ -7,6 +76,7 @@ function generateReviewPacket() {
   const library = Array.isArray(data.library) ? data.library : exercises;
   const bodyWeights = Array.isArray(data.bodyWeights) ? data.bodyWeights.slice() : [];
   const weightTarget = typeof data.weightTarget === "number" ? data.weightTarget : null;
+  const person = getReviewPacketPerson();
 
   packet.push("=== TRAINING BOOK — AI COACH HANDOFF ===");
   packet.push(`Exported: ${new Date().toISOString()}`);
@@ -24,6 +94,9 @@ function generateReviewPacket() {
   packet.push("- Then ask me questions before deciding anything — e.g. how my body feels, any pain");
   packet.push("  or niggles, what I want to focus on this week, how many days and how much time I");
   packet.push("  have, equipment access, and anything the numbers can't tell you.");
+  packet.push("- Before finalizing any plan, ask me how many sessions I expect at each location I");
+  packet.push("  train this week (e.g. home vs. gym) rather than assuming a fixed split — confirm");
+  packet.push("  the split with me, then design around it.");
   packet.push("- Give me options with a clear recommendation and the reasoning behind it. This is a");
   packet.push("  back-and-forth conversation — react to my answers, push back when useful, and help");
   packet.push("  me decide. Don't rush to a final plan.");
@@ -42,6 +115,11 @@ function generateReviewPacket() {
   packet.push("  so it must match the format exactly (including any rest targets).");
   packet.push("- Include short exercise-specific coach notes when they will help me during the");
   packet.push("  workout. Training Book shows these as live \"Coach\" callouts on that exercise.");
+  packet.push("- Alongside the week's plan, also include 1 extra alternate routine tagged [Home] and");
+  packet.push("  1 extra alternate routine tagged [Gym] that I can manually swap into any day later —");
+  packet.push("  still built from my real history, effort trends, and goals, just not referenced in");
+  packet.push("  the WEEKLY PLAN section (so they land in my routine list without being scheduled).");
+  packet.push("  Skip this only if I say I don't want alternates this time.");
   packet.push("- Do not say you saved or changed my plan. You are drafting; I preview and save");
   packet.push("  changes manually inside Training Book.");
   packet.push("- Do NOT give me that plan block until we've discussed and I ask for it. Until then,");
@@ -62,6 +140,8 @@ function generateReviewPacket() {
   packet.push("  are not general plan notes; they appear during the live workout for that move.");
   packet.push("- Skipped exercises are marked skipped in History; coach around repeated skips.");
   packet.push("");
+
+  getReviewPacketEquipmentLines(person).forEach((line) => packet.push(line));
 
   packet.push("ACTIVE PLAN:");
   packet.push(`name: ${activePlan.name || "Current Training Plan"}`);
@@ -88,9 +168,11 @@ function generateReviewPacket() {
     packet.push("");
   }
 
-  packet.push("EXERCISE LIBRARY:");
+  packet.push("EXERCISE LIBRARY (equipment tag shows what each exercise needs — cross-check against");
+  packet.push("MY EQUIPMENT & TRAINING LOCATIONS above to know where each exercise is actually possible):");
   library.forEach((exercise) => {
-    packet.push(`- ${exercise.name} (${exercise.type || "strength"}${exercise.area ? `, ${exercise.area}` : ""})`);
+    const tags = [exercise.type || "strength", exercise.area, exercise.equipment].filter(Boolean);
+    packet.push(`- ${exercise.name} (${tags.join(", ")})`);
   });
   packet.push("");
 
@@ -103,7 +185,7 @@ function generateReviewPacket() {
 
   packet.push("CURRENT ROUTINES:");
   routines.forEach((routine) => {
-    packet.push(`ROUTINE: ${routine.name}`);
+    packet.push(`ROUTINE: ${routine.name} [${formatLocation(routine.location)}]`);
     routine.exercises?.forEach((exercise) => {
       packet.push(formatRoutineExercise(exercise));
       if (exercise.coachNote) packet.push(`  note: ${exercise.coachNote}`);
@@ -157,7 +239,7 @@ function generateReviewPacket() {
   packet.push("saturday: Routine Name or rest");
   packet.push("sunday: Routine Name or rest");
   packet.push("");
-  packet.push("ROUTINE: Routine Name");
+  packet.push("ROUTINE: Routine Name [Gym]");
   packet.push("- Exercise Name: 3x8");
   packet.push("- Bench Press: 3x8 @ 95 lb, rest 90s");
   packet.push("  note: One short live cue or adjustment for this exercise, if useful.");
@@ -168,9 +250,16 @@ function generateReviewPacket() {
   packet.push("Rules for the final block:");
   packet.push("- Use exercise names from my library above when possible.");
   packet.push("- Keep each routine exercise on one dash line.");
+  packet.push("- Tag each ROUTINE line with where it happens: add \"[Home]\", \"[Gym]\", or \"[Home or");
+  packet.push("  gym]\" right after the routine name (e.g. \"ROUTINE: Full Body A [Gym]\"), matching");
+  packet.push("  the tags shown for my current routines above. Only use \"[Home or gym]\" when a");
+  packet.push("  routine genuinely works at either location.");
   packet.push("- Add a rest target with \"rest 90s\" (seconds) on strength/timed lines where rest matters; leave it off where it doesn't.");
   packet.push("- Add a `note:` line under exercises where I need a live cue, adjustment, caution,");
   packet.push("  or reminder during the workout. Keep each note short and specific.");
+  packet.push("- Include the 2 alternate routines (1 [Home], 1 [Gym]) as extra ROUTINE blocks that");
+  packet.push("  are NOT referenced by name in the WEEKLY PLAN section above — that's what keeps them");
+  packet.push("  unscheduled so I can swap one in manually whenever I want it.");
   packet.push("- Do not include any text outside this format in that final message.");
 
   return packet.join("\n");
@@ -269,20 +358,20 @@ friday: Full Body A
 saturday: Optional Walk
 sunday: rest
 
-ROUTINE: Full Body A
+ROUTINE: Full Body A [Home]
 - Goblet Squat: 3x8 @ 35, rest 90s timer
   note: Chest tall and drive through your heels — ease off the last set, you burned out here last week.
 - Push-up: 3x8, rest 60s
 - Dumbbell Row: 3x10 @ 30, rest 75s
 - Plank: 3x30, rest 45s
 
-ROUTINE: Full Body B
+ROUTINE: Full Body B [Gym]
 - Deadlift: 3x8 @ 95, rest 120s
 - Shoulder Press: 3x8 @ 20, rest 90s
 - Squat: 3x8 @ 45, rest 90s
 - Plank: 2x30, rest 45s
 
-ROUTINE: Optional Walk
+ROUTINE: Optional Walk [Gym]
 - Peloton Tread: Incline Walk, 30 min
 - Peloton Bike: Just Ride, 20 min`;
 }
@@ -391,6 +480,20 @@ function readKeyValueLine(line) {
   };
 }
 
+// Reads an optional trailing "[Home]" / "[Gym]" / "[Home or gym]" tag off a
+// parsed ROUTINE name — the same tag generateReviewPacket()'s CURRENT
+// ROUTINES section and final-deliverable format spec both use. Returns
+// location: null when no recognized tag is present, so callers can fall back
+// to the existing routine's current location instead of stomping it.
+function extractRoutineLocationTag(rawName) {
+  const match = rawName.match(/\s*\[([^\]]+)\]\s*$/);
+  if (!match) return { name: rawName, location: null };
+  const name = rawName.slice(0, match.index).trim();
+  const tag = match[1].trim().toLowerCase();
+  const location = tag === "home" ? "home" : tag === "gym" ? "gym" : "mixed";
+  return { name, location };
+}
+
 function parseAiPlanText(text) {
   const lines = text.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
   const activePlan = {};
@@ -415,9 +518,11 @@ function parseAiPlanText(text) {
 
     if (upper.startsWith("ROUTINE:")) {
       mode = "routine";
+      const rawName = line.slice(line.indexOf(":") + 1).replace(/\*\*/g, "").trim();
+      const { name, location } = extractRoutineLocationTag(rawName);
       currentRoutine = {
-        name: line.slice(line.indexOf(":") + 1).replace(/\*\*/g, "").trim(),
-        location: "mixed",
+        name,
+        location, // null when no tag was found; resolved in buildImportedPlanData()
         exercises: [],
         notes: "Updated by AI coach"
       };
@@ -495,7 +600,7 @@ function buildImportedPlanData(currentData, parsed) {
     const nextRoutine = {
       id: existing?.id || makeUniqueRoutineId(routine.name, data.routines),
       name: routine.name,
-      location: existing?.location || routine.location,
+      location: routine.location != null ? routine.location : (existing?.location || "mixed"),
       exercises: routine.exercises,
       notes: routine.notes
     };

@@ -810,6 +810,10 @@ function renderTodayRoutine() {
 
   if (activeWorkout.started) {
     if (todayRoutineName) todayRoutineName.textContent = activeWorkout.routineName || routine?.name || "Workout";
+    if (todayRoutineLoc) {
+      todayRoutineLoc.textContent = routine ? formatLocation(routine.location) : "";
+      todayRoutineLoc.hidden = !routine;
+    }
     setTodayMode("active");
     renderTodayWorkout();
     return;
@@ -828,6 +832,7 @@ function renderTodayRoutine() {
     if (todayRoutineName) {
       todayRoutineName.textContent = "Rest day";
     }
+    if (todayRoutineLoc) todayRoutineLoc.hidden = true;
     setTodayMode("rest");
     updateTodayProgress();
     return;
@@ -835,6 +840,10 @@ function renderTodayRoutine() {
 
   if (todayRoutineName) {
     todayRoutineName.textContent = routine.name;
+  }
+  if (todayRoutineLoc) {
+    todayRoutineLoc.textContent = formatLocation(routine.location);
+    todayRoutineLoc.hidden = false;
   }
 
   renderTodayPreview(routine);

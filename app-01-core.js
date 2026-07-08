@@ -3,7 +3,7 @@ const DROPBOX_TOKEN_URL = "https://api.dropboxapi.com/oauth2/token";
 const DROPBOX_UPLOAD_URL = "https://content.dropboxapi.com/2/files/upload";
 const DROPBOX_DOWNLOAD_URL = "https://content.dropboxapi.com/2/files/download";
 const DATA_FILE_PATH = "/04_Technical/06_Side_Projects/Workout and Nutrition App/data/workout-data.json";
-const APP_VERSION = "1.0.36";
+const APP_VERSION = "1.0.37";
 const SOCCER_DURATION_MINUTES = 60;
 
 const STORAGE = {
@@ -40,6 +40,7 @@ const screens = Array.from(document.querySelectorAll(".screen"));
 const tabs = Array.from(document.querySelectorAll(".tab"));
 const dateLabel = document.querySelector("#today-date");
 const todayRoutineName = document.querySelector("#today-routine-name");
+const todayRoutineLoc = document.querySelector("#today-routine-loc");
 const todayRoutineList = document.querySelector("#today-routine-list");
 const reviewReminder = document.querySelector("#review-reminder");
 const reviewReminderSub = document.querySelector("#review-reminder-sub");
