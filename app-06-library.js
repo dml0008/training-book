@@ -1219,8 +1219,7 @@ async function loadWorkoutData() {
 
 async function syncPendingData() {
   const pendingData = readJson(STORAGE.pendingData);
-  const pendingNotes = readJson(STORAGE.pendingAppNotes);
-  if (!pendingData && !pendingNotes) {
+  if (!pendingData) {
     setSyncStatus("Nothing pending. This device is caught up.", "good");
     return;
   }
@@ -1233,9 +1232,6 @@ async function syncPendingData() {
   if (pendingData) {
     await uploadWorkoutData(pendingData);
     clearPendingData();
-  }
-  if (pendingNotes) {
-    await syncPendingAppNotes();
   }
   setSyncStatus("Pending changes synced.", "good");
   renderTodayRoutine();

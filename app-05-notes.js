@@ -1,9 +1,9 @@
 // ===== App / product notes =====
 // A small global notes surface for Daniel's feature ideas and agent notes,
 // opened from the header (and from the live-workout topbar, where the header is
-// hidden). Notes sync through one shared Firestore document, with data.appNotes
-// kept as the offline/local migration copy. They stay completely separate from
-// workout history and can be copied/exported as plain markdown.
+// hidden). Notes read/write the shared Firestore document directly. Older
+// per-user data.appNotes are only used once as migration input, not as the live
+// source for the UI.
 let notesModalOpen = false;
 let editingNoteId = null;           // id of the note being edited inline (null = none)
 let pendingNoteSource = "manual";   // tags new notes with where they were captured
@@ -28,8 +28,7 @@ function makeNoteId() {
 // add/edit/delete/toggle actions below (which must pass tombstones through
 // unchanged when they persist) should read this directly.
 function getAppNotes() {
-  const data = getLocalData();
-  return Array.isArray(data.appNotes) ? data.appNotes : [];
+  return Array.isArray(sharedAppNotesCache) ? sharedAppNotesCache : [];
 }
 
 // What the UI and the Copy all / Export .md output should ever show: real
@@ -38,24 +37,21 @@ function getVisibleNotes() {
   return getAppNotes().filter((n) => !n?.deleted);
 }
 
-// Save the notes list to the shared app-notes document. We still keep a local
-// copy in data.appNotes so existing saved notes migrate forward and the sheet
-// works offline, but notes no longer belong to one user's private workout doc.
+// Save the notes list to the shared app-notes document. No local pending copy:
+// if Firestore is unavailable, the write is rejected so the list never drifts
+// into a device-only state.
 function persistAppNotes(notes) {
-  const data = getLocalData();
-  data.appNotes = notes;
-  saveLocalData(data);
-  markPendingAppNotes(notes);
-  if (!navigator.onLine) return;
+  if (!navigator.onLine || !_sharedAppNotesDoc) {
+    setNotesStatus("Notes are shared live. Connect/sign in before changing them.", "bad");
+    return false;
+  }
+  sharedAppNotesCache = notes;
   saveSharedAppNotes(notes).catch((error) => {
-    const msg = String(error?.message || error || "");
-    const expected = /sign in/i.test(msg);
-    if (!expected) {
-      console.error("Shared notes save failed:", error);
-      setNotesStatus("Saved on this device. Shared sync will retry automatically.", "warn");
-    }
+    console.error("Shared notes save failed:", error);
+    setNotesStatus("That note change did not reach the shared database. Refresh and try again.", "bad");
     updateConnectionState();
   });
+  return true;
 }
 
 // Short, human date for a note's meta line: "Today" / "Yesterday" / "Jun 28".
@@ -123,7 +119,10 @@ function renderNotesModal() {
   const done = notes.filter((n) => n.status === "done");
   const laneOptions = NOTE_LANES.map((l) => `<option value="${l.key}">${l.label}</option>`).join("");
 
-  const listHtml = notes.length
+  const notesLoaded = Array.isArray(sharedAppNotesCache);
+  const listHtml = !notesLoaded
+    ? `<p class="plan-muted notes-empty">Loading shared notes...</p>`
+    : notes.length
     ? `${open.map(renderNoteCard).join("")}${done.length ? `
         <p class="notes-group-label">Done (${done.length})</p>
         ${done.map(renderNoteCard).join("")}` : ""}`
@@ -143,7 +142,7 @@ function renderNotesModal() {
           <textarea id="note-input" rows="3" placeholder="New idea, bug, or feature request..."></textarea>
           <div class="notes-compose-row">
             <select id="note-lane" aria-label="Note type">${laneOptions}</select>
-            <button class="primary-button small-button" type="button" data-action="add-note">Add note</button>
+            <button class="primary-button small-button" type="button" data-action="add-note" ${notesLoaded ? "" : "disabled"}>Add note</button>
           </div>
         </div>
         <div class="notes-list">${listHtml}</div>
@@ -189,6 +188,10 @@ function addNoteFromInput() {
   const input = document.querySelector("#note-input");
   const laneSelect = document.querySelector("#note-lane");
   const text = (input?.value || "").trim();
+  if (!Array.isArray(sharedAppNotesCache)) {
+    setNotesStatus("Shared notes are still loading.");
+    return;
+  }
   if (!text) {
     setNotesStatus("Type a note first.");
     input?.focus();
@@ -205,7 +208,7 @@ function addNoteFromInput() {
     source: pendingNoteSource
   };
   // Newest first so a fresh idea is right under the compose box.
-  persistAppNotes([note, ...getAppNotes()]);
+  if (!persistAppNotes([note, ...getAppNotes()])) return;
   renderNotesModal();
   setNotesStatus("Note saved.", "good");
   requestAnimationFrame(() => document.querySelector("#note-input")?.focus());
@@ -217,7 +220,7 @@ function toggleNoteStatus(id) {
   if (!note) return;
   note.status = note.status === "done" ? "open" : "done";
   note.updatedAt = new Date().toISOString();
-  persistAppNotes(notes);
+  if (!persistAppNotes(notes)) return;
   renderNotesModal();
 }
 
@@ -250,7 +253,7 @@ function saveEditNote(id) {
   if (!note) return;
   note.text = text;
   note.updatedAt = new Date().toISOString();
-  persistAppNotes(notes);
+  if (!persistAppNotes(notes)) return;
   editingNoteId = null;
   renderNotesModal();
   setNotesStatus("Note updated.", "good");
@@ -268,9 +271,9 @@ async function deleteNote(id) {
   // Leave a tombstone rather than filtering the id out entirely - see
   // mergeAppNotes() for why an outright removal doesn't survive a sync from a
   // device that still has the old copy.
-  persistAppNotes(getAppNotes().map((n) => (
+  if (!persistAppNotes(getAppNotes().map((n) => (
     n.id === id ? { id: n.id, deleted: true, deletedAt: now, updatedAt: now } : n
-  )));
+  )))) return;
   if (editingNoteId === id) editingNoteId = null;
   renderNotesModal();
   setNotesStatus("Note deleted.");

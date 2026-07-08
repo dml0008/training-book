@@ -3281,7 +3281,7 @@ function setItemSafe(key, value) {
   }
   // Out of room: drop the most expendable keys one at a time, retrying after
   // each, so the write that matters can still land.
-  for (const dropKey of [STORAGE.localSnapshots, STORAGE.pendingData, STORAGE.pendingAppNotes]) {
+  for (const dropKey of [STORAGE.localSnapshots, STORAGE.pendingData]) {
     if (dropKey === key) continue;
     localStorage.removeItem(dropKey);
     try {
