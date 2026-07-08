@@ -3,13 +3,16 @@
 This folder contains the live Training Book app files that get uploaded to the
 public GitHub repo named `training-book`.
 
-> **Current state (2026-07-03).** Data now lives in **Firebase** (Cloud
+> **Current state (2026-07-08).** Data now lives in **Firebase** (Cloud
 > Firestore), not Dropbox — the older Dropbox notes below are historical. The
 > app is **multi-user**: each person signs in with their own Google account and
 > gets a private data space scoped to `users/{uid}`. A brand-new account starts
 > with a blank plan on top of the shared exercise-library catalog. The Firestore
 > security rules are in `firestore.rules` (any signed-in user reads/writes only
-> their own document + `backups`). `styles.css` was split into ordered
+> their own document + `backups`, plus the shared app-notes document
+> `shared/appNotes`). App/product Notes are intentionally one shared
+> database-backed list for Daniel and Shaina; they are not saved locally and are
+> not private per user. `styles.css` was split into ordered
 > `styles-01..07` part files, and the app script is split into ordered
 > `app-01..12` classic-script files. The Firebase web API key in
 > `app-12-bootstrap.js` is a public project identifier, not a secret. Onboard a new person via the AI prompt in
@@ -44,3 +47,5 @@ Before Step 6 is accepted as done, the sync/update UX needs one more reliability
 Future routine planning should be AI-ready, not AI-connected: Training Book should store private goals, preferences, routines, weekly plans, and workout logs in Dropbox app data, generate a copyable review packet for an outside AI coach, and import updated routines back into the app.
 
 No private workout data, goals, health notes, secrets, or passwords belong in this folder. GitHub Pages hosts these files publicly; each user's actual workout data and planning context stay in Firebase (Cloud Firestore), private to their own Google account and protected by the Firestore security rules in `firestore.rules`.
+
+The one intentional shared data slice is app/product Notes: ideas, bugs, and feature requests live in Firestore at `shared/appNotes` so both signed-in users see and edit the same current list from any phone or computer. Older per-user `appNotes` are migration input only.
